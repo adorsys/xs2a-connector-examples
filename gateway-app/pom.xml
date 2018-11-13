@@ -1,0 +1,48 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>de.adorsys.ledgers</groupId>
+		<artifactId>ledgers-xs2a-gateway</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>..</relativePath>
+	</parent>
+	<artifactId>gateway-app</artifactId>
+	<name>gateway-app</name>
+
+	<properties>
+		<ruleset.basedir>..</ruleset.basedir>
+	</properties>
+
+	<dependencies>
+
+		<!-- project dependencies -->
+
+        <dependency>
+            <groupId>de.adorsys.ledgers</groupId>
+            <artifactId>xs2a-connector</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+		<!-- spring dependencies -->
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+            <version>2.0.2.RELEASE</version>
+        </dependency>
+
+		<!-- other dependencies -->
+
+		<!-- test dependencies -->
+
+	</dependencies>
+
+</project>
+
