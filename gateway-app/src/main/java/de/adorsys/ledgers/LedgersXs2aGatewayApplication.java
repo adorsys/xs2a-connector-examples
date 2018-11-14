@@ -16,14 +16,17 @@
 
 package de.adorsys.ledgers;
 
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.cloud.netflix.feign.EnableFeignClients;
+import org.springframework.context.annotation.ComponentScan;
 
 @EnableFeignClients
+@ComponentScan(basePackages = {"de.adorsys.aspsp.xs2a", "de.adorsys.psd2"})
 @SpringBootApplication
 public class LedgersXs2aGatewayApplication {
+
     public static void main(String[] args) {
-        new SpringApplicationBuilder(LedgersXs2aGatewayApplication.class).run(args);
+        SpringApplication.run(LedgersXs2aGatewayApplication.class, args);
     }
 }

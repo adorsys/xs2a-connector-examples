@@ -26,9 +26,11 @@ import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.PaymentCancellationSpi;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Component
 public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     @Override
     public @NotNull SpiResponse<SpiPaymentCancellationResponse> initiatePaymentCancellation(@NotNull SpiPsuData spiPsuData, @NotNull SpiPayment spiPayment, @NotNull AspspConsentData aspspConsentData) {

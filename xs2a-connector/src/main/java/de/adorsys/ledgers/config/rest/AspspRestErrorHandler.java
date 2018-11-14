@@ -14,12 +14,20 @@
  * limitations under the License.
  */
 
-package de.adorsys.ledgers;
+package de.adorsys.ledgers.config.rest;
 
+import de.adorsys.psd2.xs2a.exception.RestException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.web.client.DefaultResponseErrorHandler;
 
-import org.springframework.cloud.netflix.feign.FeignClient;
+import java.io.IOException;
 
-@FeignClient("ledgers")
-public interface LedgersRestClient {
+public class AspspRestErrorHandler extends DefaultResponseErrorHandler {
 
+    @Override
+    public void handleError(ClientHttpResponse response) throws IOException {
+        HttpStatus statusCode = response.getStatusCode();
+        throw new RestException(statusCode, statusCode.getReasonPhrase());
+    }
 }

@@ -1,7 +1,0 @@
-server:
-  # Authorization HTTP header requires to enlarge max header size.
-  max-http-header-size: 65000
-  port: 8089
-
-spring:
-  application.name: ledgers-xs2a-gateway

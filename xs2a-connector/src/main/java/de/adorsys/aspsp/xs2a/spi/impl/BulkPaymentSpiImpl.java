@@ -23,7 +23,10 @@ import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.BulkPaymentSpi;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.stereotype.Component;
 
+
+@Component
 public class BulkPaymentSpiImpl implements BulkPaymentSpi {
     @Override
     public @NotNull SpiResponse<SpiResponse.VoidResponse> executePaymentWithoutSca(@NotNull SpiPsuData spiPsuData, @NotNull SpiBulkPayment spiBulkPayment, @NotNull AspspConsentData aspspConsentData) {
