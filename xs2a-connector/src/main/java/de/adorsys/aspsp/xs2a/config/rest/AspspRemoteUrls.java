@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.adorsys.ledgers.config.rest;
+package de.adorsys.aspsp.xs2a.config.rest;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

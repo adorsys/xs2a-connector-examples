@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.adorsys.ledgers.config.rest;
+package de.adorsys.aspsp.xs2a.config.rest;
 
 import de.adorsys.psd2.xs2a.exception.RestException;
 import org.springframework.http.HttpStatus;
