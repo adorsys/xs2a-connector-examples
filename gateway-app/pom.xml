@@ -25,6 +25,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>de.adorsys.ledgers</groupId>
+            <artifactId>ledgers-rest-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
 		<!-- spring dependencies -->
 
         <dependency>
@@ -33,11 +39,10 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!--<dependency>-->
-            <!--<groupId>org.springframework.cloud</groupId>-->
-            <!--<artifactId>spring-cloud-starter-openfeign</artifactId>-->
-            <!--<version>${spring-cloud-starter-openfeign.version}</version>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-feign</artifactId>
+        </dependency>
 
         <!-- other dependencies -->
 
