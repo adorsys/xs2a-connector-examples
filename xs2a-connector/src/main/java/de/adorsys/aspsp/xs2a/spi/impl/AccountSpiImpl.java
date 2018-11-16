@@ -43,10 +43,6 @@ import java.util.stream.Collectors;
 
 @Component
 public class AccountSpiImpl implements AccountSpi {
-    // Test data is used there for testing purposes to have the possibility to see if AccountSpiImpl is being invoked from xs2a.
-    // TODO remove if some requirements will be received https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/394
-    private static final String TEST_ASPSP_DATA = "Test aspsp data";
-
     private static final Logger logger = LoggerFactory.getLogger(SinglePaymentSpiImpl.class);
 
     private final LedgersAccountRestClient restClient;
@@ -61,7 +57,6 @@ public class AccountSpiImpl implements AccountSpi {
     public SpiResponse<List<SpiAccountDetails>> requestAccountList(boolean withBalance, @NotNull SpiAccountConsent accountConsent, @NotNull AspspConsentData aspspConsentData) {
         try {
             List<SpiAccountDetails> accountDetailsList;
-
             if (isBankOfferedConsent(accountConsent.getAccess())) {
                 accountDetailsList = getAccountDetailsByConsentId(accountConsent);
             } else {
@@ -70,17 +65,10 @@ public class AccountSpiImpl implements AccountSpi {
 
             return SpiResponse.<List<SpiAccountDetails>>builder()
                            .payload(filterAccountDetailsByWithBalance(withBalance, accountDetailsList))
-                           .aspspConsentData(aspspConsentData.respondWith(TEST_ASPSP_DATA.getBytes()))
+                           .aspspConsentData(aspspConsentData)
                            .success();
         } catch (RestException e) {
-            logger.error(e.getMessage());
-            if (e.getHttpStatus() == HttpStatus.INTERNAL_SERVER_ERROR) {
-                return SpiResponse.<List<SpiAccountDetails>>builder()
-                               .fail(SpiResponseStatus.TECHNICAL_FAILURE);
-            }
-
-            return SpiResponse.<List<SpiAccountDetails>>builder()
-                           .fail(SpiResponseStatus.LOGICAL_FAILURE);
+            return SpiResponse.<List<SpiAccountDetails>>builder().fail(getSpiResponseStatus(e));
         }
     }
 
@@ -97,17 +85,10 @@ public class AccountSpiImpl implements AccountSpi {
 
             return SpiResponse.<SpiAccountDetails>builder()
                            .payload(accountDetails)
-                           .aspspConsentData(aspspConsentData.respondWith(TEST_ASPSP_DATA.getBytes()))
+                           .aspspConsentData(aspspConsentData)
                            .success();
         } catch (RestException e) {
-            logger.error(e.getMessage());
-            if (e.getHttpStatus() == HttpStatus.INTERNAL_SERVER_ERROR) {
-                return SpiResponse.<SpiAccountDetails>builder()
-                               .fail(SpiResponseStatus.TECHNICAL_FAILURE);
-            }
-
-            return SpiResponse.<SpiAccountDetails>builder()
-                           .fail(SpiResponseStatus.LOGICAL_FAILURE);
+            return SpiResponse.<SpiAccountDetails>builder().fail(getSpiResponseStatus(e));
         }
     }
 
@@ -132,17 +113,10 @@ public class AccountSpiImpl implements AccountSpi {
 
             return SpiResponse.<SpiTransactionReport>builder()
                            .payload(transactionReport)
-                           .aspspConsentData(aspspConsentData.respondWith(TEST_ASPSP_DATA.getBytes()))
+                           .aspspConsentData(aspspConsentData)
                            .success();
         } catch (RestException e) {
-            logger.error(e.getMessage());
-            if (e.getHttpStatus() == HttpStatus.INTERNAL_SERVER_ERROR) {
-                return SpiResponse.<SpiTransactionReport>builder()
-                               .fail(SpiResponseStatus.TECHNICAL_FAILURE);
-            }
-
-            return SpiResponse.<SpiTransactionReport>builder()
-                           .fail(SpiResponseStatus.LOGICAL_FAILURE);
+            return SpiResponse.<SpiTransactionReport>builder().fail(getSpiResponseStatus(e));
         }
     }
 
@@ -155,16 +129,10 @@ public class AccountSpiImpl implements AccountSpi {
 
             return SpiResponse.<SpiTransaction>builder()
                            .payload(transaction)
-                           .aspspConsentData(aspspConsentData.respondWith(TEST_ASPSP_DATA.getBytes()))
+                           .aspspConsentData(aspspConsentData)
                            .success();
         } catch (RestException e) {
-            logger.error(e.getMessage());
-            if (e.getHttpStatus() == HttpStatus.INTERNAL_SERVER_ERROR) {
-                return SpiResponse.<SpiTransaction>builder()
-                               .fail(SpiResponseStatus.TECHNICAL_FAILURE);
-            }
-            return SpiResponse.<SpiTransaction>builder()
-                           .fail(SpiResponseStatus.LOGICAL_FAILURE);
+            return SpiResponse.<SpiTransaction>builder().fail(getSpiResponseStatus(e));
         }
     }
 
@@ -176,17 +144,10 @@ public class AccountSpiImpl implements AccountSpi {
                                                               .orElseThrow(() -> new RestException(HttpStatus.NOT_FOUND, "Response status was 200, but the body was empty!"));
             return SpiResponse.<List<SpiAccountBalance>>builder()
                            .payload(accountBalances)
-                           .aspspConsentData(aspspConsentData.respondWith(TEST_ASPSP_DATA.getBytes()))
+                           .aspspConsentData(aspspConsentData)
                            .success();
         } catch (RestException e) {
-            logger.error(e.getMessage());
-            if (e.getHttpStatus() == HttpStatus.INTERNAL_SERVER_ERROR) {
-                return SpiResponse.<List<SpiAccountBalance>>builder()
-                               .fail(SpiResponseStatus.TECHNICAL_FAILURE);
-            }
-
-            return SpiResponse.<List<SpiAccountBalance>>builder()
-                           .fail(SpiResponseStatus.LOGICAL_FAILURE);
+            return SpiResponse.<List<SpiAccountBalance>>builder().fail(getSpiResponseStatus(e));
         }
     }
 
@@ -216,9 +177,6 @@ public class AccountSpiImpl implements AccountSpi {
     }
 
     private List<SpiAccountDetails> getAccountDetailsFromReferences(List<SpiAccountReference> references) {
-        if (CollectionUtils.isEmpty(references)) {
-            return Collections.emptyList();
-        }
         return references.stream()
                        .map(this::getAccountDetailsByAccountReference)
                        .filter(Optional::isPresent)
@@ -247,5 +205,12 @@ public class AccountSpiImpl implements AccountSpi {
             details.forEach(SpiAccountDetails::emptyBalances);
         }
         return details;
+    }
+
+    private SpiResponseStatus getSpiResponseStatus(RestException e) {
+        logger.error(e.getMessage());
+        return e.getHttpStatus() == HttpStatus.INTERNAL_SERVER_ERROR
+                       ? SpiResponseStatus.TECHNICAL_FAILURE
+                       : SpiResponseStatus.LOGICAL_FAILURE;
     }
 }
