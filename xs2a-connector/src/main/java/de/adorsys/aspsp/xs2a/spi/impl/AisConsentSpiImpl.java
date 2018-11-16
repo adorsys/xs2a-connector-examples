@@ -16,6 +16,7 @@
 
 package de.adorsys.aspsp.xs2a.spi.impl;
 
+import de.adorsys.ledgers.LedgersRestClient;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountConsent;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
@@ -25,13 +26,25 @@ import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.AisConsentSpi;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
 public class AisConsentSpiImpl implements AisConsentSpi {
+    private static final Logger logger = LoggerFactory.getLogger(AisConsentSpiImpl.class);
+
+    private final LedgersRestClient ledgersRestClient;
+
+    public AisConsentSpiImpl(LedgersRestClient ledgersRestClient) {
+        this.ledgersRestClient = ledgersRestClient;
+    }
+
+
     @Override
     public SpiResponse<SpiResponse.VoidResponse> initiateAisConsent(@NotNull SpiPsuData spiPsuData, SpiAccountConsent spiAccountConsent, AspspConsentData aspspConsentData) {
         return null;
@@ -48,8 +61,13 @@ public class AisConsentSpiImpl implements AisConsentSpi {
     }
 
     @Override
-    public SpiResponse<SpiAuthorisationStatus> authorisePsu(@NotNull SpiPsuData spiPsuData, String s, SpiAccountConsent spiAccountConsent, AspspConsentData aspspConsentData) {
-        return null;
+    public SpiResponse<SpiAuthorisationStatus> authorisePsu(@NotNull SpiPsuData spiPsuData, String pin, SpiAccountConsent spiAccountConsent, AspspConsentData aspspConsentData) {
+        String login = spiPsuData.getPsuId();
+        logger.info("Authorise user with login={} and password={}", login, StringUtils.repeat("*", pin.length()));
+        boolean isAuthorised = ledgersRestClient.authorise(login, pin);
+        SpiAuthorisationStatus status = isAuthorised ? SpiAuthorisationStatus.SUCCESS : SpiAuthorisationStatus.FAILURE;
+        logger.info("Authorisation result is {}", status);
+        return new SpiResponse<>(status, aspspConsentData);
     }
 
     @Override

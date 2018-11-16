@@ -17,9 +17,7 @@
 package de.adorsys.ledgers;
 
 
-import de.adorsys.ledgers.domain.PaymentProduct;
-import de.adorsys.ledgers.domain.PaymentType;
-import de.adorsys.ledgers.domain.TransactionStatus;
+import de.adorsys.ledgers.domain.*;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,13 +25,22 @@ import org.springframework.web.bind.annotation.*;
 @FeignClient(value = "ledgers", url = "${ledgers.url}")
 public interface LedgersRestClient {
 
-    @RequestMapping(value = "/execute-no-sca/{paymentId}/{paymentProduct}/{paymentType}", method = RequestMethod.POST)
+    @RequestMapping(value = "/payments/execute-no-sca/{paymentId}/{paymentProduct}/{paymentType}", method = RequestMethod.POST)
     ResponseEntity<TransactionStatus> executePaymentNoSca(
             @PathVariable(name = "paymentId") String paymentId,
             @PathVariable(name = "paymentProduct") PaymentProduct paymentProduct,
             @PathVariable(name = "paymentType") PaymentType paymentType
     );
 
-    @RequestMapping(value = "/{paymentType}", method = RequestMethod.POST)
+    @RequestMapping(value = "/payments/{paymentType}", method = RequestMethod.POST)
     ResponseEntity<?> initiatePayment(@PathVariable(name = "paymentType") PaymentType paymentType, @RequestBody Object payment);
+
+    @RequestMapping(value = "/payments/{id}/status", method = RequestMethod.GET)
+    TransactionStatus getPaymentStatusById(@PathVariable String id);
+
+    @RequestMapping(value = "/auth-codes/{opId}/validate", method = RequestMethod.POST)
+    boolean validate(@PathVariable String opId, @RequestBody SCAValidationRequest request);
+
+    @RequestMapping(value = "/users/authorise", method = RequestMethod.POST)
+    boolean authorise(@RequestParam("login")String login, @RequestParam("pin") String pin);
 }
