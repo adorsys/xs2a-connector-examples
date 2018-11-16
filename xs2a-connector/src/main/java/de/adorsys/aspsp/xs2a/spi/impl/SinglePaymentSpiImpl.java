@@ -17,8 +17,7 @@
 package de.adorsys.aspsp.xs2a.spi.impl;
 
 import de.adorsys.ledgers.LedgersRestClient;
-import de.adorsys.ledgers.domain.PaymentProduct;
-import de.adorsys.ledgers.domain.PaymentType;
+import de.adorsys.ledgers.domain.*;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiTransactionStatus;
@@ -86,7 +85,43 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
     }
 
     @Override
-    public @NotNull SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiPsuData spiPsuData, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiSinglePayment spiSinglePayment, @NotNull AspspConsentData aspspConsentData) {
-        return null;
+    public @NotNull SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisationAndExecutePayment(
+            @NotNull SpiPsuData spiPsuData,
+            @NotNull SpiScaConfirmation spiScaConfirmation,
+            @NotNull SpiSinglePayment spiSinglePayment,
+            @NotNull AspspConsentData aspspConsentData
+    ) {
+        SCAValidationRequest request = new SCAValidationRequest();
+        request.setAuthCode(spiScaConfirmation.getTanNumber());
+//        todo: @fpo what is really should be set as data?
+        request.setData(spiSinglePayment.toString());
+        logger.info("Verifying SCA code");
+//        todo: @fpo where is we have get an operation ID
+        boolean isValid = ledgersRestClient.validate(spiSinglePayment.getPaymentId(), request);
+
+        logger.info("Validation result is {}", isValid);
+        if (isValid) {
+            executePaymentWithoutSca(spiPsuData, spiSinglePayment, aspspConsentData);
+        }
+
+        return SpiResponse.<SpiResponse.VoidResponse>builder().aspspConsentData(aspspConsentData).success();
+    }
+
+    @Override
+    public @NotNull SpiResponse<SpiTransactionStatus> getPaymentStatusById(
+            @NotNull SpiPsuData psuData,
+            @NotNull SpiSinglePayment payment,
+            @NotNull AspspConsentData aspspConsentData
+    ) {
+        String paymentId = payment.getPaymentId();
+        TransactionStatus status = ledgersRestClient.getPaymentStatusById(paymentId);
+        String paymentStatus = status.getName();
+
+        logger.info("Payment with id={} has status {}", paymentId, paymentStatus);
+
+        return SpiResponse.<SpiTransactionStatus>builder()
+                       .aspspConsentData(aspspConsentData)
+                       .payload(SpiTransactionStatus.valueOf(paymentStatus))
+                       .success();
     }
 }
