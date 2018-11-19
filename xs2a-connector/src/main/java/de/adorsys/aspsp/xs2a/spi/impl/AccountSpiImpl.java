@@ -16,7 +16,7 @@
 
 package de.adorsys.aspsp.xs2a.spi.impl;
 
-import de.adorsys.aspsp.xs2a.spi.mappers.LedgersSpiAccountMapper;
+import de.adorsys.aspsp.xs2a.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.ledgers.LedgersAccountRestClient;
 import de.adorsys.ledgers.domain.account.AccountDetailsTO;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
