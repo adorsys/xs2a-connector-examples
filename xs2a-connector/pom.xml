@@ -65,6 +65,11 @@
         <!--</dependency>-->
 
         <!-- other dependencies -->
+        <dependency>
+            <groupId>pro.javatar.commons</groupId>
+            <artifactId>javatar-commons</artifactId>
+            <version>${javatar-commons.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>com.google.guava</groupId>
