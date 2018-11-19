@@ -16,47 +16,81 @@
 
 package de.adorsys.aspsp.xs2a.spi.impl;
 
+import de.adorsys.aspsp.xs2a.spi.mappers.LedgersSpiPaymentMapper;
 import de.adorsys.ledgers.LedgersRestClient;
-import de.adorsys.ledgers.domain.*;
+import de.adorsys.ledgers.domain.PaymentProduct;
+import de.adorsys.ledgers.domain.PaymentType;
+import de.adorsys.ledgers.domain.SCAValidationRequest;
+import de.adorsys.ledgers.domain.TransactionStatus;
+import de.adorsys.ledgers.domain.payment.PaymentProductTO;
+import de.adorsys.ledgers.domain.payment.PaymentTypeTO;
+import de.adorsys.ledgers.domain.payment.SinglePaymentTO;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
+import de.adorsys.psd2.xs2a.domain.MessageErrorCode;
+import de.adorsys.psd2.xs2a.exception.RestException;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiTransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
+import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.SinglePaymentSpi;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 @Component
 public class SinglePaymentSpiImpl implements SinglePaymentSpi {
     private static final Logger logger = LoggerFactory.getLogger(SinglePaymentSpiImpl.class);
 
     private final LedgersRestClient ledgersRestClient;
+    private final LedgersSpiPaymentMapper paymentMapper;
 
-    public SinglePaymentSpiImpl(LedgersRestClient ledgersRestClient) {
+    public SinglePaymentSpiImpl(LedgersRestClient ledgersRestClient, LedgersSpiPaymentMapper paymentMapper) {
         this.ledgersRestClient = ledgersRestClient;
+        this.paymentMapper = paymentMapper;
     }
 
     @Override
     public @NotNull SpiResponse<SpiSinglePaymentInitiationResponse> initiatePayment(@NotNull SpiPsuData psuData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData initialAspspConsentData) {
-        String paymentTypeName = payment.getPaymentType().name();
-        PaymentType paymentType = PaymentType.valueOf(paymentTypeName);
-        logger.info("Initiate single payment with type={}", paymentTypeName);
+        PaymentType paymentType = PaymentType.valueOf(payment.getPaymentType().name());
+        logger.info("Initiate single payment with type={}", paymentType.name());
         logger.debug("Single payment body={}", payment);
 
-        ResponseEntity<?> response = ledgersRestClient.initiatePayment(paymentType, payment);
-        logger.debug("Response from Ledgers = {}", response.getBody());
+        SinglePaymentTO response = ledgersRestClient.initiateSinglePayment(PaymentType.SINGLE, paymentMapper.toSinglePaymentTO(payment)).getBody();
+        logger.debug("Response from Ledgers = {}", response);
 
         return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
                        .aspspConsentData(initialAspspConsentData)
-                       .payload(buildPaymentInitializationResponse(payment.getPaymentId()))
+                       .payload(buildPaymentInitializationResponse(response.getPaymentId()))
                        .success();
 
+    }
+
+    @Override
+    public @NotNull SpiResponse<SpiSinglePayment> getPaymentById(@NotNull SpiPsuData psuData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
+        try {
+            logger.info("Get payment by id with type={}", PaymentTypeTO.SINGLE);
+            logger.debug("Single payment body={}", payment);
+            SinglePaymentTO response = ledgersRestClient.getPeriodicPaymentPaymentById(PaymentTypeTO.SINGLE, PaymentProductTO.valueOf(payment.getPaymentProduct().name()), payment.getPaymentId()).getBody();
+            SpiSinglePayment spiPayment = Optional.ofNullable(response)
+                                                  .map(paymentMapper::toSpiSinglePayment)
+                                                  .orElseThrow(() -> new RestException(MessageErrorCode.FORMAT_ERROR));
+            return SpiResponse.<SpiSinglePayment>builder()
+                           .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
+                           .payload(spiPayment)
+                           .success();
+
+        } catch (RestException e) {
+            return SpiResponse.<SpiSinglePayment>builder()
+                           .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
+                           .fail(getSpiFailureResponse(e));
+        }
     }
 
     @NotNull
@@ -77,9 +111,9 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
         logger.debug("Single payment body={}", payment);
 
         PaymentProduct paymentProduct = PaymentProduct.valueOf(paymentProductName);
-        PaymentType paymentType = PaymentType.valueOf(paymentTypeName);
 
-        ledgersRestClient.executePaymentNoSca(paymentId, paymentProduct, paymentType);
+        ledgersRestClient.executePaymentNoSca(paymentId,
+                PaymentProductTO.valueOf(paymentProduct.name()), PaymentTypeTO.SINGLE);
 
         return SpiResponse.<SpiResponse.VoidResponse>builder().aspspConsentData(aspspConsentData).success();
     }
@@ -93,10 +127,10 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
     ) {
         SCAValidationRequest request = new SCAValidationRequest();
         request.setAuthCode(spiScaConfirmation.getTanNumber());
-//        todo: @fpo what is really should be set as data?
+        //TODO: @fpo what is really should be set as data?
         request.setData(spiSinglePayment.toString());
         logger.info("Verifying SCA code");
-//        todo: @fpo where is we have get an operation ID
+        //TODO: @fpo where is we have get an operation ID
         boolean isValid = ledgersRestClient.validate(spiSinglePayment.getPaymentId(), request);
 
         logger.info("Validation result is {}", isValid);
@@ -114,14 +148,21 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
             @NotNull AspspConsentData aspspConsentData
     ) {
         String paymentId = payment.getPaymentId();
-        TransactionStatus status = ledgersRestClient.getPaymentStatusById(paymentId);
+        TransactionStatus status = ledgersRestClient.getPaymentStatusById(paymentId).getBody();
         String paymentStatus = status.getName();
 
         logger.info("Payment with id={} has status {}", paymentId, paymentStatus);
-
         return SpiResponse.<SpiTransactionStatus>builder()
                        .aspspConsentData(aspspConsentData)
                        .payload(SpiTransactionStatus.valueOf(paymentStatus))
                        .success();
+    }
+
+    @NotNull
+    private SpiResponseStatus getSpiFailureResponse(RestException e) {
+        logger.error(e.getMessage(), e);
+        return (e.getHttpStatus() == HttpStatus.INTERNAL_SERVER_ERROR)
+                       ? SpiResponseStatus.TECHNICAL_FAILURE
+                       : SpiResponseStatus.LOGICAL_FAILURE;
     }
 }

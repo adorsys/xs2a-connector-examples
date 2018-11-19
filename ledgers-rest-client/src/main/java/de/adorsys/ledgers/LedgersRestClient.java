@@ -17,13 +17,13 @@
 package de.adorsys.ledgers;
 
 
-import de.adorsys.ledgers.domain.*;
+import de.adorsys.ledgers.domain.PaymentType;
+import de.adorsys.ledgers.domain.SCAValidationRequest;
+import de.adorsys.ledgers.domain.TransactionStatus;
+import de.adorsys.ledgers.domain.payment.*;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
 @FeignClient(value = "ledgers", url = "${ledgers.url}")
 public interface LedgersRestClient {
@@ -31,19 +31,40 @@ public interface LedgersRestClient {
     @RequestMapping(value = "/payments/execute-no-sca/{paymentId}/{paymentProduct}/{paymentType}", method = RequestMethod.POST)
     ResponseEntity<TransactionStatus> executePaymentNoSca(
             @PathVariable(name = "paymentId") String paymentId,
-            @PathVariable(name = "paymentProduct") PaymentProduct paymentProduct,
-            @PathVariable(name = "paymentType") PaymentType paymentType
+            @PathVariable(name = "paymentProduct") PaymentProductTO paymentProduct,
+            @PathVariable(name = "paymentType") PaymentTypeTO paymentType
     );
 
     @RequestMapping(value = "/payments/{paymentType}", method = RequestMethod.POST)
-    ResponseEntity<?> initiatePayment(@PathVariable(name = "paymentType") PaymentType paymentType, @RequestBody Object payment);
+    ResponseEntity<SinglePaymentTO> initiateSinglePayment(@PathVariable(name = "paymentType") PaymentType paymentType, @RequestBody SinglePaymentTO payment);
+
+    @RequestMapping(value = "/payments/{paymentType}", method = RequestMethod.POST)
+    ResponseEntity<PeriodicPaymentTO> initiatePeriodicPayment(@PathVariable(name = "paymentType") PaymentType paymentType, @RequestBody PeriodicPaymentTO payment);
+
+    @RequestMapping(value = "/payments/{paymentType}", method = RequestMethod.POST)
+    ResponseEntity<BulkPaymentTO> initiateBulkPayment(@PathVariable(name = "paymentType") PaymentType paymentType, @RequestBody BulkPaymentTO payment);
+
+    @RequestMapping(value = "/payments/{payment-type}/{payment-product}/{paymentId}")
+    ResponseEntity<SinglePaymentTO> getSinglePaymentPaymentById(@PathVariable(name = "payment-type") PaymentTypeTO paymentType,
+                                                                @PathVariable(name = "payment-product") PaymentProductTO paymentProduct,
+                                                                @PathVariable(name = "paymentId") String paymentId);
+
+    @RequestMapping(value = "/payments/{payment-type}/{payment-product}/{paymentId}")
+    ResponseEntity<PeriodicPaymentTO> getPeriodicPaymentPaymentById(@PathVariable(name = "payment-type") PaymentTypeTO paymentType,
+                                                                    @PathVariable(name = "payment-product") PaymentProductTO paymentProduct,
+                                                                    @PathVariable(name = "paymentId") String paymentId);
+
+    @RequestMapping(value = "/payments/{payment-type}/{payment-product}/{paymentId}")
+    ResponseEntity<BulkPaymentTO> getBulkPaymentPaymentById(@PathVariable(name = "payment-type") PaymentTypeTO paymentType,
+                                                            @PathVariable(name = "payment-product") PaymentProductTO paymentProduct,
+                                                            @PathVariable(name = "paymentId") String paymentId);
 
     @RequestMapping(value = "/payments/{id}/status", method = RequestMethod.GET)
-    TransactionStatus getPaymentStatusById(@PathVariable String id);
+    ResponseEntity<TransactionStatus> getPaymentStatusById(@PathVariable String id);
 
     @RequestMapping(value = "/auth-codes/{opId}/validate", method = RequestMethod.POST)
     boolean validate(@PathVariable String opId, @RequestBody SCAValidationRequest request);
 
     @RequestMapping(value = "/users/authorise", method = RequestMethod.POST)
-    boolean authorise(@RequestParam("login")String login, @RequestParam("pin") String pin);
+    boolean authorise(@RequestParam("login") String login, @RequestParam("pin") String pin);
 }
