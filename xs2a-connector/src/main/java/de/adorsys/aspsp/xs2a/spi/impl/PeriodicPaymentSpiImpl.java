@@ -64,6 +64,7 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
                     PaymentTypeTO.PERIODIC).getBody();
             Optional.ofNullable(status)
                     .orElseThrow(() -> new RestException(MessageErrorCode.PAYMENT_FAILED));
+            logger.info("The response status was:{}", status);
             return SpiResponse.<SpiResponse.VoidResponse>builder()
                            .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
                            .success();
@@ -87,7 +88,6 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
                                .success();
             }
             throw new RestException(MessageErrorCode.PAYMENT_FAILED);
-
         } catch (RestException e) {
             return SpiResponse.<SpiResponse.VoidResponse>builder()
                            .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
@@ -120,7 +120,7 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
     @Override
     public @NotNull SpiResponse<SpiPeriodicPayment> getPaymentById(@NotNull SpiPsuData psuData, @NotNull SpiPeriodicPayment payment, @NotNull AspspConsentData aspspConsentData) {
         try {
-            logger.info("Get payment by id with type={}", PaymentTypeTO.PERIODIC);
+            logger.info("Get payment by id with type={}, and id={}", PaymentTypeTO.PERIODIC, payment.getPaymentId());
             logger.debug("Periodic payment body={}", payment);
             PeriodicPaymentTO response = ledgersRestClient.getPeriodicPaymentPaymentById(PaymentTypeTO.PERIODIC, PaymentProductTO.valueOf(payment.getPaymentProduct().name()), payment.getPaymentId()).getBody();
             SpiPeriodicPayment spiPeriodicPayment = Optional.ofNullable(response)
@@ -141,17 +141,17 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
     @Override
     public @NotNull SpiResponse<SpiTransactionStatus> getPaymentStatusById(@NotNull SpiPsuData psuData, @NotNull SpiPeriodicPayment payment, @NotNull AspspConsentData aspspConsentData) {
         try {
-            logger.info("Get payment status by id with type={}", PaymentTypeTO.PERIODIC);
+            logger.info("Get payment status by id with type={}, and id={}", PaymentTypeTO.PERIODIC, payment.getPaymentId());
             logger.debug("Periodic payment body={}", payment);
             TransactionStatus response = ledgersRestClient.getPaymentStatusById(payment.getPaymentId()).getBody();
             SpiTransactionStatus status = Optional.ofNullable(response)
                                                   .map(r -> SpiTransactionStatus.valueOf(r.getName()))
                                                   .orElseThrow(() -> new RestException(MessageErrorCode.FORMAT_ERROR));
+            logger.info("The status was:{}", status);
             return SpiResponse.<SpiTransactionStatus>builder()
                            .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
                            .payload(status)
                            .success();
-
         } catch (RestException e) {
             return SpiResponse.<SpiTransactionStatus>builder()
                            .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))

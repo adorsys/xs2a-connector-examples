@@ -19,14 +19,12 @@ package de.adorsys.ledgers;
 
 import de.adorsys.ledgers.domain.account.AccountBalanceTO;
 import de.adorsys.ledgers.domain.account.AccountDetailsTO;
+import de.adorsys.ledgers.domain.account.FundsConfirmationRequestTO;
 import de.adorsys.ledgers.domain.account.TransactionTO;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -54,6 +52,9 @@ public interface LedgersAccountRestClient {
 
     @RequestMapping(value = "/accounts/iban/{iban}", method = RequestMethod.GET)
     ResponseEntity<List<AccountDetailsTO>> getAccountDetailsByIban(@PathVariable(name = "iban") String iban); //TODO - no endpoint at Ledgers!!! Have to solve it later on!
+
+    @RequestMapping(value = "/accounts/funds-confirmation", method = RequestMethod.POST)
+    ResponseEntity<Boolean> fundsConfirmation(@RequestBody FundsConfirmationRequestTO request);
 }
 
 
