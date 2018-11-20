@@ -18,7 +18,6 @@ package de.adorsys.aspsp.xs2a.spi.impl;
 
 import de.adorsys.aspsp.xs2a.spi.mappers.LedgersSpiPaymentMapper;
 import de.adorsys.ledgers.LedgersRestClient;
-import de.adorsys.ledgers.domain.PaymentProduct;
 import de.adorsys.ledgers.domain.PaymentType;
 import de.adorsys.ledgers.domain.SCAValidationRequest;
 import de.adorsys.ledgers.domain.TransactionStatus;
@@ -58,24 +57,29 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
 
     @Override
     public @NotNull SpiResponse<SpiSinglePaymentInitiationResponse> initiatePayment(@NotNull SpiPsuData psuData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData initialAspspConsentData) {
-        PaymentType paymentType = PaymentType.valueOf(payment.getPaymentType().name());
-        logger.info("Initiate single payment with type={}", paymentType.name());
-        logger.debug("Single payment body={}", payment);
-
-        SinglePaymentTO response = ledgersRestClient.initiateSinglePayment(PaymentType.SINGLE, paymentMapper.toSinglePaymentTO(payment)).getBody();
-        logger.debug("Response from Ledgers = {}", response);
-
-        return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
-                       .aspspConsentData(initialAspspConsentData)
-                       .payload(buildPaymentInitializationResponse(response.getPaymentId()))
-                       .success();
-
+        try {
+            logger.info("Initiate single payment with type={}", PaymentTypeTO.SINGLE);
+            logger.debug("Single payment body={}", payment);
+            SinglePaymentTO request = paymentMapper.toSinglePaymentTO(payment);
+            SinglePaymentTO response = ledgersRestClient.initiateSinglePayment(PaymentType.SINGLE, request).getBody();
+            SpiSinglePaymentInitiationResponse spiInitiationResponse = Optional.ofNullable(response)
+                                                                               .map(paymentMapper::toSpiSingleResponse)
+                                                                               .orElseThrow(() -> new RestException(MessageErrorCode.FORMAT_ERROR));
+            return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
+                           .aspspConsentData(initialAspspConsentData)
+                           .payload(spiInitiationResponse)
+                           .success();
+        } catch (RestException e) {
+            return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
+                           .aspspConsentData(initialAspspConsentData.respondWith(initialAspspConsentData.getAspspConsentData()))
+                           .fail(getSpiFailureResponse(e));
+        }
     }
 
     @Override
     public @NotNull SpiResponse<SpiSinglePayment> getPaymentById(@NotNull SpiPsuData psuData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
         try {
-            logger.info("Get payment by id with type={}", PaymentTypeTO.SINGLE);
+            logger.info("Get payment by id with type={}, and id={}", PaymentTypeTO.SINGLE, payment.getPaymentId());
             logger.debug("Single payment body={}", payment);
             SinglePaymentTO response = ledgersRestClient.getPeriodicPaymentPaymentById(PaymentTypeTO.SINGLE, PaymentProductTO.valueOf(payment.getPaymentProduct().name()), payment.getPaymentId()).getBody();
             SpiSinglePayment spiPayment = Optional.ofNullable(response)
@@ -85,7 +89,6 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
                            .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
                            .payload(spiPayment)
                            .success();
-
         } catch (RestException e) {
             return SpiResponse.<SpiSinglePayment>builder()
                            .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
@@ -93,69 +96,66 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
         }
     }
 
-    @NotNull
-    private SpiSinglePaymentInitiationResponse buildPaymentInitializationResponse(String paymentId) {
-        SpiSinglePaymentInitiationResponse response = new SpiSinglePaymentInitiationResponse();
-        response.setPaymentId(paymentId);
-        response.setTransactionStatus(SpiTransactionStatus.RCVD);
-        return response;
-    }
-
     @Override
     public @NotNull SpiResponse<SpiResponse.VoidResponse> executePaymentWithoutSca(@NotNull SpiPsuData spiPsuData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
-        String paymentId = payment.getPaymentId();
-        String paymentProductName = payment.getPaymentProduct().name();
-        String paymentTypeName = payment.getPaymentType().name();
-
-        logger.info("Executing single payment without SCA for paymentId={}, productName={} and paymentType={}", paymentId, paymentProductName, paymentTypeName);
+        logger.info("Executing single payment without SCA for paymentId={}, productName={} and paymentType={}", payment.getPaymentId(), payment.getPaymentProduct(), payment.getPaymentType());
         logger.debug("Single payment body={}", payment);
-
-        PaymentProduct paymentProduct = PaymentProduct.valueOf(paymentProductName);
-
-        ledgersRestClient.executePaymentNoSca(paymentId,
-                PaymentProductTO.valueOf(paymentProduct.name()), PaymentTypeTO.SINGLE);
-
-        return SpiResponse.<SpiResponse.VoidResponse>builder().aspspConsentData(aspspConsentData).success();
-    }
-
-    @Override
-    public @NotNull SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisationAndExecutePayment(
-            @NotNull SpiPsuData spiPsuData,
-            @NotNull SpiScaConfirmation spiScaConfirmation,
-            @NotNull SpiSinglePayment spiSinglePayment,
-            @NotNull AspspConsentData aspspConsentData
-    ) {
-        SCAValidationRequest request = new SCAValidationRequest();
-        request.setAuthCode(spiScaConfirmation.getTanNumber());
-        //TODO: @fpo what is really should be set as data?
-        request.setData(spiSinglePayment.toString());
-        logger.info("Verifying SCA code");
-        //TODO: @fpo where is we have get an operation ID
-        boolean isValid = ledgersRestClient.validate(spiSinglePayment.getPaymentId(), request);
-
-        logger.info("Validation result is {}", isValid);
-        if (isValid) {
-            executePaymentWithoutSca(spiPsuData, spiSinglePayment, aspspConsentData);
+        try {
+            TransactionStatus status = ledgersRestClient.executePaymentNoSca(payment.getPaymentId(),
+                    PaymentProductTO.valueOf(payment.getPaymentProduct().name()),
+                    PaymentTypeTO.SINGLE).getBody();
+            Optional.ofNullable(status)
+                    .orElseThrow(() -> new RestException(MessageErrorCode.PAYMENT_FAILED));
+            logger.info("The response status was:{}", status);
+            return SpiResponse.<SpiResponse.VoidResponse>builder()
+                           .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
+                           .success();
+        } catch (RestException e) {
+            return SpiResponse.<SpiResponse.VoidResponse>builder()
+                           .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
+                           .fail(getSpiFailureResponse(e));
         }
-
-        return SpiResponse.<SpiResponse.VoidResponse>builder().aspspConsentData(aspspConsentData).success();
     }
 
     @Override
-    public @NotNull SpiResponse<SpiTransactionStatus> getPaymentStatusById(
-            @NotNull SpiPsuData psuData,
-            @NotNull SpiSinglePayment payment,
-            @NotNull AspspConsentData aspspConsentData
-    ) {
-        String paymentId = payment.getPaymentId();
-        TransactionStatus status = ledgersRestClient.getPaymentStatusById(paymentId).getBody();
-        String paymentStatus = status.getName();
+    public @NotNull SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiPsuData spiPsuData, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
+        logger.info("Verifying SCA code");
+        try {
+            SCAValidationRequest validationRequest = new SCAValidationRequest(payment.toString(), spiScaConfirmation.getTanNumber());//TODO fix this! it is not correct!
+            boolean isValid = ledgersRestClient.validate(spiScaConfirmation.getPaymentId(), validationRequest);
+            logger.info("Validation result is {}", isValid);
+            if (isValid) {
+                return SpiResponse.<SpiResponse.VoidResponse>builder()
+                               .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
+                               .success();
+            }
+            throw new RestException(MessageErrorCode.PAYMENT_FAILED);
+        } catch (RestException e) {
+            return SpiResponse.<SpiResponse.VoidResponse>builder()
+                           .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
+                           .fail(getSpiFailureResponse(e));
+        }
+    }
 
-        logger.info("Payment with id={} has status {}", paymentId, paymentStatus);
-        return SpiResponse.<SpiTransactionStatus>builder()
-                       .aspspConsentData(aspspConsentData)
-                       .payload(SpiTransactionStatus.valueOf(paymentStatus))
-                       .success();
+    @Override
+    public @NotNull SpiResponse<SpiTransactionStatus> getPaymentStatusById(@NotNull SpiPsuData psuData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
+        try {
+            logger.info("Get payment status by id with type={}, and id={}", PaymentTypeTO.SINGLE, payment.getPaymentId());
+            logger.debug("Single payment body={}", payment);
+            TransactionStatus response = ledgersRestClient.getPaymentStatusById(payment.getPaymentId()).getBody();
+            SpiTransactionStatus status = Optional.ofNullable(response)
+                                                  .map(r -> SpiTransactionStatus.valueOf(r.getName()))
+                                                  .orElseThrow(() -> new RestException(MessageErrorCode.FORMAT_ERROR));
+            logger.info("The status was:{}", status);
+            return SpiResponse.<SpiTransactionStatus>builder()
+                           .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
+                           .payload(status)
+                           .success();
+        } catch (RestException e) {
+            return SpiResponse.<SpiTransactionStatus>builder()
+                           .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
+                           .fail(getSpiFailureResponse(e));
+        }
     }
 
     @NotNull
