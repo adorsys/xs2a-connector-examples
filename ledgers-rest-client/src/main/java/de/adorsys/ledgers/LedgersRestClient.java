@@ -17,7 +17,6 @@
 package de.adorsys.ledgers;
 
 
-import de.adorsys.ledgers.domain.*;
 import de.adorsys.ledgers.domain.sca.AuthCodeDataTO;
 import de.adorsys.ledgers.domain.sca.SCAGenerationResponse;
 import de.adorsys.ledgers.domain.sca.SCAMethodTO;
@@ -30,7 +29,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import org.springframework.web.bind.annotation.*;
 
 @FeignClient(value = "ledgers", url = "${ledgers.url}")
 public interface LedgersRestClient {

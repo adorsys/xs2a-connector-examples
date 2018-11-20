@@ -16,7 +16,7 @@
 
 package de.adorsys.aspsp.xs2a.spi.impl;
 
-import de.adorsys.aspsp.xs2a.spi.mappers.LedgersSpiPaymentMapper;
+import de.adorsys.aspsp.xs2a.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.ledgers.LedgersRestClient;
 import de.adorsys.ledgers.domain.PaymentType;
 import de.adorsys.ledgers.domain.SCAValidationRequest;

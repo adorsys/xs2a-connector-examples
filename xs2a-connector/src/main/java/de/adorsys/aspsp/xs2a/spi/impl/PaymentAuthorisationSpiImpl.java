@@ -65,7 +65,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
         logger.info("Retrieving sca methods for user {}", userLogin);
 
         List<SCAMethodTO> scaMethods = ledgersRestClient.getUserScaMethods(userLogin);
-        logger.debug("These are sca methods that was found {}", scaMethods);
+        logger.debug("These are sca methods that were found {}", scaMethods);
 
         List<SpiAuthenticationObject> authenticationObjects = scaMethodConverter.toSpiAuthenticationObjectList(scaMethods);
 
@@ -91,5 +91,6 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
         return SpiResponse.<SpiAuthorizationCodeResult>builder()
                        .aspspConsentData(aspspConsentData)
                        .success();
+//        todo: proceed with exception handling
     }
 }

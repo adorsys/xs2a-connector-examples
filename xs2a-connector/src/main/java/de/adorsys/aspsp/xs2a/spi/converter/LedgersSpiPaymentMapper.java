@@ -1,6 +1,5 @@
-package de.adorsys.aspsp.xs2a.spi.mappers;
+package de.adorsys.aspsp.xs2a.spi.converter;
 
-import de.adorsys.aspsp.xs2a.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.ledgers.domain.general.AddressTO;
 import de.adorsys.ledgers.domain.payment.BulkPaymentTO;
 import de.adorsys.ledgers.domain.payment.PeriodicPaymentTO;
