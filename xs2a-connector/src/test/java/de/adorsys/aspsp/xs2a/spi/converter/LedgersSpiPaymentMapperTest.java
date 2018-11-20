@@ -1,4 +1,4 @@
-package de.adorsys.aspsp.xs2a.spi.mappers;
+package de.adorsys.aspsp.xs2a.spi.converter;
 
 import de.adorsys.ledgers.domain.payment.AmountTO;
 import de.adorsys.ledgers.domain.payment.BulkPaymentTO;
@@ -17,12 +17,7 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiBulkPaymentInitiation
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPeriodicPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiationResponse;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mapstruct.factory.Mappers;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.beans.factory.annotation.Autowired;
 import pro.javatar.commons.reader.YamlReader;
 
 import java.io.IOException;
@@ -36,7 +31,6 @@ import java.util.Currency;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
 
 public class LedgersSpiPaymentMapperTest {
     private final LedgersSpiPaymentMapper mapper = Mappers.getMapper(LedgersSpiPaymentMapper.class);

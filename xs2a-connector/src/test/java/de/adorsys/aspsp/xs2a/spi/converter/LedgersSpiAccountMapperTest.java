@@ -1,5 +1,6 @@
-package de.adorsys.aspsp.xs2a.spi.mappers;
+package de.adorsys.aspsp.xs2a.spi.converter;
 
+import de.adorsys.aspsp.xs2a.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.ledgers.domain.account.FundsConfirmationRequestTO;
 import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;

@@ -53,22 +53,27 @@
             <groupId>de.adorsys.psd2</groupId>
             <artifactId>xs2a-impl</artifactId>
             <version>${xs2a.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.mapstruct</groupId>
+                    <artifactId>mapstruct</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- spring dependencies -->
 
-        <!-- guava cache-->
-        <!--<dependency>-->
-            <!--<groupId>org.springframework</groupId>-->
-            <!--<artifactId>spring-context-support</artifactId>-->
-            <!--<version>4.3.19.RELEASE</version>-->
-        <!--</dependency>-->
-
         <!-- other dependencies -->
+
         <dependency>
             <groupId>pro.javatar.commons</groupId>
             <artifactId>javatar-commons</artifactId>
             <version>${javatar-commons.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-jdk8</artifactId>
         </dependency>
 
         <dependency>
