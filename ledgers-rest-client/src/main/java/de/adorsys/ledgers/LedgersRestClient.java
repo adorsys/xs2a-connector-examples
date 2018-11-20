@@ -18,7 +18,7 @@ package de.adorsys.ledgers;
 
 
 import de.adorsys.ledgers.domain.*;
-import de.adorsys.ledgers.domain.sca.SCAGenerationRequest;
+import de.adorsys.ledgers.domain.sca.AuthCodeDataTO;
 import de.adorsys.ledgers.domain.sca.SCAGenerationResponse;
 import de.adorsys.ledgers.domain.sca.SCAMethodTO;
 import org.springframework.cloud.netflix.feign.FeignClient;
@@ -47,7 +47,7 @@ public interface LedgersRestClient {
     boolean validate(@PathVariable String opId, @RequestBody SCAValidationRequest request);
 
     @RequestMapping(value = "/auth-codes/generate", method = RequestMethod.POST)
-    SCAGenerationResponse generate(@RequestBody SCAGenerationRequest req);
+    SCAGenerationResponse generate(@RequestBody AuthCodeDataTO data);
 
     @RequestMapping(value = "/users/authorise", method = RequestMethod.POST)
     boolean authorise(@RequestParam("login")String login, @RequestParam("pin") String pin);

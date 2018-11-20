@@ -18,10 +18,7 @@ package de.adorsys.aspsp.xs2a.spi.impl;
 
 import de.adorsys.aspsp.xs2a.spi.converter.ScaMethodConverter;
 import de.adorsys.ledgers.LedgersRestClient;
-import de.adorsys.ledgers.domain.sca.SCAGenerationRequest;
-import de.adorsys.ledgers.domain.sca.SCAGenerationResponse;
-import de.adorsys.ledgers.domain.sca.SCAMethodTO;
-import de.adorsys.ledgers.domain.sca.SCAMethodTypeTO;
+import de.adorsys.ledgers.domain.sca.*;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
@@ -54,9 +51,11 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
     public SpiResponse<SpiAuthorisationStatus> authorisePsu(@NotNull SpiPsuData spiPsuData, String pin, SpiPayment spiPayment, AspspConsentData aspspConsentData) {
         String login = spiPsuData.getPsuId();
         logger.info("Authorise user with login={} and password={}", login, StringUtils.repeat("*", pin.length()));
+
         boolean isAuthorised = ledgersRestClient.authorise(login, pin);
         SpiAuthorisationStatus status = isAuthorised ? SpiAuthorisationStatus.SUCCESS : SpiAuthorisationStatus.FAILURE;
         logger.info("Authorisation result is {}", status);
+
         return new SpiResponse<>(status, aspspConsentData);
     }
 
@@ -74,25 +73,20 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
                        .aspspConsentData(aspspConsentData)
                        .payload(authenticationObjects)
                        .success();
-//        todo: process rest exceptions
+
+//        todo: proceed with rest exceptions
     }
 
     @Override
     public @NotNull SpiResponse<SpiAuthorizationCodeResult> requestAuthorisationCode(@NotNull SpiPsuData spiPsuData, @NotNull String authenticationMethodId, @NotNull SpiPayment spiPayment, @NotNull AspspConsentData aspspConsentData) {
         String userLogin = spiPsuData.getPsuId();
-        String opData = null; // todo where i can get it
-        String userMessage = ""; // todo where we should get it
-        SCAMethodTO scaMethod = new SCAMethodTO();
-        scaMethod.setType(SCAMethodTypeTO.valueOf(authenticationMethodId));
-        scaMethod.setValue(null); // todo where we can get it
-        int validitySeconds = 180;
+        String paymentId = spiPayment.getPaymentId();
 
-        SCAGenerationRequest generationRequest = new SCAGenerationRequest(userLogin, scaMethod, opData, userMessage, validitySeconds);
-        logger.info("Request to generate SCA {}", generationRequest);
-        SCAGenerationResponse response = ledgersRestClient.generate(generationRequest);
+        AuthCodeDataTO data = new AuthCodeDataTO(userLogin, authenticationMethodId, paymentId, spiPayment.toString());
+        logger.info("Request to generate SCA {}", data);
+
+        SCAGenerationResponse response = ledgersRestClient.generate(data);
         logger.info("SCA was send, operationId is {}", response.getOpId());
-
-        // todo: x2sa should store operationId for validation step
 
         return SpiResponse.<SpiAuthorizationCodeResult>builder()
                        .aspspConsentData(aspspConsentData)
