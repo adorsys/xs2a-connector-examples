@@ -4,6 +4,8 @@ import de.adorsys.ledgers.domain.account.*;
 import de.adorsys.ledgers.domain.payment.AmountTO;
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
+import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
+import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import org.mapstruct.Mapper;
 
 import java.util.List;
@@ -99,4 +101,6 @@ public abstract class LedgersSpiAccountMapper {
                        .map(a -> new SpiAmount(a.getCurrency(), a.getAmount()))
                        .orElse(null);
     }//Full manual mapping here, no extra tests necessary
+
+    public abstract FundsConfirmationRequestTO toFundsConfirmationTO(SpiPsuData psuData, SpiFundsConfirmationRequest spiFundsConfirmationRequest);
 }
