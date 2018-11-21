@@ -2,6 +2,7 @@ package de.adorsys.aspsp.xs2a.spi.converter;
 
 import de.adorsys.ledgers.domain.general.AddressTO;
 import de.adorsys.ledgers.domain.payment.BulkPaymentTO;
+import de.adorsys.ledgers.domain.payment.PaymentCancellationResponseTO;
 import de.adorsys.ledgers.domain.payment.PeriodicPaymentTO;
 import de.adorsys.ledgers.domain.payment.SinglePaymentTO;
 import de.adorsys.psd2.xs2a.core.profile.PaymentProduct;
@@ -12,6 +13,7 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiBulkPaymentInitiationResponse;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentCancellationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPeriodicPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiationResponse;
 import org.mapstruct.Mapper;
@@ -115,4 +117,14 @@ public abstract class LedgersSpiPaymentMapper {
                 address.getPostalCode(),
                 address.getCountry());
     } //Direct mapping no need for testing
+
+    public SpiPaymentCancellationResponse toSpiPaymentCancellationResponse(PaymentCancellationResponseTO response) {
+        return Optional.ofNullable(response)
+                       .map(t -> {
+                           SpiPaymentCancellationResponse cancellation = new SpiPaymentCancellationResponse();
+                           cancellation.setCancellationAuthorisationMandated(response.isCancellationAuthorisationMandated());
+                           cancellation.setTransactionStatus(SpiTransactionStatus.valueOf(response.getTransactionStatus().name()));
+                           return cancellation;
+                       }).orElseGet(SpiPaymentCancellationResponse::new);
+    }//Direct mapping no testing necessary
 }
