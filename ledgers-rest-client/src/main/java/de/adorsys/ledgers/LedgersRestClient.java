@@ -17,13 +17,13 @@
 package de.adorsys.ledgers;
 
 
-import de.adorsys.ledgers.domain.sca.AuthCodeDataTO;
-import de.adorsys.ledgers.domain.sca.SCAGenerationResponse;
-import de.adorsys.ledgers.domain.sca.SCAMethodTO;
 import de.adorsys.ledgers.domain.PaymentType;
 import de.adorsys.ledgers.domain.SCAValidationRequest;
 import de.adorsys.ledgers.domain.TransactionStatus;
 import de.adorsys.ledgers.domain.payment.*;
+import de.adorsys.ledgers.domain.sca.AuthCodeDataTO;
+import de.adorsys.ledgers.domain.sca.SCAGenerationResponse;
+import de.adorsys.ledgers.domain.sca.SCAMethodTO;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -78,4 +78,10 @@ public interface LedgersRestClient {
 
     @RequestMapping(value = "/sca-methods/{userLogin}", method = RequestMethod.GET)
     List<SCAMethodTO> getUserScaMethods(@PathVariable String userLogin);
+
+    @RequestMapping(value = "/payments/cancel/{psuId}/{paymentId}", method = RequestMethod.DELETE)
+    void cancelPaymentNoSca(@PathVariable String psuId, @PathVariable String paymentId);
+
+    @RequestMapping(value = "/payments/cancel-initiation/{psuId}/{paymentId}", method = RequestMethod.GET)
+    ResponseEntity<PaymentCancellationResponseTO> initiatePmtCancellation(@PathVariable String psuId, @PathVariable String paymentId);
 }
