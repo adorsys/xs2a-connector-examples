@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -44,20 +45,20 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         this.ledgersRestClient = ledgersRestClient;
     }
 
-
+    //TODO should be fully implemented after implementation of Security on Ledgers side.
     @Override
     public SpiResponse<SpiResponse.VoidResponse> initiateAisConsent(@NotNull SpiPsuData spiPsuData, SpiAccountConsent spiAccountConsent, AspspConsentData aspspConsentData) {
-        return null;
+        return SpiResponse.<SpiResponse.VoidResponse>builder().payload(SpiResponse.voidResponse()).success();
     }
 
     @Override
     public SpiResponse<SpiResponse.VoidResponse> revokeAisConsent(@NotNull SpiPsuData spiPsuData, SpiAccountConsent spiAccountConsent, AspspConsentData aspspConsentData) {
-        return null;
+        return SpiResponse.<SpiResponse.VoidResponse>builder().payload(SpiResponse.voidResponse()).success();
     }
 
     @Override
     public @NotNull SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisation(@NotNull SpiPsuData spiPsuData, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiAccountConsent spiAccountConsent, @NotNull AspspConsentData aspspConsentData) {
-        return null;
+        return SpiResponse.<SpiResponse.VoidResponse>builder().payload(SpiResponse.voidResponse()).success();
     }
 
     @Override
@@ -72,11 +73,11 @@ public class AisConsentSpiImpl implements AisConsentSpi {
 
     @Override
     public SpiResponse<List<SpiAuthenticationObject>> requestAvailableScaMethods(@NotNull SpiPsuData spiPsuData, SpiAccountConsent spiAccountConsent, AspspConsentData aspspConsentData) {
-        return null;
+        return SpiResponse.<List<SpiAuthenticationObject>>builder().payload(Collections.emptyList()).success();
     }
 
     @Override
     public @NotNull SpiResponse<SpiAuthorizationCodeResult> requestAuthorisationCode(@NotNull SpiPsuData spiPsuData, @NotNull String s, @NotNull SpiAccountConsent spiAccountConsent, @NotNull AspspConsentData aspspConsentData) {
-        return null;
+        return SpiResponse.<SpiAuthorizationCodeResult>builder().payload(new SpiAuthorizationCodeResult()).success();
     }
 }
