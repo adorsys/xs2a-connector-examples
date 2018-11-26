@@ -79,8 +79,8 @@ public interface LedgersRestClient {
     @RequestMapping(value = "/sca-methods/{userLogin}", method = RequestMethod.GET)
     List<SCAMethodTO> getUserScaMethods(@PathVariable String userLogin);
 
-    @RequestMapping(value = "/payments/cancel/{psuId}/{paymentId}", method = RequestMethod.DELETE)
-    void cancelPaymentNoSca(@PathVariable String psuId, @PathVariable String paymentId);
+    @RequestMapping(value = "/payments/cancel/{paymentId}", method = RequestMethod.DELETE)
+    void cancelPaymentNoSca(@PathVariable String paymentId);
 
     @RequestMapping(value = "/payments/cancel-initiation/{psuId}/{paymentId}", method = RequestMethod.GET)
     ResponseEntity<PaymentCancellationResponseTO> initiatePmtCancellation(@PathVariable String psuId, @PathVariable String paymentId);
