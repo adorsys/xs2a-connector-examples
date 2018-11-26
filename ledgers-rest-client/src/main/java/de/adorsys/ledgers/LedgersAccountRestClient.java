@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
-@FeignClient(value = "ledgers", url = "${ledgers.url}")
+@FeignClient(value = "ledgersAccount", url = "${ledgers.url}")
 public interface LedgersAccountRestClient {
 
     @RequestMapping(value = "/accounts/{accountId}", method = RequestMethod.GET)
@@ -44,8 +44,8 @@ public interface LedgersAccountRestClient {
 
     @RequestMapping(value = "/accounts/{accountId}/transactions", method = RequestMethod.GET)
     ResponseEntity<List<TransactionTO>> getTransactionByDates(@PathVariable(name = "accountId") String accountId,
-                                                              @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateFrom,
-                                                              @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateTo);
+                                                              @RequestParam("dateFrom") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateFrom,
+                                                              @RequestParam("dateTo") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate dateTo);
 
     @RequestMapping(value = "/accounts/users/{userLogin}", method = RequestMethod.GET)
     ResponseEntity<List<AccountDetailsTO>> getAccountDetailsByUserLogin(@PathVariable(name = "userLogin") String userLogin);

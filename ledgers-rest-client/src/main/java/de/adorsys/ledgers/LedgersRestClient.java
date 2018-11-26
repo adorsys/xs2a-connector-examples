@@ -65,10 +65,10 @@ public interface LedgersRestClient {
                                                             @PathVariable(name = "paymentId") String paymentId);
 
     @RequestMapping(value = "/payments/{id}/status", method = RequestMethod.GET)
-    ResponseEntity<TransactionStatus> getPaymentStatusById(@PathVariable String id);
+    ResponseEntity<TransactionStatus> getPaymentStatusById(@PathVariable("id") String id);
 
     @RequestMapping(value = "/auth-codes/{opId}/validate", method = RequestMethod.POST)
-    boolean validate(@PathVariable String opId, @RequestBody SCAValidationRequest request);
+    boolean validate(@PathVariable("opId") String opId, @RequestBody SCAValidationRequest request);
 
     @RequestMapping(value = "/auth-codes/generate", method = RequestMethod.POST)
     SCAGenerationResponse generate(@RequestBody AuthCodeDataTO data);
@@ -77,11 +77,11 @@ public interface LedgersRestClient {
     boolean authorise(@RequestParam("login") String login, @RequestParam("pin") String pin);
 
     @RequestMapping(value = "/sca-methods/{userLogin}", method = RequestMethod.GET)
-    List<SCAMethodTO> getUserScaMethods(@PathVariable String userLogin);
+    List<SCAMethodTO> getUserScaMethods(@PathVariable("userLogin") String userLogin);
 
     @RequestMapping(value = "/payments/cancel/{psuId}/{paymentId}", method = RequestMethod.DELETE)
-    void cancelPaymentNoSca(@PathVariable String psuId, @PathVariable String paymentId);
+    void cancelPaymentNoSca(@PathVariable("psuId") String psuId, @PathVariable("paymentId") String paymentId);
 
     @RequestMapping(value = "/payments/cancel-initiation/{psuId}/{paymentId}", method = RequestMethod.GET)
-    ResponseEntity<PaymentCancellationResponseTO> initiatePmtCancellation(@PathVariable String psuId, @PathVariable String paymentId);
+    ResponseEntity<PaymentCancellationResponseTO> initiatePmtCancellation(@PathVariable("psuId") String psuId, @PathVariable("paymentId") String paymentId);
 }
