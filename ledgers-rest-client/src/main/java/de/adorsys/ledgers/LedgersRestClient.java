@@ -82,6 +82,6 @@ public interface LedgersRestClient {
     @RequestMapping(value = "/payments/cancel/{paymentId}", method = RequestMethod.DELETE)
     void cancelPaymentNoSca(@PathVariable("paymentId") String paymentId);
 
-    @RequestMapping(value = "/payments/cancel-initiation/{psuId}/{paymentId}", method = RequestMethod.GET)
+    @RequestMapping(value = "/payments/cancel-initiation/{psuId}/{paymentId}", method = RequestMethod.POST)
     ResponseEntity<PaymentCancellationResponseTO> initiatePmtCancellation(@PathVariable("psuId") String psuId, @PathVariable("paymentId") String paymentId);
 }
