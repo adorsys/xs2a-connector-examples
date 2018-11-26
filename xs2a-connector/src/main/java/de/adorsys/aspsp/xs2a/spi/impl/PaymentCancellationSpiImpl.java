@@ -83,7 +83,7 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     public @NotNull SpiResponse<SpiResponse.VoidResponse> cancelPaymentWithoutSca(@NotNull SpiPsuData psuData, @NotNull SpiPayment payment, @NotNull AspspConsentData aspspConsentData) {
         try {
             logger.info("Cancel payment:{}, userId:{}", payment.getPaymentId(), psuData.getPsuId());
-            ledgersRestClient.cancelPaymentNoSca(psuData.getPsuId(), payment.getPaymentId());
+            ledgersRestClient.cancelPaymentNoSca(payment.getPaymentId());
             return SpiResponse.<SpiResponse.VoidResponse>builder()
                            .aspspConsentData(aspspConsentData)
                            .payload(SpiResponse.voidResponse())
