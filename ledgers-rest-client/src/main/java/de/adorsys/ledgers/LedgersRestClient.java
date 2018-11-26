@@ -64,8 +64,8 @@ public interface LedgersRestClient {
                                                             @PathVariable(name = "payment-product") PaymentProductTO paymentProduct,
                                                             @PathVariable(name = "paymentId") String paymentId);
 
-    @RequestMapping(value = "/payments/{id}/status", method = RequestMethod.GET)
-    ResponseEntity<TransactionStatus> getPaymentStatusById(@PathVariable("id") String id);
+    @RequestMapping(value = "/payments/{paymentId}/status", method = RequestMethod.GET)
+    ResponseEntity<TransactionStatus> getPaymentStatusById(@PathVariable("paymentId") String id);
 
     @RequestMapping(value = "/auth-codes/{opId}/validate", method = RequestMethod.POST)
     boolean validate(@PathVariable("opId") String opId, @RequestBody SCAValidationRequest request);
