@@ -37,20 +37,6 @@
 
         <dependency>
             <groupId>de.adorsys.psd2</groupId>
-            <artifactId>aspsp-profile-remote</artifactId>
-            <version>${xs2a.version}</version>
-        </dependency>
-
-        <!-- CMS remote mode -->
-
-        <dependency>
-            <groupId>de.adorsys.psd2</groupId>
-            <artifactId>consent-management-remote</artifactId>
-            <version>${xs2a.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>de.adorsys.psd2</groupId>
             <artifactId>xs2a-impl</artifactId>
             <version>${xs2a.version}</version>
             <exclusions>
@@ -92,6 +78,80 @@
         <!-- test dependencies -->
 
     </dependencies>
+
+    <profiles>
+
+        <profile>
+            <id>embedded</id>
+
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+
+            <dependencies>
+
+                <!-- ASPSP Profile embedded mode -->
+
+                <dependency>
+                    <groupId>de.adorsys.psd2</groupId>
+                    <artifactId>aspsp-profile-lib</artifactId>
+                    <version>${xs2a.version}</version>
+                </dependency>
+
+                <!-- CMS embedded mode -->
+
+                <dependency>
+                    <groupId>de.adorsys.psd2</groupId>
+                    <artifactId>consent-management-lib</artifactId>
+                    <version>${xs2a.version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>de.adorsys.psd2</groupId>
+                            <artifactId>aspsp-profile-remote</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+
+                <dependency>
+                    <groupId>com.h2database</groupId>
+                    <artifactId>h2</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
+
+            </dependencies>
+        </profile>
+
+        <profile>
+            <id>remote</id>
+
+            <activation>
+                <property>
+                    <name>remote</name>
+                </property>
+            </activation>
+
+            <dependencies>
+
+                <!-- ASPSP Profile remote mode -->
+
+                <dependency>
+                    <groupId>de.adorsys.psd2</groupId>
+                    <artifactId>aspsp-profile-remote</artifactId>
+                    <version>${xs2a.version}</version>
+                </dependency>
+
+                <!-- CMS remote mode -->
+
+                <dependency>
+                    <groupId>de.adorsys.psd2</groupId>
+                    <artifactId>consent-management-remote</artifactId>
+                    <version>${xs2a.version}</version>
+                </dependency>
+
+            </dependencies>
+        </profile>
+
+    </profiles>
 
     <build>
         <plugins>
