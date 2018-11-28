@@ -26,8 +26,8 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface ScaMethodConverter {
 
-    @Mapping(source = "type", target = "authenticationType")
-    @Mapping(source = "value", target = "name")
+    @Mapping(source = "scaMethod", target = "authenticationType")
+    @Mapping(source = "methodValue", target = "name")
     SpiAuthenticationObject toSpiAuthenticationObject(SCAMethodTO method);
 
     List<SpiAuthenticationObject> toSpiAuthenticationObjectList(List<SCAMethodTO> methods);

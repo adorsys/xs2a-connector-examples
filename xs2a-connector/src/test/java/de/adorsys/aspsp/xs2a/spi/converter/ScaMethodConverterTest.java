@@ -26,8 +26,8 @@ public class ScaMethodConverterTest {
     public void setUp() {
         method = new SCAMethodTO();
         methodType = SCAMethodTypeTO.EMAIL;
-        method.setValue("some@email.com");
-        method.setType(methodType);
+        method.setMethodValue("some@email.com");
+        method.setScaMethod(methodType);
 
         mapper = Mappers.getMapper(ScaMethodConverter.class);
         expected = readYml(SpiAuthenticationObject.class, "spi-authentication-object.yml");
