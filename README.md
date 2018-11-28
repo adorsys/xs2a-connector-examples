@@ -2,13 +2,13 @@
 
 XS2A Connector for the ledgers project
 
-You can run XS2A Connector in two modes. These are `Embedded` and `Remote` modes. Both modes used `PostgreSQL` database as a storage
+You can run XS2A Connector in two modes: `Embedded` and `Remote`. Both modes use `PostgreSQL` database as a storage
 
-This is, you will have to follow these steps to have this connector up and running:
+The following steps will get this connector up and running:
 
 ### Embedded mode
-- Connector contains all XS2A stuff inside
-- Ledgers and ledgers run separately
+- Connector contains all XS2A modules inside
+- Ledgers and database run separately
 ```
 > git clone https://github.com/adorsys/ledgers.git
 > cd ledgers
