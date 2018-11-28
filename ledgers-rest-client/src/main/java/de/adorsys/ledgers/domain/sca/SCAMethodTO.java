@@ -19,23 +19,23 @@ package de.adorsys.ledgers.domain.sca;
 import java.util.Objects;
 
 public class SCAMethodTO {
-    private SCAMethodTypeTO type;
-    private String value;
+    private SCAMethodTypeTO scaMethod;
+    private String methodValue;
 
-    public SCAMethodTypeTO getType() {
-        return type;
+    public SCAMethodTypeTO getScaMethod() {
+        return scaMethod;
     }
 
-    public void setType(SCAMethodTypeTO type) {
-        this.type = type;
+    public void setScaMethod(SCAMethodTypeTO scaMethod) {
+        this.scaMethod = scaMethod;
     }
 
-    public String getValue() {
-        return value;
+    public String getMethodValue() {
+        return methodValue;
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    public void setMethodValue(String methodValue) {
+        this.methodValue = methodValue;
     }
 
     @Override
@@ -47,20 +47,20 @@ public class SCAMethodTO {
             return false;
         }
         SCAMethodTO that = (SCAMethodTO) o;
-        return type == that.type &&
-                       Objects.equals(value, that.value);
+        return scaMethod == that.scaMethod &&
+                       Objects.equals(methodValue, that.methodValue);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, value);
+        return Objects.hash(scaMethod, methodValue);
     }
 
     @Override
     public String toString() {
         return "SCAMethodTO{" +
-                       "type=" + type +
-                       ", value='" + value + '\'' +
+                       "scaMethod=" + scaMethod +
+                       ", methodValue='" + methodValue + '\'' +
                        '}';
     }
 }
