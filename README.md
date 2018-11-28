@@ -8,7 +8,7 @@ This is, you will have to follow these steps to have this connector up and runni
 
 ### Embedded mode
 - Connector contains all XS2A stuff inside
-- Ledgers and ledgers database run separately
+- Ledgers and ledgers run separately
 ```
 > git clone https://github.com/adorsys/ledgers.git
 > cd ledgers
