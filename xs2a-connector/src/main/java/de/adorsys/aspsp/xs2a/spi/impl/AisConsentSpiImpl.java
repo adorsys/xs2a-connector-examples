@@ -16,8 +16,15 @@
 
 package de.adorsys.aspsp.xs2a.spi.impl;
 
+import de.adorsys.aspsp.xs2a.spi.converter.ScaMethodConverter;
 import de.adorsys.ledgers.LedgersRestClient;
+import de.adorsys.ledgers.domain.SCAValidationRequest;
+import de.adorsys.ledgers.domain.sca.AuthCodeDataTO;
+import de.adorsys.ledgers.domain.sca.SCAGenerationResponse;
+import de.adorsys.ledgers.domain.sca.SCAMethodTO;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
+import de.adorsys.psd2.xs2a.domain.MessageErrorCode;
+import de.adorsys.psd2.xs2a.exception.RestException;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountConsent;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
@@ -25,11 +32,13 @@ import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
+import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.AisConsentSpi;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -38,46 +47,121 @@ import java.util.List;
 @Component
 public class AisConsentSpiImpl implements AisConsentSpi {
     private static final Logger logger = LoggerFactory.getLogger(AisConsentSpiImpl.class);
-
+    private static final String TEST_ASPSP_DATA = "Test aspsp data";
+    private static final String TEST_MESSAGE = "Test message";
     private final LedgersRestClient ledgersRestClient;
+    private final ScaMethodConverter scaMethodConverter;
 
-    public AisConsentSpiImpl(LedgersRestClient ledgersRestClient) {
+    public AisConsentSpiImpl(LedgersRestClient ledgersRestClient, ScaMethodConverter scaMethodConverter) {
         this.ledgersRestClient = ledgersRestClient;
+        this.scaMethodConverter = scaMethodConverter;
     }
 
     //TODO should be fully implemented after implementation of Security on Ledgers side.
     @Override
     public SpiResponse<SpiResponse.VoidResponse> initiateAisConsent(@NotNull SpiPsuData spiPsuData, SpiAccountConsent spiAccountConsent, AspspConsentData aspspConsentData) {
-        return SpiResponse.<SpiResponse.VoidResponse>builder().payload(SpiResponse.voidResponse()).success();
+        return SpiResponse.<SpiResponse.VoidResponse>builder()
+                       .payload(SpiResponse.voidResponse())
+                       .aspspConsentData(aspspConsentData.respondWith(TEST_ASPSP_DATA.getBytes()))     // added for test purposes TODO remove if some requirements will be received https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/394
+                       .message(Collections.singletonList(TEST_MESSAGE))                                      // added for test purposes TODO remove if some requirements will be received https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/394
+                       .success();
     }
 
     @Override
     public SpiResponse<SpiResponse.VoidResponse> revokeAisConsent(@NotNull SpiPsuData spiPsuData, SpiAccountConsent spiAccountConsent, AspspConsentData aspspConsentData) {
-        return SpiResponse.<SpiResponse.VoidResponse>builder().payload(SpiResponse.voidResponse()).success();
+        return SpiResponse.<SpiResponse.VoidResponse>builder()
+                       .payload(SpiResponse.voidResponse())
+                       .aspspConsentData(aspspConsentData.respondWith(TEST_ASPSP_DATA.getBytes()))            // added for test purposes TODO remove if some requirements will be received https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/394
+                       .message(Collections.singletonList(TEST_MESSAGE))                                      // added for test purposes TODO remove if some requirements will be received https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/394
+                       .success();
     }
 
     @Override
     public @NotNull SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisation(@NotNull SpiPsuData spiPsuData, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiAccountConsent spiAccountConsent, @NotNull AspspConsentData aspspConsentData) {
-        return SpiResponse.<SpiResponse.VoidResponse>builder().payload(SpiResponse.voidResponse()).success();
+        logger.info("Verifying SCA code");
+        try {
+            SCAValidationRequest validationRequest = new SCAValidationRequest(spiAccountConsent.toString(), spiScaConfirmation.getTanNumber());//TODO fix this! it is not correct!
+            boolean isValid = ledgersRestClient.validate(spiScaConfirmation.getPaymentId(), validationRequest);
+            logger.info("Validation result is {}", isValid);
+            if (isValid) {
+                return SpiResponse.<SpiResponse.VoidResponse>builder()
+                               .payload(SpiResponse.voidResponse())
+                               .aspspConsentData(aspspConsentData.respondWith(TEST_ASPSP_DATA.getBytes()))            // added for test purposes TODO remove if some requirements will be received https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/394
+                               .message(Collections.singletonList(TEST_MESSAGE))                                      // added for test purposes TODO remove if some requirements will be received https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/394
+                               .success();
+            }
+            throw new RestException(MessageErrorCode.CONSENT_INVALID);
+        } catch (RestException e) {
+            return SpiResponse.<SpiResponse.VoidResponse>builder()
+                           .aspspConsentData(aspspConsentData.respondWith(TEST_ASPSP_DATA.getBytes()))            // added for test purposes TODO remove if some requirements will be received https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/394
+                           .fail(getSpiFailureResponse(e));
+        }
     }
 
     @Override
     public SpiResponse<SpiAuthorisationStatus> authorisePsu(@NotNull SpiPsuData spiPsuData, String pin, SpiAccountConsent spiAccountConsent, AspspConsentData aspspConsentData) {
-        String login = spiPsuData.getPsuId();
-        logger.info("Authorise user with login={} and password={}", login, StringUtils.repeat("*", pin.length()));
-        boolean isAuthorised = ledgersRestClient.authorise(login, pin);
-        SpiAuthorisationStatus status = isAuthorised ? SpiAuthorisationStatus.SUCCESS : SpiAuthorisationStatus.FAILURE;
-        logger.info("Authorisation result is {}", status);
-        return new SpiResponse<>(status, aspspConsentData);
+        try {
+            String login = spiPsuData.getPsuId();
+            logger.info("Authorise user with login={} and password={}", login, StringUtils.repeat("*", pin.length()));
+            boolean isAuthorised = ledgersRestClient.authorise(login, pin);
+            SpiAuthorisationStatus status = isAuthorised
+                                                    ? SpiAuthorisationStatus.SUCCESS
+                                                    : SpiAuthorisationStatus.FAILURE;
+            logger.info("Authorisation result is {}", status);
+            return new SpiResponse<>(status, aspspConsentData);
+        } catch (RestException e) {
+            return SpiResponse.<SpiAuthorisationStatus>builder()
+                           .aspspConsentData(aspspConsentData.respondWith(TEST_ASPSP_DATA.getBytes()))            // added for test purposes TODO remove if some requirements will be received https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/394
+                           .fail(getSpiFailureResponse(e));
+        }
     }
 
     @Override
     public SpiResponse<List<SpiAuthenticationObject>> requestAvailableScaMethods(@NotNull SpiPsuData spiPsuData, SpiAccountConsent spiAccountConsent, AspspConsentData aspspConsentData) {
-        return SpiResponse.<List<SpiAuthenticationObject>>builder().payload(Collections.emptyList()).success();
+        try {
+            String userLogin = spiPsuData.getPsuId();
+            logger.info("Retrieving sca methods for user {}", userLogin);
+            List<SCAMethodTO> scaMethods = ledgersRestClient.getUserScaMethods(userLogin);
+            logger.debug("These are sca methods that were found {}", scaMethods);
+
+            List<SpiAuthenticationObject> authenticationObjects = scaMethodConverter.toSpiAuthenticationObjectList(scaMethods);
+            return SpiResponse.<List<SpiAuthenticationObject>>builder()
+                           .aspspConsentData(aspspConsentData)
+                           .payload(authenticationObjects)
+                           .success();
+        } catch (RestException e) {
+            return SpiResponse.<List<SpiAuthenticationObject>>builder()
+                           .aspspConsentData(aspspConsentData)
+                           .fail(getSpiFailureResponse(e));
+        }
     }
 
     @Override
-    public @NotNull SpiResponse<SpiAuthorizationCodeResult> requestAuthorisationCode(@NotNull SpiPsuData spiPsuData, @NotNull String s, @NotNull SpiAccountConsent spiAccountConsent, @NotNull AspspConsentData aspspConsentData) {
-        return SpiResponse.<SpiAuthorizationCodeResult>builder().payload(new SpiAuthorizationCodeResult()).success();
+    public @NotNull SpiResponse<SpiAuthorizationCodeResult> requestAuthorisationCode(@NotNull SpiPsuData spiPsuData, @NotNull String authenticationMethodId, @NotNull SpiAccountConsent spiAccountConsent, @NotNull AspspConsentData aspspConsentData) {
+        try {
+            String userLogin = spiPsuData.getPsuId();
+            String paymentId = spiAccountConsent.getId();
+            AuthCodeDataTO data = new AuthCodeDataTO(userLogin, authenticationMethodId, paymentId, spiAccountConsent.toString());
+            logger.info("Request to generate SCA {}", data);
+
+            SCAGenerationResponse response = ledgersRestClient.generate(data);
+            logger.info("SCA was send, operationId is {}", response.getOpId());
+
+            return SpiResponse.<SpiAuthorizationCodeResult>builder()
+                           .aspspConsentData(aspspConsentData)
+                           .success();
+        } catch (RestException e) {
+            return SpiResponse.<SpiAuthorizationCodeResult>builder()
+                           .aspspConsentData(aspspConsentData)
+                           .fail(getSpiFailureResponse(e));
+        }
+    }
+
+    @NotNull
+    private SpiResponseStatus getSpiFailureResponse(RestException e) {
+        logger.error(e.getMessage(), e);
+        return (e.getHttpStatus() == HttpStatus.INTERNAL_SERVER_ERROR)
+                       ? SpiResponseStatus.TECHNICAL_FAILURE
+                       : SpiResponseStatus.LOGICAL_FAILURE;
     }
 }
