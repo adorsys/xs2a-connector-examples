@@ -14,19 +14,19 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.adorsys.ledgers</groupId>
-    <artifactId>ledgers-xs2a-gateway</artifactId>
+    <artifactId>xs2a-connector-examples</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
 
     <modules>
         <module>ledgers-rest-client</module>
         <module>xs2a-connector</module>
         <module>gateway-app</module>
     </modules>
-    <packaging>pom</packaging>
 
-    <description>OpenSource Implementation Of Ledgers Gateway</description>
+    <description>OpenSource Implementation Of XS2A connector examples</description>
 
-    <url>https://github.com/adorsys/ledgers-xs2a-gateway</url>
+    <url>https://github.com/adorsys/xs2a-connector-examples</url>
 
     <licenses>
         <license>
@@ -34,6 +34,27 @@
             <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
         </license>
     </licenses>
+
+    <developers>
+        <developer>
+            <name>Francis Pouatcha</name>
+            <email>fpo@adorsys.de</email>
+            <organization>adorsys</organization>
+            <organizationUrl>https://adorsys.de/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Serhii Petrychenko</name>
+            <email>spe@adorsys.com.ua</email>
+            <organization>LLC Golden Dimension</organization>
+            <organizationUrl>https://adorsys.com.ua/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Dmytro Mishchuck</name>
+            <email>dmi@adorsys.com.ua</email>
+            <organization>LLC Golden Dimension</organization>
+            <organizationUrl>https://adorsys.com.ua/</organizationUrl>
+        </developer>
+    </developers>
 
     <properties>
         <!-- common properties -->
@@ -277,9 +298,9 @@
     </build>
 
     <scm>
-        <connection>scm:git@github.com:adorsys/ledgers-xs2a-gateway.git</connection>
-        <developerConnection>scm:git:git@github.com:adorsys/ledgers-xs2a-gateway.git</developerConnection>
-        <url>git@github.com:adorsys/ledgers-xs2a-gateway.git</url>
+        <connection>scm:git@github.com:adorsys/xs2a-connector-examples.git</connection>
+        <developerConnection>scm:git:git@github.com:adorsys/xs2a-connector-examples.git</developerConnection>
+        <url>git@github.com:adorsys/xs2a-connector-examples.git</url>
         <tag>HEAD</tag>
     </scm>
 
