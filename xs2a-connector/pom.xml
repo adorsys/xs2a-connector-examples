@@ -31,12 +31,6 @@
 
         <dependency>
             <groupId>de.adorsys.psd2</groupId>
-            <artifactId>spi-api</artifactId>
-            <version>${xs2a.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>de.adorsys.psd2</groupId>
             <artifactId>xs2a-impl</artifactId>
             <version>${xs2a.version}</version>
             <exclusions>
@@ -50,6 +44,11 @@
         <!-- spring dependencies -->
 
         <!-- other dependencies -->
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <version>${aspectj.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>pro.javatar.commons</groupId>
@@ -96,6 +95,12 @@
                     <groupId>de.adorsys.psd2</groupId>
                     <artifactId>aspsp-profile-lib</artifactId>
                     <version>${xs2a.version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>de.adorsys.psd2</groupId>
+                            <artifactId>aspsp-profile-remote</artifactId>
+                        </exclusion>
+                    </exclusions>
                 </dependency>
 
                 <!-- CMS embedded mode -->
@@ -144,7 +149,7 @@
 
                 <dependency>
                     <groupId>de.adorsys.psd2</groupId>
-                    <artifactId>consent-management-remote</artifactId>
+                    <artifactId>consent-xs2a-client</artifactId>
                     <version>${xs2a.version}</version>
                 </dependency>
 

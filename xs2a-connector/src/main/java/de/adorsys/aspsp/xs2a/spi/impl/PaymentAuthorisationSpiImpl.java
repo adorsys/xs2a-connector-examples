@@ -16,9 +16,6 @@
 
 package de.adorsys.aspsp.xs2a.spi.impl;
 
-import de.adorsys.aspsp.xs2a.spi.converter.ScaMethodConverter;
-import de.adorsys.ledgers.LedgersRestClient;
-import de.adorsys.ledgers.domain.sca.*;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
@@ -27,70 +24,31 @@ import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.PaymentAuthorisationSpi;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
 public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
-    private static final Logger logger = LoggerFactory.getLogger(PaymentAuthorisationSpiImpl.class);
+    private final GeneralAuthorisationService authorisationService;
 
-    private final LedgersRestClient ledgersRestClient;
-    private final ScaMethodConverter scaMethodConverter;
-
-    public PaymentAuthorisationSpiImpl(LedgersRestClient ledgersRestClient, ScaMethodConverter scaMethodConverter) {
-        this.ledgersRestClient = ledgersRestClient;
-        this.scaMethodConverter = scaMethodConverter;
+    public PaymentAuthorisationSpiImpl(GeneralAuthorisationService authorisationService) {
+        this.authorisationService = authorisationService;
     }
 
     @Override
     public SpiResponse<SpiAuthorisationStatus> authorisePsu(@NotNull SpiPsuData spiPsuData, String pin, SpiPayment spiPayment, AspspConsentData aspspConsentData) {
-        String login = spiPsuData.getPsuId();
-        logger.info("Authorise user with login={} and password={}", login, StringUtils.repeat("*", pin.length()));
-
-        boolean isAuthorised = ledgersRestClient.authorise(login, pin);
-        SpiAuthorisationStatus status = isAuthorised ? SpiAuthorisationStatus.SUCCESS : SpiAuthorisationStatus.FAILURE;
-        logger.info("Authorisation result is {}", status);
-
-        return new SpiResponse<>(status, aspspConsentData);
+        return authorisationService.authorisePsu(spiPsuData, pin, aspspConsentData);
     }
 
     @Override
     public SpiResponse<List<SpiAuthenticationObject>> requestAvailableScaMethods(@NotNull SpiPsuData spiPsuData, SpiPayment spiPayment, AspspConsentData aspspConsentData) {
-        String userLogin = spiPsuData.getPsuId();
-        logger.info("Retrieving sca methods for user {}", userLogin);
-
-        List<SCAMethodTO> scaMethods = ledgersRestClient.getUserScaMethods(userLogin);
-        logger.debug("These are sca methods that were found {}", scaMethods);
-
-        List<SpiAuthenticationObject> authenticationObjects = scaMethodConverter.toSpiAuthenticationObjectList(scaMethods);
-
-        return SpiResponse.<List<SpiAuthenticationObject>>builder()
-                       .aspspConsentData(aspspConsentData)
-                       .payload(authenticationObjects)
-                       .success();
-
-//        todo: proceed with rest exceptions
+        return authorisationService.requestAvailableScaMethods(spiPsuData, aspspConsentData);
     }
 
     @Override
     public @NotNull SpiResponse<SpiAuthorizationCodeResult> requestAuthorisationCode(@NotNull SpiPsuData spiPsuData, @NotNull String authenticationMethodId, @NotNull SpiPayment spiPayment, @NotNull AspspConsentData aspspConsentData) {
-        String userLogin = spiPsuData.getPsuId();
-        String paymentId = spiPayment.getPaymentId();
-
-        AuthCodeDataTO data = new AuthCodeDataTO(userLogin, authenticationMethodId, paymentId, spiPayment.toString());
-        logger.info("Request to generate SCA {}", data);
-
-        SCAGenerationResponse response = ledgersRestClient.generate(data);
-        logger.info("SCA was send, operationId is {}", response.getOpId());
-
-        return SpiResponse.<SpiAuthorizationCodeResult>builder()
-                       .aspspConsentData(aspspConsentData)
-                       .success();
-//        todo: proceed with exception handling
+        return authorisationService.requestAuthorisationCode(spiPsuData, authenticationMethodId, spiPayment.getPaymentId(), spiPayment.toString(), aspspConsentData);
     }
 }
