@@ -1,15 +1,15 @@
 FROM adorsys/openjdk-jre-base:8-minideb
 
-MAINTAINER https://git.adorsys.de/adorsys/xs2a/ledgers-xs2a-gateway
+MAINTAINER https://github.com/adorsys/xs2a-connector-examples
 
 ENV SERVER_PORT 8089
 ENV JAVA_OPTS -Xmx1024m
 ENV JAVA_TOOL_OPTIONS -Xmx1024m
 
-WORKDIR /opt/ledgers-xs2a-gateway
+WORKDIR /opt/xs2a-connector-examples
 
-COPY ./gateway-app/target/ledgers-xs2a-gateway.jar /opt/ledgers-xs2a-gateway/ledgers-xs2a-gateway.jar
+COPY ./gateway-app/target/xs2a-connector-examples.jar /opt/xs2a-connector-examples/xs2a-connector-examples.jar
 
 EXPOSE 8089
 
-CMD exec $JAVA_HOME/bin/java $JAVA_OPTS -jar /opt/ledgers-xs2a-gateway/ledgers-xs2a-gateway.jar
+CMD exec $JAVA_HOME/bin/java $JAVA_OPTS -jar /opt/xs2a-connector-examples/xs2a-connector-examples.jar
