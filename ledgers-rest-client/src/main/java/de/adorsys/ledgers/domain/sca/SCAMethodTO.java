@@ -19,8 +19,17 @@ package de.adorsys.ledgers.domain.sca;
 import java.util.Objects;
 
 public class SCAMethodTO {
+    private String id;
     private SCAMethodTypeTO scaMethod;
     private String methodValue;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public SCAMethodTypeTO getScaMethod() {
         return scaMethod;
@@ -40,26 +49,24 @@ public class SCAMethodTO {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) { return true; }
+        if (o == null || getClass() != o.getClass()) { return false; }
         SCAMethodTO that = (SCAMethodTO) o;
-        return scaMethod == that.scaMethod &&
+        return Objects.equals(id, that.id) &&
+                       scaMethod == that.scaMethod &&
                        Objects.equals(methodValue, that.methodValue);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(scaMethod, methodValue);
+        return Objects.hash(id, scaMethod, methodValue);
     }
 
     @Override
     public String toString() {
         return "SCAMethodTO{" +
-                       "scaMethod=" + scaMethod +
+                       "id='" + id + '\'' +
+                       ", scaMethod=" + scaMethod +
                        ", methodValue='" + methodValue + '\'' +
                        '}';
     }

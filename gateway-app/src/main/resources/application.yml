@@ -87,6 +87,9 @@ db:
 ---
 spring:
   profiles: postgres
+  jpa:
+    properties:
+      hibernate.default_schema: consent
 
 db:
   host: localhost

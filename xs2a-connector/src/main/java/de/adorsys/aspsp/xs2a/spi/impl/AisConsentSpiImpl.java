@@ -26,6 +26,7 @@ import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.domain.MessageErrorCode;
 import de.adorsys.psd2.xs2a.exception.RestException;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountConsent;
+import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
@@ -34,6 +35,7 @@ import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.AisConsentSpi;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -80,7 +82,8 @@ public class AisConsentSpiImpl implements AisConsentSpi {
     public @NotNull SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisation(@NotNull SpiPsuData spiPsuData, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiAccountConsent spiAccountConsent, @NotNull AspspConsentData aspspConsentData) {
         logger.info("Verifying SCA code");
         try {
-            SCAValidationRequest validationRequest = new SCAValidationRequest(spiAccountConsent.toString(), spiScaConfirmation.getTanNumber());//TODO fix this! it is not correct!
+            String opData = buildOpData(spiAccountConsent);
+            SCAValidationRequest validationRequest = new SCAValidationRequest(opData, spiScaConfirmation.getTanNumber());//TODO fix this! it is not correct!
             boolean isValid = ledgersRestClient.validate(spiScaConfirmation.getPaymentId(), validationRequest);
             logger.info("Validation result is {}", isValid);
             if (isValid) {
@@ -141,7 +144,8 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         try {
             String userLogin = spiPsuData.getPsuId();
             String paymentId = spiAccountConsent.getId();
-            AuthCodeDataTO data = new AuthCodeDataTO(userLogin, authenticationMethodId, paymentId, spiAccountConsent.toString());
+            String opData = buildOpData(spiAccountConsent);
+            AuthCodeDataTO data = new AuthCodeDataTO(userLogin, authenticationMethodId, paymentId, opData);
             logger.info("Request to generate SCA {}", data);
 
             SCAGenerationResponse response = ledgersRestClient.generate(data);
@@ -157,11 +161,60 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         }
     }
 
+    private String buildOpData(SpiAccountConsent spiAccountConsent) {
+        OpData opData = OpData.of(spiAccountConsent);
+        return opData.toString();
+    }
+
     @NotNull
     private SpiResponseStatus getSpiFailureResponse(RestException e) {
         logger.error(e.getMessage(), e);
         return (e.getHttpStatus() == HttpStatus.INTERNAL_SERVER_ERROR)
                        ? SpiResponseStatus.TECHNICAL_FAILURE
                        : SpiResponseStatus.LOGICAL_FAILURE;
+    }
+
+    // todo: @fpo let's agree with opData content
+    private static final class OpData {
+        private List<SpiAccountReference> accounts;
+        // todo: discuss because it could modified
+        private SpiPsuData psuData;
+        private String tppId;
+
+        OpData(List<SpiAccountReference> accounts, SpiPsuData psuData, String tppId) {
+            this.accounts = Collections.unmodifiableList(accounts);
+            this.psuData = ObjectUtils.clone(psuData);
+            this.tppId = tppId;
+        }
+
+        private OpData(final SpiAccountConsent consent) {
+            this(consent.getAccess().getAccounts(), consent.getPsuData(), consent.getTppId());
+        }
+
+        public List<SpiAccountReference> getAccounts() {
+            return accounts;
+        }
+
+        public SpiPsuData getPsuData() {
+            return psuData;
+        }
+
+        public String getTppId() {
+            return tppId;
+        }
+
+        @Override
+        public String toString() {
+            return "{" +
+                           "\"accounts\":" + accounts +
+                           ", \"psuData\":" + psuData +
+                           ", \"tppId\":\"" + tppId + '\"' +
+                           '}';
+        }
+
+        @SuppressWarnings("PMD.ShortMethodName")
+        static OpData of(final SpiAccountConsent consent) {
+            return new OpData(consent);
+        }
     }
 }
