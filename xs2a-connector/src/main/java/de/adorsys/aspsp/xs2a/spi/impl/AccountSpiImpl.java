@@ -20,18 +20,18 @@ import de.adorsys.aspsp.xs2a.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.ledgers.LedgersAccountRestClient;
 import de.adorsys.ledgers.domain.account.AccountDetailsTO;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
-import de.adorsys.psd2.xs2a.exception.RestException;
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.AccountSpi;
+import feign.FeignException;
+import feign.Response;
 import org.apache.commons.collections4.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -56,38 +56,36 @@ public class AccountSpiImpl implements AccountSpi {
     @Override
     public SpiResponse<List<SpiAccountDetails>> requestAccountList(boolean withBalance, @NotNull SpiAccountConsent accountConsent, @NotNull AspspConsentData aspspConsentData) {
         try {
-            List<SpiAccountDetails> accountDetailsList;
-            if (isBankOfferedConsent(accountConsent.getAccess())) {
-                accountDetailsList = getAccountDetailsByConsentId(accountConsent);
-            } else {
-                accountDetailsList = getAccountDetailsFromReferences(withBalance, accountConsent);
-            }
-
+            logger.info("Requested Details list for consent with id: {} and withBalance : {}", accountConsent.getId(), withBalance);
+            List<SpiAccountDetails> accountDetailsList = getSpiAccountDetails(withBalance, accountConsent);
+            logger.info("Details for consent are: {}", accountDetailsList);
             return SpiResponse.<List<SpiAccountDetails>>builder()
                            .payload(filterAccountDetailsByWithBalance(withBalance, accountDetailsList))
                            .aspspConsentData(aspspConsentData)
                            .success();
-        } catch (RestException e) {
-            return SpiResponse.<List<SpiAccountDetails>>builder().fail(getSpiResponseStatus(e));
+        } catch (FeignException e) {
+            logger.error(e.getMessage());
+            return SpiResponse.<List<SpiAccountDetails>>builder().aspspConsentData(aspspConsentData).fail(getSpiResponseStatus(e));
         }
     }
 
     @Override
     public SpiResponse<SpiAccountDetails> requestAccountDetailForAccount(boolean withBalance, @NotNull SpiAccountReference accountReference, @NotNull SpiAccountConsent accountConsent, @NotNull AspspConsentData aspspConsentData) {
         try {
+            logger.info("Requested details for account with id: {}, and withBalances: {}", accountReference.getResourceId(), withBalance);
             SpiAccountDetails accountDetails = Optional.ofNullable(restClient.getDetailsByAccountId(accountReference.getResourceId()).getBody())
                                                        .map(accountMapper::toSpiAccountDetails)
-                                                       .orElseThrow(() -> new RestException(HttpStatus.NOT_FOUND, "Response status was 200, but body was empty!"));
-
+                                                       .orElseThrow(() -> FeignException.errorStatus("Response status was 200, but the body was empty!", Response.builder().status(404).build()));
             if (!withBalance) {
                 accountDetails.emptyBalances();
             }
-
+            logger.info("The responded details are: {}", accountDetails);
             return SpiResponse.<SpiAccountDetails>builder()
                            .payload(accountDetails)
                            .aspspConsentData(aspspConsentData)
                            .success();
-        } catch (RestException e) {
+        } catch (FeignException e) {
+            logger.error(e.getMessage());
             return SpiResponse.<SpiAccountDetails>builder().fail(getSpiResponseStatus(e));
         }
     }
@@ -95,27 +93,21 @@ public class AccountSpiImpl implements AccountSpi {
     @Override
     public SpiResponse<SpiTransactionReport> requestTransactionsForAccount(boolean withBalance, @NotNull LocalDate dateFrom, @NotNull LocalDate dateTo, @NotNull SpiAccountReference accountReference, @NotNull SpiAccountConsent accountConsent, @NotNull AspspConsentData aspspConsentData) {
         try {
-            Optional<List<SpiTransaction>> transactionsOptional = Optional.ofNullable(
-                    restClient.getTransactionByDates(accountReference.getResourceId(), dateFrom, dateTo).getBody())
-                                                                          .map(accountMapper::toSpiTransactions);
-
-            List<SpiTransaction> transactions = transactionsOptional.orElseGet(ArrayList::new);
-            List<SpiAccountBalance> balances = null;
-
-            if (withBalance) {
-                balances = Optional.ofNullable(restClient.getDetailsByAccountId(accountReference.getResourceId()).getBody())
-                                   .map(accountMapper::toSpiAccountDetails)
-                                   .map(SpiAccountDetails::getBalances)
-                                   .orElseGet(ArrayList::new);
-            }
+            logger.info("Requested transactions for account with is: {},  dates from: {}, to: {}, withBalance: {}", accountReference.getResourceId(), dateFrom, dateTo, withBalance);
+            List<SpiTransaction> transactions = Optional.ofNullable(restClient.getTransactionByDates(accountReference.getResourceId(), dateFrom, dateTo).getBody())
+                                                        .map(accountMapper::toSpiTransactions)
+                                                        .orElseGet(ArrayList::new);
+            logger.info("Transactions are: {}", transactions);
+            List<SpiAccountBalance> balances = getSpiAccountBalances(withBalance, accountReference, accountConsent, aspspConsentData);
 
             SpiTransactionReport transactionReport = new SpiTransactionReport(transactions, balances);
-
+            logger.info("Final transaction report is: {}", transactionReport);
             return SpiResponse.<SpiTransactionReport>builder()
                            .payload(transactionReport)
                            .aspspConsentData(aspspConsentData)
                            .success();
-        } catch (RestException e) {
+        } catch (FeignException e) {
+            logger.error(e.getMessage());
             return SpiResponse.<SpiTransactionReport>builder().fail(getSpiResponseStatus(e));
         }
     }
@@ -123,15 +115,17 @@ public class AccountSpiImpl implements AccountSpi {
     @Override
     public SpiResponse<SpiTransaction> requestTransactionForAccountByTransactionId(@NotNull String transactionId, @NotNull SpiAccountReference accountReference, @NotNull SpiAccountConsent accountConsent, @NotNull AspspConsentData aspspConsentData) {
         try {
+            logger.info("Requested transaction id is: {}, for account with id: {}", transactionId, accountReference.getResourceId());
             SpiTransaction transaction = Optional.ofNullable(restClient.getTransactionById(accountReference.getResourceId(), transactionId).getBody())
                                                  .map(accountMapper::toSpiTransaction)
-                                                 .orElseThrow(() -> new RestException(HttpStatus.NOT_FOUND, "Response status was 200, but the body was empty!"));
-
+                                                 .orElseThrow(() -> FeignException.errorStatus("Response status was 200, but the body was empty!", Response.builder().status(404).build()));
+            logger.info("Transaction is: {}", transaction);
             return SpiResponse.<SpiTransaction>builder()
                            .payload(transaction)
                            .aspspConsentData(aspspConsentData)
                            .success();
-        } catch (RestException e) {
+        } catch (FeignException e) {
+            logger.error(e.getMessage());
             return SpiResponse.<SpiTransaction>builder().fail(getSpiResponseStatus(e));
         }
     }
@@ -139,15 +133,43 @@ public class AccountSpiImpl implements AccountSpi {
     @Override
     public SpiResponse<List<SpiAccountBalance>> requestBalancesForAccount(@NotNull SpiAccountReference accountReference, @NotNull SpiAccountConsent accountConsent, @NotNull AspspConsentData aspspConsentData) {
         try {
+            logger.info("Requested Balances for account with is: {}", accountReference.getResourceId());
             List<SpiAccountBalance> accountBalances = Optional.ofNullable(restClient.getBalancesByAccountId(accountReference.getResourceId()).getBody())
                                                               .map(accountMapper::toSpiAccountBalancesList)
-                                                              .orElseThrow(() -> new RestException(HttpStatus.NOT_FOUND, "Response status was 200, but the body was empty!"));
+                                                              .orElseThrow(() -> FeignException.errorStatus("Response status was 200, but the body was empty!", Response.builder().status(404).build()));
+            logger.info("Balances received are: {}", accountBalances);
             return SpiResponse.<List<SpiAccountBalance>>builder()
                            .payload(accountBalances)
                            .aspspConsentData(aspspConsentData)
                            .success();
-        } catch (RestException e) {
+        } catch (FeignException e) {
+            logger.error(e.getMessage());
             return SpiResponse.<List<SpiAccountBalance>>builder().fail(getSpiResponseStatus(e));
+        }
+    }
+
+    private List<SpiAccountDetails> getSpiAccountDetails(boolean withBalance, @NotNull SpiAccountConsent accountConsent) {
+        List<SpiAccountDetails> accountDetailsList;
+        if (isBankOfferedConsent(accountConsent.getAccess())) {
+            logger.info("Consent with id: {} is a Bank Offered Consent", accountConsent.getId());
+            accountDetailsList = getAccountDetailsByConsentId(accountConsent);
+        } else {
+            logger.info("Consent with id: {} is a regular consent", accountConsent.getId());
+            accountDetailsList = getAccountDetailsFromReferences(withBalance, accountConsent);
+        }
+        return accountDetailsList;
+    }
+
+    private List<SpiAccountBalance> getSpiAccountBalances(boolean withBalance, @NotNull SpiAccountReference accountReference, @NotNull SpiAccountConsent accountConsent, @NotNull AspspConsentData aspspConsentData) {
+        if (withBalance) {
+            SpiResponse<List<SpiAccountBalance>> response = requestBalancesForAccount(accountReference, accountConsent, aspspConsentData);
+            if (response.isSuccessful()) {
+                return response.getPayload();
+            } else {
+                throw FeignException.errorStatus("Requested transaction can`t be found", Response.builder().status(404).build());
+            }
+        } else {
+            return null;
         }
     }
 
@@ -190,13 +212,10 @@ public class AccountSpiImpl implements AccountSpi {
         }
 
         // TODO don't use IBAN as an account identifier https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/440
-        List<AccountDetailsTO> response = Optional.ofNullable(restClient.getAccountDetailsByIban(reference.getIban()).getBody())
-                                                  .orElseGet(Collections::emptyList);
+        AccountDetailsTO response = restClient.getAccountDetailsByIban(reference.getIban()).getBody();
 
         // TODO don't use currency as an account identifier https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/440
-        return response.stream()
-                       .filter(acc -> acc.getCurrency() == reference.getCurrency())
-                       .findFirst()
+        return Optional.ofNullable(response)
                        .map(accountMapper::toSpiAccountDetails);
     }
 
@@ -207,9 +226,9 @@ public class AccountSpiImpl implements AccountSpi {
         return details;
     }
 
-    private SpiResponseStatus getSpiResponseStatus(RestException e) {
+    private SpiResponseStatus getSpiResponseStatus(FeignException e) {
         logger.error(e.getMessage());
-        return e.getHttpStatus() == HttpStatus.INTERNAL_SERVER_ERROR
+        return e.status() == 500
                        ? SpiResponseStatus.TECHNICAL_FAILURE
                        : SpiResponseStatus.LOGICAL_FAILURE;
     }

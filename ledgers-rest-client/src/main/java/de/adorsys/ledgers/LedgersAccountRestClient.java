@@ -50,8 +50,8 @@ public interface LedgersAccountRestClient {
     @RequestMapping(value = "/accounts/users/{userLogin}", method = RequestMethod.GET)
     ResponseEntity<List<AccountDetailsTO>> getAccountDetailsByUserLogin(@PathVariable(name = "userLogin") String userLogin);
 
-    @RequestMapping(value = "/accounts/iban/{iban}", method = RequestMethod.GET)
-    ResponseEntity<List<AccountDetailsTO>> getAccountDetailsByIban(@PathVariable(name = "iban") String iban); //TODO - no endpoint at Ledgers!!! Have to solve it later on!
+    @RequestMapping(value = "/accounts/ibans/{iban}", method = RequestMethod.GET)
+    ResponseEntity<AccountDetailsTO> getAccountDetailsByIban(@PathVariable(name = "iban") String iban);
 
     @RequestMapping(value = "/accounts/funds-confirmation", method = RequestMethod.POST)
     ResponseEntity<Boolean> fundsConfirmation(@RequestBody FundsConfirmationRequestTO request);

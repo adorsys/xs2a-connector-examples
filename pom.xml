@@ -68,9 +68,9 @@
         <java.version>1.8</java.version>
         <pmd.plugin.version>3.10.0</pmd.plugin.version>
         <!-- xs2a version -->
-        <xs2a.version>1.11</xs2a.version>
+        <xs2a.version>1.12</xs2a.version>
         <!-- other properties -->
-        <spring-boot-dependencies.version>1.5.16.RELEASE</spring-boot-dependencies.version>
+        <spring-boot-dependencies.version>1.5.17.RELEASE</spring-boot-dependencies.version>
         <spring-cloud-dependencies.version>Edgware.SR5</spring-cloud-dependencies.version>
         <spring-test-dbunit.version>1.2.1</spring-test-dbunit.version>
         <jetbrains.annotations.version>15.0</jetbrains.annotations.version>
@@ -86,6 +86,7 @@
         <!-- automatically run annotation processors within the incremental compilation -->
         <m2e.apt.activation>jdt_apt</m2e.apt.activation>
         <slf4j.version>1.7.25</slf4j.version>
+        <aspectj.version>1.9.2</aspectj.version>
     </properties>
 
     <dependencyManagement>
