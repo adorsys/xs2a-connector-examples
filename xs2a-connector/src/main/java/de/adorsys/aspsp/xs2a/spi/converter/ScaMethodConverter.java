@@ -28,6 +28,7 @@ public interface ScaMethodConverter {
 
     @Mapping(source = "scaMethod", target = "authenticationType")
     @Mapping(source = "methodValue", target = "name")
+    @Mapping(source = "id", target = "authenticationMethodId")
     SpiAuthenticationObject toSpiAuthenticationObject(SCAMethodTO method);
 
     List<SpiAuthenticationObject> toSpiAuthenticationObjectList(List<SCAMethodTO> methods);
