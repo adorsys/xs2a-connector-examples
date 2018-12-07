@@ -18,8 +18,7 @@ variables: &variables
   # Docker images variables #
   ###########################
   GITLAB_REGISTRY: "gitlab-registry.adorsys.de"
-#  GITLAB_NAMESPACE: "adorsys/xs2a/xs2a-connector-examples"
-  GITLAB_NAMESPACE: "adorsys/xs2a/ledgers-xs2a-gateway"
+  GITLAB_NAMESPACE: "adorsys/xs2a/xs2a-connector-examples"
 
   DOCKER_NAMESPACE: "adorsys"
 
@@ -29,7 +28,6 @@ variables: &variables
   # Ledgers Service
 #  GITLAB_IMAGE_NAME_LEDGERS: "${GITLAB_REGISTRY}/${GITLAB_NAMESPACE}"
 #  DOCKER_IMAGE_NAME_XS2A_CONNECTOR: "${DOCKER_NAMESPACE}/xs2a-connector-examples"
-  DOCKER_IMAGE_NAME_XS2A_CONNECTOR: "${DOCKER_NAMESPACE}/ledgers-xs2a-gateway"
   #  OPENSHIFT_IMAGE_NAME_LEDGERS: "${OPENSHIFT_REGISTRY}/${OPENSHIFT_NAMESPACE}/aspsp-xs2a"
 
 

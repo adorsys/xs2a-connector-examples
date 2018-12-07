@@ -9,9 +9,9 @@ volumes:
 
 services:
 
-  ledgers-xs2a-gateway:
-    image: adorsys/ledgers-xs2a-gateway
-    container_name: ledgers-xs2a-gateway
+  xs2a-connector-examples:
+    image: adorsys/xs2a-connector-examples
+    container_name: xs2a-connector-examples
     restart: on-failure
     build:
       context: .

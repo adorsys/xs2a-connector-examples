@@ -4,32 +4,32 @@ networks:
   xs2a-net:
 
 volumes:
-  ledgers-xs2a-gateway-data:
+  xs2a-connector-data:
   ledgers-data:
 
 services:
 
-  ledgers-xs2a-gateway:
-    image: adorsys/ledgers-xs2a-gateway
-    container_name: ledgers-xs2a-gateway
+  xs2a-connector-examples:
+    image: adorsys/xs2a-connector-examples
+    container_name: xs2a-connector-examples
     restart: on-failure
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8089:8089"
+    - "8089:8089"
     environment:
-      - LEDGERS_URL=http://ledgers:8088
-      - SPRING_PROFILES_ACTIVE=postgres,mockspi
-      - DB_HOST=ledgers_xs2a_gateway_db
-      - DB_DATABASE=consent
-      - DB_USER=cms
-      - DB_PASSWORD=cms
+    - LEDGERS_URL=http://ledgers:8088
+    - SPRING_PROFILES_ACTIVE=postgres,mockspi
+    - DB_HOST=xs2a_connector_examples_db
+    - DB_DATABASE=consent
+    - DB_USER=cms
+    - DB_PASSWORD=cms
     networks:
-      - xs2a-net
+    - xs2a-net
     depends_on:
-      - ledgers-xs2a-gateway-db
-      - ledgers
+    - xs2a-connector-examples-db
+    - ledgers
 
   online-banking-demo-ui:
     image: adorsys/xs2a-mock-online-banking-ui
@@ -77,12 +77,12 @@ services:
     - POSTGRESQL_USER=ledgers
     - POSTGRESQL_PASSWORD=ledgers
 
-  ledgers-xs2a-gateway-db:
+  xs2a-connector-examples-db:
     image: centos/postgresql-95-centos7
-    container_name: ledgers_xs2a_gateway_db
+    container_name: xs2a_connector_examples_db
     restart: on-failure
     volumes:
-    - ledgers-xs2a-gateway-data:/var/lib/pgsql/data
+    - xs2a-connector-data:/var/lib/pgsql/data
     expose:
     - 5432
     networks:
