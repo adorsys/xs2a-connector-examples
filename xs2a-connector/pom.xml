@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>de.adorsys.ledgers</groupId>
-        <artifactId>ledgers-xs2a-gateway</artifactId>
+        <artifactId>xs2a-connector-examples</artifactId>
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
