@@ -1,4 +1,4 @@
-# ledgers-xs2a-gateway
+# xs2a-connector-examples
 
 XS2A Connector for the ledgers project
 
