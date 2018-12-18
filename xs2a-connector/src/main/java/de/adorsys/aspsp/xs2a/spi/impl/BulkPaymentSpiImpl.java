@@ -16,6 +16,12 @@
 
 package de.adorsys.aspsp.xs2a.spi.impl;
 
+import java.util.Optional;
+
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
 import de.adorsys.aspsp.xs2a.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.ledgers.LedgersRestClient;
 import de.adorsys.ledgers.domain.PaymentType;
@@ -33,11 +39,6 @@ import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.BulkPaymentSpi;
 import feign.FeignException;
 import feign.Response;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
-import java.util.Optional;
 
 
 @Component
@@ -60,7 +61,7 @@ public class BulkPaymentSpiImpl implements BulkPaymentSpi {
             logger.info("Initiate bulk payment with type={}", PaymentTypeTO.BULK);
             logger.debug("Bulk payment body={}", payment);
             BulkPaymentTO request = paymentMapper.toBulkPaymentTO(payment);
-            BulkPaymentTO response = ledgersRestClient.initiateBulkPayment(PaymentType.BULK, request).getBody();
+            BulkPaymentTO response = ledgersRestClient.initiateBulkPayment(TokenUtils.read(initialAspspConsentData),PaymentType.BULK, request).getBody();
             SpiBulkPaymentInitiationResponse spiInitiationResponse = Optional.ofNullable(response)
                                                                              .map(paymentMapper::toSpiBulkResponse)
                                                                              .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 201, but body was empty!", Response.builder().status(400).build()));
@@ -80,7 +81,7 @@ public class BulkPaymentSpiImpl implements BulkPaymentSpi {
         try {
             logger.info("Get payment by id with type={}, and id={}", PaymentTypeTO.BULK, payment.getPaymentId());
             logger.debug("Bulk payment body={}", payment);
-            BulkPaymentTO response = ledgersRestClient.getBulkPaymentPaymentById(PaymentTypeTO.BULK, PaymentProductTO.valueOf(payment.getPaymentProduct().name()), payment.getPaymentId()).getBody();
+            BulkPaymentTO response = ledgersRestClient.getBulkPaymentPaymentById(TokenUtils.read(aspspConsentData),PaymentTypeTO.BULK, PaymentProductTO.valueOf(payment.getPaymentProduct()), payment.getPaymentId()).getBody();
             SpiBulkPayment spiBulkPayment = Optional.ofNullable(response)
                                                     .map(paymentMapper::mapToSpiBulkPayment)
                                                     .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 200, but body was empty!", Response.builder().status(400).build()));
@@ -102,14 +103,14 @@ public class BulkPaymentSpiImpl implements BulkPaymentSpi {
 
     @Override
     public @NotNull SpiResponse<SpiResponse.VoidResponse> executePaymentWithoutSca(@NotNull SpiPsuData psuData, @NotNull SpiBulkPayment payment, @NotNull AspspConsentData aspspConsentData) {
-        return paymentService.executePaymentWithoutSca(payment.getPaymentId(), PaymentProductTO.valueOf(payment.getPaymentProduct().name()), PaymentTypeTO.BULK, aspspConsentData);
+        return paymentService.executePaymentWithoutSca(payment.getPaymentId(), PaymentProductTO.valueOf(payment.getPaymentProduct()), PaymentTypeTO.BULK, aspspConsentData);
     }
 
     @Override
     public @NotNull SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiPsuData psuData, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiBulkPayment payment, @NotNull AspspConsentData aspspConsentData) {
         return paymentService.verifyScaAuthorisationAndExecutePayment(
                 payment.getPaymentId(),
-                PaymentProductTO.valueOf(payment.getPaymentProduct().name()),
+                PaymentProductTO.valueOf(payment.getPaymentProduct()),
                 PaymentTypeTO.BULK,
                 payment.toString(),
                 spiScaConfirmation,

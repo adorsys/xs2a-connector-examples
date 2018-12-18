@@ -15,6 +15,7 @@ services:
     restart: on-failure
     ports:
     - "8089:8089"
+    - "8189:8000"
     environment:
     - LEDGERS_URL=http://ledgers:8088
     - SPRING_PROFILES_ACTIVE=postgres,mockspi
@@ -22,28 +23,32 @@ services:
     - DB_DATABASE=consent
     - DB_USER=cms
     - DB_PASSWORD=cms
+    #- DB_SCHEMA=consent
+    #- DB_URL=jdbc:postgresql://xs2a_gateway_db:5432/consent?currentSchema=consent
     networks:
     - xs2a-net
     depends_on:
     - xs2a-connector-examples-db
     - ledgers
 
-  online-banking-demo-ui:
-    image: adorsys/xs2a-mock-online-banking-ui
-    container_name: online_banking_demo_ui
+  xs2a-online-banking:
+    image: adorsys/xs2a-online-banking
+    container_name: xs2a_online_banking
     restart: on-failure
+    build:
+      context: .
+      dockerfile: Dockerfile-OBA
     ports:
-    - "4200:4200"
+    - "8090:8090"
+    - "8190:8000"
+    depends_on:
+    - ledgers
+    - xs2a-gateway
     networks:
     - xs2a-net
     environment:
-    - XS2A_URL=http://localhost:8080
-    - MOCKSERVER_URL=http://localhost:8088
-    - ONLINE_BANKING_SERVER_URL=http://localhost:28081
-    - CONSENT_MANAGEMENT_URL=http://localhost:38080
-    - PROFILE_SERVER_URL=http://localhost:48080
-    expose:
-    - 4200
+    - XS2A_URL=http://xs2a_gateway:8089
+    - LEDGERS_URL=http://ledgers:8088
 
   ledgers:
     image: adorsys/ledgers:develop
@@ -53,6 +58,7 @@ services:
     - xs2a-net
     ports:
     - "8088:8088"
+    - "8188:8000"
     depends_on:
     - ledgers-db
     environment:
@@ -69,6 +75,8 @@ services:
     - ledgers-data:/var/lib/pgsql/data
     expose:
     - 5432
+    ports:
+    - "5435:5432"
     networks:
     - xs2a-net
     environment:
@@ -82,9 +90,12 @@ services:
     container_name: xs2a_connector_examples_db
     restart: on-failure
     volumes:
-    - xs2a-connector-data:/var/lib/pgsql/data
+    - xs2a-gateway-data:/var/lib/pgsql/data
+    - ./db-scripts/pg-create-schema.sh:/usr/share/container-scripts/postgresql/start/zzz-create-schema.sh
     expose:
     - 5432
+    ports:
+    - "5436:5432"
     networks:
     - xs2a-net
     environment:

@@ -55,7 +55,7 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     public @NotNull SpiResponse<SpiPaymentCancellationResponse> initiatePaymentCancellation(@NotNull SpiPsuData psuData, @NotNull SpiPayment payment, @NotNull AspspConsentData aspspConsentData) {
         try {
             logger.info("Initiate payment cancellation payment:{}, userId:{}", payment.getPaymentId(), psuData.getPsuId());
-            PaymentCancellationResponseTO aspspResponse = ledgersRestClient.initiatePmtCancellation(psuData.getPsuId(), payment.getPaymentId()).getBody();
+            PaymentCancellationResponseTO aspspResponse = ledgersRestClient.initiatePmtCancellation(TokenUtils.read(aspspConsentData),psuData.getPsuId(), payment.getPaymentId()).getBody();
             SpiPaymentCancellationResponse response = paymentMapper.toSpiPaymentCancellationResponse(aspspResponse);
             logger.info("With response:{}", response.getTransactionStatus().name());
             return SpiResponse.<SpiPaymentCancellationResponse>builder()
@@ -73,7 +73,7 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     public @NotNull SpiResponse<SpiResponse.VoidResponse> cancelPaymentWithoutSca(@NotNull SpiPsuData psuData, @NotNull SpiPayment payment, @NotNull AspspConsentData aspspConsentData) {
         try {
             logger.info("Cancel payment:{}, userId:{}", payment.getPaymentId(), psuData.getPsuId());
-            ledgersRestClient.cancelPaymentNoSca(payment.getPaymentId());
+            ledgersRestClient.cancelPaymentNoSca(TokenUtils.read(aspspConsentData),payment.getPaymentId());
             return SpiResponse.<SpiResponse.VoidResponse>builder()
                            .aspspConsentData(aspspConsentData)
                            .payload(SpiResponse.voidResponse())

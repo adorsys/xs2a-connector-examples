@@ -18,22 +18,23 @@ server:
   max-http-header-size: 65000
   port: 8089
 
+# Swagger configuration location.
+# Empty string, mean the default setting from xs2a-impl will be used.
+xs2a.swagger.psd2.api.location: /psd2-api-1.2-Update-2018-08-18-non-oauth.yaml
+
 spring:
   application.name: ledgers-xs2a-gateway
+  # These datasource information are provided for the consent db
   datasource:
-    url: ${db.url}
     username: ${db.user}
     password: ${db.password}
+    url: ${db.url}
   jpa:
     show-sql: true
-    generate-ddl: true
-    hibernate:
-      ddl-auto: update
     properties:
       hibrenate.globally_quoted_identifiers: true
       hibernate.jdbc.lob.non_contextual_creation: true
       hibernate.naming-strategy: org.hibernate.cfg.ImprovedNamingStrategy
-      hibernate.default_schema: consent
   jackson:
     serialization:
       write_dates_as_timestamps: false
@@ -57,6 +58,9 @@ springfox.documentation.swagger.v2.path: /swagger.json
 
 skip.ssl.certificate.verification: true
 
+# Profile Service config
+bank_profile.path: /bank_profile_mockbank.yml
+
 # ENDPOINTS CORS CONFIGURATION
 # Whether credentials are supported. When not set, credentials are not supported.
 endpoints:
@@ -78,37 +82,55 @@ spring:
     console:
       enabled: true
       path: /h2
-    datasource.data: classpath:data-h2.sql
-  
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: create
+  # SpringBoot 2.x react to this liquibase proprty
+  liquibase:
+    enabled: false 
 db:
-  url: jdbc:h2:mem:psdsandboxdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
   user: sa
   password: sa
+  url: jdbc:h2:./target/xs2adbs/consent;DB_CLOSE_DELAY=-1
 
+# SpringBoot 1.x react to this liquibase proprty
+liquibase:
+  enabled: false 
 ---
 spring:
   profiles: postgres
   jpa:
     properties:
       hibernate.default_schema: consent
-
+  # SpringBoot 2.x react to this liquibase proprty
+  liquibase:
+    default-schema: consent
+    enabled: true 
+    change-log: classpath:/master.xml
 db:
   host: localhost
-  user: ledgers
-  password: ledgers
-  database: ledgers
+  user: cms
+  password: cms
+  database: consent
   port: 5432
-  url: jdbc:postgresql://${db.host}:${db.port}/${db.database}
+  url: jdbc:postgresql://${db.host}:${db.port}/${db.database}?currentSchema=consent
+  
+# SpringBoot 1.x react to this liquibase proprty
+liquibase:
+  default-schema: consent
+  enabled: true 
+  change-log: classpath:/master.xml
+
 ---
 spring:
   profiles: dev
 
 logging.level.org.postgresql: INFO
-logging.level.org.hibernate.SQL: DEBUG
-logging.level.org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-logging.level.org.springframework: TRACE
+logging.level.org.hibernate.SQL: WARN
+logging.level.org.hibernate.type.descriptor.sql.BasicBinder: WARN
+logging.level.org.springframework: INFO
 
 management.endpoints.web.exposure.include: "*"
 management.endpoints.web.exposure.exclude: env,beans
-
 

@@ -15,7 +15,6 @@
  */
 package de.adorsys.aspsp.xs2a.config.rest;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,15 +25,22 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.annotation.RequestScope;
 
 @Configuration
-@RequiredArgsConstructor
 public class AspspRestConfig {
     @Value("${http-client.read-timeout.ms:10000}")
     private int readTimeout;
     @Value("${http-client.connection-timeout.ms:10000}")
     private int connectionTimeout;
-//    private final BearerToken bearerToken;
 
-    @RequestScope
+    
+    public AspspRestConfig() {
+	}
+
+	public AspspRestConfig(int readTimeout, int connectionTimeout) {
+		this.readTimeout = readTimeout;
+		this.connectionTimeout = connectionTimeout;
+	}
+
+	@RequestScope
     @Bean(name = "aspspRestTemplate")
     public RestTemplate restTemplate(){
         RestTemplate rest = new RestTemplate(clientHttpRequestFactory());

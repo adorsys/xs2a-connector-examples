@@ -1,0 +1,261 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>de.adorsys.ledgers</groupId>
+		<artifactId>xs2a-connector-examples</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>..</relativePath>
+	</parent>
+
+	<artifactId>xs2a-ctk</artifactId>
+	<name>xs2a-ctk</name>
+
+	<properties>
+		<ruleset.basedir>..</ruleset.basedir>
+		<ledgers.version>0.0.1-SNAPSHOT</ledgers.version>
+	</properties>
+
+	<dependencies>
+
+		<!-- project dependencies -->
+		<dependency>
+			<groupId>de.adorsys.ledgers</groupId>
+			<artifactId>gateway-app</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>de.adorsys.ledgers</groupId>
+			<artifactId>online-banking-app</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<!-- 
+		<dependency>
+			<groupId>de.adorsys.ledgers</groupId>
+			<artifactId>ledgers-app</artifactId>
+			<version>${ledgers.version}</version>
+		</dependency>
+		 -->
+
+		<!-- xs2a dependencies -->
+
+		<!-- test dependencies -->
+		<dependency>
+			<groupId>de.adorsys.ledgers</groupId>
+			<artifactId>ledgers-rest-client</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- test dependencies -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>de.adorsys.multibanking</groupId>
+			<artifactId>xs2a-adapter</artifactId>
+			<version>1.2.5</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>info.cukes</groupId>
+			<artifactId>cucumber-java</artifactId>
+			<version>${cucumber.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>info.cukes</groupId>
+			<artifactId>cucumber-junit</artifactId>
+			<version>${cucumber.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>info.cukes</groupId>
+			<artifactId>cucumber-spring</artifactId>
+			<version>${cucumber.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.1.1</version>
+				<executions>
+					<execution>
+						<id>copy</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<artifactItems>
+						<artifactItem>
+							<groupId>de.adorsys.ledgers</groupId>
+							<artifactId>gateway-app</artifactId>
+							<version>${project.version}</version>
+							<type>jar</type>
+							<overWrite>false</overWrite>
+							<outputDirectory>${project.build.directory}/xs2a-gateway</outputDirectory>
+							<destFileName>xs2a-gateway-app.jar</destFileName>
+						</artifactItem>
+						<artifactItem>
+							<groupId>de.adorsys.ledgers</groupId>
+							<artifactId>online-banking-app</artifactId>
+							<version>${project.version}</version>
+							<type>jar</type>
+							<overWrite>false</overWrite>
+							<outputDirectory>${project.build.directory}/online-banking</outputDirectory>
+							<destFileName>online-banking-app.jar</destFileName>
+						</artifactItem>
+						<!-- 
+						<artifactItem>
+							<groupId>de.adorsys.ledgers</groupId>
+							<artifactId>ledgers-app</artifactId>
+							<version>0.0.1-SNAPSHOT</version>
+							<type>jar</type>
+							<overWrite>false</overWrite>
+							<outputDirectory>${project.build.directory}/ledgers</outputDirectory>
+							<destFileName>ledgers-app.jar</destFileName>
+						</artifactItem>
+						 -->
+						<artifactItem>
+							<!-- https://mvnrepository.com/artifact/com.github.tntim96/fakesmtp -->
+						    <groupId>com.github.tntim96</groupId>
+						    <artifactId>fakesmtp</artifactId>
+						    <version>2.0</version>
+							<type>jar</type>
+							<overWrite>false</overWrite>
+							<outputDirectory>${project.build.directory}/fakesmtp</outputDirectory>
+							<destFileName>fakesmtp.jar</destFileName>
+						</artifactItem>
+					</artifactItems>
+					<overWriteReleases>false</overWriteReleases>
+					<overWriteSnapshots>true</overWriteSnapshots>
+				</configuration>
+			</plugin>		
+			<plugin>
+				<groupId>com.bazaarvoice.maven.plugins</groupId>
+				<artifactId>process-exec-maven-plugin</artifactId>
+				<version>0.7</version>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+				<executions>
+					<!-- MAIL SERVER -->
+					<execution>
+						<id>faksmtp-process</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>start</goal>
+						</goals>
+						<configuration>
+							<name>FAKE SMTP</name>
+							<workingDir>${project.build.directory}/fakesmtp</workingDir>
+							<waitForInterrupt>false</waitForInterrupt>
+							<!-- java -jar fakeSMTP.jar -s -b -p 2500 -o ${project.build.directory}/fakesmtp/mails-->
+							<arguments>
+								<argument>java</argument>
+								<argument>-jar</argument>
+								<argument>${project.build.directory}/fakesmtp/fakesmtp.jar</argument>
+								<argument>-s</argument>
+								<argument>-b</argument>
+								<argument>-p</argument>
+								<argument>2500</argument>
+								<argument>-o</argument>
+								<argument>${project.build.directory}/fakesmtp/mails</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<!-- START LEDGERS -->
+					<!-- 
+					<execution>
+						<id>ledgers-process</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>start</goal>
+						</goals>
+						<configuration>
+							<name>LEDGERS</name>
+							<workingDir>${project.build.directory}/ledgers</workingDir>
+							<waitForInterrupt>false</waitForInterrupt>
+							<healthcheckUrl>http://localhost:8088/actuator/health</healthcheckUrl>
+							<arguments>
+								<argument>java</argument>
+								<argument>-jar</argument>
+								<argument>${project.build.directory}/ledgers/ledgers-app.jar</argument>
+								<argument>(minus minus)spring.profiles.active=h2'</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					 -->
+					<!-- START XS2A GATEWAY -->
+					<execution>
+						<id>xs2a-gateway-process</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>start</goal>
+						</goals>
+						<configuration>
+							<name>XS2A GATEWAY</name>
+							<workingDir>${project.build.directory}/xs2a-gateway</workingDir>
+							<waitForInterrupt>false</waitForInterrupt>
+							<healthcheckUrl>http://localhost:8089/actuator/health</healthcheckUrl>
+							<arguments>
+								<argument>java</argument>
+								<argument>-jar</argument>
+								<argument>${project.build.directory}/xs2a-gateway/xs2a-gateway-app.jar</argument>
+								<argument>--spring.main.allow-bean-definition-overriding=true</argument>
+								<argument>--spring.profiles.active=h2,mockspi</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<!-- START ONLINE BANKING -->
+					<execution>
+						<id>online-banking-process</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>start</goal>
+						</goals>
+						<configuration>
+							<name>ONLINE BANKING</name>
+							<workingDir>${project.build.directory}/online-banking</workingDir>
+							<waitForInterrupt>false</waitForInterrupt>
+							<healthcheckUrl>http://localhost:8090/actuator/health</healthcheckUrl>
+							<arguments>
+								<argument>java</argument>
+								<argument>-jar</argument>
+								<argument>${project.build.directory}/online-banking/online-banking-app.jar</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					
+					<!--STOP ALL -->
+					<execution>
+						<id>stop-all</id>
+						<phase>post-integration-test</phase>
+						<goals>
+							<goal>stop-all</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
+
