@@ -36,14 +36,14 @@ services:
     container_name: xs2a_online_banking
     restart: on-failure
     build:
-      context: .
-      dockerfile: Dockerfile-OBA
+      context: online-banking-app
+      dockerfile: Dockerfile
     ports:
     - "8090:8090"
     - "8190:8000"
     depends_on:
     - ledgers
-    - xs2a-gateway
+    - xs2a-connector-examples
     networks:
     - xs2a-net
     environment:
@@ -90,7 +90,7 @@ services:
     container_name: xs2a_connector_examples_db
     restart: on-failure
     volumes:
-    - xs2a-gateway-data:/var/lib/pgsql/data
+    - xs2a-connector-data:/var/lib/pgsql/data
     - ./db-scripts/pg-create-schema.sh:/usr/share/container-scripts/postgresql/start/zzz-create-schema.sh
     expose:
     - 5432

@@ -8,7 +8,7 @@ ENV JAVA_TOOL_OPTIONS -Xmx1024m -agentlib:jdwp=transport=dt_socket,address=8000,
 
 WORKDIR /opt/xs2a-connector-examples
 
-COPY ./online-banking-app/target/online-banking-app.jar /opt/xs2a-connector-examples/xs2a-online-banking.jar
+COPY ./target/online-banking-app.jar /opt/xs2a-connector-examples/xs2a-online-banking.jar
 
 EXPOSE 8090 8000
 
