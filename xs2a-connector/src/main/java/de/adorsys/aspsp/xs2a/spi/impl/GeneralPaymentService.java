@@ -32,7 +32,7 @@ public class GeneralPaymentService {
     public SpiResponse<SpiTransactionStatus> getPaymentStatusById(@NotNull PaymentTypeTO paymentType, @NotNull String paymentId, @NotNull AspspConsentData aspspConsentData) {
         try {
             logger.info("Get payment status by id with type={}, and id={}", paymentType, paymentId);
-            TransactionStatus response = ledgersRestClient.getPaymentStatusById(paymentId).getBody();
+            TransactionStatus response = ledgersRestClient.getPaymentStatusById(TokenUtils.read(aspspConsentData),paymentId).getBody();
             SpiTransactionStatus status = Optional.ofNullable(response)
                                                   .map(r -> SpiTransactionStatus.valueOf(r.getName()))
                                                   .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 200, but body was empty!", Response.builder().status(400).build()));
@@ -51,7 +51,7 @@ public class GeneralPaymentService {
     public SpiResponse<SpiResponse.VoidResponse> executePaymentWithoutSca(@NotNull String paymentId, @NotNull PaymentProductTO paymentProduct, @NotNull PaymentTypeTO paymentType, @NotNull AspspConsentData aspspConsentData) {
         logger.info("Executing payment without SCA for paymentId={}, productName={} and paymentType={}", paymentId, paymentProduct, paymentType);
         try {
-            TransactionStatus status = ledgersRestClient.executePaymentNoSca(paymentId, paymentProduct, paymentType).getBody();
+            TransactionStatus status = ledgersRestClient.executePaymentNoSca(TokenUtils.read(aspspConsentData),paymentId, paymentProduct, paymentType).getBody();
             Optional.ofNullable(status)
                     .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 200, but body was empty!", Response.builder().status(400).build()));
             logger.info("The response status was:{}", status);

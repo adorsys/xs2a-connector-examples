@@ -13,7 +13,8 @@
 
     <properties>
         <ruleset.basedir>..</ruleset.basedir>
-        <log4j.version>1.2.17</log4j.version>
+		<spring-boot-dependencies.version>1.5.17.RELEASE</spring-boot-dependencies.version>
+		<spring-cloud-dependencies.version>Edgware.SR5</spring-cloud-dependencies.version>
         <google.guava.version>23.0</google.guava.version>
     </properties>
 
@@ -44,23 +45,25 @@
         <!-- spring dependencies -->
 
         <!-- other dependencies -->
+        <!-- 
+        	Not needed for SpringBoot 2.
         <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>
             <version>${aspectj.version}</version>
         </dependency>
+         -->
 
         <dependency>
             <groupId>pro.javatar.commons</groupId>
             <artifactId>javatar-commons</artifactId>
-            <version>${javatar-commons.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct-jdk8</artifactId>
         </dependency>
-
+		
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
@@ -76,6 +79,29 @@
 
         <!-- test dependencies -->
 
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>test</scope>
+		</dependency>
+
     </dependencies>
 
     <profiles>
@@ -89,8 +115,8 @@
 
             <dependencies>
 
-                <!-- ASPSP Profile embedded mode -->
-
+                <!-- ASPSP Profile embedded mode 
+					Profile Lib initialization not working.
                 <dependency>
                     <groupId>de.adorsys.psd2</groupId>
                     <artifactId>aspsp-profile-lib</artifactId>
@@ -101,6 +127,12 @@
                             <artifactId>aspsp-profile-remote</artifactId>
                         </exclusion>
                     </exclusions>
+                </dependency>
+                -->
+                <dependency>
+                    <groupId>de.adorsys.psd2</groupId>
+                    <artifactId>aspsp-profile-api</artifactId>
+                    <version>${xs2a.version}</version>
                 </dependency>
 
                 <!-- CMS embedded mode -->
@@ -122,6 +154,32 @@
                     <artifactId>h2</artifactId>
                     <scope>runtime</scope>
                 </dependency>
+
+				<!-- CMS embedded mode -->
+				<dependency>
+					<groupId>de.adorsys.psd2</groupId>
+					<artifactId>consent-xs2a-web</artifactId>
+					<version>${xs2a.version}</version>
+					<exclusions>
+						<exclusion>
+							<groupId>de.adorsys.psd2</groupId>
+							<artifactId>consent-core-web</artifactId>
+						</exclusion>
+					</exclusions>
+				</dependency>
+				
+				<!-- Liquibase auto installation for testing -->
+				<dependency>
+					<groupId>de.adorsys.psd2</groupId>
+					<artifactId>cms-db-schema</artifactId>
+					<version>${xs2a.version}</version>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.liquibase</groupId>
+					<artifactId>liquibase-core</artifactId>
+					<scope>test</scope>
+				</dependency>
 
             </dependencies>
         </profile>
