@@ -103,7 +103,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         }
 
         private OpData(final SpiAccountConsent consent) {
-            this(consent.getAccess().getAccounts(), consent.getPsuData(), consent.getTppId());
+            this(consent.getAccess().getAccounts(), consent.getPsuData(), consent.getTppInfo().getAuthorisationNumber());
         }
 
         @Override

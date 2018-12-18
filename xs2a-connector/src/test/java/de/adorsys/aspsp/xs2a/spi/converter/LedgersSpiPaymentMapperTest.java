@@ -1,10 +1,24 @@
 package de.adorsys.aspsp.xs2a.spi.converter;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.Currency;
+
+import org.junit.Test;
+import org.mapstruct.factory.Mappers;
+
 import de.adorsys.ledgers.domain.payment.AmountTO;
 import de.adorsys.ledgers.domain.payment.BulkPaymentTO;
+import de.adorsys.ledgers.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.domain.payment.PeriodicPaymentTO;
 import de.adorsys.ledgers.domain.payment.SinglePaymentTO;
-import de.adorsys.psd2.xs2a.core.profile.PaymentProduct;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.code.SpiFrequencyCode;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
@@ -16,23 +30,14 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiBulkPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPeriodicPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiationResponse;
-import org.junit.Test;
-import org.mapstruct.factory.Mappers;
 import pro.javatar.commons.reader.YamlReader;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.Currency;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-
 public class LedgersSpiPaymentMapperTest {
+
+    public static final PaymentProductTO PAYMENT_PRODUCT_SEPA = PaymentProductTO.SEPA;
+    
+    public static final PaymentProductTO PAYMENT_PRODUCT_CROSS_BORDER=PaymentProductTO.CROSS_BORDER;
+    
     private final LedgersSpiPaymentMapper mapper = Mappers.getMapper(LedgersSpiPaymentMapper.class);
 
 
@@ -121,7 +126,7 @@ public class LedgersSpiPaymentMapperTest {
     }
 
     private SpiSinglePayment getSpiSingle() {
-        SpiSinglePayment spiPayment = new SpiSinglePayment(PaymentProduct.SEPA);
+        SpiSinglePayment spiPayment = new SpiSinglePayment(PAYMENT_PRODUCT_SEPA.getValue());
         spiPayment.setPaymentId("myPaymentId");
         spiPayment.setEndToEndIdentification("123456789");
         spiPayment.setDebtorAccount(getDebtorAcc());
@@ -138,7 +143,7 @@ public class LedgersSpiPaymentMapperTest {
     }
 
     private SpiPeriodicPayment getPeriodic() {
-        SpiPeriodicPayment spiPayment = new SpiPeriodicPayment(PaymentProduct.SEPA);
+        SpiPeriodicPayment spiPayment = new SpiPeriodicPayment(PAYMENT_PRODUCT_SEPA.getValue());
         spiPayment.setPaymentId("myPaymentId");
         spiPayment.setEndToEndIdentification("123456789");
         spiPayment.setDebtorAccount(getDebtorAcc());
@@ -178,10 +183,10 @@ public class LedgersSpiPaymentMapperTest {
         two.setPaymentId("myPaymentId2");
         two.setCreditorAccount(getCreditorAcc2());
         two.setCreditorName("Sokol.ua");
-        two.setPaymentProduct(PaymentProduct.CROSS_BORDER);
+        two.setPaymentProduct(PAYMENT_PRODUCT_CROSS_BORDER.getValue());
 
         payment.setPayments(Arrays.asList(one, two));
-        payment.setPaymentProduct(PaymentProduct.SEPA);
+        payment.setPaymentProduct(PAYMENT_PRODUCT_SEPA.getValue());
         return payment;
     }
 

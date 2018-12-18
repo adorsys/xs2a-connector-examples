@@ -16,21 +16,24 @@
 
 package de.adorsys.aspsp.xs2a.spi.impl;
 
-import de.adorsys.aspsp.xs2a.spi.converter.LedgersSpiAccountMapper;
-import de.adorsys.ledgers.LedgersAccountRestClient;
-import de.adorsys.ledgers.domain.account.FundsConfirmationRequestTO;
-import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
-import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
-import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
-import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
-import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
-import de.adorsys.psd2.xs2a.spi.service.FundsConfirmationSpi;
-import feign.FeignException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import de.adorsys.aspsp.xs2a.spi.converter.LedgersSpiAccountMapper;
+import de.adorsys.ledgers.LedgersAccountRestClient;
+import de.adorsys.ledgers.domain.account.FundsConfirmationRequestTO;
+import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
+import de.adorsys.psd2.xs2a.core.piis.PiisConsent;
+import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
+import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationResponse;
+import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
+import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
+import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
+import de.adorsys.psd2.xs2a.spi.service.FundsConfirmationSpi;
+import feign.FeignException;
 
 @Component
 public class FundsConfirmationSpiImpl implements FundsConfirmationSpi {
@@ -45,24 +48,28 @@ public class FundsConfirmationSpiImpl implements FundsConfirmationSpi {
     }
 
     @Override
-    public @NotNull SpiResponse<Boolean> performFundsSufficientCheck(@NotNull SpiPsuData psuData, @Nullable String consentId, @NotNull SpiFundsConfirmationRequest spiFundsConfirmationRequest, @NotNull AspspConsentData aspspConsentData) {
+	public @NotNull SpiResponse<SpiFundsConfirmationResponse> performFundsSufficientCheck(@NotNull SpiPsuData psuData,
+			@Nullable PiisConsent piisConsent, @NotNull SpiFundsConfirmationRequest spiFundsConfirmationRequest,
+			@NotNull AspspConsentData aspspConsentData) {
         try {
             logger.info("Funds confirmation request e={}", spiFundsConfirmationRequest);
             FundsConfirmationRequestTO request = accountMapper.toFundsConfirmationTO(psuData, spiFundsConfirmationRequest);
-            Boolean fundsAvailable = restClient.fundsConfirmation(request).getBody();
+            Boolean fundsAvailable = restClient.fundsConfirmation(TokenUtils.read(aspspConsentData),request).getBody();
             logger.info("And got the response ={}", fundsAvailable);
-            return SpiResponse.<Boolean>builder()
+
+            SpiFundsConfirmationResponse spiFundsConfirmationResponse = new SpiFundsConfirmationResponse();
+            spiFundsConfirmationResponse.setFundsAvailable(fundsAvailable);
+            return SpiResponse.<SpiFundsConfirmationResponse>builder()
                            .aspspConsentData(aspspConsentData)
-                           .payload(fundsAvailable)
+                           .payload(spiFundsConfirmationResponse)
                            .success();
         } catch (FeignException e) {
-            return SpiResponse.<Boolean>builder()
+            return SpiResponse.<SpiFundsConfirmationResponse>builder()
                            .aspspConsentData(aspspConsentData)
                            .fail(getSpiFailureResponse(e));
         }
-    }
-
-    @NotNull
+	}
+	@NotNull
     private SpiResponseStatus getSpiFailureResponse(FeignException e) {
         logger.error(e.getMessage(), e);
         return e.status() == 500

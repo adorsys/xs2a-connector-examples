@@ -16,6 +16,13 @@
 
 package de.adorsys.aspsp.xs2a.spi.impl;
 
+import java.util.Optional;
+
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
 import de.adorsys.aspsp.xs2a.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.ledgers.LedgersRestClient;
 import de.adorsys.ledgers.domain.PaymentType;
@@ -33,12 +40,6 @@ import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.SinglePaymentSpi;
 import feign.FeignException;
 import feign.Response;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
-import java.util.Optional;
 
 @Component
 public class SinglePaymentSpiImpl implements SinglePaymentSpi {
@@ -60,7 +61,7 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
             logger.info("Initiate single payment with type={}", PaymentTypeTO.SINGLE);
             logger.debug("Single payment body={}", payment);
             SinglePaymentTO request = paymentMapper.toSinglePaymentTO(payment);
-            SinglePaymentTO response = ledgersRestClient.initiateSinglePayment(PaymentType.SINGLE, request).getBody();
+            SinglePaymentTO response = ledgersRestClient.initiateSinglePayment(TokenUtils.read(initialAspspConsentData),PaymentType.SINGLE, request).getBody();
             SpiSinglePaymentInitiationResponse spiInitiationResponse = Optional.ofNullable(response)
                                                                                .map(paymentMapper::toSpiSingleResponse)
                                                                                .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 201, but body was empty!", Response.builder().status(400).build()));
@@ -80,7 +81,7 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
         try {
             logger.info("Get payment by id with type={}, and id={}", PaymentTypeTO.SINGLE, payment.getPaymentId());
             logger.debug("Single payment body={}", payment);
-            SinglePaymentTO response = ledgersRestClient.getSinglePaymentPaymentById(PaymentTypeTO.SINGLE, PaymentProductTO.valueOf(payment.getPaymentProduct().name()), payment.getPaymentId()).getBody();
+            SinglePaymentTO response = ledgersRestClient.getSinglePaymentPaymentById(TokenUtils.read(aspspConsentData),PaymentTypeTO.SINGLE, PaymentProductTO.valueOf(payment.getPaymentProduct()), payment.getPaymentId()).getBody();
             SpiSinglePayment spiPayment = Optional.ofNullable(response)
                                                   .map(paymentMapper::toSpiSinglePayment)
                                                   .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 200, but body was empty!", Response.builder().status(400).build()));
@@ -102,14 +103,14 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
 
     @Override
     public @NotNull SpiResponse<SpiResponse.VoidResponse> executePaymentWithoutSca(@NotNull SpiPsuData spiPsuData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
-        return paymentService.executePaymentWithoutSca(payment.getPaymentId(), PaymentProductTO.valueOf(payment.getPaymentProduct().name()), PaymentTypeTO.SINGLE, aspspConsentData);
+        return paymentService.executePaymentWithoutSca(payment.getPaymentId(), PaymentProductTO.valueOf(payment.getPaymentProduct()), PaymentTypeTO.SINGLE, aspspConsentData);
     }
 
     @Override
     public @NotNull SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiPsuData spiPsuData, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
         return paymentService.verifyScaAuthorisationAndExecutePayment(
                 payment.getPaymentId(),
-                PaymentProductTO.valueOf(payment.getPaymentProduct().name()),
+                PaymentProductTO.valueOf(payment.getPaymentProduct()),
                 PaymentTypeTO.SINGLE,
                 payment.toString(),
                 spiScaConfirmation,

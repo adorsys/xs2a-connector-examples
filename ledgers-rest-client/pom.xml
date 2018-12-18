@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
@@ -8,32 +9,28 @@
 		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>ledgers-rest-client</artifactId>
-	
+
 	<properties>
 		<ruleset.basedir>..</ruleset.basedir>
+        <spring-boot-dependencies.version>1.5.17.RELEASE</spring-boot-dependencies.version>
+        <spring-cloud-dependencies.version>Edgware.SR5</spring-cloud-dependencies.version>
 	</properties>
 
 	<dependencies>
 
 		<!-- project dependencies -->
+		<dependency>
+			<groupId>de.adorsys.ledgers</groupId>
+			<artifactId>ledgers-rest-client-core</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<!-- spring dependencies -->
 
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-feign</artifactId>
-        </dependency>
-
-		<!-- other dependencies -->
 		<dependency>
-			<groupId>com.fasterxml.jackson.datatype</groupId>
-			<artifactId>jackson-datatype-jsr310</artifactId>
-			<version>2.9.6</version>
-			<scope>compile</scope>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-feign</artifactId>
 		</dependency>
-
-		<!-- test dependencies -->
-
 	</dependencies>
 
 	<build>
@@ -54,6 +51,7 @@
 									<excludes>
 										<exclude>de.adorsys.ledgers:xs2a-connector</exclude>
 										<exclude>de.adorsys.ledgers:gateway-app</exclude>
+										<exclude>de.adorsys.ledgers:online-banking-app</exclude>
 									</excludes>
 								</bannedDependencies>
 							</rules>

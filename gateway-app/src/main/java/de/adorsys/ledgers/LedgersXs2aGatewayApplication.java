@@ -20,13 +20,21 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Import;
 
-@EnableFeignClients
-@ComponentScan(basePackages = {"de.adorsys.aspsp.xs2a", "de.adorsys.psd2"})
+import de.adorsys.aspsp.xs2a.EnableLedgersXS2AConnector;
+import de.adorsys.psd2.xs2a.config.EnableXs2aInterface;
+
+@EnableFeignClients(basePackageClasses=LedgersRestClient.class)
+@ComponentScan
 @SpringBootApplication
+@EnableXs2aInterface
+@EnableLedgersXS2AConnector
+@Import({SwaggerConfig.class, LiquiBaseConfig.class})
 public class LedgersXs2aGatewayApplication {
 
     public static void main(String[] args) {
+    	System.setProperty("spring.main.allow-bean-definition-overriding", "true");
         SpringApplication.run(LedgersXs2aGatewayApplication.class, args);
     }
 }

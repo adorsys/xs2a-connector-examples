@@ -17,71 +17,113 @@
 package de.adorsys.ledgers;
 
 
+import java.util.List;
+
+import org.springframework.cloud.netflix.feign.FeignClient;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import de.adorsys.ledgers.domain.PaymentType;
 import de.adorsys.ledgers.domain.SCAValidationRequest;
 import de.adorsys.ledgers.domain.TransactionStatus;
-import de.adorsys.ledgers.domain.payment.*;
+import de.adorsys.ledgers.domain.payment.BulkPaymentTO;
+import de.adorsys.ledgers.domain.payment.PaymentCancellationResponseTO;
+import de.adorsys.ledgers.domain.payment.PaymentProductTO;
+import de.adorsys.ledgers.domain.payment.PaymentTypeTO;
+import de.adorsys.ledgers.domain.payment.PeriodicPaymentTO;
+import de.adorsys.ledgers.domain.payment.SinglePaymentTO;
 import de.adorsys.ledgers.domain.sca.AuthCodeDataTO;
 import de.adorsys.ledgers.domain.sca.SCAGenerationResponse;
 import de.adorsys.ledgers.domain.sca.SCAMethodTO;
-import org.springframework.cloud.netflix.feign.FeignClient;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import de.adorsys.ledgers.domain.um.BearerTokenTO;
 
 @FeignClient(value = "ledgers", url = "${ledgers.url}")
 public interface LedgersRestClient {
+    String AUTH_TOKEN = "Authorization";
 
     @RequestMapping(value = "/payments/execute-no-sca/{paymentId}/{paymentProduct}/{paymentType}", method = RequestMethod.POST)
     ResponseEntity<TransactionStatus> executePaymentNoSca(
+    		@RequestHeader(AUTH_TOKEN) String accessTokenHeader,
             @PathVariable(name = "paymentId") String paymentId,
             @PathVariable(name = "paymentProduct") PaymentProductTO paymentProduct,
             @PathVariable(name = "paymentType") PaymentTypeTO paymentType
     );
 
     @RequestMapping(value = "/payments/{paymentType}", method = RequestMethod.POST)
-    ResponseEntity<SinglePaymentTO> initiateSinglePayment(@PathVariable(name = "paymentType") PaymentType paymentType, @RequestBody SinglePaymentTO payment);
+    ResponseEntity<SinglePaymentTO> initiateSinglePayment(
+    		@RequestHeader(AUTH_TOKEN) String accessTokenHeader,
+    		@PathVariable(name = "paymentType") PaymentType paymentType, @RequestBody SinglePaymentTO payment);
 
     @RequestMapping(value = "/payments/{paymentType}", method = RequestMethod.POST)
-    ResponseEntity<PeriodicPaymentTO> initiatePeriodicPayment(@PathVariable(name = "paymentType") PaymentType paymentType, @RequestBody PeriodicPaymentTO payment);
+    ResponseEntity<PeriodicPaymentTO> initiatePeriodicPayment(
+    		@RequestHeader(AUTH_TOKEN) String accessTokenHeader,
+    		@PathVariable(name = "paymentType") PaymentType paymentType, @RequestBody PeriodicPaymentTO payment);
 
     @RequestMapping(value = "/payments/{paymentType}", method = RequestMethod.POST)
-    ResponseEntity<BulkPaymentTO> initiateBulkPayment(@PathVariable(name = "paymentType") PaymentType paymentType, @RequestBody BulkPaymentTO payment);
+    ResponseEntity<BulkPaymentTO> initiateBulkPayment(
+    		@RequestHeader(AUTH_TOKEN) String accessTokenHeader,
+    		@PathVariable(name = "paymentType") PaymentType paymentType, @RequestBody BulkPaymentTO payment);
 
     @RequestMapping(value = "/payments/{payment-type}/{payment-product}/{paymentId}")
-    ResponseEntity<SinglePaymentTO> getSinglePaymentPaymentById(@PathVariable(name = "payment-type") PaymentTypeTO paymentType,
-                                                                @PathVariable(name = "payment-product") PaymentProductTO paymentProduct,
-                                                                @PathVariable(name = "paymentId") String paymentId);
+    ResponseEntity<SinglePaymentTO> getSinglePaymentPaymentById(
+    		@RequestHeader(AUTH_TOKEN) String accessTokenHeader,
+    		@PathVariable(name = "payment-type") PaymentTypeTO paymentType,
+    		@PathVariable(name = "payment-product") PaymentProductTO paymentProduct,
+            @PathVariable(name = "paymentId") String paymentId);
 
     @RequestMapping(value = "/payments/{payment-type}/{payment-product}/{paymentId}")
-    ResponseEntity<PeriodicPaymentTO> getPeriodicPaymentPaymentById(@PathVariable(name = "payment-type") PaymentTypeTO paymentType,
-                                                                    @PathVariable(name = "payment-product") PaymentProductTO paymentProduct,
-                                                                    @PathVariable(name = "paymentId") String paymentId);
+    ResponseEntity<PeriodicPaymentTO> getPeriodicPaymentPaymentById(
+    		@RequestHeader(AUTH_TOKEN) String accessTokenHeader,
+    		@PathVariable(name = "payment-type") PaymentTypeTO paymentType,
+    		@PathVariable(name = "payment-product") PaymentProductTO paymentProduct,
+    		@PathVariable(name = "paymentId") String paymentId);
 
     @RequestMapping(value = "/payments/{payment-type}/{payment-product}/{paymentId}")
-    ResponseEntity<BulkPaymentTO> getBulkPaymentPaymentById(@PathVariable(name = "payment-type") PaymentTypeTO paymentType,
-                                                            @PathVariable(name = "payment-product") PaymentProductTO paymentProduct,
-                                                            @PathVariable(name = "paymentId") String paymentId);
+    ResponseEntity<BulkPaymentTO> getBulkPaymentPaymentById(
+    		@RequestHeader(AUTH_TOKEN) String accessTokenHeader,
+    		@PathVariable(name = "payment-type") PaymentTypeTO paymentType,
+    		@PathVariable(name = "payment-product") PaymentProductTO paymentProduct,
+            @PathVariable(name = "paymentId") String paymentId);
 
     @RequestMapping(value = "/payments/{paymentId}/status", method = RequestMethod.GET)
-    ResponseEntity<TransactionStatus> getPaymentStatusById(@PathVariable("paymentId") String id);
+    ResponseEntity<TransactionStatus> getPaymentStatusById(
+    		@RequestHeader(AUTH_TOKEN) String accessTokenHeader,
+    		@PathVariable("paymentId") String id);
 
     @RequestMapping(value = "/auth-codes/{opId}/validate", method = RequestMethod.POST)
-    boolean validate(@PathVariable("opId") String opId, @RequestBody SCAValidationRequest request);
+    BearerTokenTO validate(
+    		@RequestHeader(AUTH_TOKEN) String accessTokenHeader,
+    		@PathVariable("opId") String opId, @RequestBody SCAValidationRequest request);
 
     @RequestMapping(value = "/auth-codes/generate", method = RequestMethod.POST)
-    SCAGenerationResponse generate(@RequestBody AuthCodeDataTO data);
+    SCAGenerationResponse generate(
+    		@RequestHeader(AUTH_TOKEN) String accessTokenHeader,
+    		@RequestBody AuthCodeDataTO data);
 
     @RequestMapping(value = "/users/authorise", method = RequestMethod.POST)
-    boolean authorise(@RequestParam("login") String login, @RequestParam("pin") String pin);
-
+    BearerTokenTO authorise(@RequestParam("login") String login, @RequestParam("pin") String pin, @RequestParam("role") String role);
+    
     @RequestMapping(value = "/sca-methods/{userLogin}", method = RequestMethod.GET)
-    List<SCAMethodTO> getUserScaMethods(@PathVariable("userLogin") String userLogin);
+    List<SCAMethodTO> getUserScaMethods(
+    		@RequestHeader(AUTH_TOKEN) String accessTokenHeader,
+    		@PathVariable("userLogin") String userLogin);
 
     @RequestMapping(value = "/payments/cancel/{paymentId}", method = RequestMethod.DELETE)
-    void cancelPaymentNoSca(@PathVariable("paymentId") String paymentId);
+    void cancelPaymentNoSca(
+    		@RequestHeader(AUTH_TOKEN) String accessTokenHeader,
+    		@PathVariable("paymentId") String paymentId);
 
     @RequestMapping(value = "/payments/cancel-initiation/{psuId}/{paymentId}", method = RequestMethod.POST)
-    ResponseEntity<PaymentCancellationResponseTO> initiatePmtCancellation(@PathVariable("psuId") String psuId, @PathVariable("paymentId") String paymentId);
+    ResponseEntity<PaymentCancellationResponseTO> initiatePmtCancellation(
+    		@RequestHeader(AUTH_TOKEN) String accessTokenHeader,
+    		@PathVariable("psuId") String psuId, @PathVariable("paymentId") String paymentId);
+    
+    @RequestMapping(value = "/validate", method = RequestMethod.POST)
+    ResponseEntity<BearerTokenTO> validateToken(@RequestParam("accessToken")String token);
+
 }
