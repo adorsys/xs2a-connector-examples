@@ -13,9 +13,6 @@ services:
     image: adorsys/xs2a-connector-examples
     container_name: xs2a-connector-examples
     restart: on-failure
-    build:
-      context: .
-      dockerfile: Dockerfile
     ports:
     - "8089:8089"
     environment:
@@ -49,7 +46,7 @@ services:
     - 4200
 
   ledgers:
-    image: adorsys/ledgers
+    image: adorsys/ledgers:develop
     container_name: ledgers
     restart: on-failure
     networks:
@@ -60,6 +57,9 @@ services:
     - ledgers-db
     environment:
     - DB_HOST=ledgers_db
+    - SPRING_PROFILES_ACTIVE=postgres
+    - SPRING_JPA_GENERATE-DLL=true
+    - SPRING_JPA_HIBERNATE_DDL-AUTO=update
 
   ledgers-db:
     image: centos/postgresql-95-centos7
