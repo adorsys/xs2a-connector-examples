@@ -5,12 +5,11 @@ networks:
 
 volumes:
   xs2a-connector-data:
-  ledgers-data:
 
 services:
 
   xs2a-connector-examples:
-    image: adorsys/xs2a-connector-examples
+    image: adorsys/xs2a-connector-examples:develop
     container_name: xs2a-connector-examples
     restart: on-failure
     ports:
@@ -23,8 +22,6 @@ services:
     - DB_DATABASE=consent
     - DB_USER=cms
     - DB_PASSWORD=cms
-    #- DB_SCHEMA=consent
-    #- DB_URL=jdbc:postgresql://xs2a_gateway_db:5432/consent?currentSchema=consent
     networks:
     - xs2a-net
     depends_on:
@@ -47,7 +44,7 @@ services:
     networks:
     - xs2a-net
     environment:
-    - XS2A_URL=http://xs2a_gateway:8089
+    - XS2A_URL=http://xs2a-connector-examples:8089
     - LEDGERS_URL=http://ledgers:8088
 
   ledgers:
@@ -60,30 +57,13 @@ services:
     - "8088:8088"
     - "8188:8000"
     depends_on:
-    - ledgers-db
+    - xs2a-connector-examples-db
     environment:
-    - DB_HOST=ledgers_db
-    - SPRING_PROFILES_ACTIVE=postgres
-    - SPRING_JPA_GENERATE-DLL=true
-    - SPRING_JPA_HIBERNATE_DDL-AUTO=update
-
-  ledgers-db:
-    image: centos/postgresql-95-centos7
-    container_name: ledgers_db
-    restart: on-failure
-    volumes:
-    - ledgers-data:/var/lib/pgsql/data
-    expose:
-    - 5432
-    ports:
-    - "5435:5432"
-    networks:
-    - xs2a-net
-    environment:
-    - POSTGRESQL_ADMIN_PASSWORD=postgres
-    - POSTGRESQL_DATABASE=ledgers
-    - POSTGRESQL_USER=ledgers
-    - POSTGRESQL_PASSWORD=ledgers
+      - SPRING_PROFILES_ACTIVE=postgres
+      - DB_HOST=xs2a-connector-examples-db
+      - DB_DATABASE=consent
+      - DB_USER=cms
+      - DB_PASSWORD=cms
 
   xs2a-connector-examples-db:
     image: centos/postgresql-95-centos7

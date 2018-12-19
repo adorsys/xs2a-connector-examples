@@ -21,6 +21,7 @@ import java.io.InputStream;
 
 import javax.annotation.PostConstruct;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,6 +31,7 @@ import de.adorsys.psd2.aspsp.profile.domain.AspspSettings;
 import de.adorsys.psd2.aspsp.profile.service.AspspProfileService;
 import de.adorsys.psd2.xs2a.core.profile.ScaApproach;
 
+@Profile("!remote")
 @Service
 public class AspspProfileServiceImpl implements AspspProfileService {
     private ProfileConfiguration profileConfiguration;

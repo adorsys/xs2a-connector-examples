@@ -19,6 +19,7 @@
 	</properties>
 
 	<dependencies>
+
 		<!-- project dependencies -->
 
 		<dependency>
@@ -38,10 +39,12 @@
 			<artifactId>cms-db-schema</artifactId>
 			<version>${xs2a.version}</version>
 		</dependency>
+
 		<dependency>
 			<groupId>org.liquibase</groupId>
 			<artifactId>liquibase-core</artifactId>
 		</dependency>
+
 		<!-- spring dependencies -->
 
 		<dependency>
@@ -56,6 +59,7 @@
 		</dependency>
 
 		<!-- other dependencies -->
+
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
@@ -67,7 +71,7 @@
 	</dependencies>
 
 	<build>
-		<finalName>${project.artifactId}</finalName>
+		<finalName>${parent.artifactId}</finalName>
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>

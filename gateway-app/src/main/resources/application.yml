@@ -94,7 +94,7 @@ db:
   password: sa
   url: jdbc:h2:./target/xs2adbs/consent;DB_CLOSE_DELAY=-1
 
-# SpringBoot 1.x react to this liquibase proprty
+# SpringBoot 1.x react to this liquibase property
 liquibase:
   enabled: false 
 ---
@@ -103,7 +103,7 @@ spring:
   jpa:
     properties:
       hibernate.default_schema: consent
-  # SpringBoot 2.x react to this liquibase proprty
+  # SpringBoot 2.x react to this liquibase property
   liquibase:
     default-schema: consent
     enabled: true 
@@ -116,7 +116,7 @@ db:
   port: 5432
   url: jdbc:postgresql://${db.host}:${db.port}/${db.database}?currentSchema=consent
   
-# SpringBoot 1.x react to this liquibase proprty
+# SpringBoot 1.x react to this liquibase property
 liquibase:
   default-schema: consent
   enabled: true 

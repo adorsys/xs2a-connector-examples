@@ -4,47 +4,40 @@ networks:
   xs2a-net:
 
 volumes:
-  consent-management-data:
-  ledgers-data:
+  xs2a-connector-data:
 
 services:
 
-  xs2a-connector-examples:
-    image: adorsys/xs2a-connector-examples
-    container_name: xs2a-connector-examples
-    restart: on-failure
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8089:8089"
-    environment:
-      - LEDGERS_URL=http://ledgers:8088
-      - SPRING_PROFILES_ACTIVE=h2,mockspi
-      - ASPSP_PROFILE_BASEURL=${ASPSP_PROFILE_BASEURL:-http://aspsp-profile:8080/api/v1}
-      - CONSENT_MANAGEMENT_URL=http://consent-management:8080
-      - CONSENT-SERVICE_BASEURL=http://consent-management:8080/api/v1
-    networks:
-      - xs2a-net
-    depends_on:
-      - aspsp-profile
-      - consent-management
-      - ledgers
-
-  # ASPSP-PROFILE
   aspsp-profile:
     image: adorsys/xs2a-aspsp-profile
     container_name: aspsp_profile
     restart: on-failure
     environment:
-    - JAVA_TOOL_OPTIONS="-Xmx256M"
-    - SPRING_PROFILES_ACTIVE=debug_mode
+      - SPRING_PROFILES_ACTIVE=debug_mode
     ports:
-    - "48080:8080"
+      - "48080:8080"
     networks:
-    - xs2a-net
+      - xs2a-net
 
-  # CONSENT-MANAGEMENT-SYSTEM
+  xs2a-connector-examples-db:
+    image: centos/postgresql-95-centos7
+    container_name: xs2a_connector_examples_db
+    restart: on-failure
+    volumes:
+      - xs2a-connector-data:/var/lib/pgsql/data
+      - ./db-scripts/pg-create-schema.sh:/usr/share/container-scripts/postgresql/start/zzz-create-schema.sh
+    expose:
+      - 5432
+    ports:
+      - "5433:5432"
+    networks:
+      - xs2a-net
+    environment:
+      - POSTGRESQL_ADMIN_PASSWORD=postgres
+      - POSTGRESQL_DATABASE=consent
+      - POSTGRESQL_USER=cms
+      - POSTGRESQL_PASSWORD=cms
+
   consent-management:
     image: adorsys/xs2a-consent-management
     container_name: consent_management
@@ -54,78 +47,63 @@ services:
     networks:
       - xs2a-net
     environment:
-    - JAVA_TOOL_OPTIONS="-Xmx512M"
-    - SPRING_DATASOURCE_URL=jdbc:postgresql://consent-management-postgres/consent?currentSchema=consent
-    - SPRING_DATASOURCE_USERNAME=cms
-    - SPRING_DATASOURCE_PASSWORD=cms
-    - ASPSP_PROFILE_BASEURL=${ASPSP_PROFILE_BASEURL:-http://aspsp-profile:8080/api/v1}
-    - KEYCLOAK_AUTH_SERVER_URL=http://xs2a-idp:8080/auth
-    - KEYCLOAK_CREDENTIALS_SECRET="${XS2A_CMS_CLIENT_SECRET}"
-    - SERVER_KEY=ledgers_conenctor_secret
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://xs2a-connector-examples-db/consent?currentSchema=consent
+      - SPRING_DATASOURCE_USERNAME=cms
+      - SPRING_DATASOURCE_PASSWORD=cms
+      - ASPSP_PROFILE_BASEURL=${ASPSP_PROFILE_BASEURL:-http://aspsp-profile:8080/api/v1}
+      - KEYCLOAK_AUTH_SERVER_URL=http://xs2a-idp:8080/auth
+      - KEYCLOAK_CREDENTIALS_SECRET="${XS2A_CMS_CLIENT_SECRET}"
+      - SERVER_KEY=ledgers_conenctor_secret
     depends_on:
-    - consent-management-postgres
-
-  consent-management-postgres:
-    image: centos/postgresql-95-centos7
-    container_name: consent_management_postgres
-    volumes:
-    - consent-management-data:/var/lib/pgsql/data
-    - ./consent-management/cms-db-schema/util/pg-create-schema.sh:/usr/share/container-scripts/postgresql/start/zzz-create-schema.sh
-    restart: on-failure
-    ports:
-    - "5432:5432"
-    networks:
-    - xs2a-net
-    environment:
-    - POSTGRESQL_ADMIN_PASSWORD=postgres
-    - POSTGRESQL_DATABASE=consent
-    - POSTGRESQL_USER=cms
-    - POSTGRESQL_PASSWORD=cms
-    expose:
-    - 5432
-
-  online-banking-demo-ui:
-    image: adorsys/xs2a-mock-online-banking-ui
-    container_name: online_banking_demo_ui
-    restart: on-failure
-    ports:
-    - "4200:4200"
-    networks:
-    - xs2a-net
-    environment:
-    - XS2A_URL=http://localhost:8080
-    - MOCKSERVER_URL=http://localhost:8088
-    - ONLINE_BANKING_SERVER_URL=http://localhost:28081
-    - CONSENT_MANAGEMENT_URL=http://localhost:38080
-    - PROFILE_SERVER_URL=http://localhost:48080
-    expose:
-    - 4200
+      - xs2a-connector-examples-db
 
   ledgers:
-    image: adorsys/ledgers
+    image: adorsys/ledgers:develop
     container_name: ledgers
     restart: on-failure
     networks:
-    - xs2a-net
+      - xs2a-net
     ports:
-    - "8088:8088"
+      - "8088:8088"
+    #      - "8188:8000"
     depends_on:
-    - ledgers-db
+      - xs2a-connector-examples-db
     environment:
-    - DB_HOST=ledgers_db
+      - SPRING_PROFILES_ACTIVE=postgres
+      - DB_HOST=xs2a-connector-examples-db
+      - DB_DATABASE=consent
+      - DB_USER=cms
+      - DB_PASSWORD=cms
 
-  ledgers-db:
-    image: centos/postgresql-95-centos7
-    container_name: ledgers_db
+  xs2a-connector-examples:
+    image: adorsys/xs2a-connector-examples:develop
+    container_name: xs2a-connector-examples
     restart: on-failure
-    volumes:
-    - ledgers-data:/var/lib/pgsql/data
-    expose:
-    - 5432
-    networks:
-    - xs2a-net
+    ports:
+      - "8089:8089"
+      - "8189:8000"
     environment:
-    - POSTGRESQL_ADMIN_PASSWORD=postgres
-    - POSTGRESQL_DATABASE=ledgers
-    - POSTGRESQL_USER=ledgers
-    - POSTGRESQL_PASSWORD=ledgers
+      - LEDGERS_URL=http://ledgers:8088
+      - SPRING_PROFILES_ACTIVE=postgres,mockspi,remote
+      - DB_HOST=xs2a_connector_examples_db
+      - DB_DATABASE=consent
+      - DB_USER=cms
+      - DB_PASSWORD=cms
+    networks:
+      - xs2a-net
+
+  xs2a-online-banking:
+    image: adorsys/xs2a-online-banking
+    container_name: online_banking
+    restart: on-failure
+    build:
+      context: online-banking-app
+      dockerfile: Dockerfile
+    ports:
+      - "8090:8090"
+    #      - "8190:8000"
+    networks:
+      - xs2a-net
+    environment:
+      - XS2A_URL=http://xs2a-connector-examples:8089
+      - LEDGERS_URL=http://ledgers:8088
