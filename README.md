@@ -10,16 +10,11 @@ The following steps will get this connector up and running:
 - Connector contains all XS2A modules inside
 - Ledgers and database run separately
 ```
-> git clone https://github.com/adorsys/ledgers.git
-> cd ledgers
-> mvn clean install -DskipITs
-> docker build -t adorsys/ledgers .
-> cd ..
-
-> git clone https://git.adorsys.de/adorsys/xs2a/ledgers-xs2a-gateway.git
-> cd ledgers-xs2a-gateway
+> git clone https://github.com/adorsys/xs2a-connector-examples.git
+> cd xs2a-connector-examples
 > mvn clean install
-> docker-compose build
+> docker pull adorsys/ledgers
+> docker pull adorsys/xs2a-connector-examples
 > docker-compose up
 ```
 
@@ -29,15 +24,12 @@ The following steps will get this connector up and running:
 - Consent management and database run separately
 - Ledgers and database run separately
 ```
-> git clone https://github.com/adorsys/ledgers.git
-> cd ledgers
-> mvn clean install -DskipITs
-> docker build -t adorsys/ledgers .
-> cd ..
-
-> git clone https://git.adorsys.de/adorsys/xs2a/ledgers-xs2a-gateway.git
-> cd ledgers-xs2a-gateway
+> git clone https://github.com/adorsys/xs2a-connector-examples.git
+> cd xs2a-connector-examples
 > mvn clean install -Dremote
-> docker-compose -f docker-compose-remote.yml build
+> docker pull adorsys/ledgers
+> docker pull adorsys/xs2a-connector-examples
+> docker pull adorsys/xs2a-consent-management
+> docker pull adorsys/xs2a-aspsp-profile
 > docker-compose -f docker-compose-remote.yml up
 ```
