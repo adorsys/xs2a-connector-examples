@@ -11,12 +11,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
 
+	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.adorsys.ledgers</groupId>
 	<artifactId>xs2a-connector-examples</artifactId>
 	<version>0.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
+
+	<name>XS2A Connector Examples</name>
+	<description>OpenSource Implementation Of XS2A connector examples</description>
 
 	<modules>
 		<module>ledgers-rest-client-core</module>
@@ -27,8 +30,6 @@
 		<module>online-banking-app</module>
 		<module>xs2a-ctk</module>
 	</modules>
-
-	<description>OpenSource Implementation Of XS2A connector examples</description>
 
 	<url>https://github.com/adorsys/xs2a-connector-examples</url>
 
@@ -97,6 +98,7 @@
 			</snapshots>
 		</repository>
 	</repositories>
+
 	<dependencyManagement>
 		<dependencies>
 
@@ -174,12 +176,14 @@
 				<version>${cucumber.version}</version>
 				<scope>test</scope>
 			</dependency>
+
 			<dependency>
 				<groupId>info.cukes</groupId>
 				<artifactId>cucumber-junit</artifactId>
 				<version>${cucumber.version}</version>
 				<scope>test</scope>
 			</dependency>
+
 			<dependency>
 				<groupId>info.cukes</groupId>
 				<artifactId>cucumber-spring</artifactId>
