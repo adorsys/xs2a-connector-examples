@@ -42,13 +42,24 @@ public class SwaggerConfig {
                    .build();
     }
 
-    @Bean(name = "psu-api")
+    @Bean(name = "consent-xs2a-api")
+    public Docket xs2aApiDocklet() {
+        return new Docket(DocumentationType.SWAGGER_2)
+                   .apiInfo(new ApiInfoBuilder().build())
+                   .groupName("CONSENT XS2A API")
+                   .select()
+                   .apis(RequestHandlerSelectors.basePackage("de.adorsys.psd2.consent.web.xs2a.controller"))
+                   .build();
+    }
+
+
+    @Bean(name = "cosent-psu-api")
     public Docket psuApiDocklet() {
         return new Docket(DocumentationType.SWAGGER_2)
                    .apiInfo(new ApiInfoBuilder().build())
-                   .groupName("PSU CONSENT API")
+                   .groupName("CONSENT PSU API")
                    .select()
-                   .apis(RequestHandlerSelectors.basePackage("de.adorsys.psd2.consent.web.xs2a.controller"))
+                   .apis(RequestHandlerSelectors.basePackage("de.adorsys.psd2.consent.web.psu.controller"))
                    .build();
     }
     

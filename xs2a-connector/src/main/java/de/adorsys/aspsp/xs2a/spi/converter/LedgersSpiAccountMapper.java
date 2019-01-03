@@ -1,19 +1,32 @@
 package de.adorsys.aspsp.xs2a.spi.converter;
 
-import de.adorsys.ledgers.domain.account.*;
-import de.adorsys.ledgers.domain.payment.AmountTO;
-import de.adorsys.psd2.xs2a.spi.domain.account.*;
-import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
-import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
-import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
-import org.mapstruct.Mapper;
-
 import java.util.List;
 import java.util.Optional;
 
+import org.mapstruct.Mapper;
+
+import de.adorsys.ledgers.middleware.api.domain.account.AccountBalanceTO;
+import de.adorsys.ledgers.middleware.api.domain.account.AccountDetailsTO;
+import de.adorsys.ledgers.middleware.api.domain.account.AccountReferenceTO;
+import de.adorsys.ledgers.middleware.api.domain.account.ExchangeRateTO;
+import de.adorsys.ledgers.middleware.api.domain.account.FundsConfirmationRequestTO;
+import de.adorsys.ledgers.middleware.api.domain.account.TransactionTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.AmountTO;
+import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountBalance;
+import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountDetails;
+import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
+import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountStatus;
+import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountType;
+import de.adorsys.psd2.xs2a.spi.domain.account.SpiExchangeRate;
+import de.adorsys.psd2.xs2a.spi.domain.account.SpiTransaction;
+import de.adorsys.psd2.xs2a.spi.domain.account.SpiUsageType;
+import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
+import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
+import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
+
 @Mapper(componentModel = "spring")
 public abstract class LedgersSpiAccountMapper {
-
+	
     public abstract List<SpiAccountDetails> toSpiAccountDetailsList(List<AccountDetailsTO> accountDetails);
 
     public SpiAccountDetails toSpiAccountDetails(AccountDetailsTO accountDetails) {

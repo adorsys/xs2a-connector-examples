@@ -16,7 +16,13 @@
 
 package de.adorsys.aspsp.xs2a.spi.impl;
 
+import java.util.List;
+
+import org.jetbrains.annotations.NotNull;
+import org.springframework.stereotype.Component;
+
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
+import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
@@ -24,10 +30,6 @@ import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.PaymentAuthorisationSpi;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Component
 public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
@@ -38,17 +40,17 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
     }
 
     @Override
-    public SpiResponse<SpiAuthorisationStatus> authorisePsu(@NotNull SpiPsuData spiPsuData, String pin, SpiPayment spiPayment, AspspConsentData aspspConsentData) {
-        return authorisationService.authorisePsu(spiPsuData, pin, aspspConsentData);
+    public SpiResponse<SpiAuthorisationStatus> authorisePsu(@NotNull SpiContextData contextData, @NotNull SpiPsuData psuLoginData, String pin, SpiPayment spiPayment, AspspConsentData aspspConsentData) {
+        return authorisationService.authorisePsu(psuLoginData, pin, aspspConsentData);
     }
 
     @Override
-    public SpiResponse<List<SpiAuthenticationObject>> requestAvailableScaMethods(@NotNull SpiPsuData spiPsuData, SpiPayment spiPayment, AspspConsentData aspspConsentData) {
-        return authorisationService.requestAvailableScaMethods(spiPsuData, aspspConsentData);
+    public SpiResponse<List<SpiAuthenticationObject>> requestAvailableScaMethods(@NotNull SpiContextData contextData, SpiPayment spiPayment, AspspConsentData aspspConsentData) {
+        return authorisationService.requestAvailableScaMethods(contextData.getPsuData(), aspspConsentData);
     }
 
     @Override
-    public @NotNull SpiResponse<SpiAuthorizationCodeResult> requestAuthorisationCode(@NotNull SpiPsuData spiPsuData, @NotNull String authenticationMethodId, @NotNull SpiPayment spiPayment, @NotNull AspspConsentData aspspConsentData) {
-        return authorisationService.requestAuthorisationCode(spiPsuData, authenticationMethodId, spiPayment.getPaymentId(), spiPayment.toString(), aspspConsentData);
+    public @NotNull SpiResponse<SpiAuthorizationCodeResult> requestAuthorisationCode(@NotNull SpiContextData contextData, @NotNull String authenticationMethodId, @NotNull SpiPayment spiPayment, @NotNull AspspConsentData aspspConsentData) {
+        return authorisationService.requestAuthorisationCode(contextData.getPsuData(), authenticationMethodId, spiPayment.getPaymentId(), spiPayment.toString(), aspspConsentData);
     }
 }

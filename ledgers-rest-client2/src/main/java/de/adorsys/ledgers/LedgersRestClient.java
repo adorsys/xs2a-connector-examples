@@ -22,6 +22,7 @@ import java.util.List;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -96,17 +97,17 @@ public interface LedgersRestClient {
     		@PathVariable("paymentId") String id);
 
     @RequestMapping(value = "/auth-codes/{opId}/validate", method = RequestMethod.POST)
-    BearerTokenTO validate(
+    ResponseEntity<Boolean> validate(
     		@RequestHeader(AUTH_TOKEN) String accessTokenHeader,
     		@PathVariable("opId") String opId, @RequestBody SCAValidationRequest request);
 
     @RequestMapping(value = "/auth-codes/generate", method = RequestMethod.POST)
-    SCAGenerationResponse generate(
+    ResponseEntity<SCAGenerationResponse> generate(
     		@RequestHeader(AUTH_TOKEN) String accessTokenHeader,
     		@RequestBody AuthCodeDataTO data);
 
     @RequestMapping(value = "/users/authorise", method = RequestMethod.POST)
-    BearerTokenTO authorise(@RequestParam("login") String login, @RequestParam("pin") String pin, @RequestParam("role") String role);
+    ResponseEntity<BearerTokenTO> authorise(@RequestParam("login") String login, @RequestParam("pin") String pin, @RequestParam("role") String role);
     
     @RequestMapping(value = "/sca-methods/{userLogin}", method = RequestMethod.GET)
     List<SCAMethodTO> getUserScaMethods(
@@ -114,7 +115,7 @@ public interface LedgersRestClient {
     		@PathVariable("userLogin") String userLogin);
 
     @RequestMapping(value = "/payments/cancel/{paymentId}", method = RequestMethod.DELETE)
-    void cancelPaymentNoSca(
+    ResponseEntity<Void> cancelPaymentNoSca(
     		@RequestHeader(AUTH_TOKEN) String accessTokenHeader,
     		@PathVariable("paymentId") String paymentId);
 
@@ -126,4 +127,8 @@ public interface LedgersRestClient {
     @RequestMapping(value = "/validate", method = RequestMethod.POST)
     ResponseEntity<BearerTokenTO> validateToken(@RequestParam("accessToken")String token);
 
+    @PostMapping(path="/{payment-id}/auth", params= {"authCode", "opId"})
+    public ResponseEntity<BearerTokenTO> authorizePayment(@PathVariable(name = "payment-id") String paymentId,
+    		@RequestParam(name="authCode") String authCode,
+    		@RequestParam(name="opId") String opId);    
 }

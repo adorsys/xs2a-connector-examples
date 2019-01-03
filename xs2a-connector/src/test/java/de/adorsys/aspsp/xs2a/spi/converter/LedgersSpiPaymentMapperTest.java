@@ -14,11 +14,11 @@ import java.util.Currency;
 import org.junit.Test;
 import org.mapstruct.factory.Mappers;
 
-import de.adorsys.ledgers.domain.payment.AmountTO;
-import de.adorsys.ledgers.domain.payment.BulkPaymentTO;
-import de.adorsys.ledgers.domain.payment.PaymentProductTO;
-import de.adorsys.ledgers.domain.payment.PeriodicPaymentTO;
-import de.adorsys.ledgers.domain.payment.SinglePaymentTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.AmountTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.BulkPaymentTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.code.SpiFrequencyCode;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;

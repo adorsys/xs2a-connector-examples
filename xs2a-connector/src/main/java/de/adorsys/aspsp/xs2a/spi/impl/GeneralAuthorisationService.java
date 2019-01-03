@@ -1,21 +1,22 @@
 package de.adorsys.aspsp.xs2a.spi.impl;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import de.adorsys.aspsp.xs2a.spi.converter.ScaMethodConverter;
-import de.adorsys.ledgers.LedgersRestClient;
-import de.adorsys.ledgers.domain.SCAValidationRequest;
-import de.adorsys.ledgers.domain.sca.AuthCodeDataTO;
-import de.adorsys.ledgers.domain.sca.SCAGenerationResponse;
-import de.adorsys.ledgers.domain.sca.SCAMethodTO;
-import de.adorsys.ledgers.domain.um.BearerTokenTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.SCALoginResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
+import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
+import de.adorsys.ledgers.middleware.api.domain.um.UserRoleTO;
+import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
+import de.adorsys.ledgers.rest.client.UserMgmtRestClient;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
@@ -30,46 +31,76 @@ import feign.Response;
 @Component
 public class GeneralAuthorisationService {
     private static final Logger logger = LoggerFactory.getLogger(PaymentAuthorisationSpiImpl.class);
-    private static final String TEST_ASPSP_DATA = "Test aspsp data";
-    private static final String TEST_MESSAGE = "Test message";
-    private final LedgersRestClient ledgersRestClient;
+    private final UserMgmtRestClient userMgmtRestClient;
     private final ScaMethodConverter scaMethodConverter;
+	private final AuthRequestInterceptor authRequestInterceptor;
+	private final AspspConsentDataService tokenService;
 
-    public GeneralAuthorisationService(LedgersRestClient ledgersRestClient, ScaMethodConverter scaMethodConverter) {
-        this.ledgersRestClient = ledgersRestClient;
-        this.scaMethodConverter = scaMethodConverter;
-    }
+	public GeneralAuthorisationService(UserMgmtRestClient userMgmtRestClient, ScaMethodConverter scaMethodConverter,
+			AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService tokenService) {
+		super();
+		this.userMgmtRestClient = userMgmtRestClient;
+		this.scaMethodConverter = scaMethodConverter;
+		this.authRequestInterceptor = authRequestInterceptor;
+		this.tokenService = tokenService;
+	}
 
-    public SpiResponse<SpiAuthorisationStatus> authorisePsu(@NotNull SpiPsuData spiPsuData, String pin, AspspConsentData aspspConsentData) {
+	/**
+	 * First authorization of the PSU.
+	 * 
+	 * The result of this authorization must contain an scaStatus with following options:
+	 * - {@link ScaStatusTO#EXEMPTED} : There is no sca needed. The user does not have any sca method anyway.
+	 * - {@link ScaStatusTO#SCAMETHODSELECTED} : The user has receive an authorization code and must enter it.
+	 * - {@link ScaStatusTO#PSUIDENTIFIED} : the user must select a authorization method to complete auth.
+	 * 
+	 * In all three cases, we store the response object for reuse in an {@link AspspConsentData} object.
+	 * 
+	 * @param spiPsuData
+	 * @param pin
+	 * @param aspspConsentData
+	 * @return
+	 */
+	public SpiResponse<SpiAuthorisationStatus> authorisePsu(@NotNull SpiPsuData spiPsuData, String pin, AspspConsentData aspspConsentData) {
         try {
             String login = spiPsuData.getPsuId();
-            logger.info("Authorise user with login={} and password={}", login, StringUtils.repeat("*", pin.length()));
-//            boolean isAuthorised = ledgersRestClient.authorise(login, pin);
-            BearerTokenTO bearerToken = ledgersRestClient.authorise(login, pin, "CUSTOMER");
-            SpiAuthorisationStatus status = bearerToken!=null
+            logger.info("Authorise user with login={} and password={}", login, StringUtils.repeat("*", 10));
+            ResponseEntity<SCALoginResponseTO> response = userMgmtRestClient.authorise(login, pin, UserRoleTO.CUSTOMER);
+            SpiAuthorisationStatus status = response!=null && response.getBody()!=null && response.getBody().getBearerToken()!=null
                                                     ? SpiAuthorisationStatus.SUCCESS
                                                     : SpiAuthorisationStatus.FAILURE;
             logger.info("Authorisation result is {}", status);
-            return new SpiResponse<>(status, TokenUtils.store(bearerToken.getAccess_token(), aspspConsentData));
+            return new SpiResponse<>(status, tokenService.store(response.getBody(), aspspConsentData));
         } catch (FeignException e) {
             return SpiResponse.<SpiAuthorisationStatus>builder()
-                           .aspspConsentData(aspspConsentData.respondWith(TEST_ASPSP_DATA.getBytes()))            // added for test purposes TODO remove if some requirements will be received https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/394
                            .fail(getSpiFailureResponse(e));
 		}
     }
 
+	/**
+	 * This call won't go to the server. The login process is supposed to have returned if necessary the list of 
+	 * sca methods. But we return this only if a bearer token is available.
+	 * 
+	 * So we parse consent data and we return containing sca methods.
+	 * 
+	 * @param psuData
+	 * @param aspspConsentData
+	 * @return
+	 */
     public SpiResponse<List<SpiAuthenticationObject>> requestAvailableScaMethods(@NotNull SpiPsuData psuData, AspspConsentData aspspConsentData) {
         try {
-            String userLogin = psuData.getPsuId();
-            logger.info("Retrieving sca methods for user {}", userLogin);
-            List<SCAMethodTO> scaMethods = ledgersRestClient.getUserScaMethods(TokenUtils.read(aspspConsentData),userLogin);
-            logger.debug("These are sca methods that were found {}", scaMethods);
-
-            List<SpiAuthenticationObject> authenticationObjects = scaMethodConverter.toSpiAuthenticationObjectList(scaMethods);
-            return SpiResponse.<List<SpiAuthenticationObject>>builder()
-                           .aspspConsentData(aspspConsentData)
-                           .payload(authenticationObjects)
-                           .success();
+        	SCALoginResponseTO sca = tokenService.response(aspspConsentData, SCALoginResponseTO.class);
+        	if(sca.getScaMethods()!=null) {
+        		userMgmtRestClient.validate(sca.getBearerToken().getAccess_token());
+        		List<ScaUserDataTO> scaMethods = sca.getScaMethods();
+        		List<SpiAuthenticationObject> authenticationObjects = scaMethodConverter.toSpiAuthenticationObjectList(scaMethods);
+        		return SpiResponse.<List<SpiAuthenticationObject>>builder()
+        				.aspspConsentData(aspspConsentData)
+        				.payload(authenticationObjects)
+        				.success();
+        	} else {
+        		String message = String.format("Process mismatch. Current SCA Status is %s", sca.getScaStatus());
+        		throw FeignException.errorStatus(message, Response.builder().status(HttpStatus.EXPECTATION_FAILED.value()).build());
+        	}
         } catch (FeignException e) {
             return SpiResponse.<List<SpiAuthenticationObject>>builder()
                            .aspspConsentData(aspspConsentData)
@@ -79,40 +110,43 @@ public class GeneralAuthorisationService {
 
     public SpiResponse<SpiAuthorizationCodeResult> requestAuthorisationCode(@NotNull SpiPsuData psuData, @NotNull String authenticationMethodId, @NotNull String businessObjId, @NotNull String businessObjectAsString, @NotNull AspspConsentData aspspConsentData) {
         try {
-            String userLogin = psuData.getPsuId();
-            AuthCodeDataTO data = new AuthCodeDataTO(userLogin, authenticationMethodId, businessObjId, businessObjectAsString, null, -1);
-            logger.info("Request to generate SCA {}", data);
-
-            SCAGenerationResponse response = ledgersRestClient.generate(TokenUtils.read(aspspConsentData),data);
-            logger.info("SCA was send, operationId is {}", response.getOpId());
-
+        	SCALoginResponseTO sca = tokenService.response(aspspConsentData, SCALoginResponseTO.class);
+        	authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
+        	logger.info("Request to generate SCA {}", sca.getScaId());
+        	ResponseEntity<SCALoginResponseTO> selectMethodResponse = userMgmtRestClient.selectMethod(sca.getScaId(), sca.getAuthorisationId(), authenticationMethodId);
+        	logger.info("SCA was send, operationId is {}", sca.getScaId());
             return SpiResponse.<SpiAuthorizationCodeResult>builder()
-                           .aspspConsentData(aspspConsentData)
+                           .aspspConsentData(tokenService.store(selectMethodResponse.getBody(), aspspConsentData))
                            .success();
         } catch (FeignException e) {
             return SpiResponse.<SpiAuthorizationCodeResult>builder()
                            .aspspConsentData(aspspConsentData)
                            .fail(getSpiFailureResponse(e));
-        }
+		} finally {
+			authRequestInterceptor.setAccessToken(null);
+		}
     }
 
     public @NotNull SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisation(@NotNull SpiScaConfirmation spiScaConfirmation, @NotNull String businessObjAsString, @NotNull AspspConsentData aspspConsentData) {
         logger.info("Verifying SCA code");
         try {
-            SCAValidationRequest validationRequest = new SCAValidationRequest(businessObjAsString, spiScaConfirmation.getTanNumber());//TODO fix this! it is not correct!
-            BearerTokenTO bearerToken = ledgersRestClient.validate(TokenUtils.read(aspspConsentData),spiScaConfirmation.getPaymentId(), validationRequest);
-            logger.info("Validation result is {}", bearerToken!=null);
-            if (bearerToken!=null) {
+        	SCALoginResponseTO sca = tokenService.response(aspspConsentData, SCALoginResponseTO.class);
+        	authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
+        	ResponseEntity<SCALoginResponseTO> authorizeLoginResponse = userMgmtRestClient.authorizeLogin(sca.getScaId(), sca.getAuthorisationId(), spiScaConfirmation.getTanNumber());
+        	logger.info("Validation result is {}", authorizeLoginResponse.getBody().getBearerToken()!=null);
+            if (authorizeLoginResponse.getBody().getBearerToken()!=null) {
                 return SpiResponse.<SpiResponse.VoidResponse>builder()
                                .payload(SpiResponse.voidResponse())
-                               .aspspConsentData(aspspConsentData.respondWith(TEST_ASPSP_DATA.getBytes()))            // added for test purposes TODO remove if some requirements will be received https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/394
-                               .message(Collections.singletonList(TEST_MESSAGE))                                      // added for test purposes TODO remove if some requirements will be received https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/394
+                               .aspspConsentData(tokenService.store(authorizeLoginResponse.getBody(), aspspConsentData))
                                .success();
+            } else {
+                return SpiResponse.<SpiResponse.VoidResponse>builder()
+                        .payload(SpiResponse.voidResponse())
+                        .aspspConsentData(tokenService.store(sca, aspspConsentData))
+                        .fail(SpiResponseStatus.UNAUTHORIZED_FAILURE);
             }
-            throw FeignException.errorStatus("Request failed, Response was 200, but body was empty!", Response.builder().status(400).build());
         } catch (FeignException e) {
             return SpiResponse.<SpiResponse.VoidResponse>builder()
-                           .aspspConsentData(aspspConsentData.respondWith(TEST_ASPSP_DATA.getBytes()))            // added for test purposes TODO remove if some requirements will be received https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/394
                            .fail(getSpiFailureResponse(e));
         }
     }

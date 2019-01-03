@@ -12,12 +12,13 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
-import de.adorsys.ledgers.domain.general.AddressTO;
-import de.adorsys.ledgers.domain.payment.BulkPaymentTO;
-import de.adorsys.ledgers.domain.payment.PaymentCancellationResponseTO;
-import de.adorsys.ledgers.domain.payment.PaymentProductTO;
-import de.adorsys.ledgers.domain.payment.PeriodicPaymentTO;
-import de.adorsys.ledgers.domain.payment.SinglePaymentTO;
+import de.adorsys.ledgers.middleware.api.domain.general.AddressTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.BulkPaymentTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.psd2.xs2a.spi.domain.code.SpiFrequencyCode;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiTransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiAddress;
@@ -45,12 +46,24 @@ public abstract class LedgersSpiPaymentMapper {
     @Mapping(source = "paymentStatus", target = "transactionStatus")
     public abstract SpiSinglePaymentInitiationResponse toSpiSingleResponse(SinglePaymentTO payment);
 
+    @Mapping(target = "scaMethods", expression = "java(de.adorsys.aspsp.xs2a.spi.converter.ScaMethodUtils.toScaMethods(response.getScaMethods()))")
+    @Mapping(target = "chosenScaMethod", expression = "java(de.adorsys.aspsp.xs2a.spi.converter.ScaMethodUtils.toScaMethod(response.getChosenScaMethod()))")
+    public abstract SpiSinglePaymentInitiationResponse toSpiSingleResponse(SCAPaymentResponseTO response);
+
     @Mapping(source = "paymentStatus", target = "transactionStatus")
     public abstract SpiPeriodicPaymentInitiationResponse toSpiPeriodicResponse(PeriodicPaymentTO payment);
 
+    @Mapping(target = "scaMethods", expression = "java(de.adorsys.aspsp.xs2a.spi.converter.ScaMethodUtils.toScaMethods(response.getScaMethods()))")
+    @Mapping(target = "chosenScaMethod", expression = "java(de.adorsys.aspsp.xs2a.spi.converter.ScaMethodUtils.toScaMethod(response.getChosenScaMethod()))")
+    public abstract SpiPeriodicPaymentInitiationResponse toSpiPeriodicResponse(SCAPaymentResponseTO response);
+    
     @Mapping(source = "paymentStatus", target = "transactionStatus")
     public abstract SpiBulkPaymentInitiationResponse toSpiBulkResponse(BulkPaymentTO payment);
 
+    @Mapping(target = "scaMethods", expression = "java(de.adorsys.aspsp.xs2a.spi.converter.ScaMethodUtils.toScaMethods(response.getScaMethods()))")
+    @Mapping(target = "chosenScaMethod", expression = "java(de.adorsys.aspsp.xs2a.spi.converter.ScaMethodUtils.toScaMethod(response.getChosenScaMethod()))")
+    public abstract SpiBulkPaymentInitiationResponse toSpiBulkResponse(SCAPaymentResponseTO response);
+    
     public SpiSinglePayment toSpiSinglePayment(SinglePaymentTO payment) {
         SpiSinglePayment spiPayment = new SpiSinglePayment(payment.getPaymentProduct().getValue());
         spiPayment.setPaymentId(payment.getPaymentId());
@@ -127,11 +140,11 @@ public abstract class LedgersSpiPaymentMapper {
                 address.getCountry());
     } //Direct mapping no need for testing
 
-    public SpiPaymentCancellationResponse toSpiPaymentCancellationResponse(PaymentCancellationResponseTO response) {
+    public SpiPaymentCancellationResponse toSpiPaymentCancellationResponse(SCAPaymentResponseTO response) {
         return Optional.ofNullable(response)
                        .map(t -> {
                            SpiPaymentCancellationResponse cancellation = new SpiPaymentCancellationResponse();
-                           cancellation.setCancellationAuthorisationMandated(response.isCancellationAuthorisationMandated());
+                           cancellation.setCancellationAuthorisationMandated(needAuthorization(response));
                            cancellation.setTransactionStatus(SpiTransactionStatus.valueOf(response.getTransactionStatus().name()));
                            return cancellation;
                        }).orElseGet(SpiPaymentCancellationResponse::new);
@@ -139,5 +152,14 @@ public abstract class LedgersSpiPaymentMapper {
     
     PaymentProductTO toPaymentProduct(String paymentProduct) {
     	return PaymentProductTO.getByValue(paymentProduct).get();
+    }
+    
+    /*
+     * How do we know if a payment or a cancellation needs authorization.
+     * 
+     * At initiation the SCAStatus shall be set to {@link ScaStatusTO#EXEMPTED}
+     */
+    private boolean needAuthorization(SCAPaymentResponseTO response) {
+    	return !ScaStatusTO.EXEMPTED.equals(response.getScaStatus());
     }
 }

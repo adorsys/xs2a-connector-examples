@@ -1,16 +1,16 @@
 package de.adorsys.aspsp.xs2a.spi.converter;
 
-import de.adorsys.aspsp.xs2a.spi.converter.LedgersSpiAccountMapper;
-import de.adorsys.ledgers.domain.account.FundsConfirmationRequestTO;
-import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
-import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
-import org.junit.Test;
-import org.mapstruct.factory.Mappers;
-import pro.javatar.commons.reader.YamlReader;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
+import org.mapstruct.factory.Mappers;
+
+import de.adorsys.ledgers.middleware.api.domain.account.FundsConfirmationRequestTO;
+import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
+import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
+import pro.javatar.commons.reader.YamlReader;
 
 public class LedgersSpiAccountMapperTest {
     private LedgersSpiAccountMapper accountMapper = Mappers.getMapper(LedgersSpiAccountMapper.class);

@@ -22,11 +22,11 @@ import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
 
 import de.adorsys.aspsp.xs2a.EnableLedgersXS2AConnector;
-import de.adorsys.ledgers.LedgersRestClient;
+import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.psd2.xs2a.config.EnableXs2aInterface;
 import de.adorsys.psd2.xs2a.web.config.EnableXs2aSwagger;
 
-@EnableFeignClients(basePackageClasses=LedgersRestClient.class)
+@EnableFeignClients(basePackageClasses=PaymentRestClient.class)
 @ComponentScan
 @SpringBootApplication
 @EnableXs2aInterface

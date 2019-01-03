@@ -1,33 +1,34 @@
 package de.adorsys.aspsp.xs2a.spi.converter;
 
-import de.adorsys.ledgers.domain.sca.SCAMethodTO;
-import de.adorsys.ledgers.domain.sca.SCAMethodTypeTO;
-import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
-import org.junit.Before;
-import org.junit.Test;
-import org.mapstruct.factory.Mappers;
-import pro.javatar.commons.reader.YamlReader;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
+import org.mapstruct.factory.Mappers;
+
+import de.adorsys.ledgers.middleware.api.domain.um.ScaMethodTypeTO;
+import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
+import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
+import pro.javatar.commons.reader.YamlReader;
 
 public class ScaMethodConverterTest {
 
-    private SCAMethodTO method;
-    private SCAMethodTypeTO methodType;
+    private ScaUserDataTO method;
+    private ScaMethodTypeTO methodType;
     private ScaMethodConverter mapper;
     private SpiAuthenticationObject expected;
 
     @Before
     public void setUp() {
-        method = new SCAMethodTO();
-        methodType = SCAMethodTypeTO.EMAIL;
+        method = new ScaUserDataTO();
+        methodType = ScaMethodTypeTO.EMAIL;
         method.setMethodValue("some@email.com");
-        method.setScaMethod(methodType);
+		method.setScaMethod(methodType);
 
         mapper = Mappers.getMapper(ScaMethodConverter.class);
         expected = readYml(SpiAuthenticationObject.class, "spi-authentication-object.yml");

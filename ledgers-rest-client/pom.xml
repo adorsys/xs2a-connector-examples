@@ -17,12 +17,10 @@
 	</properties>
 
 	<dependencies>
-
-		<!-- project dependencies -->
 		<dependency>
 			<groupId>de.adorsys.ledgers</groupId>
-			<artifactId>ledgers-rest-client-core</artifactId>
-			<version>${project.version}</version>
+			<artifactId>ledgers-middleware-rest-api</artifactId>
+			<version>${ledgers.version}</version>
 		</dependency>
 
 		<!-- spring dependencies -->

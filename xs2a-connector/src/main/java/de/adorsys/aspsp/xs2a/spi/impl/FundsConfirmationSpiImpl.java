@@ -23,13 +23,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.adorsys.aspsp.xs2a.spi.converter.LedgersSpiAccountMapper;
-import de.adorsys.ledgers.LedgersAccountRestClient;
-import de.adorsys.ledgers.domain.account.FundsConfirmationRequestTO;
+import de.adorsys.ledgers.middleware.api.domain.account.FundsConfirmationRequestTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
+import de.adorsys.ledgers.rest.client.AccountRestClient;
+import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.core.piis.PiisConsent;
+import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
 import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationResponse;
-import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.FundsConfirmationSpi;
@@ -39,22 +41,35 @@ import feign.FeignException;
 public class FundsConfirmationSpiImpl implements FundsConfirmationSpi {
     private static final Logger logger = LoggerFactory.getLogger(SinglePaymentSpiImpl.class);
 
-    private final LedgersAccountRestClient restClient;
+    private final AccountRestClient restClient;
     private final LedgersSpiAccountMapper accountMapper;
+	private final AuthRequestInterceptor authRequestInterceptor;
+	private final AspspConsentDataService tokenService;
 
-    public FundsConfirmationSpiImpl(LedgersAccountRestClient restClient, LedgersSpiAccountMapper accountMapper) {
-        this.restClient = restClient;
-        this.accountMapper = accountMapper;
-    }
-
-    @Override
-	public @NotNull SpiResponse<SpiFundsConfirmationResponse> performFundsSufficientCheck(@NotNull SpiPsuData psuData,
+    public FundsConfirmationSpiImpl(AccountRestClient restClient, LedgersSpiAccountMapper accountMapper,
+			AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService tokenService) {
+		super();
+		this.restClient = restClient;
+		this.accountMapper = accountMapper;
+		this.authRequestInterceptor = authRequestInterceptor;
+		this.tokenService = tokenService;
+	}
+    
+	/*
+     * We accept any response with valid bearer token for the fund confirmation.
+     *  
+     */
+	@Override
+	public @NotNull SpiResponse<SpiFundsConfirmationResponse> performFundsSufficientCheck(@NotNull SpiContextData contextData,
 			@Nullable PiisConsent piisConsent, @NotNull SpiFundsConfirmationRequest spiFundsConfirmationRequest,
 			@NotNull AspspConsentData aspspConsentData) {
         try {
+			SCAResponseTO sca = tokenService.response(aspspConsentData);
+			authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
+
             logger.info("Funds confirmation request e={}", spiFundsConfirmationRequest);
-            FundsConfirmationRequestTO request = accountMapper.toFundsConfirmationTO(psuData, spiFundsConfirmationRequest);
-            Boolean fundsAvailable = restClient.fundsConfirmation(TokenUtils.read(aspspConsentData),request).getBody();
+            FundsConfirmationRequestTO request = accountMapper.toFundsConfirmationTO(contextData.getPsuData(), spiFundsConfirmationRequest);
+            Boolean fundsAvailable = restClient.fundsConfirmation(request).getBody();
             logger.info("And got the response ={}", fundsAvailable);
 
             SpiFundsConfirmationResponse spiFundsConfirmationResponse = new SpiFundsConfirmationResponse();
@@ -67,8 +82,11 @@ public class FundsConfirmationSpiImpl implements FundsConfirmationSpi {
             return SpiResponse.<SpiFundsConfirmationResponse>builder()
                            .aspspConsentData(aspspConsentData)
                            .fail(getSpiFailureResponse(e));
-        }
+		} finally {
+			authRequestInterceptor.setAccessToken(null);
+		}
 	}
+	
 	@NotNull
     private SpiResponseStatus getSpiFailureResponse(FeignException e) {
         logger.error(e.getMessage(), e);

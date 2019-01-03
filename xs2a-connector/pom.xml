@@ -178,6 +178,17 @@
 						</exclusion>
 					</exclusions>
 				</dependency>
+				<dependency>
+					<groupId>de.adorsys.psd2</groupId>
+					<artifactId>consent-psu-web</artifactId>
+					<version>${xs2a.version}</version>
+					<exclusions>
+						<exclusion>
+							<groupId>de.adorsys.psd2</groupId>
+							<artifactId>consent-core-web</artifactId>
+						</exclusion>
+					</exclusions>
+				</dependency>
 				
 				<!-- Liquibase auto installation for testing -->
 				<dependency>
