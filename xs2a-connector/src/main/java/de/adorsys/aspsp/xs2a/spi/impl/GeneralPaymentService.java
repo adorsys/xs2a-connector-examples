@@ -62,18 +62,6 @@ public class GeneralPaymentService {
 		}
     }
 
-	/**
-	 * This call does not make any sense.
-	 * @param paymentId
-	 * @param paymentProduct
-	 * @param paymentType
-	 * @param aspspConsentData
-	 * @return
-	 */
-    public SpiResponse<SpiResponse.VoidResponse> executePaymentWithoutSca(@NotNull String paymentId, @NotNull PaymentProductTO paymentProduct, @NotNull PaymentTypeTO paymentType, @NotNull AspspConsentData aspspConsentData) {
-    	throw new UnsupportedOperationException("Can not proceed without sca.");
-    }
-
     public SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisationAndExecutePayment(@NotNull String paymentId, @NotNull PaymentProductTO paymentProduct, @NotNull PaymentTypeTO paymentType, @NotNull String paymentAsString, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull AspspConsentData aspspConsentData) {
 		try {
 			SCAPaymentResponseTO sca = tokenService.response(aspspConsentData, SCAPaymentResponseTO.class);

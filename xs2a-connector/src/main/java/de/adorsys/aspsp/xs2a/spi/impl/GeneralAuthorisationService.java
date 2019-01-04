@@ -55,10 +55,10 @@ public class GeneralAuthorisationService {
 	 * 
 	 * In all three cases, we store the response object for reuse in an {@link AspspConsentData} object.
 	 * 
-	 * @param spiPsuData
-	 * @param pin
-	 * @param aspspConsentData
-	 * @return
+	 * @param spiPsuData identification data for the psu
+	 * @param pin : pis of the psu
+	 * @param aspspConsentData : credential transport object.
+	 * @return : the authorisation status
 	 */
 	public SpiResponse<SpiAuthorisationStatus> authorisePsu(@NotNull SpiPsuData spiPsuData, String pin, AspspConsentData aspspConsentData) {
         try {
@@ -82,9 +82,9 @@ public class GeneralAuthorisationService {
 	 * 
 	 * So we parse consent data and we return containing sca methods.
 	 * 
-	 * @param psuData
-	 * @param aspspConsentData
-	 * @return
+	 * @param psuData identification data for the psu
+	 * @param aspspConsentData : credential transport object.
+	 * @return the authentication object.
 	 */
     public SpiResponse<List<SpiAuthenticationObject>> requestAvailableScaMethods(@NotNull SpiPsuData psuData, AspspConsentData aspspConsentData) {
         try {

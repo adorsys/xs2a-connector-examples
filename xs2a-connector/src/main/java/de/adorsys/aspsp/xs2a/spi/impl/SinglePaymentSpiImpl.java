@@ -16,6 +16,8 @@
 
 package de.adorsys.aspsp.xs2a.spi.impl;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
@@ -29,6 +31,7 @@ import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
@@ -69,28 +72,20 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
 	 */
 	@Override
     public @NotNull SpiResponse<SpiSinglePaymentInitiationResponse> initiatePayment(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData initialAspspConsentData) {
-        try {
-			SCAResponseTO sca = tokenService.response(initialAspspConsentData);
-			authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
-
-			logger.info("Initiate single payment with type={}", PaymentTypeTO.SINGLE);
-            logger.debug("Single payment body={}", payment);
-            SinglePaymentTO request = paymentMapper.toSinglePaymentTO(payment);
-            SCAPaymentResponseTO response = ledgersRestClient.initiatePayment(PaymentTypeTO.SINGLE, request).getBody();
-            SpiSinglePaymentInitiationResponse spiInitiationResponse = Optional.ofNullable(response)
-                                                                               .map(paymentMapper::toSpiSingleResponse)
-                                                                               .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 201, but body was empty!", Response.builder().status(400).build()));
-            return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
-                           .aspspConsentData(tokenService.store(response, initialAspspConsentData))
-                           .message(response.getScaStatus().name())
-                           .payload(spiInitiationResponse)
-                           .success();
+		try {
+			SCAPaymentResponseTO response = initiatePaymentInternal(payment, initialAspspConsentData);
+			SpiSinglePaymentInitiationResponse spiInitiationResponse = Optional.ofNullable(response)
+					.map(paymentMapper::toSpiSingleResponse)
+					.orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 201, but body was empty!", Response.builder().status(400).build()));
+			return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
+					.aspspConsentData(tokenService.store(response, initialAspspConsentData))
+					.message(response.getScaStatus().name())
+					.payload(spiInitiationResponse)
+					.success();
         } catch (FeignException e) {
             return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
                            .aspspConsentData(initialAspspConsentData.respondWith(initialAspspConsentData.getAspspConsentData()))
                            .fail(getSpiFailureResponse(e));
-		} finally {
-			authRequestInterceptor.setAccessToken(null);
 		}
     }
 
@@ -127,9 +122,36 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
         return paymentService.getPaymentStatusById(PaymentTypeTO.valueOf(payment.getPaymentType().name()), payment.getPaymentId(), aspspConsentData);
     }
 
+    /*
+     * This attempt to execute payment without sca can only work if the core banking system decides that there is no 
+     * sca required.
+     * 
+     * In sure, the core banking considers it like any other payment initiation. If the status is ScsStatus.EXEMPTED
+     * then we are fine. If not the user will be required to proceed with sca.
+     * 
+     */
     @Override
     public @NotNull SpiResponse<SpiResponse.VoidResponse> executePaymentWithoutSca(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
-        return paymentService.executePaymentWithoutSca(payment.getPaymentId(), PaymentProductTO.valueOf(payment.getPaymentProduct()), PaymentTypeTO.SINGLE, aspspConsentData);
+		try {
+			SCAPaymentResponseTO response = initiatePaymentInternal(payment, aspspConsentData);
+			if(ScaStatusTO.EXEMPTED.equals(response.getScaStatus())){
+				// Success
+				List<String> messages = Arrays.asList(response.getScaStatus().name(), String.format("Payment scheduled for execution. Transaction status is %s. Als see sca status", response.getTransactionStatus()));
+				return SpiResponse.<SpiResponse.VoidResponse>builder()
+						.aspspConsentData(tokenService.store(response, aspspConsentData))
+						.message(messages)
+						.success();
+			}
+			List<String> messages = Arrays.asList(response.getScaStatus().name(), String.format("Payment not executed. Transaction status is %s. Als see sca status", response.getTransactionStatus()));
+			return SpiResponse.<SpiResponse.VoidResponse>builder()
+					.aspspConsentData(tokenService.store(response, aspspConsentData))
+					.message(messages)
+					.fail(SpiResponseStatus.LOGICAL_FAILURE);
+        } catch (FeignException e) {
+            return SpiResponse.<SpiResponse.VoidResponse>builder()
+                           .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
+                           .fail(getSpiFailureResponse(e));
+		}
     }
 
     @Override
@@ -151,4 +173,21 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
                        ? SpiResponseStatus.TECHNICAL_FAILURE
                        : SpiResponseStatus.LOGICAL_FAILURE;
     }
+    
+	private SCAPaymentResponseTO initiatePaymentInternal(SpiSinglePayment payment,
+			AspspConsentData initialAspspConsentData) throws FeignException {
+        try {
+			SCAResponseTO sca = tokenService.response(initialAspspConsentData);
+			authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
+
+			logger.info("Initiate single payment with type={}", PaymentTypeTO.SINGLE);
+            logger.debug("Single payment body={}", payment);
+            SinglePaymentTO request = paymentMapper.toSinglePaymentTO(payment);
+            return ledgersRestClient.initiatePayment(PaymentTypeTO.SINGLE, request).getBody();
+		} finally {
+			authRequestInterceptor.setAccessToken(null);
+		}
+	}
+	
+    
 }
