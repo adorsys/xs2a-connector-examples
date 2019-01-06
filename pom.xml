@@ -19,7 +19,6 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>ledgers-rest-client-core</module>
 		<module>ledgers-rest-client</module>
 		<module>xs2a-connector</module>
 		<module>gateway-app</module>
