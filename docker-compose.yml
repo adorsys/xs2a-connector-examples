@@ -9,7 +9,7 @@ volumes:
 services:
 
   xs2a-connector-examples:
-    image: adorsys/xs2a-connector-examples:develop
+    image: adorsys/xs2a-connector-examples
     container_name: xs2a-connector-examples
     restart: on-failure
     ports:
@@ -48,7 +48,7 @@ services:
     - LEDGERS_URL=http://ledgers:8088
 
   ledgers:
-    image: adorsys/ledgers:develop
+    image: adorsys/ledgers
     container_name: ledgers
     restart: on-failure
     networks:
