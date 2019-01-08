@@ -14,24 +14,18 @@
  * limitations under the License.
  */
 
-package de.adorsys.aspsp.xs2a.test;
+package de.adorsys.ledgers.gatway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
-import org.springframework.context.annotation.ComponentScan;
 
-import de.adorsys.aspsp.xs2a.EnableLedgersXS2AConnector;
+import de.adorsys.aspsp.xs2a.remote.connector.EnableLedgersXS2AConnectorRemote;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
-import de.adorsys.psd2.xs2a.config.EnableXs2aInterface;
-import de.adorsys.psd2.xs2a.web.config.EnableXs2aSwagger;
 
 @EnableFeignClients(basePackageClasses=PaymentRestClient.class)
-@ComponentScan
 @SpringBootApplication
-@EnableXs2aInterface
-@EnableXs2aSwagger
-@EnableLedgersXS2AConnector
+@EnableLedgersXS2AConnectorRemote
 public class LedgersXs2aGatewayApplication {
 
     public static void main(String[] args) {

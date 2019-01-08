@@ -14,28 +14,23 @@
  * limitations under the License.
  */
 
-package de.adorsys.ledgers;
+package de.adorsys.ledgers.app;
 
-import org.springframework.boot.SpringApplication;
+import org.adorsys.ledgers.consent.psu.rest.client.CmsPsuPisRestClient;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.feign.EnableFeignClients;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Import;
 
-import de.adorsys.aspsp.xs2a.EnableLedgersXS2AConnector;
-import de.adorsys.ledgers.rest.client.PaymentRestClient;
-import de.adorsys.psd2.xs2a.config.EnableXs2aInterface;
+import de.adorsys.ledgers.middleware.client.rest.AccountRestClient;
 
-@EnableFeignClients(basePackageClasses=PaymentRestClient.class)
-@ComponentScan
+@EnableFeignClients(basePackageClasses= {AccountRestClient.class, CmsPsuPisRestClient.class})
 @SpringBootApplication
-@EnableXs2aInterface
-@EnableLedgersXS2AConnector
-@Import({SwaggerConfig.class, LiquiBaseConfig.class})
-public class LedgersXs2aGatewayApplication {
-
+@EnableAutoConfiguration
+@ComponentScan( basePackages="de.adorsys.ledgers.oba")
+public class LedgersXs2aObaApplication {
     public static void main(String[] args) {
-    	System.setProperty("spring.main.allow-bean-definition-overriding", "true");
-        SpringApplication.run(LedgersXs2aGatewayApplication.class, args);
+        new SpringApplicationBuilder(LedgersXs2aObaApplication.class).run(args);
     }
 }

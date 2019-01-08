@@ -30,13 +30,11 @@
 			<artifactId>online-banking-app</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		<!-- 
 		<dependency>
 			<groupId>de.adorsys.ledgers</groupId>
 			<artifactId>ledgers-app</artifactId>
 			<version>${ledgers.version}</version>
 		</dependency>
-		 -->
 
 		<!-- xs2a dependencies -->
 
@@ -123,17 +121,15 @@
 							<outputDirectory>${project.build.directory}/online-banking</outputDirectory>
 							<destFileName>online-banking-app.jar</destFileName>
 						</artifactItem>
-						<!-- 
 						<artifactItem>
 							<groupId>de.adorsys.ledgers</groupId>
 							<artifactId>ledgers-app</artifactId>
-							<version>0.0.1-SNAPSHOT</version>
+							<version>0.2-SNAPSHOT</version>
 							<type>jar</type>
 							<overWrite>false</overWrite>
 							<outputDirectory>${project.build.directory}/ledgers</outputDirectory>
 							<destFileName>ledgers-app.jar</destFileName>
 						</artifactItem>
-						 -->
 						<artifactItem>
 							<!-- https://mvnrepository.com/artifact/com.github.tntim96/fakesmtp -->
 						    <groupId>com.github.tntim96</groupId>
@@ -183,7 +179,6 @@
 						</configuration>
 					</execution>
 					<!-- START LEDGERS -->
-					<!-- 
 					<execution>
 						<id>ledgers-process</id>
 						<phase>pre-integration-test</phase>
@@ -203,7 +198,6 @@
 							</arguments>
 						</configuration>
 					</execution>
-					 -->
 					<!-- START XS2A GATEWAY -->
 					<execution>
 						<id>xs2a-gateway-process</id>

@@ -1,4 +1,4 @@
-package de.adorsys.ledgers;
+package de.adorsys.ledgers.gatway;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,11 +24,9 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 public class SwaggerConfig {
     private static final String DEFAULT_PSD2_API_LOCATION = "/psd2-api-1.2-Update-2018-08-17.yaml";
 
-    @Value("${xs2a.swagger.psd2.api.location}")
+    @Value("${xs2a.swagger.psd2.api.location:''}")
     private String customPsd2ApiLocation;
 
-    @SuppressWarnings("Guava") // Intellij IDEA claims that Guava predicates could be replaced with Java API,
-    // but actually it is not possible
     @Bean(name = "api")
     public Docket apiDocklet() {
         return new Docket(DocumentationType.SWAGGER_2)
@@ -42,27 +40,6 @@ public class SwaggerConfig {
                    .build();
     }
 
-    @Bean(name = "consent-xs2a-api")
-    public Docket xs2aApiDocklet() {
-        return new Docket(DocumentationType.SWAGGER_2)
-                   .apiInfo(new ApiInfoBuilder().build())
-                   .groupName("CONSENT XS2A API")
-                   .select()
-                   .apis(RequestHandlerSelectors.basePackage("de.adorsys.psd2.consent.web.xs2a.controller"))
-                   .build();
-    }
-
-
-    @Bean(name = "cosent-psu-api")
-    public Docket psuApiDocklet() {
-        return new Docket(DocumentationType.SWAGGER_2)
-                   .apiInfo(new ApiInfoBuilder().build())
-                   .groupName("CONSENT PSU API")
-                   .select()
-                   .apis(RequestHandlerSelectors.basePackage("de.adorsys.psd2.consent.web.psu.controller"))
-                   .build();
-    }
-    
     @Bean
     @Primary
     public SwaggerResourcesProvider swaggerResourcesProvider(InMemorySwaggerResourcesProvider defaultResourcesProvider) {

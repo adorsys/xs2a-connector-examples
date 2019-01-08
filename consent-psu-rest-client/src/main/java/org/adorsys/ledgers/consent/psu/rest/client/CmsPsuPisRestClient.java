@@ -36,7 +36,7 @@ import io.swagger.annotations.ApiResponses;
 @RestController
 @RequestMapping(path = "psu-api/v1/pis/consent")
 @Api(value = "psu-api/v1/pis/consent", tags = "PSU PIS, Consents", description = "Test controller for cms-psu-api providing access for PIS consents")
-@FeignClient(value = "xs2a", url = "${xs2a.url}")
+@FeignClient(value = "xs2aCmsPsuPis", url = "${xs2a.url}", primary=false)
 public interface CmsPsuPisRestClient {
 
     @GetMapping(path = "/{payment-id}")

@@ -36,7 +36,7 @@ import io.swagger.annotations.ApiResponses;
 
 @RequestMapping(path = "psu-api/v1/ais/consent")
 @Api(value = "psu-api/v1/ais/consent", tags = "PSU AIS, Consents", description = "Provides access to consent management system for PSU AIS")
-@FeignClient(value = "xs2a", url = "${xs2a.url}")
+@FeignClient(value = "xs2aCmsPsuAisConsent", url = "${xs2a.url}", primary=false)
 public interface CmsPsuAisConsentRestClient {
 
     @PutMapping(path = "/{consent-id}/update-psu-data")

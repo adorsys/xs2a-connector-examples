@@ -28,6 +28,10 @@
 		<module>online-banking-app</module>
 		<module>xs2a-ctk</module>
 		<module>consent-psu-rest-client</module>
+		<!-- 
+		<module>xs2a-connector-embedded</module>
+		 -->
+		<module>xs2a-connector-remote</module>
 	</modules>
 
 	<url>https://github.com/adorsys/xs2a-connector-examples</url>
@@ -198,6 +202,11 @@
 				<scope>test</scope>
 			</dependency>
 
+			<dependency>
+			    <groupId>javax.validation</groupId>
+			    <artifactId>validation-api</artifactId>
+			    <version>2.0.1.Final</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -244,7 +253,6 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
@@ -264,7 +272,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
 		</plugins>
 	</build>
 

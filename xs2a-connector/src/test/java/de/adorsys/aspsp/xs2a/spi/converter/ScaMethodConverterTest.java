@@ -11,10 +11,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mapstruct.factory.Mappers;
 
+import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaMethodTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
-import pro.javatar.commons.reader.YamlReader;
 
 public class ScaMethodConverterTest {
 
@@ -22,16 +22,18 @@ public class ScaMethodConverterTest {
     private ScaMethodTypeTO methodType;
     private ScaMethodConverter mapper;
     private SpiAuthenticationObject expected;
+    
+    private YamlMapper yamlMapper = new YamlMapper(ScaMethodConverterTest.class);
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         method = new ScaUserDataTO();
         methodType = ScaMethodTypeTO.EMAIL;
         method.setMethodValue("some@email.com");
 		method.setScaMethod(methodType);
 
         mapper = Mappers.getMapper(ScaMethodConverter.class);
-        expected = readYml(SpiAuthenticationObject.class, "spi-authentication-object.yml");
+        expected = yamlMapper.readYml(SpiAuthenticationObject.class, "spi-authentication-object.yml");
     }
 
     @Test
@@ -51,15 +53,6 @@ public class ScaMethodConverterTest {
         SpiAuthenticationObject authenticationObject = objects.get(0);
 
         assertThat(authenticationObject, is(expected));
-    }
-
-    private static <T> T readYml(Class<T> aClass, String file) {
-        try {
-            return YamlReader.getInstance().getObjectFromResource(LedgersSpiPaymentMapper.class, file, aClass);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new IllegalStateException("Resource file not found", e);
-        }
     }
 
 }

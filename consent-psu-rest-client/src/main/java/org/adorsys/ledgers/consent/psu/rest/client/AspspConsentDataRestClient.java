@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiResponses;
 
 @RequestMapping(path = "api/v1/aspsp-consent-data/consents/{consent-id}")
 @Api(value = "api/v1/aspsp-consent-data", tags = "Aspsp Consent Data", description = "Provides access to consent management system for AspspDataConsent")
-@FeignClient(value = "xs2a", url = "${xs2a.url}")
+@FeignClient(value = "xs2aAspspConsentData", url = "${xs2a.url}", primary=false)
 public interface AspspConsentDataRestClient {
 
     @GetMapping
