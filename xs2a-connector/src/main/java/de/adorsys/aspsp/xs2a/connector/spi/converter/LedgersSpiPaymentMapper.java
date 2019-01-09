@@ -20,6 +20,8 @@ import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
+import de.adorsys.psd2.xs2a.core.pis.PisDayOfExecution;
+import de.adorsys.psd2.xs2a.core.pis.PisExecutionRule;
 import de.adorsys.psd2.xs2a.spi.domain.code.SpiFrequencyCode;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiTransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiAddress;
@@ -42,6 +44,10 @@ public abstract class LedgersSpiPaymentMapper {
     })
     public abstract SinglePaymentTO toSinglePaymentTO(SpiSinglePayment payment);
 
+	@Mappings({
+		@Mapping(target="executionRule", expression="java(mapPisExecutionRule(payment.getExecutionRule()))"),
+		@Mapping(target="dayOfExecution", expression="java(mapPisDayOfExecution(payment.getDayOfExecution()))")
+	})
     public abstract PeriodicPaymentTO toPeriodicPaymentTO(SpiPeriodicPayment payment);
 
     public abstract BulkPaymentTO toBulkPaymentTO(SpiBulkPayment payment);
@@ -106,9 +112,9 @@ public abstract class LedgersSpiPaymentMapper {
         spiPayment.setRequestedExecutionTime(toDateTime(payment.getRequestedExecutionDate(), payment.getRequestedExecutionTime()));
         spiPayment.setStartDate(payment.getStartDate());
         spiPayment.setEndDate(payment.getEndDate());
-        spiPayment.setExecutionRule(payment.getExecutionRule());
+        spiPayment.setExecutionRule(PisExecutionRule.valueOf(payment.getExecutionRule()));
         spiPayment.setFrequency(SpiFrequencyCode.valueOf(payment.getFrequency().name()));
-        spiPayment.setDayOfExecution(payment.getDayOfExecution());
+        spiPayment.setDayOfExecution(PisDayOfExecution.valueOf(""+payment.getDayOfExecution()));
         return spiPayment;
     } //Direct mapping no need for testing
 
@@ -171,4 +177,17 @@ public abstract class LedgersSpiPaymentMapper {
     private boolean needAuthorization(SCAPaymentResponseTO response) {
     	return !ScaStatusTO.EXEMPTED.equals(response.getScaStatus());
     }
+    
+    public String mapPisExecutionRule(PisExecutionRule rule) {
+    	return rule==null
+    			?null
+    					:rule.getValue();
+    }
+    
+    public int mapPisDayOfExecution(PisDayOfExecution day) {
+    	return day==null
+    			?1
+    					: Integer.parseInt(day.getValue());
+    }
+    
 }

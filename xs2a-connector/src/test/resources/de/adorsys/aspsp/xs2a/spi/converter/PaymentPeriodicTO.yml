@@ -41,7 +41,7 @@ requestedExecutionTime: 12:00:00
 
 startDate: 2018-12-12
 endDate: 2018-12-28
-executionRule: everyday
+executionRule: following
 frequency: DAILY
 dayOfExecution: 1
 

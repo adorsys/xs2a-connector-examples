@@ -124,7 +124,7 @@
 						<artifactItem>
 							<groupId>de.adorsys.ledgers</groupId>
 							<artifactId>ledgers-app</artifactId>
-							<version>0.2-SNAPSHOT</version>
+							<version>${ledgers.version}</version>
 							<type>jar</type>
 							<overWrite>false</overWrite>
 							<outputDirectory>${project.build.directory}/ledgers</outputDirectory>

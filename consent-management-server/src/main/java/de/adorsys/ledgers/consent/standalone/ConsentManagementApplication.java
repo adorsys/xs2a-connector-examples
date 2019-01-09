@@ -14,27 +14,18 @@
  * limitations under the License.
  */
 
-package de.adorsys.aspsp.xs2a.remote.connector.test;
+package de.adorsys.ledgers.consent.standalone;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.test.context.ActiveProfiles;
 
-import de.adorsys.aspsp.xs2a.remote.connector.EnableLedgersXS2AConnectorRemote;
-import de.adorsys.ledgers.rest.client.PaymentRestClient;
-import de.adorsys.psd2.xs2a.web.config.EnableXs2aSwagger;
-
-@EnableFeignClients(basePackageClasses=PaymentRestClient.class)
 @SpringBootApplication
-@EnableXs2aSwagger
-@EnableLedgersXS2AConnectorRemote
-@ActiveProfiles({"mockspi"})
-@ComponentScan
-public class LedgersXs2aGatewayApplication {
+@ComponentScan({"de.adorsys.psd2", "de.adorsys.ledgers"})
+public class ConsentManagementApplication {
+
     public static void main(String[] args) {
-    	System.setProperty("spring.main.allow-bean-definition-overriding", "true");
-        SpringApplication.run(LedgersXs2aGatewayApplication.class, "--spring.profiles.active=h2,mockspi", "--security.basic.enabled=false");
+        SpringApplication.run(ConsentManagementApplication.class, args);
     }
 }
+

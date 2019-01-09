@@ -16,14 +16,10 @@
 server:
   # Authorization HTTP header requires to enlarge max header size.
   max-http-header-size: 65000
-  port: 8089
-
-# Swagger configuration location.
-# Empty string, mean the default setting from xs2a-impl will be used.
-xs2a.swagger.psd2.api.location: /psd2-api-1.2-Update-2018-08-18-non-oauth.yaml
+  port: 38080
 
 spring:
-  application.name: ledgers-xs2a-gateway
+  application.name: consent-management
   # These datasource information are provided for the consent db
   datasource:
     username: ${db.user}
@@ -40,11 +36,13 @@ spring:
       write_dates_as_timestamps: false
       wrap-root-value: true
 
-ledgers.url: http://localhost:8088/
+# the top of every hour of every day
+stoplist.cron.expression: 0 0 * * * *
 
 consent.cron.expression: 0 0 1 * * ?
 scheduler.pool.size: 30
 server_key: test123
+
 # ----------------------------------------------
 
 # number of characters in a json string
@@ -81,14 +79,15 @@ spring:
   h2:
     console:
       enabled: true
-      path: /h2
+      path: /h2-console
   jpa:
     generate-ddl: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
   # SpringBoot 2.x react to this liquibase proprty
   liquibase:
-    enabled: false 
+  enabled: true 
+  change-log: classpath:/master.xml
 db:
   user: sa
   password: sa
@@ -96,7 +95,8 @@ db:
 
 # SpringBoot 1.x react to this liquibase property
 liquibase:
-  enabled: false 
+  enabled: true 
+  change-log: classpath:/master.xml
 ---
 spring:
   profiles: postgres
