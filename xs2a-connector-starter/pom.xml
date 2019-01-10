@@ -9,79 +9,66 @@
 		<relativePath>..</relativePath>
 	</parent>
 
-	<artifactId>xs2a-ctk</artifactId>
-	<name>xs2a-ctk</name>
+	<artifactId>xs2a-connector-starter</artifactId>
+	<name>xs2a-connector-starter</name>
 
 	<properties>
 		<ruleset.basedir>..</ruleset.basedir>
-		<ledgers.version>0.0.1-SNAPSHOT</ledgers.version>
+		<spring-boot-dependencies.version>1.5.17.RELEASE</spring-boot-dependencies.version>
+		<spring-cloud-dependencies.version>Edgware.SR5</spring-cloud-dependencies.version>
+		<google.guava.version>23.0</google.guava.version>
 	</properties>
 
 	<dependencies>
-
 		<!-- project dependencies -->
 		<dependency>
 			<groupId>de.adorsys.ledgers</groupId>
 			<artifactId>gateway-app</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+
+		<!-- ASPSP Profile remote mode -->
 		<dependency>
 			<groupId>de.adorsys.ledgers</groupId>
-			<artifactId>online-banking-app</artifactId>
+			<artifactId>consent-management-server</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+
+		<!-- CMS remote mode -->
 		<dependency>
 			<groupId>de.adorsys.ledgers</groupId>
 			<artifactId>ledgers-app</artifactId>
 			<version>${ledgers.version}</version>
 		</dependency>
 
-		<!-- xs2a dependencies -->
-
 		<!-- test dependencies -->
 		<dependency>
-			<groupId>de.adorsys.ledgers</groupId>
-			<artifactId>ledgers-rest-client</artifactId>
-			<version>${project.version}</version>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- test dependencies -->
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- XS2A Adapter -->
 		<dependency>
 			<groupId>de.adorsys.multibanking</groupId>
 			<artifactId>xs2a-adapter</artifactId>
 			<version>1.2.5</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>info.cukes</groupId>
-			<artifactId>cucumber-java</artifactId>
-			<version>${cucumber.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>info.cukes</groupId>
-			<artifactId>cucumber-junit</artifactId>
-			<version>${cucumber.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>info.cukes</groupId>
-			<artifactId>cucumber-spring</artifactId>
-			<version>${cucumber.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-mail</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -108,18 +95,18 @@
 							<artifactId>gateway-app</artifactId>
 							<version>${project.version}</version>
 							<type>jar</type>
-							<overWrite>false</overWrite>
-							<outputDirectory>${project.build.directory}/xs2a-gateway</outputDirectory>
-							<destFileName>xs2a-gateway-app.jar</destFileName>
+							<overWrite>true</overWrite>
+							<outputDirectory>${project.build.directory}/gateway</outputDirectory>
+							<destFileName>gateway-app.jar</destFileName>
 						</artifactItem>
 						<artifactItem>
 							<groupId>de.adorsys.ledgers</groupId>
-							<artifactId>online-banking-app</artifactId>
+							<artifactId>consent-management-server</artifactId>
 							<version>${project.version}</version>
 							<type>jar</type>
-							<overWrite>false</overWrite>
-							<outputDirectory>${project.build.directory}/online-banking</outputDirectory>
-							<destFileName>online-banking-app.jar</destFileName>
+							<overWrite>true</overWrite>
+							<outputDirectory>${project.build.directory}/consents</outputDirectory>
+							<destFileName>consent-management-server.jar</destFileName>
 						</artifactItem>
 						<artifactItem>
 							<groupId>de.adorsys.ledgers</groupId>
@@ -131,10 +118,19 @@
 							<destFileName>ledgers-app.jar</destFileName>
 						</artifactItem>
 						<artifactItem>
+							<groupId>de.adorsys.psd2</groupId>
+							<artifactId>aspsp-profile-server</artifactId>
+							<version>${xs2a.version}</version>
+							<type>jar</type>
+							<overWrite>false</overWrite>
+							<outputDirectory>${project.build.directory}/aspsp-profile</outputDirectory>
+							<destFileName>aspsp-profile.jar</destFileName>
+						</artifactItem>
+						<artifactItem>
 							<!-- https://mvnrepository.com/artifact/com.github.tntim96/fakesmtp -->
-						    <groupId>com.github.tntim96</groupId>
-						    <artifactId>fakesmtp</artifactId>
-						    <version>2.0</version>
+							<groupId>com.github.tntim96</groupId>
+							<artifactId>fakesmtp</artifactId>
+							<version>2.0</version>
 							<type>jar</type>
 							<overWrite>false</overWrite>
 							<outputDirectory>${project.build.directory}/fakesmtp</outputDirectory>
@@ -144,13 +140,13 @@
 					<overWriteReleases>false</overWriteReleases>
 					<overWriteSnapshots>true</overWriteSnapshots>
 				</configuration>
-			</plugin>		
+			</plugin>
 			<plugin>
 				<groupId>com.bazaarvoice.maven.plugins</groupId>
 				<artifactId>process-exec-maven-plugin</artifactId>
 				<version>0.7</version>
 				<configuration>
-					<skip>true</skip>
+					<skip>false</skip>
 				</configuration>
 				<executions>
 					<!-- MAIL SERVER -->
@@ -164,7 +160,8 @@
 							<name>FAKE SMTP</name>
 							<workingDir>${project.build.directory}/fakesmtp</workingDir>
 							<waitForInterrupt>false</waitForInterrupt>
-							<!-- java -jar fakeSMTP.jar -s -b -p 2500 -o ${project.build.directory}/fakesmtp/mails-->
+							<!-- java -jar target/fakesmtp/fakesmtp.jar -s -b -p 2500 -o target/fakesmtp/mails -->
+							<waitAfterLaunch>2</waitAfterLaunch><!-- 2 seconds -->
 							<arguments>
 								<argument>java</argument>
 								<argument>-jar</argument>
@@ -186,59 +183,94 @@
 							<goal>start</goal>
 						</goals>
 						<configuration>
+							<skip>false</skip>
 							<name>LEDGERS</name>
 							<workingDir>${project.build.directory}/ledgers</workingDir>
 							<waitForInterrupt>false</waitForInterrupt>
 							<healthcheckUrl>http://localhost:8088/actuator/health</healthcheckUrl>
+							<!-- java -jar target/ledgers/ledgers-app.jar - -spring.profiles.active=h2 
+								- -ledgers.mockbank.data.load=true -->
+							<waitAfterLaunch>10</waitAfterLaunch>
 							<arguments>
 								<argument>java</argument>
 								<argument>-jar</argument>
 								<argument>${project.build.directory}/ledgers/ledgers-app.jar</argument>
-								<argument>(minus minus)spring.profiles.active=h2'</argument>
+								<argument>--spring.profiles.active=h2</argument>
+								<argument>--ledgers.mockbank.data.load=true</argument>
 							</arguments>
 						</configuration>
 					</execution>
-					<!-- START XS2A GATEWAY -->
+					<!-- ASPSP PROFILE -->
 					<execution>
-						<id>xs2a-gateway-process</id>
+						<id>aspsp-profile-server</id>
 						<phase>pre-integration-test</phase>
 						<goals>
 							<goal>start</goal>
 						</goals>
 						<configuration>
-							<name>XS2A GATEWAY</name>
-							<workingDir>${project.build.directory}/xs2a-gateway</workingDir>
+							<name>ASPSP PROFILE</name>
+							<skip>false</skip>
+							<workingDir>${project.build.directory}/aspsp-profile</workingDir>
 							<waitForInterrupt>false</waitForInterrupt>
-							<healthcheckUrl>http://localhost:8089/actuator/health</healthcheckUrl>
+							<healthcheckUrl>http://localhost:48080/api/v1/health</healthcheckUrl>
+							<!-- java -jar target/aspsp-profile/aspsp-profile.jar - -bank_profile.path=src/test/resources/bank_profile_ledgers.yml -->
 							<arguments>
 								<argument>java</argument>
 								<argument>-jar</argument>
-								<argument>${project.build.directory}/xs2a-gateway/xs2a-gateway-app.jar</argument>
-								<argument>--spring.main.allow-bean-definition-overriding=true</argument>
-								<argument>--spring.profiles.active=h2,mockspi</argument>
+								<argument>${project.build.directory}/aspsp-profile/aspsp-profile.jar</argument>
+								<argument>--bank_profile.path=${project.build.directory}/test-classes/bank_profile_ledgers.yml</argument>
 							</arguments>
 						</configuration>
 					</execution>
-					<!-- START ONLINE BANKING -->
+					<!-- CONSENT MANAGEMENT SYSTEM -->
 					<execution>
-						<id>online-banking-process</id>
+						<id>consent-management-server</id>
 						<phase>pre-integration-test</phase>
 						<goals>
 							<goal>start</goal>
 						</goals>
 						<configuration>
-							<name>ONLINE BANKING</name>
-							<workingDir>${project.build.directory}/online-banking</workingDir>
+							<name>CMS</name>
+							<skip>false</skip>
+							<workingDir>${project.build.directory}/consents</workingDir>
 							<waitForInterrupt>false</waitForInterrupt>
-							<healthcheckUrl>http://localhost:8090/actuator/health</healthcheckUrl>
+							<healthcheckUrl>http://localhost:38080/health</healthcheckUrl>
+							<!-- java -jar target/consents/consent-management-server.jar - -spring.profiles.active=h2 
+								- -security.basic.enabled=false -->
 							<arguments>
 								<argument>java</argument>
 								<argument>-jar</argument>
-								<argument>${project.build.directory}/online-banking/online-banking-app.jar</argument>
+								<argument>${project.build.directory}/consents/consent-management-server.jar</argument>
+								<argument>--spring.profiles.active=h2</argument>
+								<argument>--security.basic.enabled=false</argument>
 							</arguments>
 						</configuration>
 					</execution>
-					
+					<!-- CONSENT MANAGEMENT SYSTEM -->
+					<execution>
+						<id>gateway-app</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>start</goal>
+						</goals>
+						<configuration>
+							<name>GATEWAY</name>
+							<skip>false</skip>
+							<workingDir>${project.build.directory}/gateway</workingDir>
+							<waitForInterrupt>false</waitForInterrupt>
+							<healthcheckUrl>http://localhost:8089/health</healthcheckUrl>
+							<!-- java -jar target/gateway/gateway-app.jar - -spring.profiles.active=mockspi 
+								- -security.basic.enabled=false -->
+							<arguments>
+								<argument>java</argument>
+								<argument>-jar</argument>
+								<argument>${project.build.directory}/gateway/gateway-app.jar</argument>
+								<argument>--spring.profiles.active=mockspi</argument>
+								<argument>--security.basic.enabled=false</argument>
+							</arguments>
+						</configuration>
+					</execution>
+
 					<!--STOP ALL -->
 					<execution>
 						<id>stop-all</id>

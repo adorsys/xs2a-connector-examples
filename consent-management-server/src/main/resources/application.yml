@@ -36,11 +36,20 @@ spring:
       write_dates_as_timestamps: false
       wrap-root-value: true
 
+
 # the top of every hour of every day
 stoplist.cron.expression: 0 0 * * * *
 
+# the top of every hour of every day
+not-confirmed-consent-expiration.cron.expression: 0 0 * * * *
+
+# the top of every hour of every day
+not-confirmed-payment-expiration.cron.expression: 0 0 * * * *
+
 consent.cron.expression: 0 0 1 * * ?
 scheduler.pool.size: 30
+
+
 server_key: test123
 
 # ----------------------------------------------

@@ -41,6 +41,12 @@
 
 		<!-- test dependencies -->
 		<dependency>
+			<groupId>de.adorsys.ledgers</groupId>
+			<artifactId>consent-management-server</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>

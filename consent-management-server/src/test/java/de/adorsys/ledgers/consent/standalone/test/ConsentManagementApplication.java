@@ -14,26 +14,18 @@
  * limitations under the License.
  */
 
-package de.adorsys.ledgers.gatway;
+package de.adorsys.ledgers.consent.standalone.test;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.feign.EnableFeignClients;
-import org.springframework.context.annotation.ComponentScan;
 
-import de.adorsys.aspsp.xs2a.remote.connector.EnableLedgersXS2AConnectorRemote;
-import de.adorsys.ledgers.rest.client.PaymentRestClient;
-import de.adorsys.psd2.xs2a.web.config.EnableXs2aSwagger;
+import de.adorsys.ledgers.consent.standalone.EnableConsentMgnt;
 
-
-@ComponentScan
-@EnableFeignClients(basePackageClasses=PaymentRestClient.class)
 @SpringBootApplication
-@EnableLedgersXS2AConnectorRemote
-@EnableXs2aSwagger
-public class LedgersXs2aGatewayApplication {
-
+@EnableConsentMgnt
+public class ConsentManagementApplication {
     public static void main(String[] args) {
-        SpringApplication.run(LedgersXs2aGatewayApplication.class, args);
+        SpringApplication.run(ConsentManagementApplication.class, args);
     }
 }
+

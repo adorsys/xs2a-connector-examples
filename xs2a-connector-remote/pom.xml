@@ -137,7 +137,7 @@
 			<version>2.8.0</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<!-- XS2A Adapter -->
 		<dependency>
 			<groupId>de.adorsys.multibanking</groupId>
@@ -193,9 +193,9 @@
 						</artifactItem>
 						<artifactItem>
 							<!-- https://mvnrepository.com/artifact/com.github.tntim96/fakesmtp -->
-						    <groupId>com.github.tntim96</groupId>
-						    <artifactId>fakesmtp</artifactId>
-						    <version>2.0</version>
+							<groupId>com.github.tntim96</groupId>
+							<artifactId>fakesmtp</artifactId>
+							<version>2.0</version>
 							<type>jar</type>
 							<overWrite>false</overWrite>
 							<outputDirectory>${project.build.directory}/fakesmtp</outputDirectory>
@@ -222,10 +222,11 @@
 							<goal>start</goal>
 						</goals>
 						<configuration>
+							<skip>true</skip>
 							<name>FAKE SMTP</name>
 							<workingDir>${project.build.directory}/fakesmtp</workingDir>
 							<waitForInterrupt>false</waitForInterrupt>
-							<!-- java -jar target/fakesmtp/fakesmtp.jar -s -b -p 2500 -o target/fakesmtp/mails-->
+							<!-- java -jar target/fakesmtp/fakesmtp.jar -s -b -p 2500 -o target/fakesmtp/mails -->
 							<waitAfterLaunch>2</waitAfterLaunch><!-- 2 seconds -->
 							<arguments>
 								<argument>java</argument>
@@ -248,12 +249,14 @@
 							<goal>start</goal>
 						</goals>
 						<configuration>
-							<skip>false</skip>
+							<skip>true</skip>
 							<name>LEDGERS</name>
 							<workingDir>${project.build.directory}/ledgers</workingDir>
 							<waitForInterrupt>false</waitForInterrupt>
 							<healthcheckUrl>http://localhost:8088/actuator/health</healthcheckUrl>
-							<!-- java -jar target/ledgers/ledgers-app.jar - -spring.profiles.active=h2 - -ledgers.mockbank.data.load=true -->
+							<!-- java -jar target/ledgers/ledgers-app.jar - -spring.profiles.active=h2 
+								- -ledgers.mockbank.data.load=true -->
+							<waitAfterLaunch>10</waitAfterLaunch>
 							<arguments>
 								<argument>java</argument>
 								<argument>-jar</argument>
@@ -276,11 +279,12 @@
 							<workingDir>${project.build.directory}/aspsp-profile</workingDir>
 							<waitForInterrupt>false</waitForInterrupt>
 							<healthcheckUrl>http://localhost:48080/api/v1/health</healthcheckUrl>
-							<!-- java -jar target/aspsp-profile/aspsp-profile.jar -->
+							<!-- java -jar target/aspsp-profile/aspsp-profile.jar - -bank_profile.path=src/test/resources/bank_profile_ledgers.yml-->
 							<arguments>
 								<argument>java</argument>
 								<argument>-jar</argument>
 								<argument>${project.build.directory}/aspsp-profile/aspsp-profile.jar</argument>
+								<argument>--bank_profile.path=${project.build.directory}/test-classes/bank_profile_ledgers.yml</argument>
 							</arguments>
 						</configuration>
 					</execution>
@@ -293,11 +297,12 @@
 						</goals>
 						<configuration>
 							<name>CMS</name>
-							<skip>false</skip>
+							<skip>true</skip>
 							<workingDir>${project.build.directory}/consents</workingDir>
 							<waitForInterrupt>false</waitForInterrupt>
 							<healthcheckUrl>http://localhost:38080/health</healthcheckUrl>
-							<!-- java -jar target/consents/consent-management-server.jar - -spring.profiles.active=h2 - -security.basic.enabled=false-->
+							<!-- java -jar target/consents/consent-management-server.jar - -spring.profiles.active=h2 
+								- -security.basic.enabled=false -->
 							<arguments>
 								<argument>java</argument>
 								<argument>-jar</argument>

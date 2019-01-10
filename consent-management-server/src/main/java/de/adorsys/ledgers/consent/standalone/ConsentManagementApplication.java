@@ -23,7 +23,6 @@ import org.springframework.context.annotation.ComponentScan;
 @SpringBootApplication
 @ComponentScan({"de.adorsys.psd2", "de.adorsys.ledgers"})
 public class ConsentManagementApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(ConsentManagementApplication.class, args);
     }

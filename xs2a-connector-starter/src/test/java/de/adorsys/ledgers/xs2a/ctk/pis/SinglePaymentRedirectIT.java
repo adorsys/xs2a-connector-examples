@@ -6,29 +6,28 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
-import de.adorsys.aspsp.xs2a.remote.connector.test.LedgersXs2aGatewayApplication;
 import de.adorsys.ledgers.xs2a.ctk.core.AbstractITTest;
 import de.adorsys.psd2.client.ApiException;
 import de.adorsys.psd2.client.api.PaymentInitiationServicePisApi;
+import de.adorsys.psd2.client.model.PaymentInitationRequestResponse201;
 
-@Ignore
 @RunWith(SpringJUnit4ClassRunner.class)
-//@SpringBootTest(classes = LedgersXs2aGatewayApplication.class)
 public class SinglePaymentRedirectIT extends AbstractITTest {
 	ObjectMapper ymlMapper = new ObjectMapper(new YAMLFactory());
 
 	@SuppressWarnings("unchecked")
 	@Test
-	public void test_create_payment() {
+	public void test_create_payment() throws JsonParseException, JsonMappingException, IOException {
         PaymentInitiationServicePisApi pis = new PaymentInitiationServicePisApi(createApiClient());
         UUID xRequestId = UUID.randomUUID();
         String tppProcessId = UUID.randomUUID().toString();
@@ -48,11 +47,15 @@ public class SinglePaymentRedirectIT extends AbstractITTest {
 		} catch (ApiException e) {
 			throw new IllegalStateException(e);
 		}
-		
-		String scaRedirect = response.get("scaRedirect");
-        String paymentId = response.get("paymentId");
+		ObjectMapper objectMapper = new ObjectMapper();
+		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		PaymentInitationRequestResponse201 resp = objectMapper.convertValue(response.get("PaymentInitationRequestResponse201"), PaymentInitationRequestResponse201.class);
 
-        Assert.assertNotNull(paymentId);
+        Assert.assertNotNull(resp.getPaymentId());
+        String redirectLink = (String) resp.getLinks().get("scaRedirect");
+        Assert.assertNotNull(redirectLink);
+        Assert.assertTrue(redirectLink.startsWith("http://localhost:8090/pis/auth?paymentId="+resp.getPaymentId()));
+        
 	}
 	
 	public PaymentCase loadPayment(String file) {

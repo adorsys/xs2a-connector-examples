@@ -35,6 +35,7 @@ import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
+import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiTransactionStatus;
@@ -68,10 +69,21 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
 	}
 
 	/*
-	 * Initiating a payment you need a valid bearer token.
+	 * Initiating a payment you need a valid bearer token if not we just return ok.
+	 * 
+	 * TODO: discuss access with xs2a team: we are receiving a call without authentication of 
+	 * the user. So we take no action here.
 	 */
 	@Override
     public @NotNull SpiResponse<SpiSinglePaymentInitiationResponse> initiatePayment(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData initialAspspConsentData) {
+		if(initialAspspConsentData==null || initialAspspConsentData.getAspspConsentData()==null) {
+			SpiSinglePaymentInitiationResponse r = new SpiSinglePaymentInitiationResponse();
+			r.setPaymentId(initialAspspConsentData.getConsentId());
+			r.setTransactionStatus(SpiTransactionStatus.RCVD);
+			return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
+				.aspspConsentData(initialAspspConsentData)
+				.payload(r).success();
+		}
 		try {
 			SCAPaymentResponseTO response = initiatePaymentInternal(payment, initialAspspConsentData);
 			SpiSinglePaymentInitiationResponse spiInitiationResponse = Optional.ofNullable(response)

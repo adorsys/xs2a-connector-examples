@@ -20,6 +20,9 @@ public class TokenStorageServiceImpl implements TokenStorageService {
 	
 	@Override
 	public SCAResponseTO fromBytes(byte[] tokenBytes) throws IOException {
+		if(tokenBytes==null) {
+			return null;
+		}
 		String type = readType(tokenBytes);
 		if(SCAConsentResponseTO.class.getSimpleName().equals(type)) {
 			return mapper.readValue(tokenBytes, SCAConsentResponseTO.class);

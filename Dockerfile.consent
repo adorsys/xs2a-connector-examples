@@ -1,0 +1,15 @@
+FROM adorsys/openjdk-jre-base:8-minideb
+
+MAINTAINER https://github.com/adorsys/xs2a-connector-examples
+
+ENV SERVER_PORT 38080
+ENV JAVA_OPTS -Xmx1024m -agentlib:jdwp=transport=dt_socket,address=38000,server=y,suspend=n
+ENV JAVA_TOOL_OPTIONS -Xmx1024m -agentlib:jdwp=transport=dt_socket,address=38000,server=y,suspend=n
+
+WORKDIR /opt/consent-management-server
+
+COPY ./xs2a-connector-starter/target/consents/consent-management-server.jar /opt/consent-management-server/consent-management-server.jar
+
+EXPOSE 38080 38000
+
+CMD exec $JAVA_HOME/bin/java $JAVA_OPTS -jar /opt/consent-management-server/consent-management-server.jar

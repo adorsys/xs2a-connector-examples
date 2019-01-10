@@ -68,6 +68,14 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
 
 	@Override
     public @NotNull SpiResponse<SpiPeriodicPaymentInitiationResponse> initiatePayment(@NotNull SpiContextData contextData, @NotNull SpiPeriodicPayment payment, @NotNull AspspConsentData initialAspspConsentData) {
+		if(initialAspspConsentData==null || initialAspspConsentData.getAspspConsentData()==null) {
+			SpiPeriodicPaymentInitiationResponse r = new SpiPeriodicPaymentInitiationResponse();
+			r.setPaymentId(initialAspspConsentData.getConsentId());
+			r.setTransactionStatus(SpiTransactionStatus.RCVD);
+			return SpiResponse.<SpiPeriodicPaymentInitiationResponse>builder()
+				.aspspConsentData(initialAspspConsentData)
+				.payload(r).success();
+		}
 		try {
 			SCAPaymentResponseTO response = initiatePaymentInternal(payment, initialAspspConsentData);
 	        SpiPeriodicPaymentInitiationResponse spiInitiationResponse = Optional.ofNullable(response)

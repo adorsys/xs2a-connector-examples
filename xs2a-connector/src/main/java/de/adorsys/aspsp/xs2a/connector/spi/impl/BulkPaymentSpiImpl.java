@@ -72,6 +72,14 @@ public class BulkPaymentSpiImpl implements BulkPaymentSpi {
 	@NotNull
     @Override
     public SpiResponse<SpiBulkPaymentInitiationResponse> initiatePayment(@NotNull SpiContextData contextData, @NotNull SpiBulkPayment payment, @NotNull AspspConsentData initialAspspConsentData) {
+		if(initialAspspConsentData==null || initialAspspConsentData.getAspspConsentData()==null) {
+			SpiBulkPaymentInitiationResponse r = new SpiBulkPaymentInitiationResponse();
+			r.setPaymentId(initialAspspConsentData.getConsentId());
+			r.setTransactionStatus(SpiTransactionStatus.RCVD);
+			return SpiResponse.<SpiBulkPaymentInitiationResponse>builder()
+				.aspspConsentData(initialAspspConsentData)
+				.payload(r).success();
+		}
 		try {
 			SCAPaymentResponseTO response = initiatePaymentInternal(payment, initialAspspConsentData);
 	        SpiBulkPaymentInitiationResponse spiInitiationResponse = Optional.ofNullable(response)

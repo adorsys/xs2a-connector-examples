@@ -26,12 +26,12 @@
 		<module>xs2a-connector</module>
 		<module>gateway-app</module>
 		<module>consent-management-server</module>
-		<!--  <module>gateway-app-embedded</module> -->
+		<!-- <module>gateway-app-embedded</module> -->
 		<module>online-banking-app</module>
-		<module>xs2a-ctk</module>
 		<module>consent-psu-rest-client</module>
 		<!-- <module>xs2a-connector-embedded</module> -->
 		<module>xs2a-connector-remote</module>
+		<module>xs2a-connector-starter</module>
 	</modules>
 
 	<url>https://github.com/adorsys/xs2a-connector-examples</url>
@@ -90,7 +90,7 @@
 		<google.guava.version>23.0</google.guava.version>
 		<cucumber.version>1.2.5</cucumber.version>
 		<nimbus-jose-jwt.version>6.1.1</nimbus-jose-jwt.version>
-		<ledgers.version>0.3-SNAPSHOT</ledgers.version>
+		<ledgers.version>0.2.1</ledgers.version>
 	</properties>
 
 	<repositories>
@@ -253,8 +253,6 @@
 					<source>${java.version}</source>
 					<target>${java.version}</target>
 					<annotationProcessorPaths>
-						<!-- <path> <groupId>org.projectlombok</groupId> <artifactId>lombok</artifactId> 
-							<version>${lombok-plugin.version}</version> </path> -->
 						<path>
 							<groupId>org.mapstruct</groupId>
 							<artifactId>mapstruct-processor</artifactId>
@@ -266,7 +264,9 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>2.22.1</version>
+				<configuration>
+					<classpathDependencyScopeExclude>provided</classpathDependencyScopeExclude>
+				</configuration>
 				<executions>
 					<execution>
 						<id>integration-test</id>

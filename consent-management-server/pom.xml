@@ -17,98 +17,124 @@
 		<spring-boot-dependencies.version>1.5.17.RELEASE</spring-boot-dependencies.version>
 		<spring-cloud-dependencies.version>Edgware.SR5</spring-cloud-dependencies.version>
 		<google.guava.version>23.0</google.guava.version>
-        <hibernate.version>5.3.6.Final</hibernate.version>
+		<hibernate.version>5.3.6.Final</hibernate.version>
 	</properties>
 
 	<dependencies>
 
-		
-        <!-- project dependencies -->
-        <dependency>
-            <groupId>de.adorsys.psd2</groupId>
-            <artifactId>consent-xs2a-web</artifactId>
-            <version>${xs2a.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>de.adorsys.psd2</groupId>
-            <artifactId>consent-psu-web</artifactId>
-            <version>${xs2a.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>de.adorsys.psd2</groupId>
-            <artifactId>consent-aspsp-web</artifactId>
-            <version>${xs2a.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>de.adorsys.psd2</groupId>
-            <artifactId>aspsp-profile-remote</artifactId>
-            <version>${xs2a.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>de.adorsys.psd2</groupId>
-        	<artifactId>cms-db-schema</artifactId>
+		<dependency>
+			<groupId>de.adorsys.psd2</groupId>
+			<artifactId>consent-management-lib</artifactId>
 			<version>${xs2a.version}</version>
-        </dependency>
+		</dependency>
+		<!-- project dependencies -->
+		<dependency>
+			<groupId>de.adorsys.psd2</groupId>
+			<artifactId>consent-xs2a-web</artifactId>
+			<version>${xs2a.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>de.adorsys.psd2</groupId>
+			<artifactId>consent-psu-web</artifactId>
+			<version>${xs2a.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>de.adorsys.psd2</groupId>
+			<artifactId>consent-aspsp-web</artifactId>
+			<version>${xs2a.version}</version>
+		</dependency>
 
-        <!-- other dependencies -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.hibernate</groupId>
-                    <artifactId>hibernate-core</artifactId>
-                </exclusion>
-            </exclusions>
-            <version>${spring-boot-dependencies.version}</version>
-        </dependency>
+		<dependency>
+			<groupId>de.adorsys.psd2</groupId>
+			<artifactId>aspsp-profile-remote</artifactId>
+			<version>${xs2a.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>de.adorsys.psd2</groupId>
+			<artifactId>cms-db-schema</artifactId>
+			<version>${xs2a.version}</version>
+		</dependency>
 
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-            <version>${spring-boot-dependencies.version}</version>
-        </dependency>
+		<!-- other dependencies -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.hibernate</groupId>
+					<artifactId>hibernate-core</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-            <version>${spring-boot-dependencies.version}</version>
-        </dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
 
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
 
-        <dependency>
-            <groupId>org.mariadb.jdbc</groupId>
-            <artifactId>mariadb-java-client</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mariadb.jdbc</groupId>
+			<artifactId>mariadb-java-client</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
 
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 			<scope>runtime</scope>
-            <optional>true</optional>
+			<optional>true</optional>
 		</dependency>
-        <dependency>
-            <groupId>org.liquibase</groupId>
-            <artifactId>liquibase-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger2</artifactId>
-        </dependency>
+		<dependency>
+			<groupId>org.liquibase</groupId>
+			<artifactId>liquibase-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger2</artifactId>
+		</dependency>
 
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger-ui</artifactId>
-        </dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger-ui</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- test dependencies -->
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -119,7 +145,6 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<version>${spring-boot-dependencies.version}</version>
 				<configuration>
-					<includeSystemScope>true</includeSystemScope>
 					<mainClass>de.adorsys.ledgers.consent.standalone.ConsentManagementApplication</mainClass>
 				</configuration>
 				<executions>

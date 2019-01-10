@@ -16,34 +16,42 @@
 server:
   # Authorization HTTP header requires to enlarge max header size.
   max-http-header-size: 65000
-  port: 8089
+  port: 38080
 
 spring:
-  application.name: ledgers-xs2a-gateway
+  application.name: consent-management
+  # These datasource information are provided for the consent db
   datasource:
-    url: ${db.url}
     username: ${db.user}
     password: ${db.password}
+    url: ${db.url}
   jpa:
     show-sql: true
-    generate-ddl: true
-    hibernate:
-      ddl-auto: update
     properties:
       hibrenate.globally_quoted_identifiers: true
       hibernate.jdbc.lob.non_contextual_creation: true
       hibernate.naming-strategy: org.hibernate.cfg.ImprovedNamingStrategy
-      hibernate.default_schema: consent
   jackson:
     serialization:
       write_dates_as_timestamps: false
       wrap-root-value: true
 
-ledgers.url: http://localhost:8088/
+
+# the top of every hour of every day
+stoplist.cron.expression: 0 0 * * * *
+
+# the top of every hour of every day
+not-confirmed-consent-expiration.cron.expression: 0 0 * * * *
+
+# the top of every hour of every day
+not-confirmed-payment-expiration.cron.expression: 0 0 * * * *
 
 consent.cron.expression: 0 0 1 * * ?
 scheduler.pool.size: 30
+
+
 server_key: test123
+
 # ----------------------------------------------
 
 # number of characters in a json string
@@ -57,62 +65,81 @@ springfox.documentation.swagger.v2.path: /swagger.json
 
 skip.ssl.certificate.verification: true
 
-# Swagger configuration location.
-# Empty string, mean the default setting from xs2a-impl will be used.
-xs2a.swagger.psd2.api.location:
+# Profile Service config
+bank_profile.path: /bank_profile_mockbank.yml
 
 # ENDPOINTS CORS CONFIGURATION
 # Whether credentials are supported. When not set, credentials are not supported.
-endpoints:
-  cors:
-    allow-credentials: false
-    # Comma-separated list of origins to allow. '*' allows all origins. When not set, CORS support is disabled.
-    allowed-origins: '*'
-    # Comma-separated list of headers to include in a response.
-    allowed-headers: '*'
-    # Comma-separated list of methods to allow. '*' allows all methods. When not set, defaults to GET.
-    allowed-methods: DELETE,GET,OPTIONS,PATCH,POST,PUT
-    # How long, in seconds, the response from a pre-flight request can be cached by clients
-    max-age: 3600
-
+xs2a:
+  endpoints:
+    cors:
+      allow-credentials: false
+      # Comma-separated list of origins to allow. '*' allows all origins. When not set, CORS support is disabled.
+      allowed-origins: '*'
+      # Comma-separated list of headers to include in a response.
+      allowed-headers: '*'
+      # Comma-separated list of methods to allow. '*' allows all methods. When not set, defaults to GET.
+      allowed-methods: DELETE,GET,OPTIONS,PATCH,POST,PUT
+      # How long, in seconds, the response from a pre-flight request can be cached by clients
+      max-age: 3600
 ---
 spring:
   profiles: h2
   h2:
     console:
       enabled: true
-      path: /h2
-    datasource.data: classpath:data-h2.sql
-  
+      path: /h2-console
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+  # SpringBoot 2.x react to this liquibase proprty
+  liquibase:
+  enabled: true 
+  change-log: classpath:/master.xml
 db:
-  url: jdbc:h2:mem:psdsandboxdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
   user: sa
   password: sa
+  url: jdbc:h2:mem:consent;DB_CLOSE_DELAY=-1
 
+# SpringBoot 1.x react to this liquibase property
+liquibase:
+  enabled: true 
+  change-log: classpath:/master.xml
 ---
 spring:
   profiles: postgres
   jpa:
     properties:
       hibernate.default_schema: consent
-
+  # SpringBoot 2.x react to this liquibase property
+  liquibase:
+    default-schema: consent
+    enabled: true 
+    change-log: classpath:/master.xml
 db:
   host: localhost
-  user: ledgers
-  password: ledgers
-  database: ledgers
+  user: cms
+  password: cms
+  database: consent
   port: 5432
-  url: jdbc:postgresql://${db.host}:${db.port}/${db.database}
+  url: jdbc:postgresql://${db.host}:${db.port}/${db.database}?currentSchema=consent
+  
+# SpringBoot 1.x react to this liquibase property
+liquibase:
+  default-schema: consent
+  enabled: true 
+  change-log: classpath:/master.xml
+
 ---
 spring:
   profiles: dev
 
 logging.level.org.postgresql: INFO
-logging.level.org.hibernate.SQL: DEBUG
-logging.level.org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-logging.level.org.springframework: TRACE
+logging.level.org.hibernate.SQL: WARN
+logging.level.org.hibernate.type.descriptor.sql.BasicBinder: WARN
+logging.level.org.springframework: INFO
 
 management.endpoints.web.exposure.include: "*"
 management.endpoints.web.exposure.exclude: env,beans
-
 
