@@ -1,22 +1,34 @@
 # Running
 
+
+
+This command will start all services in the project /xs2a-connector-starter and run a sample xs2a request. Get a look at /xs2a-connector-starter/pom.xml to see the commands used to start each micro service. 
+
+To get this up and working you need https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a branch develop with some minor fixes. After the branches https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/tree/bugfix/fpo-making-package-private-interfaces-public and https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/tree/PR_h2_liquibase_support are merged to develop.
+
+
 ```
-> cd xs2a-ctk
-> java -jar target/fakesmtp/fakesmtp.jar -s -b -p 2500 -o target/fakesmtp/mails
+> mvn clean install
 
 ```
 
+with this command we can also get all services up and running in docker.
+ 
 ```
-> cd xs2a-ctk
-> java -jar target/ledgers-app.jar --spring.profiles.active=h2 --ledgers.mockbank.data.load=true
-
-````
-
-```
-> cd xs2a-ctk
-> java -jar target/online-banking/online-banking-app.jar
-```
+docker-compose -f docker-compose-all-with-h2.yml up
 
 ```
-> java -jar target/xs2a-gateway/xs2a-gateway-app.jar --spring.main.allow-bean-definition-overriding=true --spring.profiles.active=h2,mockspi
+
+To cleanup, use following commands
+
 ```
+> docker-compose -f docker-compose-all-with-h2.yml down
+
+> docker stop $(docker ps -aq)
+
+> docker rm $(docker ps -aq)
+
+> docker volume rm xs2a-connector-examples_xs2a-gateway-data
+
+```
+

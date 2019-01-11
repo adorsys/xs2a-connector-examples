@@ -27,6 +27,9 @@ spring:
     url: ${db.url}
   jpa:
     show-sql: true
+    generate-ddl: false
+    hibernate:
+      ddl-auto: none
     properties:
       hibrenate.globally_quoted_identifiers: true
       hibernate.jdbc.lob.non_contextual_creation: true
@@ -89,10 +92,10 @@ spring:
     console:
       enabled: true
       path: /h2-console
+    webAllowOthers: true
   jpa:
-    generate-ddl: true
-    hibernate:
-      ddl-auto: update
+    properties:
+      hibernate.default_schema: public
   # SpringBoot 2.x react to this liquibase proprty
   liquibase:
   enabled: true 

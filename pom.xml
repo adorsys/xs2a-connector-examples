@@ -25,7 +25,6 @@
 		<module>ledgers-rest-client</module>
 		<module>xs2a-connector</module>
 		<module>gateway-app</module>
-		<module>consent-management-server</module>
 		<!-- <module>gateway-app-embedded</module> -->
 		<module>online-banking-app</module>
 		<module>consent-psu-rest-client</module>
@@ -90,7 +89,7 @@
 		<google.guava.version>23.0</google.guava.version>
 		<cucumber.version>1.2.5</cucumber.version>
 		<nimbus-jose-jwt.version>6.1.1</nimbus-jose-jwt.version>
-		<ledgers.version>0.2.1</ledgers.version>
+		<ledgers.version>0.3-SNAPSHOT</ledgers.version>
 	</properties>
 
 	<repositories>

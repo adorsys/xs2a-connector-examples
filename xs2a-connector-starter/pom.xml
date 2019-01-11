@@ -100,9 +100,9 @@
 							<destFileName>gateway-app.jar</destFileName>
 						</artifactItem>
 						<artifactItem>
-							<groupId>de.adorsys.ledgers</groupId>
-							<artifactId>consent-management-server</artifactId>
-							<version>${project.version}</version>
+							<groupId>de.adorsys.psd2</groupId>
+							<artifactId>cms-standalone-service</artifactId>
+							<version>${xs2a.version}</version>
 							<type>jar</type>
 							<overWrite>true</overWrite>
 							<outputDirectory>${project.build.directory}/consents</outputDirectory>
@@ -146,7 +146,7 @@
 				<artifactId>process-exec-maven-plugin</artifactId>
 				<version>0.7</version>
 				<configuration>
-					<skip>false</skip>
+					<skip>true</skip>
 				</configuration>
 				<executions>
 					<!-- MAIL SERVER -->
@@ -158,6 +158,7 @@
 						</goals>
 						<configuration>
 							<name>FAKE SMTP</name>
+							<skip>false</skip>
 							<workingDir>${project.build.directory}/fakesmtp</workingDir>
 							<waitForInterrupt>false</waitForInterrupt>
 							<!-- java -jar target/fakesmtp/fakesmtp.jar -s -b -p 2500 -o target/fakesmtp/mails -->
@@ -236,13 +237,14 @@
 							<waitForInterrupt>false</waitForInterrupt>
 							<healthcheckUrl>http://localhost:38080/health</healthcheckUrl>
 							<!-- java -jar target/consents/consent-management-server.jar - -spring.profiles.active=h2 
-								- -security.basic.enabled=false -->
+								- -security.basic.enabled=false - -spring.config.location=target/test-classes/consent-management-application.yml -->
 							<arguments>
 								<argument>java</argument>
 								<argument>-jar</argument>
 								<argument>${project.build.directory}/consents/consent-management-server.jar</argument>
 								<argument>--spring.profiles.active=h2</argument>
 								<argument>--security.basic.enabled=false</argument>
+								<argument>--spring.config.location=${project.build.directory}/test-classes/consent-management-application.yml</argument>
 							</arguments>
 						</configuration>
 					</execution>

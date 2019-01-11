@@ -32,6 +32,7 @@ public abstract class LedgersSpiAccountMapper {
     public SpiAccountDetails toSpiAccountDetails(AccountDetailsTO accountDetails) {
         return Optional.ofNullable(accountDetails)
                        .map(d -> new SpiAccountDetails(
+                    		   d.getIban(),
                                d.getId(),
                                d.getIban(),
                                d.getBban(),

@@ -165,24 +165,6 @@
 				<configuration>
 					<artifactItems>
 						<artifactItem>
-							<groupId>de.adorsys.ledgers</groupId>
-							<artifactId>consent-management-server</artifactId>
-							<version>${project.version}</version>
-							<type>jar</type>
-							<overWrite>true</overWrite>
-							<outputDirectory>${project.build.directory}/consents</outputDirectory>
-							<destFileName>consent-management-server.jar</destFileName>
-						</artifactItem>
-						<artifactItem>
-							<groupId>de.adorsys.ledgers</groupId>
-							<artifactId>ledgers-app</artifactId>
-							<version>${ledgers.version}</version>
-							<type>jar</type>
-							<overWrite>false</overWrite>
-							<outputDirectory>${project.build.directory}/ledgers</outputDirectory>
-							<destFileName>ledgers-app.jar</destFileName>
-						</artifactItem>
-						<artifactItem>
 							<groupId>de.adorsys.psd2</groupId>
 							<artifactId>aspsp-profile-server</artifactId>
 							<version>${xs2a.version}</version>
@@ -190,16 +172,6 @@
 							<overWrite>false</overWrite>
 							<outputDirectory>${project.build.directory}/aspsp-profile</outputDirectory>
 							<destFileName>aspsp-profile.jar</destFileName>
-						</artifactItem>
-						<artifactItem>
-							<!-- https://mvnrepository.com/artifact/com.github.tntim96/fakesmtp -->
-							<groupId>com.github.tntim96</groupId>
-							<artifactId>fakesmtp</artifactId>
-							<version>2.0</version>
-							<type>jar</type>
-							<overWrite>false</overWrite>
-							<outputDirectory>${project.build.directory}/fakesmtp</outputDirectory>
-							<destFileName>fakesmtp.jar</destFileName>
 						</artifactItem>
 					</artifactItems>
 					<overWriteReleases>false</overWriteReleases>
@@ -214,58 +186,6 @@
 					<skip>false</skip>
 				</configuration>
 				<executions>
-					<!-- MAIL SERVER -->
-					<execution>
-						<id>faksmtp-process</id>
-						<phase>pre-integration-test</phase>
-						<goals>
-							<goal>start</goal>
-						</goals>
-						<configuration>
-							<skip>true</skip>
-							<name>FAKE SMTP</name>
-							<workingDir>${project.build.directory}/fakesmtp</workingDir>
-							<waitForInterrupt>false</waitForInterrupt>
-							<!-- java -jar target/fakesmtp/fakesmtp.jar -s -b -p 2500 -o target/fakesmtp/mails -->
-							<waitAfterLaunch>2</waitAfterLaunch><!-- 2 seconds -->
-							<arguments>
-								<argument>java</argument>
-								<argument>-jar</argument>
-								<argument>${project.build.directory}/fakesmtp/fakesmtp.jar</argument>
-								<argument>-s</argument>
-								<argument>-b</argument>
-								<argument>-p</argument>
-								<argument>2500</argument>
-								<argument>-o</argument>
-								<argument>${project.build.directory}/fakesmtp/mails</argument>
-							</arguments>
-						</configuration>
-					</execution>
-					<!-- START LEDGERS -->
-					<execution>
-						<id>ledgers-process</id>
-						<phase>pre-integration-test</phase>
-						<goals>
-							<goal>start</goal>
-						</goals>
-						<configuration>
-							<skip>true</skip>
-							<name>LEDGERS</name>
-							<workingDir>${project.build.directory}/ledgers</workingDir>
-							<waitForInterrupt>false</waitForInterrupt>
-							<healthcheckUrl>http://localhost:8088/actuator/health</healthcheckUrl>
-							<!-- java -jar target/ledgers/ledgers-app.jar - -spring.profiles.active=h2 
-								- -ledgers.mockbank.data.load=true -->
-							<waitAfterLaunch>10</waitAfterLaunch>
-							<arguments>
-								<argument>java</argument>
-								<argument>-jar</argument>
-								<argument>${project.build.directory}/ledgers/ledgers-app.jar</argument>
-								<argument>--spring.profiles.active=h2</argument>
-								<argument>--ledgers.mockbank.data.load=true</argument>
-							</arguments>
-						</configuration>
-					</execution>
 					<!-- ASPSP PROFILE -->
 					<execution>
 						<id>aspsp-profile-server</id>
@@ -288,31 +208,6 @@
 							</arguments>
 						</configuration>
 					</execution>
-					<!-- CONSENT MANAGEMENT SYSTEM -->
-					<execution>
-						<id>consent-management-server</id>
-						<phase>pre-integration-test</phase>
-						<goals>
-							<goal>start</goal>
-						</goals>
-						<configuration>
-							<name>CMS</name>
-							<skip>true</skip>
-							<workingDir>${project.build.directory}/consents</workingDir>
-							<waitForInterrupt>false</waitForInterrupt>
-							<healthcheckUrl>http://localhost:38080/health</healthcheckUrl>
-							<!-- java -jar target/consents/consent-management-server.jar - -spring.profiles.active=h2 
-								- -security.basic.enabled=false -->
-							<arguments>
-								<argument>java</argument>
-								<argument>-jar</argument>
-								<argument>${project.build.directory}/consents/consent-management-server.jar</argument>
-								<argument>--spring.profiles.active=h2</argument>
-								<argument>--security.basic.enabled=false</argument>
-							</arguments>
-						</configuration>
-					</execution>
-
 					<!--STOP ALL -->
 					<execution>
 						<id>stop-all</id>

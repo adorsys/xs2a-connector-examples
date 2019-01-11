@@ -13,7 +13,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.gateway
-    image: adorsys/xs2a-gateway-app:latest
     restart: on-failure
     ports:
     - "8089:8089"
@@ -36,7 +35,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.profile
-    image: adorsys/ledgers-xs2a-profile-app:latest
     restart: on-failure
     ports:
     - "48080:48080"
@@ -50,11 +48,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.consent
-    image: adorsys/ledgers-xs2a-consent-app:latest
     restart: on-failure
     ports:
     - "38080:38080"
-    - "38000:38000"
+    - "38000:8000"
     environment:
     - ASPSP_PROFILE_BASEURL=http://profile:48080/api/v1
     - SPRING_PROFILES_ACTIVE=h2
@@ -74,7 +71,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.ledgers
-    image: adorsys/ledgers-xs2a-app:latest
     restart: on-failure
     ports:
     - "8088:8088"
