@@ -32,3 +32,11 @@ To cleanup, use following commands
 
 ```
 
+java -Xmx1024m -agentlib:jdwp=transport=dt_socket,address=38000,server=y,suspend=n -jar target/consents/consent-management-server.jar --spring.profiles.active=h2 —security.basic.enabled=false --spring.config.location=target/test-classes/consent-management-application.yml
+
+
+java -jar target/ledgers/ledgers-app.jar --spring.profiles.active=h2 --ledgers.mockbank.data.load=true
+
+java -jar target/fakesmtp/fakesmtp.jar -s -b -p 2500 -o target/fakesmtp/mails
+
+java -jar target/aspsp-profile/aspsp-profile.jar --bank_profile.path=src/test/resources/bank_profile_ledgers.yml

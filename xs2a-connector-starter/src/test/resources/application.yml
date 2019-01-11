@@ -1,0 +1,9 @@
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: full
+
+logging.level.de.adorsys.ledgers.xs2a.ctk: DEBUG        

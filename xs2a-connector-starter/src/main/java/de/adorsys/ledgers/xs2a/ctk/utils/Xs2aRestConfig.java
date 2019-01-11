@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.adorsys.ledgers.xs2a.ctk.conf;
+package de.adorsys.ledgers.xs2a.ctk.utils;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;

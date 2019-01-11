@@ -1,6 +1,6 @@
-package de.adorsys.ledgers.xs2a.ctk.pis;
+package de.adorsys.ledgers.xs2a.test.ctk.pis;
 
-import de.adorsys.psd2.client.model.PaymentInitiationSctJson;
+import de.adorsys.psd2.model.PaymentInitiationSctJson;
 
 public class PaymentCase {
 	private String psuId;
