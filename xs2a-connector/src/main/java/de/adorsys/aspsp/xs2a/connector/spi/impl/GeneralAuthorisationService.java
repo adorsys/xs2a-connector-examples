@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
+import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCALoginResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
@@ -72,9 +73,26 @@ public class GeneralAuthorisationService {
             return new SpiResponse<>(status, tokenService.store(response.getBody(), aspspConsentData));
         } catch (FeignException e) {
             return SpiResponse.<SpiAuthorisationStatus>builder()
-                           .fail(getSpiFailureResponse(e));
+                           .fail(SpiFailureResponseHelper.getSpiFailureResponse(e, logger));
 		}
     }
+	
+	public SpiResponse<SpiAuthorisationStatus> authorisePsuForConsent(@NotNull SpiPsuData spiPsuData, String pin, String consentId, String authorisationId, OpTypeTO opType, AspspConsentData aspspConsentData) {
+        try {
+            String login = spiPsuData.getPsuId();
+            logger.info("Authorise user with login={} and password={}", login, StringUtils.repeat("*", 10));
+            ResponseEntity<SCALoginResponseTO> response = userMgmtRestClient.authoriseForConsent(login, pin, consentId, authorisationId, opType);
+            SpiAuthorisationStatus status = response!=null && response.getBody()!=null && response.getBody().getBearerToken()!=null
+                                                    ? SpiAuthorisationStatus.SUCCESS
+                                                    : SpiAuthorisationStatus.FAILURE;
+            logger.info("Authorisation result is {}", status);
+            return new SpiResponse<>(status, tokenService.store(response.getBody(), aspspConsentData));
+        } catch (FeignException e) {
+            return SpiResponse.<SpiAuthorisationStatus>builder()
+                           .fail(SpiFailureResponseHelper.getSpiFailureResponse(e, logger));
+		}
+    }
+	
 
 	/**
 	 * This call won't go to the server. The login process is supposed to have returned if necessary the list of 
@@ -104,7 +122,7 @@ public class GeneralAuthorisationService {
         } catch (FeignException e) {
             return SpiResponse.<List<SpiAuthenticationObject>>builder()
                            .aspspConsentData(aspspConsentData)
-                           .fail(getSpiFailureResponse(e));
+                           .fail(SpiFailureResponseHelper.getSpiFailureResponse(e, logger));
         }
     }
 
@@ -121,7 +139,7 @@ public class GeneralAuthorisationService {
         } catch (FeignException e) {
             return SpiResponse.<SpiAuthorizationCodeResult>builder()
                            .aspspConsentData(aspspConsentData)
-                           .fail(getSpiFailureResponse(e));
+                           .fail(SpiFailureResponseHelper.getSpiFailureResponse(e, logger));
 		} finally {
 			authRequestInterceptor.setAccessToken(null);
 		}
@@ -147,14 +165,8 @@ public class GeneralAuthorisationService {
             }
         } catch (FeignException e) {
             return SpiResponse.<SpiResponse.VoidResponse>builder()
-                           .fail(getSpiFailureResponse(e));
+                           .fail(SpiFailureResponseHelper.getSpiFailureResponse(e, logger));
         }
     }
 
-    private SpiResponseStatus getSpiFailureResponse(FeignException e) {
-        logger.error(e.getMessage(), e);
-        return e.status() == 500
-                       ? SpiResponseStatus.TECHNICAL_FAILURE
-                       : SpiResponseStatus.LOGICAL_FAILURE;
-    }
 }

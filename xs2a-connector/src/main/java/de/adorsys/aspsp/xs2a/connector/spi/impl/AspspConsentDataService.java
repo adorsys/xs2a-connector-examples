@@ -1,6 +1,7 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,7 @@ public class AspspConsentDataService {
 		try {
 			bytes = tokenStorageService.toBytes(response);
 		} catch (IOException e) {
-			throw FeignException.errorStatus(e.getMessage(), Response.builder().status(500).build());
+			throw FeignException.errorStatus(e.getMessage(), error(500));
 		}
 		return aspspConsentData.respondWith(bytes);
 	}
@@ -43,7 +44,7 @@ public class AspspConsentDataService {
 			checkBearerTokenPresent(checkCredentials, sca);
 			return sca;
 		} catch (IOException e) {
-			throw FeignException.errorStatus(e.getMessage(), Response.builder().status(500).build());
+			throw FeignException.errorStatus(e.getMessage(), error(500));
 		}
 	}
 	
@@ -55,21 +56,24 @@ public class AspspConsentDataService {
 			checkBearerTokenPresent(checkCredentials, sca);
 			return sca;
 		} catch (IOException e) {
-			throw FeignException.errorStatus(e.getMessage(), Response.builder().status(500).build());
+			throw FeignException.errorStatus(e.getMessage(), error(500));
 		}
 	}
 
 	private <T extends SCAResponseTO> void checkBearerTokenPresent(boolean checkCredentials, T sca) {
 		if(checkCredentials && sca.getBearerToken()==null) {
-			throw FeignException.errorStatus("Missing credentials. Expecting a bearer token in the consent data object.", Response.builder().status(401).build());
+			throw FeignException.errorStatus("Missing credentials. Expecting a bearer token in the consent data object.", 
+					Response.builder().status(401).build());
 		}
 	}
 
 	private <T extends SCAResponseTO> void checkScaPresent(T sca) {
 		if(sca==null) {
-			throw FeignException.errorStatus("Missing consent data", Response.builder().status(401).build());
+			throw FeignException.errorStatus("Missing consent data", error(401));
 		}
 	}
 
-	
+	private Response error(int code) {
+		return Response.builder().status(code).headers(Collections.emptyMap()).build();
+	}
 }

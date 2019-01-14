@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
-import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
@@ -132,7 +131,8 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
 
     /*
      * This attempt to execute payment without sca can only work if the core banking system decides that there is no 
-     * sca required.
+     * sca required. If this is the case, the payment would have been executed in the initiation phase after
+     * the first login of the user. 
      * 
      * In sure, the core banking considers it like any other payment initiation. If the status is ScsStatus.EXEMPTED
      * then we are fine. If not the user will be required to proceed with sca.
@@ -140,21 +140,12 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
      */
     @Override
     public @NotNull SpiResponse<SpiResponse.VoidResponse> executePaymentWithoutSca(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
-    	// This shall normally happen when the payment is not yes initiated but call has a valid token.
-    	SCAPaymentResponseTO response = initiatePaymentInternal(payment, aspspConsentData);
-		return SpiResponse.<SpiResponse.VoidResponse>builder()
-			.aspspConsentData(tokenService.store(response, aspspConsentData))
-			.payload(SpiResponse.voidResponse())
-			.success();
+    	return paymentService.executePaymentWithoutSca(contextData, payment, aspspConsentData);
     }
 
     @Override
     public @NotNull SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiContextData contextData, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
         return paymentService.verifyScaAuthorisationAndExecutePayment(
-                payment.getPaymentId(),
-                PaymentProductTO.valueOf(payment.getPaymentProduct()),
-                PaymentTypeTO.SINGLE,
-                payment.toString(),
                 spiScaConfirmation,
                 aspspConsentData
         );

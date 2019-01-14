@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.ledgers.middleware.api.domain.payment.BulkPaymentTO;
-import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
@@ -125,12 +124,7 @@ public class BulkPaymentSpiImpl implements BulkPaymentSpi {
 	@Override
 	public @NotNull SpiResponse<VoidResponse> executePaymentWithoutSca(@NotNull SpiContextData contextData,
 			@NotNull SpiBulkPayment payment, @NotNull AspspConsentData aspspConsentData) {
-    	// This shall normally happen when the payment is not yes initiated but call has a valid token.
-    	SCAPaymentResponseTO response = initiatePaymentInternal(payment, aspspConsentData);
-		return SpiResponse.<SpiResponse.VoidResponse>builder()
-			.aspspConsentData(tokenService.store(response, aspspConsentData))
-			.payload(SpiResponse.voidResponse())
-			.success();
+    	return paymentService.executePaymentWithoutSca(contextData, payment, aspspConsentData);
     }
 
 	@Override
@@ -138,10 +132,6 @@ public class BulkPaymentSpiImpl implements BulkPaymentSpi {
 			@NotNull SpiContextData contextData, @NotNull SpiScaConfirmation spiScaConfirmation,
 			@NotNull SpiBulkPayment payment, @NotNull AspspConsentData aspspConsentData) {
         return paymentService.verifyScaAuthorisationAndExecutePayment(
-                payment.getPaymentId(),
-                PaymentProductTO.valueOf(payment.getPaymentProduct()),
-                PaymentTypeTO.BULK,
-                payment.toString(),
                 spiScaConfirmation,
                 aspspConsentData
         );

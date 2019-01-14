@@ -15,12 +15,13 @@ import de.adorsys.ledgers.xs2a.test.ctk.StarterApplication;
 import de.adorsys.psd2.model.PaymentInitationRequestResponse201;
 import de.adorsys.psd2.model.PaymentInitiationStatusResponse200Json;
 import de.adorsys.psd2.model.ScaStatus;
+import de.adorsys.psd2.model.SelectPsuAuthenticationMethodResponse;
 import de.adorsys.psd2.model.TransactionStatus;
 import de.adorsys.psd2.model.UpdatePsuAuthenticationResponse;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = StarterApplication.class)
-public class SinglePaymentEmbeddedOneScaMethodIT {
+public class SinglePaymentEmbeddedManyScaMethodIT {
 	private final YAMLMapper ymlMapper = new YAMLMapper();
 	private final String paymentService = "payments";
 	private final String paymentProduct = "sepa-credit-transfers";
@@ -32,7 +33,7 @@ public class SinglePaymentEmbeddedOneScaMethodIT {
 	
 	@Before
 	public void beforeClass() {
-		PaymentCase paymentCase = LoadPayment.loadPayment(SinglePaymentEmbeddedOneScaMethodIT.class, "SinglePaymentEmbeddedOneScaMethodIT.yml", ymlMapper);
+		PaymentCase paymentCase = LoadPayment.loadPayment(SinglePaymentEmbeddedManyScaMethodIT.class, "SinglePaymentEmbeddedManyScaMethodIT.yml", ymlMapper);
 		paymentInitService = new PaymentExecutionHelper(paymentApi, paymentCase, paymentService, paymentProduct);
 	}
 
@@ -43,8 +44,17 @@ public class SinglePaymentEmbeddedOneScaMethodIT {
 
 		// Login User
 		UpdatePsuAuthenticationResponse psuAuthenticationResponse = paymentInitService.login(initiatedPayment);
-		checkScaStatus(ScaStatus.SCAMETHODSELECTED, psuAuthenticationResponse);
+		// TODO: check why not PSUIDENTIFIED
+		checkScaStatus(ScaStatus.PSUAUTHENTICATED, psuAuthenticationResponse);
 		checkTransactionStatusStatus(TransactionStatus.ACCP, psuAuthenticationResponse);
+		
+		Assert.assertNull(psuAuthenticationResponse.getChosenScaMethod());
+		Assert.assertNotNull(psuAuthenticationResponse.getScaMethods());
+		Assert.assertEquals(2, psuAuthenticationResponse.getScaMethods().size());
+		
+		UpdatePsuAuthenticationResponse choseScaMethodResponse = paymentInitService.choseScaMethod(psuAuthenticationResponse);
+		checkScaStatus(ScaStatus.SCAMETHODSELECTED, choseScaMethodResponse);
+		checkTransactionStatusStatus(TransactionStatus.ACCP, choseScaMethodResponse);
 		
 		psuAuthenticationResponse = paymentInitService.authCode(psuAuthenticationResponse);
 		checkScaStatus(ScaStatus.FINALISED, psuAuthenticationResponse);

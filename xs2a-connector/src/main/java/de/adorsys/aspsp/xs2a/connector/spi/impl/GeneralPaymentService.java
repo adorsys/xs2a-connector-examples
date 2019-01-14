@@ -1,5 +1,7 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
@@ -13,10 +15,12 @@ import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.ledgers.util.Ids;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
+import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiTransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
@@ -65,7 +69,7 @@ public class GeneralPaymentService {
 		}
     }
 
-    public SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisationAndExecutePayment(@NotNull String paymentId, @NotNull PaymentProductTO paymentProduct, @NotNull PaymentTypeTO paymentType, @NotNull String paymentAsString, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull AspspConsentData aspspConsentData) {
+    public SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiScaConfirmation spiScaConfirmation, @NotNull AspspConsentData aspspConsentData) {
 		try {
 			SCAPaymentResponseTO sca = tokenService.response(aspspConsentData, SCAPaymentResponseTO.class);
 			authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
@@ -107,6 +111,35 @@ public class GeneralPaymentService {
 			.aspspConsentData(tokenService.store(response, initialAspspConsentData))
 			.payload(responsePayload).success();
     }
+    
+    public <T> @NotNull SpiResponse<SpiResponse.VoidResponse> executePaymentWithoutSca(@NotNull SpiContextData contextData, @NotNull T payment, @NotNull AspspConsentData aspspConsentData) {
+		try {
+			// First check if there is any payment response ongoing.
+			SCAPaymentResponseTO response = tokenService.response(aspspConsentData, SCAPaymentResponseTO.class);
+
+			if (ScaStatusTO.EXEMPTED.equals(response.getScaStatus())
+					|| ScaStatusTO.FINALISED.equals(response.getScaStatus())) {
+				// Success
+				List<String> messages = Arrays.asList(response.getScaStatus().name(),
+						String.format("Payment scheduled for execution. Transaction status is %s. Als see sca status",
+								response.getTransactionStatus()));
+				return SpiResponse.<SpiResponse.VoidResponse>builder()
+						.aspspConsentData(aspspConsentData).message(messages)
+						.payload(SpiResponse.voidResponse()).success();
+			}
+			List<String> messages = Arrays.asList(response.getScaStatus().name(),
+					String.format("Payment not executed. Transaction status is %s. Als see sca status",
+							response.getTransactionStatus()));
+			return SpiResponse.<SpiResponse.VoidResponse>builder()
+					.aspspConsentData(tokenService.store(response, aspspConsentData)).message(messages)
+					.fail(SpiResponseStatus.LOGICAL_FAILURE);
+		} catch (FeignException e) {
+			return SpiResponse.<SpiResponse.VoidResponse>builder()
+					.aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
+					.fail(getSpiFailureResponse(e));
+		}
+    }
+    
 
     private SpiResponseStatus getSpiFailureResponse(FeignException e) {
         logger.error(e.getMessage(), e);

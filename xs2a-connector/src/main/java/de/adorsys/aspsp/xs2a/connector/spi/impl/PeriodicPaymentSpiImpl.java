@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
-import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
@@ -121,21 +120,12 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
 
     @Override
     public @NotNull SpiResponse<SpiResponse.VoidResponse> executePaymentWithoutSca(@NotNull SpiContextData contextData, @NotNull SpiPeriodicPayment payment, @NotNull AspspConsentData aspspConsentData) {
-    	// This shall normally happen when the payment is not yes initiated but call has a valid token.
-    	SCAPaymentResponseTO response = initiatePaymentInternal(payment, aspspConsentData);
-		return SpiResponse.<SpiResponse.VoidResponse>builder()
-			.aspspConsentData(tokenService.store(response, aspspConsentData))
-			.payload(SpiResponse.voidResponse())
-			.success();
+    	return paymentService.executePaymentWithoutSca(contextData, payment, aspspConsentData);
     }
 
     @Override
     public @NotNull SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiContextData contextData, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiPeriodicPayment payment, @NotNull AspspConsentData aspspConsentData) {
         return paymentService.verifyScaAuthorisationAndExecutePayment(
-                payment.getPaymentId(),
-                PaymentProductTO.valueOf(payment.getPaymentProduct()),
-                PaymentTypeTO.PERIODIC,
-                payment.toString(),
                 spiScaConfirmation,
                 aspspConsentData
         );
