@@ -9,8 +9,8 @@
 		<relativePath>..</relativePath>
 	</parent>
 
-	<artifactId>xs2a-connector-starter</artifactId>
-	<name>xs2a-connector-starter</name>
+	<artifactId>xs2a-connector-redirect-test</artifactId>
+	<name>xs2a-connector-redirect-test</name>
 
 	<properties>
 		<ruleset.basedir>..</ruleset.basedir>
@@ -23,7 +23,7 @@
 			<artifactId>xs2a-rest-client</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		
+
 		<!-- swagger -->
 		<dependency>
 			<groupId>io.swagger</groupId>
@@ -42,13 +42,13 @@
 			<artifactId>xs2a-server-api</artifactId>
 			<version>${xs2a.version}</version>
 		</dependency>
-
+		
 		<!-- Commons -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
   			<artifactId>commons-lang3</artifactId>
 		</dependency>
-
+		
 		<!-- Jackson -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>
@@ -142,6 +142,15 @@
 							<overWrite>false</overWrite>
 							<outputDirectory>${project.build.directory}/fakesmtp</outputDirectory>
 							<destFileName>fakesmtp.jar</destFileName>
+						</artifactItem>
+						<artifactItem>
+							<groupId>de.adorsys.ledgers</groupId>
+							<artifactId>online-banking-app</artifactId>
+							<version>${project.version}</version>
+							<type>jar</type>
+							<overWrite>true</overWrite>
+							<outputDirectory>${project.build.directory}/online-banking</outputDirectory>
+							<destFileName>online-banking-app.jar</destFileName>
 						</artifactItem>
 					</artifactItems>
 					<overWriteReleases>false</overWriteReleases>
@@ -269,6 +278,30 @@
 							<waitForInterrupt>false</waitForInterrupt>
 							<healthcheckUrl>http://localhost:8089/health</healthcheckUrl>
 							<!-- java -jar target/gateway/gateway-app.jar - -spring.profiles.active=mockspi 
+								- -security.basic.enabled=false -->
+							<arguments>
+								<argument>java</argument>
+								<argument>-jar</argument>
+								<argument>${project.build.directory}/gateway/gateway-app.jar</argument>
+								<argument>--spring.profiles.active=mockspi</argument>
+								<argument>--security.basic.enabled=false</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<!-- ONLINE BANKING APP -->
+					<execution>
+						<id>online-banking-app</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>start</goal>
+						</goals>
+						<configuration>
+							<name>ONLINE BANKING</name>
+							<skip>false</skip>
+							<workingDir>${project.build.directory}/online-banking</workingDir>
+							<waitForInterrupt>false</waitForInterrupt>
+							<healthcheckUrl>http://localhost:8090/health</healthcheckUrl>
+							<!-- java -jar target/online-banking/online-banking-app.jar - -spring.profiles.active=mockspi 
 								- -security.basic.enabled=false -->
 							<arguments>
 								<argument>java</argument>
