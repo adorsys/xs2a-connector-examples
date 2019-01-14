@@ -16,8 +16,6 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +29,6 @@ import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
@@ -47,6 +44,7 @@ import feign.FeignException;
 import feign.Response;
 
 @Component
+@SuppressWarnings("PMD.TooManyMethods")
 public class SinglePaymentSpiImpl implements SinglePaymentSpi {
     private static final Logger logger = LoggerFactory.getLogger(SinglePaymentSpiImpl.class);
 
@@ -75,13 +73,8 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
 	 */
 	@Override
     public @NotNull SpiResponse<SpiSinglePaymentInitiationResponse> initiatePayment(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData initialAspspConsentData) {
-		if(initialAspspConsentData==null || initialAspspConsentData.getAspspConsentData()==null) {
-			SpiSinglePaymentInitiationResponse r = new SpiSinglePaymentInitiationResponse();
-			r.setPaymentId(initialAspspConsentData.getConsentId());
-			r.setTransactionStatus(SpiTransactionStatus.RCVD);
-			return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
-				.aspspConsentData(initialAspspConsentData)
-				.payload(r).success();
+		if(initialAspspConsentData.getAspspConsentData()==null) {
+			return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, payment, initialAspspConsentData, new SpiSinglePaymentInitiationResponse());
 		}
 		try {
 			SCAPaymentResponseTO response = initiatePaymentInternal(payment, initialAspspConsentData);
@@ -97,6 +90,10 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
             return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
                            .aspspConsentData(initialAspspConsentData.respondWith(initialAspspConsentData.getAspspConsentData()))
                            .fail(getSpiFailureResponse(e));
+        } catch (IllegalStateException e) {
+            return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
+                           .aspspConsentData(initialAspspConsentData.respondWith(initialAspspConsentData.getAspspConsentData()))
+                           .fail(SpiResponseStatus.TECHNICAL_FAILURE);
 		}
     }
 
@@ -143,26 +140,12 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
      */
     @Override
     public @NotNull SpiResponse<SpiResponse.VoidResponse> executePaymentWithoutSca(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
-		try {
-			SCAPaymentResponseTO response = initiatePaymentInternal(payment, aspspConsentData);
-			if(ScaStatusTO.EXEMPTED.equals(response.getScaStatus())){
-				// Success
-				List<String> messages = Arrays.asList(response.getScaStatus().name(), String.format("Payment scheduled for execution. Transaction status is %s. Als see sca status", response.getTransactionStatus()));
-				return SpiResponse.<SpiResponse.VoidResponse>builder()
-						.aspspConsentData(tokenService.store(response, aspspConsentData))
-						.message(messages)
-						.success();
-			}
-			List<String> messages = Arrays.asList(response.getScaStatus().name(), String.format("Payment not executed. Transaction status is %s. Als see sca status", response.getTransactionStatus()));
-			return SpiResponse.<SpiResponse.VoidResponse>builder()
-					.aspspConsentData(tokenService.store(response, aspspConsentData))
-					.message(messages)
-					.fail(SpiResponseStatus.LOGICAL_FAILURE);
-        } catch (FeignException e) {
-            return SpiResponse.<SpiResponse.VoidResponse>builder()
-                           .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
-                           .fail(getSpiFailureResponse(e));
-		}
+    	// This shall normally happen when the payment is not yes initiated but call has a valid token.
+    	SCAPaymentResponseTO response = initiatePaymentInternal(payment, aspspConsentData);
+		return SpiResponse.<SpiResponse.VoidResponse>builder()
+			.aspspConsentData(tokenService.store(response, aspspConsentData))
+			.payload(SpiResponse.voidResponse())
+			.success();
     }
 
     @Override
@@ -194,6 +177,15 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
 			logger.info("Initiate single payment with type={}", PaymentTypeTO.SINGLE);
             logger.debug("Single payment body={}", payment);
             SinglePaymentTO request = paymentMapper.toSinglePaymentTO(payment);
+            // If the payment product is missing, get it from the sca object.
+            if(request.getPaymentProduct()==null) {
+            	if(sca instanceof SCAPaymentResponseTO) {
+            		SCAPaymentResponseTO scaPaymentResponse = (SCAPaymentResponseTO) sca;
+            		request.setPaymentProduct(scaPaymentResponse.getPaymentProduct());
+            	} else {
+            		throw new IllegalStateException(String.format("Missing payment product for payment with id %s ", payment.getPaymentId()));
+            	}
+            }
             return ledgersRestClient.initiatePayment(PaymentTypeTO.SINGLE, request).getBody();
 		} finally {
 			authRequestInterceptor.setAccessToken(null);

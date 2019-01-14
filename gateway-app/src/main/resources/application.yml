@@ -29,7 +29,7 @@ spring:
       write_dates_as_timestamps: false
       wrap-root-value: true
 
-ledgers.url: http://localhost:8088/
+ledgers.url: http://localhost:8088
 
 
 # ----------------------------------------------
@@ -70,3 +70,13 @@ logging.level.org.springframework: INFO
 management.endpoints.web.exposure.include: "*"
 management.endpoints.web.exposure.exclude: env,beans
 
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 60000
+        readTimeout: 60000
+        loggerLevel: full
+
+logging.level.de.adorsys.ledgers.rest.client: DEBUG
+logging.level.de.adorsys.psd2.consent.service: DEBUG

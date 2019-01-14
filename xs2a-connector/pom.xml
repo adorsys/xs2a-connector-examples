@@ -28,7 +28,11 @@
 			<artifactId>spi-api</artifactId>
 			<version>${xs2a.version}</version>
 		</dependency>
-
+		<dependency>
+			<groupId>de.adorsys.ledgers</groupId>
+			<artifactId>ledgers-utils</artifactId>
+			<version>${ledgers.version}</version>
+		</dependency>
 		<!-- other dependencies -->
 		<dependency>
 			<groupId>org.mapstruct</groupId>

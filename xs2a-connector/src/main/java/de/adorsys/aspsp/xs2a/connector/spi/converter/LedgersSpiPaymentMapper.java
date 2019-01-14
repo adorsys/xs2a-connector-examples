@@ -45,8 +45,8 @@ public abstract class LedgersSpiPaymentMapper {
     public abstract SinglePaymentTO toSinglePaymentTO(SpiSinglePayment payment);
 
 	@Mappings({
-		@Mapping(target="executionRule", expression="java(mapPisExecutionRule(payment.getExecutionRule()))"),
-		@Mapping(target="dayOfExecution", expression="java(mapPisDayOfExecution(payment.getDayOfExecution()))")
+		@Mapping(target="executionRule", expression="java(de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapperHelper.mapPisExecutionRule(payment.getExecutionRule()))"),
+		@Mapping(target="dayOfExecution", expression="java(de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapperHelper.mapPisDayOfExecution(payment.getDayOfExecution()))")
 	})
     public abstract PeriodicPaymentTO toPeriodicPaymentTO(SpiPeriodicPayment payment);
 
@@ -166,6 +166,9 @@ public abstract class LedgersSpiPaymentMapper {
     }//Direct mapping no testing necessary
     
     PaymentProductTO toPaymentProduct(String paymentProduct) {
+    	if(paymentProduct==null) {
+    		return null;
+    	}
     	return PaymentProductTO.getByValue(paymentProduct).get();
     }
     
@@ -177,17 +180,4 @@ public abstract class LedgersSpiPaymentMapper {
     private boolean needAuthorization(SCAPaymentResponseTO response) {
     	return !ScaStatusTO.EXEMPTED.equals(response.getScaStatus());
     }
-    
-    public String mapPisExecutionRule(PisExecutionRule rule) {
-    	return rule==null
-    			?null
-    					:rule.getValue();
-    }
-    
-    public int mapPisDayOfExecution(PisDayOfExecution day) {
-    	return day==null
-    			?1
-    					: Integer.parseInt(day.getValue());
-    }
-    
 }

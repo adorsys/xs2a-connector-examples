@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import de.adorsys.ledgers.xs2a.ctk.utils.RemoteURLs;
 import de.adorsys.psd2.model.Authorisations;
 import de.adorsys.psd2.model.CancellationList;
+import de.adorsys.psd2.model.PaymentInitationRequestResponse201;
 import de.adorsys.psd2.model.PaymentInitiationCancelResponse200202;
 import de.adorsys.psd2.model.PaymentInitiationStatusResponse200Json;
 import de.adorsys.psd2.model.ScaStatusResponse;
@@ -26,6 +27,7 @@ import de.adorsys.psd2.model.TppMessages404;
 import de.adorsys.psd2.model.TppMessages405;
 import de.adorsys.psd2.model.TppMessages406;
 import de.adorsys.psd2.model.TppMessages429;
+import de.adorsys.psd2.model.UpdatePsuAuthenticationResponse;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
@@ -315,7 +317,7 @@ public interface PaymentApiClient {
         @RequestMapping(value = "/v1/{payment-service}/{payment-product}",
             produces = {"application/json"},
             method = RequestMethod.POST)
-        ResponseEntity<Object> _initiatePayment(
+        ResponseEntity<PaymentInitationRequestResponse201> _initiatePayment(
             @ApiParam(value = "JSON request body for a payment inition request message  There are the following payment-products supported:   * \"sepa-credit-transfers\" with JSON-Body   * \"instant-sepa-credit-transfers\" with JSON-Body   * \"target-2-payments\" with JSON-Body   * \"cross-border-credit-transfers\" with JSON-Body   * \"pain.001-sepa-credit-transfers\" with XML pain.001.001.03 body for SCT scheme   * \"pain.001-instant-sepa-credit-transfers\" with XML pain.001.001.03 body for SCT INST scheme   * \"pain.001-target-2-payments\" with pain.001 body.     Only country specific schemes are currently available   * \"pain.001-cross-border-credit-transfers\" with pain.001 body.     Only country specific schemes are currently available  There are the following payment-services supported:   * \"payments\"   * \"periodic-payments\"   * \"bulk-paments\"  All optional, conditional and predefined but not yet used fields are defined. ", required = true) @Valid @RequestBody Object body,
             @ApiParam(value = "Payment service:  Possible values are: * payments * bulk-payments * periodic-payments ", required = true, allowableValues = "\"payments\", \"bulk-payments\", \"periodic-payments\"") @PathVariable("payment-service") String paymentService,
             @ApiParam(value = "The addressed payment product endpoint, e.g. for SEPA Credit Transfers (SCT). The ASPSP will publish which of the payment products/endpoints will be supported.  The following payment products are supported:   - sepa-credit-transfers   - instant-sepa-credit-transfers   - target-2-payments   - cross-border-credit-transfers   - pain.001-sepa-credit-transfers   - pain.001-instant-sepa-credit-transfers   - pain.001-target-2-payments   - pain.001-cross-border-credit-transfers  **Remark:** For all SEPA Credit Transfer based endpoints which accept XML encoding, the XML pain.001 schemes provided by EPC are supported by the ASPSP as a minimum for the body content. Further XML schemes might be supported by some communities.  **Remark:** For cross-border and TARGET-2 payments only community wide pain.001 schemes do exist. There are plenty of country specificic scheme variants. ", required = true, allowableValues = "\"sepa-credit-transfers\", \"instant-sepa-credit-transfers\", \"target-2-payments\", \"cross-border-credit-transfers\", \"pain.001-sepa-credit-transfers\", \"pain.001-instant-sepa-credit-transfers\", \"pain.001-target-2-payments\", \"pain.001-cross-border-credit-transfers\"") @PathVariable("payment-product") String paymentProduct,
@@ -489,7 +491,7 @@ public interface PaymentApiClient {
             produces = {"application/json"},
             consumes = {"application/json"},
             method = RequestMethod.PUT)
-        ResponseEntity<Object> _updatePaymentPsuData(
+        ResponseEntity<UpdatePsuAuthenticationResponse> _updatePaymentPsuData(
             @ApiParam(value = "Payment service:  Possible values are: * payments * bulk-payments * periodic-payments ", required = true, allowableValues = "\"payments\", \"bulk-payments\", \"periodic-payments\"") @PathVariable("payment-service") String paymentService,
             @ApiParam(value = "Resource identification of the generated payment initiation resource.", required = true) @PathVariable("paymentId") String paymentId,
             @ApiParam(value = "Resource identification of the related SCA.", required = true) @PathVariable("authorisationId") String authorisationId,

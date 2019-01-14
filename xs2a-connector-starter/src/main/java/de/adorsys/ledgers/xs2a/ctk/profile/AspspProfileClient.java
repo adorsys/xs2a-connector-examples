@@ -34,10 +34,10 @@ public interface AspspProfileClient {
     @GetMapping
     @ApiOperation(value = "Reads aspsp specific settings")
     @ApiResponse(code = 200, message = "Ok", response = AspspSettings.class)
-    public ResponseEntity<AspspSettings> getAspspSettings();
+    ResponseEntity<AspspSettings> getAspspSettings();
 
     @GetMapping(path = "/sca-approach")
     @ApiOperation(value = "Reads sca approach value")
     @ApiResponse(code = 200, message = "Ok", response = ScaApproach.class)
-    public ResponseEntity<ScaApproach> getScaApproach();
+    ResponseEntity<ScaApproach> getScaApproach();
 }

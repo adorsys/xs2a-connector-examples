@@ -98,8 +98,8 @@ spring:
       hibernate.default_schema: public
   # SpringBoot 2.x react to this liquibase proprty
   liquibase:
-  enabled: true 
-  change-log: classpath:/master.xml
+    enabled: true 
+    change-log: classpath:/master.xml
 db:
   user: sa
   password: sa

@@ -2,9 +2,12 @@ package de.adorsys.aspsp.xs2a.connector.config.auth;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -16,23 +19,15 @@ import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
 
 @Service
 public class TokenStorageServiceImpl implements TokenStorageService {
-	ObjectMapper mapper = new ObjectMapper();
+	@Autowired
+	private ObjectMapper mapper;
 	
 	@Override
 	public SCAResponseTO fromBytes(byte[] tokenBytes) throws IOException {
 		if(tokenBytes==null) {
 			return null;
 		}
-		String type = readType(tokenBytes);
-		if(SCAConsentResponseTO.class.getSimpleName().equals(type)) {
-			return mapper.readValue(tokenBytes, SCAConsentResponseTO.class);
-		} else if (SCALoginResponseTO.class.getSimpleName().equals(type)) {
-			return mapper.readValue(tokenBytes, SCALoginResponseTO.class);
-		} else if (SCAPaymentResponseTO.class.getSimpleName().equals(type)) {
-			return mapper.readValue(tokenBytes, SCAPaymentResponseTO.class);
-		} else {
-			return null;
-		}
+		return read(tokenBytes);
 	}
 
 	@Override
@@ -42,20 +37,41 @@ public class TokenStorageServiceImpl implements TokenStorageService {
 
 	@Override
 	public <T extends SCAResponseTO> T fromBytes(byte[] tokenBytes, Class<T> klass) throws IOException {
-		String type = readType(tokenBytes);
-		if(!klass.getSimpleName().equals(type)) {
-			return null;
-		}
-		return mapper.readValue(tokenBytes, klass);
+		return read(tokenBytes, klass);
 	}
 
-	private String readType(byte[] tokenBytes) throws IOException {
-		JsonNode jsonNode = mapper.readTree(tokenBytes);
-		JsonNode objectType = jsonNode.get("objectType");
-		if(objectType==null) {
-			return null;
+	private SCAResponseTO read(byte[] tokenBytes) throws IOException {
+		JsonNode jsonNode = prepareNode(tokenBytes);
+		String type = objectType(jsonNode);
+		JsonParser jsonParser = mapper.treeAsTokens(jsonNode);
+		if(SCAConsentResponseTO.class.getSimpleName().equals(type)) {
+			return mapper.readValue(jsonParser, SCAConsentResponseTO.class);
+		} else if (SCALoginResponseTO.class.getSimpleName().equals(type)) {
+			return mapper.readValue(jsonParser, SCALoginResponseTO.class);
+		} else if (SCAPaymentResponseTO.class.getSimpleName().equals(type)) {
+			return mapper.readValue(jsonParser, SCAPaymentResponseTO.class);
+		} else {
+			throw new IOException("Unknown response type " + type);
 		}
-		return objectType.toString();
+	}
+	
+	private <T extends SCAResponseTO> T read(byte[] tokenBytes, Class<T> klass) throws IOException {
+		JsonNode jsonNode = prepareNode(tokenBytes);
+		JsonParser jsonParser = mapper.treeAsTokens(jsonNode);
+		return mapper.readValue(jsonParser, klass);
+	}
+
+	private JsonNode prepareNode(byte[] tokenBytes) throws IOException {
+		JsonNode jsonNode = mapper.readTree(tokenBytes);
+		// size
+		if(jsonNode.size()==1) { // unwrapped object
+			jsonNode = jsonNode.iterator().next();
+		}
+		return jsonNode;
+	}
+	
+	public String objectType(JsonNode jsonNode) {
+		return Optional.ofNullable(jsonNode.get("objectType")).orElse(null).asText();
 	}
 
 	@Override

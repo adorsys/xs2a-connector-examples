@@ -15,11 +15,14 @@ import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
+import de.adorsys.ledgers.util.Ids;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiTransactionStatus;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
+import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
 import feign.FeignException;
 import feign.Response;
 
@@ -46,7 +49,7 @@ public class GeneralPaymentService {
 			logger.info("Get payment status by id with type={}, and id={}", paymentType, paymentId);
             TransactionStatusTO response = paymentRestClient.getPaymentStatusById(paymentId).getBody();
             SpiTransactionStatus status = Optional.ofNullable(response)
-                                                  .map(r -> SpiTransactionStatus.valueOf(r.getName()))
+                                                  .map(r -> SpiTransactionStatus.valueOf(r.name()))
                                                   .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 200, but body was empty!", Response.builder().status(400).build()));
             logger.info("The status was:{}", status);
             return SpiResponse.<SpiTransactionStatus>builder()
@@ -76,6 +79,33 @@ public class GeneralPaymentService {
 		} finally {
 			authRequestInterceptor.setAccessToken(null);
 		}
+    }
+    
+    /**
+     * Instantiating the very first response object.
+     * 
+     * @param paymentType the payment type
+     * @param payment the payment object
+     * @param initialAspspConsentData the credential data container
+     * @param responsePayload the instantiated payload object
+     * @return
+     */
+    public <T extends SpiPaymentInitiationResponse> SpiResponse<T> firstCallInstantiatingPayment(
+    		@NotNull PaymentTypeTO paymentType, @NotNull SpiPayment payment, 
+    		@NotNull AspspConsentData initialAspspConsentData, T responsePayload){
+		String paymentId = initialAspspConsentData.getConsentId()!=null
+				? initialAspspConsentData.getConsentId()
+						: Ids.id();
+		SCAPaymentResponseTO response = new SCAPaymentResponseTO();
+		response.setPaymentId(paymentId);
+		response.setTransactionStatus(TransactionStatusTO.RCVD);
+		response.setPaymentProduct(PaymentProductTO.getByValue(payment.getPaymentProduct()).orElse(null));
+		response.setPaymentType(paymentType);
+		responsePayload.setPaymentId(paymentId);
+		responsePayload.setTransactionStatus(SpiTransactionStatus.valueOf(response.getTransactionStatus().name()));
+		return SpiResponse.<T>builder()
+			.aspspConsentData(tokenService.store(response, initialAspspConsentData))
+			.payload(responsePayload).success();
     }
 
     private SpiResponseStatus getSpiFailureResponse(FeignException e) {

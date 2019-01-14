@@ -28,28 +28,48 @@ public class AspspConsentDataService {
 	}
 
 	public <T extends SCAResponseTO> T response(AspspConsentData aspspConsentData, Class<T> klass) {
+		return response(aspspConsentData, klass, true);
+	}
+
+	public SCAResponseTO response(AspspConsentData aspspConsentData) {
+		return response(aspspConsentData, true);
+	}
+
+	public SCAResponseTO response(AspspConsentData aspspConsentData, boolean checkCredentials) {
+		byte[] aspspConsentDataBytes = aspspConsentData.getAspspConsentData();
+		try {
+			SCAResponseTO sca = tokenStorageService.fromBytes(aspspConsentDataBytes);
+			checkScaPresent(sca);
+			checkBearerTokenPresent(checkCredentials, sca);
+			return sca;
+		} catch (IOException e) {
+			throw FeignException.errorStatus(e.getMessage(), Response.builder().status(500).build());
+		}
+	}
+	
+	public <T extends SCAResponseTO> T response(AspspConsentData aspspConsentData, Class<T> klass, boolean checkCredentials) {
 		byte[] aspspConsentDataBytes = aspspConsentData.getAspspConsentData();
 		try {
 			T sca = tokenStorageService.fromBytes(aspspConsentDataBytes, klass);
-			if(sca==null || sca.getBearerToken()==null) {
-				throw FeignException.errorStatus("Missing credentials", Response.builder().status(401).build());
-			}
+			checkScaPresent(sca);
+			checkBearerTokenPresent(checkCredentials, sca);
 			return sca;
 		} catch (IOException e) {
 			throw FeignException.errorStatus(e.getMessage(), Response.builder().status(500).build());
 		}
 	}
 
-	public SCAResponseTO response(AspspConsentData aspspConsentData) {
-		byte[] aspspConsentDataBytes = aspspConsentData.getAspspConsentData();
-		try {
-			SCAResponseTO sca = tokenStorageService.fromBytes(aspspConsentDataBytes);
-			if(sca==null || sca.getBearerToken()==null) {
-				throw FeignException.errorStatus("Missing credentials", Response.builder().status(401).build());
-			}
-			return sca;
-		} catch (IOException e) {
-			throw FeignException.errorStatus(e.getMessage(), Response.builder().status(500).build());
+	private <T extends SCAResponseTO> void checkBearerTokenPresent(boolean checkCredentials, T sca) {
+		if(checkCredentials && sca.getBearerToken()==null) {
+			throw FeignException.errorStatus("Missing credentials. Expecting a bearer token in the consent data object.", Response.builder().status(401).build());
 		}
 	}
+
+	private <T extends SCAResponseTO> void checkScaPresent(T sca) {
+		if(sca==null) {
+			throw FeignException.errorStatus("Missing consent data", Response.builder().status(401).build());
+		}
+	}
+
+	
 }

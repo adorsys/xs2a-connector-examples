@@ -47,18 +47,6 @@
 			<artifactId>jackson-dataformat-yaml</artifactId>
 		</dependency>
 
-		<!-- project dependencies <dependency> <groupId>de.adorsys.ledgers</groupId> 
-			<artifactId>gateway-app</artifactId> <version>${project.version}</version> 
-			<scope>test</scope> </dependency> -->
-
-		<!-- ASPSP Profile remote mode <dependency> <groupId>de.adorsys.ledgers</groupId> 
-			<artifactId>consent-management-server</artifactId> <version>${project.version}</version> 
-			<scope>test</scope> </dependency> -->
-
-		<!-- CMS remote mode <dependency> <groupId>de.adorsys.ledgers</groupId> 
-			<artifactId>ledgers-app</artifactId> <version>${ledgers.version}</version> 
-			<scope>test</scope> </dependency> -->
-
 		<!-- test dependencies -->
 		<dependency>
 			<groupId>org.assertj</groupId>
@@ -82,9 +70,6 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- XS2A Adapter <dependency> <groupId>de.adorsys.multibanking</groupId> 
-			<artifactId>xs2a-adapter</artifactId> <version>1.2.5</version> <scope>test</scope> 
-			</dependency> -->
 	</dependencies>
 
 	<build>

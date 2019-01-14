@@ -38,12 +38,12 @@ public interface AspspProfileUpdateClient {
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "Ok"),
         @ApiResponse(code = 400, message = "Bad request")})
-    public ResponseEntity<Void> updateScaApproach(@RequestBody String scaApproach);
+    ResponseEntity<Void> updateScaApproach(@RequestBody String scaApproach);
 
     @PutMapping(path = "/aspsp-settings")
     @ApiOperation(value = "Updates aspsp profile settings. Only for DEBUG!")
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "Ok"),
         @ApiResponse(code = 400, message = "Bad request")})
-    public ResponseEntity<Void> updateAspspSettings(@RequestBody AspspSettings aspspSettings);
+    ResponseEntity<Void> updateAspspSettings(@RequestBody AspspSettings aspspSettings);
 }

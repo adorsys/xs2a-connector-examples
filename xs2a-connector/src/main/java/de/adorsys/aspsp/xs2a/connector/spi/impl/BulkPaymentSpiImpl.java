@@ -16,8 +16,6 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +29,6 @@ import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
@@ -72,13 +69,8 @@ public class BulkPaymentSpiImpl implements BulkPaymentSpi {
 	@NotNull
     @Override
     public SpiResponse<SpiBulkPaymentInitiationResponse> initiatePayment(@NotNull SpiContextData contextData, @NotNull SpiBulkPayment payment, @NotNull AspspConsentData initialAspspConsentData) {
-		if(initialAspspConsentData==null || initialAspspConsentData.getAspspConsentData()==null) {
-			SpiBulkPaymentInitiationResponse r = new SpiBulkPaymentInitiationResponse();
-			r.setPaymentId(initialAspspConsentData.getConsentId());
-			r.setTransactionStatus(SpiTransactionStatus.RCVD);
-			return SpiResponse.<SpiBulkPaymentInitiationResponse>builder()
-				.aspspConsentData(initialAspspConsentData)
-				.payload(r).success();
+		if(initialAspspConsentData.getAspspConsentData()==null) {
+			return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.BULK, payment, initialAspspConsentData, new SpiBulkPaymentInitiationResponse());
 		}
 		try {
 			SCAPaymentResponseTO response = initiatePaymentInternal(payment, initialAspspConsentData);
@@ -133,26 +125,12 @@ public class BulkPaymentSpiImpl implements BulkPaymentSpi {
 	@Override
 	public @NotNull SpiResponse<VoidResponse> executePaymentWithoutSca(@NotNull SpiContextData contextData,
 			@NotNull SpiBulkPayment payment, @NotNull AspspConsentData aspspConsentData) {
-		try {
-			SCAPaymentResponseTO response = initiatePaymentInternal(payment, aspspConsentData);
-			if(ScaStatusTO.EXEMPTED.equals(response.getScaStatus())){
-				// Success
-				List<String> messages = Arrays.asList(response.getScaStatus().name(), String.format("Payment scheduled for execution. Transaction status is %s. Als see sca status", response.getTransactionStatus()));
-				return SpiResponse.<SpiResponse.VoidResponse>builder()
-						.aspspConsentData(tokenService.store(response, aspspConsentData))
-						.message(messages)
-						.success();
-			}
-			List<String> messages = Arrays.asList(response.getScaStatus().name(), String.format("Payment not executed. Transaction status is %s. Als see sca status", response.getTransactionStatus()));
-			return SpiResponse.<SpiResponse.VoidResponse>builder()
-					.aspspConsentData(tokenService.store(response, aspspConsentData))
-					.message(messages)
-					.fail(SpiResponseStatus.LOGICAL_FAILURE);
-        } catch (FeignException e) {
-            return SpiResponse.<SpiResponse.VoidResponse>builder()
-                           .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
-                           .fail(getSpiFailureResponse(e));
-		}
+    	// This shall normally happen when the payment is not yes initiated but call has a valid token.
+    	SCAPaymentResponseTO response = initiatePaymentInternal(payment, aspspConsentData);
+		return SpiResponse.<SpiResponse.VoidResponse>builder()
+			.aspspConsentData(tokenService.store(response, aspspConsentData))
+			.payload(SpiResponse.voidResponse())
+			.success();
     }
 
 	@Override
