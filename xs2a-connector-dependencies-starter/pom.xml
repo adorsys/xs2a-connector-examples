@@ -9,74 +9,24 @@
 		<relativePath>..</relativePath>
 	</parent>
 
-	<artifactId>xs2a-connector-redirect-test</artifactId>
-	<name>xs2a-connector-redirect-test</name>
+	<artifactId>xs2a-connector-dependencies-starter</artifactId>
+	<name>xs2a-connector-dependencies-starter</name>
 
 	<properties>
 		<ruleset.basedir>..</ruleset.basedir>
 	</properties>
 
 	<dependencies>
-		<!-- Project dependencies -->
+		<!-- Add project dependency here so we make sure they can be build before. -->
 		<dependency>
 			<groupId>de.adorsys.ledgers</groupId>
-			<artifactId>xs2a-rest-client</artifactId>
+			<artifactId>online-banking-app</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
-		<!-- swagger -->
 		<dependency>
-			<groupId>io.swagger</groupId>
-			<artifactId>swagger-annotations</artifactId>
-		</dependency>
-
-		<!-- Spring -->
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-openfeign</artifactId>
-		</dependency>
-
-		<!-- XS2A -->
-		<dependency>
-			<groupId>de.adorsys.psd2</groupId>
-			<artifactId>xs2a-server-api</artifactId>
-			<version>${xs2a.version}</version>
-		</dependency>
-		
-		<!-- Commons -->
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-  			<artifactId>commons-lang3</artifactId>
-		</dependency>
-		
-		<!-- Jackson -->
-		<dependency>
-			<groupId>com.fasterxml.jackson.dataformat</groupId>
-			<artifactId>jackson-dataformat-yaml</artifactId>
-		</dependency>
-
-		<!-- test dependencies -->
-		<dependency>
-			<groupId>org.assertj</groupId>
-			<artifactId>assertj-core</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-			<scope>test</scope>
+			<groupId>de.adorsys.ledgers</groupId>
+			<artifactId>gateway-app</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 
@@ -107,9 +57,9 @@
 							<destFileName>gateway-app.jar</destFileName>
 						</artifactItem>
 						<artifactItem>
-							<groupId>de.adorsys.ledgers</groupId>
-							<artifactId>consent-management-server</artifactId>
-							<version>${project.version}</version>
+							<groupId>de.adorsys.psd2</groupId>
+							<artifactId>cms-standalone-service</artifactId>
+							<version>${xs2a.version}</version>
 							<type>jar</type>
 							<overWrite>true</overWrite>
 							<outputDirectory>${project.build.directory}/consents</outputDirectory>
@@ -300,7 +250,7 @@
 							<skip>false</skip>
 							<workingDir>${project.build.directory}/online-banking</workingDir>
 							<waitForInterrupt>false</waitForInterrupt>
-							<healthcheckUrl>http://localhost:8090/actuator/health</healthcheckUrl>
+							<healthcheckUrl>http://localhost:8090/health</healthcheckUrl>
 							<!-- java -jar target/online-banking/online-banking-app.jar - -spring.profiles.active=mockspi 
 								- -security.basic.enabled=false -->
 							<arguments>

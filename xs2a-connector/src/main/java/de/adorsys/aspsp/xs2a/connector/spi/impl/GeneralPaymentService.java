@@ -106,6 +106,7 @@ public class GeneralPaymentService {
 		response.setPaymentProduct(PaymentProductTO.getByValue(payment.getPaymentProduct()).orElse(null));
 		response.setPaymentType(paymentType);
 		responsePayload.setPaymentId(paymentId);
+//		responsePayload.setAspspAccountId();// TODO ID of the deposit account
 		responsePayload.setTransactionStatus(SpiTransactionStatus.valueOf(response.getTransactionStatus().name()));
 		return SpiResponse.<T>builder()
 			.aspspConsentData(tokenService.store(response, initialAspspConsentData))

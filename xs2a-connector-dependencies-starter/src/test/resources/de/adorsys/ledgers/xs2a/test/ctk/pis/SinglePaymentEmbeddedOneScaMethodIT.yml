@@ -1,12 +1,12 @@
-psuId: marion.mueller
+psuId: anton.brueckner
 payment:
-  endToEndIdentification: 123456789
+  endToEndIdentification: 456789321
   debtorAccount:
-    iban: DE69760700240340283600
+    iban: DE80760700240271232400
     currency: EUR
   instructedAmount:
     currency: EUR
-    amount: 100
+    amount: 300
   creditorAccount:
     iban: DE38760700240320465700
     currency: EUR
@@ -19,4 +19,4 @@ payment:
     postalCode: 04210
     country: Ukraine
   remittanceInformationUnstructured: remittance
-  
+

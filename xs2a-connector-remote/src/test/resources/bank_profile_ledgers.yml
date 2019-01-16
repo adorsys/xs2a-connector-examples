@@ -1,36 +1,39 @@
 ---
 setting:
-  frequencyPerDay: 5
-  combinedServiceIndicator: false
-  availablePaymentProducts:
-  - sepa-credit-transfers
-  - instant-sepa-credit-transfers
-  availablePaymentTypes:
-  - BULK
-  - PERIODIC
-  - SINGLE
-  scaApproach: REDIRECT
-  tppSignatureRequired: false
-  bankOfferedConsentSupport: false
-  pisRedirectUrlToAspsp: http://localhost:8090/pis/auth?paymentId={encrypted-payment-id}&redirectId={redirect-id}
-  aisRedirectUrlToAspsp: http://localhost:8090/ais/auth?consentId={encrypted-consent-id}&redirectId={redirect-id}
-  aisRedirectUrlToAspsp: http://localhost:8090/pis/cancellation/auth??paymentId={encrypted-payment-id}&redirectId={redirect-id}
+ # frequencyPerDay: 5
+ combinedServiceIndicator: false
+ scaApproach: REDIRECT
+ tppSignatureRequired: false
+ bankOfferedConsentSupport: true
+ pisRedirectUrlToAspsp: http://localhost:8090/pis/auth?paymentId={encrypted-payment-id}&redirectId={redirect-id}
+ pisPaymentCancellationRedirectUrlToAspsp: http://localhost:8090/ais/auth?consentId={encrypted-consent-id}&redirectId={redirect-id}
+ aisRedirectUrlToAspsp: http://localhost:8090/pis/cancellation/auth??paymentId={encrypted-payment-id}&redirectId={redirect-id}
 
-  multicurrencyAccountLevel: SUBACCOUNT
-  availableBookingStatuses:
+ multicurrencyAccountLevel: SUBACCOUNT
+ availableBookingStatuses:
   - BOOKED
   - PENDING
-  supportedAccountReferenceFields:
+ supportedAccountReferenceFields:
   - MSISDN
-  consentLifetime: 0
-  transactionLifetime: 0
-  allPsd2Support: false
-  transactionsWithoutBalancesSupported: true
-  signingBasketSupported: false
-  paymentCancellationAuthorizationMandated: false
-  piisConsentSupported: false
-  deltaReportSupported: false
-  redirectUrlExpirationTimeMs: 600000
-  notConfirmedConsentExpirationPeriodMs: 86400000
-  notConfirmedPaymentExpirationPeriodMs: 86400000
-  
+ consentLifetime: 0
+ transactionLifetime: 0
+ allPsd2Support: true
+ transactionsWithoutBalancesSupported: true
+ signingBasketSupported: false
+ paymentCancellationAuthorizationMandated: false
+ piisConsentSupported: false
+ deltaReportSupported: false
+ redirectUrlExpirationTimeMs: 600000
+ notConfirmedConsentExpirationPeriodMs: 86400000
+ notConfirmedPaymentExpirationPeriodMs: 86400000
+ supportedPaymentTypeAndProductMatrix:
+  SINGLE:
+   - sepa-credit-transfers
+   - instant-sepa-credit-transfers
+  PERIODIC:
+   - sepa-credit-transfers
+   - instant-sepa-credit-transfers
+  BULK:
+   - sepa-credit-transfers
+   - instant-sepa-credit-transfers
+ paymentCancellationRedirectUrlExpirationTimeMs: 600000
