@@ -1,9 +1,0 @@
-transactionStatus: RCVD
-paymentId: myPaymentId
-spiTransactionFees:
-spiTransactionFeeIndicator:
-scaMethods:
-chosenScaMethod:
-challengeData:
-psuMessage:
-tppMessages:

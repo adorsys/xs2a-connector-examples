@@ -26,10 +26,8 @@
 		<module>xs2a-connector</module>
 		<module>consent-management-server</module>
 		<module>gateway-app</module>
-		<!-- <module>gateway-app-embedded</module> -->
 		<module>online-banking-app</module>
 		<module>consent-psu-rest-client</module>
-		<!-- <module>xs2a-connector-embedded</module> -->
 		<module>xs2a-connector-remote</module>
 		<module>xs2a-connector-redirect-test</module>
 		<module>xs2a-connector-embedded-test</module>
@@ -242,6 +240,8 @@
 					<printFailingErrors>true</printFailingErrors>
 					<excludeRoots>
 						<excludeRoot>../xs2a-connector/target/generated-sources/annotations
+						</excludeRoot>
+						<excludeRoot>../online-banking-app/target/generated-sources/annotations
 						</excludeRoot>
 					</excludeRoots>
 				</configuration>
