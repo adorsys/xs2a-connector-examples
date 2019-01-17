@@ -1,19 +1,5 @@
 package de.adorsys.aspsp.xs2a.spi.converter;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.Currency;
-
-import org.junit.Test;
-import org.mapstruct.factory.Mappers;
-
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.ledgers.middleware.api.domain.payment.BulkPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
@@ -32,14 +18,27 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiBulkPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPeriodicPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiationResponse;
+import org.junit.Test;
+import org.mapstruct.factory.Mappers;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.Currency;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class LedgersSpiPaymentMapperTest {
     private YamlMapper yamlMapper = new YamlMapper(ScaMethodConverterTest.class);
 
     public static final PaymentProductTO PAYMENT_PRODUCT_SEPA = PaymentProductTO.SEPA;
-    
-    public static final PaymentProductTO PAYMENT_PRODUCT_CROSS_BORDER=PaymentProductTO.CROSS_BORDER;
-    
+
+    public static final PaymentProductTO PAYMENT_PRODUCT_CROSS_BORDER = PaymentProductTO.CROSS_BORDER;
+
     private final LedgersSpiPaymentMapper mapper = Mappers.getMapper(LedgersSpiPaymentMapper.class);
 
 
@@ -163,7 +162,7 @@ public class LedgersSpiPaymentMapperTest {
         spiPayment.setEndDate(LocalDate.of(2018, 12, 28));
         spiPayment.setExecutionRule(PisExecutionRule.FOLLOWING);
         spiPayment.setFrequency(SpiFrequencyCode.DAILY);
-        spiPayment.setDayOfExecution(PisDayOfExecution.getByValue("01").get());
+        spiPayment.setDayOfExecution(PisDayOfExecution.getByValue("1").get());
         return spiPayment;
     }
 
@@ -193,15 +192,15 @@ public class LedgersSpiPaymentMapperTest {
     }
 
     private SpiAccountReference getDebtorAcc() {
-        return new SpiAccountReference(null, "DE91100000000123456789", "bban", "pan", "maskedPan", "msisdn", Currency.getInstance("EUR"));
+        return new SpiAccountReference("DE91100000000123456789", "DE91100000000123456789", "DE91100000000123456789", "bban", "pan", "maskedPan", "msisdn", Currency.getInstance("EUR"));
     }
 
     private SpiAccountReference getCreditorAcc() {
-        return new SpiAccountReference(null, "DE91100000000123456787", "bban", "pan", "maskedPan", "msisdn", Currency.getInstance("EUR"));
+        return new SpiAccountReference("DE91100000000123456787", "DE91100000000123456787", "DE91100000000123456787", "bban", "pan", "maskedPan", "msisdn", Currency.getInstance("EUR"));
     }
 
     private SpiAccountReference getCreditorAcc2() {
-        return new SpiAccountReference(null, "DE91100000000123456788", "bban", "pan", "maskedPan", "msisdn", Currency.getInstance("EUR"));
+        return new SpiAccountReference("DE91100000000123456788", "DE91100000000123456788", "DE91100000000123456788", "bban", "pan", "maskedPan", "msisdn", Currency.getInstance("EUR"));
     }
 
     private SpiBulkPaymentInitiationResponse getBulkResponse() {

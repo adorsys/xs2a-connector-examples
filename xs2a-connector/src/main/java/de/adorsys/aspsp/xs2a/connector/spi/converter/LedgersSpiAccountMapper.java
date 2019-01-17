@@ -1,38 +1,25 @@
 package de.adorsys.aspsp.xs2a.connector.spi.converter;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.mapstruct.Mapper;
-
-import de.adorsys.ledgers.middleware.api.domain.account.AccountBalanceTO;
-import de.adorsys.ledgers.middleware.api.domain.account.AccountDetailsTO;
-import de.adorsys.ledgers.middleware.api.domain.account.AccountReferenceTO;
-import de.adorsys.ledgers.middleware.api.domain.account.ExchangeRateTO;
-import de.adorsys.ledgers.middleware.api.domain.account.FundsConfirmationRequestTO;
-import de.adorsys.ledgers.middleware.api.domain.account.TransactionTO;
+import de.adorsys.ledgers.middleware.api.domain.account.*;
 import de.adorsys.ledgers.middleware.api.domain.payment.AmountTO;
-import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountBalance;
-import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountDetails;
-import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
-import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountStatus;
-import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountType;
-import de.adorsys.psd2.xs2a.spi.domain.account.SpiExchangeRate;
-import de.adorsys.psd2.xs2a.spi.domain.account.SpiTransaction;
-import de.adorsys.psd2.xs2a.spi.domain.account.SpiUsageType;
+import de.adorsys.psd2.xs2a.spi.domain.account.*;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
+import org.mapstruct.Mapper;
+
+import java.util.List;
+import java.util.Optional;
 
 @Mapper(componentModel = "spring")
 public abstract class LedgersSpiAccountMapper {
-	
+
     public abstract List<SpiAccountDetails> toSpiAccountDetailsList(List<AccountDetailsTO> accountDetails);
 
     public SpiAccountDetails toSpiAccountDetails(AccountDetailsTO accountDetails) {
         return Optional.ofNullable(accountDetails)
                        .map(d -> new SpiAccountDetails(
-                    		   d.getIban(),
+                               d.getIban(),
                                d.getId(),
                                d.getIban(),
                                d.getBban(),
@@ -84,7 +71,8 @@ public abstract class LedgersSpiAccountMapper {
     public SpiAccountReference toSpiAccountReference(AccountReferenceTO reference) {
         return Optional.ofNullable(reference)
                        .map(r -> new SpiAccountReference(
-                               null, //TODO check with xs2a team on this!
+                               r.getIban(),
+                               r.getIban(),
                                r.getIban(),
                                r.getBban(),
                                r.getPan(),
@@ -101,9 +89,9 @@ public abstract class LedgersSpiAccountMapper {
     public SpiExchangeRate toSpiExchangeRate(ExchangeRateTO exchangeRate) {
         return Optional.ofNullable(exchangeRate)
                        .map(e -> new SpiExchangeRate(
-                               e.getCurrencyFrom(),
+                               e.getCurrencyFrom().getCurrencyCode(),
                                e.getRateFrom(),
-                               e.getCurrency(),
+                               e.getCurrency().getCurrencyCode(),
                                e.getRateTo(),
                                e.getRateDate(),
                                e.getRateContract()))
