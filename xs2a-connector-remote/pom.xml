@@ -1,0 +1,224 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>de.adorsys.ledgers</groupId>
+		<artifactId>xs2a-connector-examples</artifactId>
+		<version>0.2-SNAPSHOT</version>
+		<relativePath>..</relativePath>
+	</parent>
+
+	<artifactId>xs2a-connector-remote</artifactId>
+	<name>xs2a-connector-remote</name>
+
+	<properties>
+		<ruleset.basedir>..</ruleset.basedir>
+		<spring-boot-dependencies.version>1.5.17.RELEASE</spring-boot-dependencies.version>
+		<spring-cloud-dependencies.version>Edgware.SR5</spring-cloud-dependencies.version>
+		<google.guava.version>23.0</google.guava.version>
+	</properties>
+
+	<dependencies>
+		<!-- project dependencies -->
+		<dependency>
+			<groupId>de.adorsys.ledgers</groupId>
+			<artifactId>xs2a-connector</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<!-- ASPSP Profile remote mode -->
+		<dependency>
+			<groupId>de.adorsys.psd2</groupId>
+			<artifactId>aspsp-profile-remote</artifactId>
+			<version>${xs2a.version}</version>
+		</dependency>
+
+		<!-- CMS remote mode -->
+		<dependency>
+			<groupId>de.adorsys.psd2</groupId>
+			<artifactId>consent-xs2a-client</artifactId>
+			<version>${xs2a.version}</version>
+		</dependency>
+
+		<!-- xs2a dependencies -->
+		<dependency>
+			<groupId>de.adorsys.psd2</groupId>
+			<artifactId>xs2a-impl</artifactId>
+			<version>${xs2a.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.mapstruct</groupId>
+					<artifactId>mapstruct</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<!-- spring dependencies -->
+
+		<!-- other dependencies -->
+		<dependency>
+			<groupId>pro.javatar.commons</groupId>
+			<artifactId>javatar-commons</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct-jdk8</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>${google.guava.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>${log4j.version}</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- test dependencies -->
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Sprinfox and swagger UI -->
+		<dependency>
+			<groupId>io.swagger</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger2</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger-ui</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-bean-validators</artifactId>
+			<version>2.8.0</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- XS2A Adapter -->
+		<dependency>
+			<groupId>de.adorsys.multibanking</groupId>
+			<artifactId>xs2a-adapter</artifactId>
+			<version>1.2.5</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.1.1</version>
+				<executions>
+					<execution>
+						<id>copy</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<artifactItems>
+						<artifactItem>
+							<groupId>de.adorsys.psd2</groupId>
+							<artifactId>aspsp-profile-server</artifactId>
+							<version>${xs2a.version}</version>
+							<type>jar</type>
+							<overWrite>false</overWrite>
+							<outputDirectory>${project.build.directory}/aspsp-profile</outputDirectory>
+							<destFileName>aspsp-profile.jar</destFileName>
+						</artifactItem>
+					</artifactItems>
+					<overWriteReleases>false</overWriteReleases>
+					<overWriteSnapshots>true</overWriteSnapshots>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>com.bazaarvoice.maven.plugins</groupId>
+				<artifactId>process-exec-maven-plugin</artifactId>
+				<version>0.7</version>
+				<configuration>
+					<skip>false</skip>
+				</configuration>
+				<executions>
+					<!-- ASPSP PROFILE -->
+					<execution>
+						<id>aspsp-profile-server</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>start</goal>
+						</goals>
+						<configuration>
+							<name>ASPSP PROFILE</name>
+							<skip>false</skip>
+							<workingDir>${project.build.directory}/aspsp-profile</workingDir>
+							<waitForInterrupt>false</waitForInterrupt>
+							<healthcheckUrl>http://localhost:48080/api/v1/health</healthcheckUrl>
+							<!-- java -jar target/aspsp-profile/aspsp-profile.jar - -bank_profile.path=src/test/resources/bank_profile_ledgers.yml-->
+							<arguments>
+								<argument>java</argument>
+								<argument>-jar</argument>
+								<argument>${project.build.directory}/aspsp-profile/aspsp-profile.jar</argument>
+								<argument>--bank_profile.path=${project.build.directory}/test-classes/bank_profile_ledgers.yml</argument>
+							</arguments>
+						</configuration>
+					</execution>
+					<!--STOP ALL -->
+					<execution>
+						<id>stop-all</id>
+						<phase>post-integration-test</phase>
+						<goals>
+							<goal>stop-all</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
+

@@ -15,36 +15,24 @@
 		<ruleset.basedir>..</ruleset.basedir>
 		<spring-boot-dependencies.version>1.5.17.RELEASE</spring-boot-dependencies.version>
 		<spring-cloud-dependencies.version>Edgware.SR5</spring-cloud-dependencies.version>
-        <google.guava.version>23.0</google.guava.version>
+		<google.guava.version>23.0</google.guava.version>
 	</properties>
 
 	<dependencies>
 
 		<!-- project dependencies -->
-
 		<dependency>
 			<groupId>de.adorsys.ledgers</groupId>
-			<artifactId>xs2a-connector</artifactId>
+			<artifactId>xs2a-connector-remote</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
+		
 		<dependency>
-			<groupId>de.adorsys.ledgers</groupId>
-			<artifactId>ledgers-rest-client</artifactId>
-			<version>${project.version}</version>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>${google.guava.version}</version>
 		</dependency>
-
-		<dependency>
-			<groupId>de.adorsys.psd2</groupId>
-			<artifactId>cms-db-schema</artifactId>
-			<version>${xs2a.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.liquibase</groupId>
-			<artifactId>liquibase-core</artifactId>
-		</dependency>
-
+		
 		<!-- spring dependencies -->
 
 		<dependency>
@@ -52,26 +40,17 @@
 			<artifactId>spring-boot-starter-actuator</artifactId>
 			<scope>runtime</scope>
 		</dependency>
-
 		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-feign</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
-
-		<!-- other dependencies -->
-
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${google.guava.version}</version>
-        </dependency>
-
-		<!-- test dependencies -->
-
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
 	</dependencies>
-
 	<build>
-		<finalName>${parent.artifactId}</finalName>
+		<finalName>${project.artifactId}</finalName>
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
@@ -82,9 +61,8 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<version>${spring-boot-dependencies.version}</version>
 				<configuration>
-					<mainClass>de.adorsys.ledgers.LedgersXs2aGatewayApplication</mainClass>
+					<mainClass>de.adorsys.ledgers.gatway.LedgersXs2aGatewayApplication</mainClass>
 				</configuration>
 				<executions>
 					<execution>
@@ -93,6 +71,17 @@
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.7</version>
+				<configuration>
+					<delimiters>
+						<delimiter>@</delimiter>
+					</delimiters>
+					<useDefaultDelimiters>false</useDefaultDelimiters>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

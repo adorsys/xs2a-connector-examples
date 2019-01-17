@@ -1,24 +1,12 @@
 package de.adorsys.aspsp.xs2a.spi.converter;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.Currency;
-
-import org.junit.Test;
-import org.mapstruct.factory.Mappers;
-
-import de.adorsys.ledgers.domain.payment.AmountTO;
-import de.adorsys.ledgers.domain.payment.BulkPaymentTO;
-import de.adorsys.ledgers.domain.payment.PaymentProductTO;
-import de.adorsys.ledgers.domain.payment.PeriodicPaymentTO;
-import de.adorsys.ledgers.domain.payment.SinglePaymentTO;
+import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
+import de.adorsys.ledgers.middleware.api.domain.payment.BulkPaymentTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
+import de.adorsys.psd2.xs2a.core.pis.PisDayOfExecution;
+import de.adorsys.psd2.xs2a.core.pis.PisExecutionRule;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.code.SpiFrequencyCode;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
@@ -30,22 +18,35 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiBulkPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPeriodicPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiationResponse;
-import pro.javatar.commons.reader.YamlReader;
+import org.junit.Test;
+import org.mapstruct.factory.Mappers;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.Currency;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class LedgersSpiPaymentMapperTest {
+    private YamlMapper yamlMapper = new YamlMapper(ScaMethodConverterTest.class);
 
     public static final PaymentProductTO PAYMENT_PRODUCT_SEPA = PaymentProductTO.SEPA;
-    
-    public static final PaymentProductTO PAYMENT_PRODUCT_CROSS_BORDER=PaymentProductTO.CROSS_BORDER;
-    
+
+    public static final PaymentProductTO PAYMENT_PRODUCT_CROSS_BORDER = PaymentProductTO.CROSS_BORDER;
+
     private final LedgersSpiPaymentMapper mapper = Mappers.getMapper(LedgersSpiPaymentMapper.class);
 
 
     @Test
-    public void toSinglePaymentTO() {
+    public void toSinglePaymentTO() throws IOException {
         //Given
         SpiSinglePayment spiPayment = getSpiSingle();
-        SinglePaymentTO expected = readYml(SinglePaymentTO.class, "PaymentSingleTO.yml");
+        SinglePaymentTO expected = yamlMapper.readYml(SinglePaymentTO.class, "PaymentSingleTO.yml");
 
         //When
         SinglePaymentTO payment = mapper.toSinglePaymentTO(spiPayment);
@@ -54,10 +55,10 @@ public class LedgersSpiPaymentMapperTest {
     }
 
     @Test
-    public void toPeriodicPaymentTO() {
+    public void toPeriodicPaymentTO() throws IOException {
         //Given
         SpiPeriodicPayment spiPayment = getPeriodic();
-        PeriodicPaymentTO expected = readYml(PeriodicPaymentTO.class, "PaymentPeriodicTO.yml");
+        PeriodicPaymentTO expected = yamlMapper.readYml(PeriodicPaymentTO.class, "PaymentPeriodicTO.yml");
 
         //When
         PeriodicPaymentTO payment = mapper.toPeriodicPaymentTO(spiPayment);
@@ -66,10 +67,10 @@ public class LedgersSpiPaymentMapperTest {
     }
 
     @Test
-    public void toBulkPaymentTO() {
+    public void toBulkPaymentTO() throws IOException {
         //Given
         SpiBulkPayment spiPayment = getBulk();
-        BulkPaymentTO expected = readYml(BulkPaymentTO.class, "PaymentBulkTO.yml");
+        BulkPaymentTO expected = yamlMapper.readYml(BulkPaymentTO.class, "PaymentBulkTO.yml");
 
         //When
         BulkPaymentTO payment = mapper.toBulkPaymentTO(spiPayment);
@@ -78,10 +79,10 @@ public class LedgersSpiPaymentMapperTest {
     }
 
     @Test
-    public void toSpiSingleResponse() {
+    public void toSpiSingleResponse() throws IOException {
         //Given
-        SinglePaymentTO initial = readYml(SinglePaymentTO.class, "PaymentSingleTO.yml");
-        SpiSinglePaymentInitiationResponse expected = readYml(SpiSinglePaymentInitiationResponse.class, "SingleSpiResponse.yml");
+        SinglePaymentTO initial = yamlMapper.readYml(SinglePaymentTO.class, "PaymentSingleTO.yml");
+        SpiSinglePaymentInitiationResponse expected = yamlMapper.readYml(SpiSinglePaymentInitiationResponse.class, "SingleSpiResponse.yml");
 
         //When
         SpiSinglePaymentInitiationResponse response = mapper.toSpiSingleResponse(initial);
@@ -90,10 +91,10 @@ public class LedgersSpiPaymentMapperTest {
     }
 
     @Test
-    public void toSpiPeriodicResponse() {
+    public void toSpiPeriodicResponse() throws IOException {
         //Given
-        PeriodicPaymentTO initial = readYml(PeriodicPaymentTO.class, "PaymentPeriodicTO.yml");
-        SpiPeriodicPaymentInitiationResponse expected = readYml(SpiPeriodicPaymentInitiationResponse.class, "SingleSpiResponse.yml");
+        PeriodicPaymentTO initial = yamlMapper.readYml(PeriodicPaymentTO.class, "PaymentPeriodicTO.yml");
+        SpiPeriodicPaymentInitiationResponse expected = yamlMapper.readYml(SpiPeriodicPaymentInitiationResponse.class, "SingleSpiResponse.yml");
 
         //When
         SpiPeriodicPaymentInitiationResponse response = mapper.toSpiPeriodicResponse(initial);
@@ -102,9 +103,9 @@ public class LedgersSpiPaymentMapperTest {
     }
 
     @Test
-    public void toSpiBulkResponse() {
+    public void toSpiBulkResponse() throws IOException {
         //Given
-        BulkPaymentTO initial = readYml(BulkPaymentTO.class, "PaymentBulkTO.yml");
+        BulkPaymentTO initial = yamlMapper.readYml(BulkPaymentTO.class, "PaymentBulkTO.yml");
         SpiBulkPaymentInitiationResponse expected = getBulkResponse();
 
         //When
@@ -114,9 +115,9 @@ public class LedgersSpiPaymentMapperTest {
     }
 
     @Test
-    public void mapToSpiBulkPayment() {
+    public void mapToSpiBulkPayment() throws IOException {
         //Given
-        BulkPaymentTO initial = readYml(BulkPaymentTO.class, "PaymentBulkTO.yml");
+        BulkPaymentTO initial = yamlMapper.readYml(BulkPaymentTO.class, "PaymentBulkTO.yml");
         SpiBulkPayment expected = getBulk();
 
         //When
@@ -159,9 +160,9 @@ public class LedgersSpiPaymentMapperTest {
 
         spiPayment.setStartDate(LocalDate.of(2018, 12, 12));
         spiPayment.setEndDate(LocalDate.of(2018, 12, 28));
-        spiPayment.setExecutionRule("everyday");
+        spiPayment.setExecutionRule(PisExecutionRule.FOLLOWING);
         spiPayment.setFrequency(SpiFrequencyCode.DAILY);
-        spiPayment.setDayOfExecution(1);
+        spiPayment.setDayOfExecution(PisDayOfExecution.getByValue("1").get());
         return spiPayment;
     }
 
@@ -191,15 +192,15 @@ public class LedgersSpiPaymentMapperTest {
     }
 
     private SpiAccountReference getDebtorAcc() {
-        return new SpiAccountReference(null, "DE91100000000123456789", "bban", "pan", "maskedPan", "msisdn", Currency.getInstance("EUR"));
+        return new SpiAccountReference("DE91100000000123456789", "DE91100000000123456789", "DE91100000000123456789", "bban", "pan", "maskedPan", "msisdn", Currency.getInstance("EUR"));
     }
 
     private SpiAccountReference getCreditorAcc() {
-        return new SpiAccountReference(null, "DE91100000000123456787", "bban", "pan", "maskedPan", "msisdn", Currency.getInstance("EUR"));
+        return new SpiAccountReference("DE91100000000123456787", "DE91100000000123456787", "DE91100000000123456787", "bban", "pan", "maskedPan", "msisdn", Currency.getInstance("EUR"));
     }
 
     private SpiAccountReference getCreditorAcc2() {
-        return new SpiAccountReference(null, "DE91100000000123456788", "bban", "pan", "maskedPan", "msisdn", Currency.getInstance("EUR"));
+        return new SpiAccountReference("DE91100000000123456788", "DE91100000000123456788", "DE91100000000123456788", "bban", "pan", "maskedPan", "msisdn", Currency.getInstance("EUR"));
     }
 
     private SpiBulkPaymentInitiationResponse getBulkResponse() {
@@ -208,21 +209,5 @@ public class LedgersSpiPaymentMapperTest {
         resp.setTransactionStatus(SpiTransactionStatus.RCVD);
         resp.setPayments(getBulk().getPayments());
         return resp;
-    }
-
-    private AmountTO getAmountTO(long amount) {
-        AmountTO to = new AmountTO();
-        to.setCurrency(Currency.getInstance("EUR"));
-        to.setAmount(BigDecimal.valueOf(amount));
-        return to;
-    }
-
-    private static <T> T readYml(Class<T> aClass, String file) {
-        try {
-            return YamlReader.getInstance().getObjectFromResource(LedgersSpiPaymentMapper.class, file, aClass);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new IllegalStateException("Resource file not found", e);
-        }
     }
 }

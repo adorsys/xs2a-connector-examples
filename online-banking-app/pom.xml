@@ -20,13 +20,13 @@
 		<!-- project dependencies -->
 		<dependency>
 			<groupId>de.adorsys.ledgers</groupId>
-			<artifactId>ledgers-rest-client2</artifactId>
-			<version>${project.version}</version>
+			<artifactId>ledgers-middleware-rest-client</artifactId>
+			<version>${ledgers.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>de.adorsys.psd2</groupId>
-			<artifactId>consent-xs2a-client</artifactId>
-			<version>${xs2a.version}</version>
+			<groupId>de.adorsys.ledgers</groupId>
+			<artifactId>consent-psu-rest-client</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 
 		<!-- spring dependencies -->
@@ -61,16 +61,23 @@
 			<groupId>io.springfox</groupId>
 			<artifactId>springfox-swagger-ui</artifactId>
 		</dependency>
+		
+		<!-- Other dependencies -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+		<dependency>
+		    <groupId>com.nimbusds</groupId>
+		    <artifactId>nimbus-jose-jwt</artifactId>
+		</dependency>
 
+		<!-- logging dependencies -->
 		<!-- test dependencies -->
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -89,7 +96,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<version>2.1.1.RELEASE</version>
 				<configuration>
-					<mainClass>de.adorsys.ledgers.oba.LedgersXs2aObaApplication</mainClass>
+					<mainClass>de.adorsys.ledgers.app.LedgersXs2aObaApplication</mainClass>
 				</configuration>
 				<executions>
 					<execution>

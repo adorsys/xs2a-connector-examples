@@ -1,0 +1,14 @@
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 60000
+        readTimeout: 60000
+        loggerLevel: full
+
+logging.level.de.adorsys.ledgers.xs2a: debug
+
+spring:
+  jackson:
+    deserialization:
+      unwrap-root-value: true
