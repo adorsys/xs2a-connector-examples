@@ -10,12 +10,12 @@ payment:
   creditorAccount:
     iban: DE38760700240320465700
     currency: EUR
-  creditorAgent: agent
+  creditorAgent: DEUTDEDB760
   creditorName: Max Musterman
   creditorAddress:
     street: SomeStreet
     buildingNumber: 666 
     city: Kiev
     postalCode: 04210
-    country: Ukraine
+    country: UA
   remittanceInformationUnstructured: remittance

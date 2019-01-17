@@ -24,7 +24,7 @@ public class PaymentExecutionHelper {
 	private final String psUCorporateID = null;
 	private final String psUCorporateIDType = null;
 	private final String psUIPAddress = "127.0.0.1";
-	private final Object psUIPPort = null;
+	private final String psUIPPort = null;
 	private final String psUAccept = null;
 	private final String psUAcceptCharset = null;
 	private final String psUAcceptEncoding = null;
@@ -56,13 +56,13 @@ public class PaymentExecutionHelper {
 		UUID xRequestID = UUID.randomUUID();
 		String PSU_ID = paymentCase.getPsuId();
 		String consentID = null;
-		Boolean tpPRedirectPreferred = false;
+		String tpPRedirectPreferred = "false";
 		String tpPRedirectURI = null;
 		String tpPNokRedirectURI = null;
 		Boolean tpPExplicitAuthorisationPreferred = true;
-		PaymentInitationRequestResponse201 resp = paymentApi._initiatePayment(payment, paymentService, paymentProduct,
-				xRequestID, psUIPAddress, digest, signature, tpPSignatureCertificate, PSU_ID, psUIDType, psUCorporateID,
-				psUCorporateIDType, consentID, tpPRedirectPreferred, tpPRedirectURI, tpPNokRedirectURI,
+		PaymentInitationRequestResponse201 resp = paymentApi._initiatePayment(payment, xRequestID, psUIPAddress,
+				paymentService, paymentProduct, digest, signature, tpPSignatureCertificate, PSU_ID, psUIDType,
+				psUCorporateID, psUCorporateIDType, consentID, tpPRedirectPreferred, tpPRedirectURI, tpPNokRedirectURI,
 				tpPExplicitAuthorisationPreferred, psUIPPort, psUAccept, psUAcceptCharset, psUAcceptEncoding,
 				psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation).getBody();
 
@@ -91,10 +91,10 @@ public class PaymentExecutionHelper {
 //		paymentApi._startPaymentAuthorisation(paymentService, paymentId, xRequestID, PSU_ID, psUIDType, psUCorporateID, psUCorporateIDType, digest, signature, tpPSignatureCertificate, psUIPAddress, psUIPPort, psUAccept, psUAcceptCharset, psUAcceptEncoding, psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation);
 
 		UpdatePsuAuthenticationResponse updatePaymentPsuData = paymentApi
-				._updatePaymentPsuData(paymentService, paymentId, authorisationId, xRequestID, updatePsuAuthentication,
-						digest, signature, tpPSignatureCertificate, PSU_ID, psUIDType, psUCorporateID,
-						psUCorporateIDType, psUIPAddress, psUIPPort, psUAccept, psUAcceptCharset, psUAcceptEncoding,
-						psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation)
+				._updatePaymentPsuData(xRequestID, paymentService, paymentProduct, paymentId, authorisationId,
+						updatePsuAuthentication, digest, signature, tpPSignatureCertificate, PSU_ID, psUIDType,
+						psUCorporateID, psUCorporateIDType, psUIPAddress, psUIPPort, psUAccept, psUAcceptCharset,
+						psUAcceptEncoding, psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation)
 				.getBody();
 
 		Assert.assertNotNull(updatePaymentPsuData);
@@ -107,7 +107,7 @@ public class PaymentExecutionHelper {
 		String paymentId = StringUtils.substringAfterLast(self, "/");
 		UUID xRequestID = UUID.randomUUID();
 		PaymentInitiationStatusResponse200Json paymentInitiationStatus = paymentApi
-				._getPaymentInitiationStatus(paymentService, paymentId, xRequestID, digest, signature,
+				._getPaymentInitiationStatus(paymentService, paymentProduct, paymentId, xRequestID, digest, signature,
 						tpPSignatureCertificate, psUIPAddress, psUIPPort, psUAccept, psUAcceptCharset,
 						psUAcceptEncoding, psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation)
 				.getBody();
@@ -127,9 +127,9 @@ public class PaymentExecutionHelper {
 		scaAuthenticationData.put("scaAuthenticationData", "123456");
 		String PSU_ID = paymentCase.getPsuId();
 		UpdatePsuAuthenticationResponse updatePaymentPsuData = paymentApi
-				._updatePaymentPsuData(paymentService, paymentId, authorisationId, xRequestID, scaAuthenticationData,
-						digest, signature, tpPSignatureCertificate, PSU_ID, psUIDType, psUCorporateID,
-						psUCorporateIDType, psUIPAddress, psUIPPort, psUAccept, psUAcceptCharset,
+				._updatePaymentPsuData(xRequestID, paymentService, paymentProduct, paymentId, authorisationId,
+						scaAuthenticationData, digest, signature, tpPSignatureCertificate, PSU_ID, psUIDType,
+						psUCorporateID, psUCorporateIDType, psUIPAddress, psUIPPort, psUAccept, psUAcceptCharset,
 						psUAcceptEncoding, psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation)
 				.getBody();
 
@@ -143,12 +143,13 @@ public class PaymentExecutionHelper {
 		SelectPsuAuthenticationMethod selectPsuAuthenticationMethod = new SelectPsuAuthenticationMethod();
 		Assert.assertNotNull(psuAuthenticationResponse.getScaMethods());
 		Assert.assertFalse(psuAuthenticationResponse.getScaMethods().isEmpty());
-		selectPsuAuthenticationMethod.setAuthenticationMethodId(psuAuthenticationResponse.getScaMethods().iterator().next().getAuthenticationMethodId());
+		selectPsuAuthenticationMethod.setAuthenticationMethodId(
+				psuAuthenticationResponse.getScaMethods().iterator().next().getAuthenticationMethodId());
 		String PSU_ID = paymentCase.getPsuId();
 		UpdatePsuAuthenticationResponse updatePaymentPsuData = paymentApi
-				._updatePaymentPsuData(paymentService, paymentId, authorisationId, xRequestID, selectPsuAuthenticationMethod,
-						digest, signature, tpPSignatureCertificate, PSU_ID, psUIDType, psUCorporateID,
-						psUCorporateIDType, psUIPAddress, psUIPPort, psUAccept, psUAcceptCharset,
+				._updatePaymentPsuData(xRequestID, paymentService, paymentProduct, paymentId, authorisationId,
+						selectPsuAuthenticationMethod, digest, signature, tpPSignatureCertificate, PSU_ID, psUIDType,
+						psUCorporateID, psUCorporateIDType, psUIPAddress, psUIPPort, psUAccept, psUAcceptCharset,
 						psUAcceptEncoding, psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation)
 				.getBody();
 
