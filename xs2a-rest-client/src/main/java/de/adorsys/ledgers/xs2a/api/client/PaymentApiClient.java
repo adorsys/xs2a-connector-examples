@@ -42,7 +42,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.Authorization;
 
-@FeignClient(value = "paymentApiClient", url = RemoteURLs.XS2A_URL, path = "/")
+@FeignClient(value = "paymentApiClient", url = RemoteURLs.XS2A_URL, path = "/", configuration=FeignConfig.class)
 @javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2018-08-13T14:16:46.416+02:00[Europe/Berlin]")
 @Api(value = "v1", description = "payment API")
 public interface PaymentApiClient {

@@ -22,6 +22,7 @@
 	<description>OpenSource Implementation Of XS2A connector examples</description>
 
 	<modules>
+		<module>oba-rest-api</module>
 		<module>ledgers-rest-client</module>
 		<module>xs2a-connector</module>
 		<module>consent-management-server</module>
@@ -32,6 +33,7 @@
 		<module>xs2a-connector-redirect-test</module>
 		<module>xs2a-connector-embedded-test</module>
 		<module>xs2a-rest-client</module>
+		<module>oba-rest-client</module>
 	</modules>
 
 	<url>https://github.com/adorsys/xs2a-connector-examples</url>
@@ -134,7 +136,6 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-
 			<!-- swagger -->
 
 			<dependency>

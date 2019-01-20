@@ -2,7 +2,7 @@
 setting:
  frequencyPerDay: 5
  combinedServiceIndicator: false
- scaApproach: EMBEDDED
+ scaApproach: REDIRECT
  tppSignatureRequired: false
  bankOfferedConsentSupport: true
  pisRedirectUrlToAspsp: http://localhost:8090/pis/auth?paymentId={encrypted-payment-id}&redirectId={redirect-id}

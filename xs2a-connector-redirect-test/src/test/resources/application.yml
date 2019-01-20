@@ -6,7 +6,8 @@ feign:
         readTimeout: 60000
         loggerLevel: full
 
-logging.level.de.adorsys.ledgers.xs2a.ctk: DEBUG        
+logging.level.de.adorsys.ledgers.xs2a: DEBUG        
+logging.level.de.adorsys.ledgers.oba.rest: DEBUG
 
 spring:
   jackson:
