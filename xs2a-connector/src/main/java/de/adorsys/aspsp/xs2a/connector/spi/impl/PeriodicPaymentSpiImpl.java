@@ -16,12 +16,7 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
-import java.util.Optional;
-
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
@@ -40,6 +35,11 @@ import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.PeriodicPaymentSpi;
 import feign.FeignException;
 import feign.Response;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 @Component
 public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
@@ -48,54 +48,56 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
     private final PaymentRestClient ledgersRestClient;
     private final LedgersSpiPaymentMapper paymentMapper;
     private final GeneralPaymentService paymentService;
-	private final AuthRequestInterceptor authRequestInterceptor;
-	private final AspspConsentDataService tokenService;
+    private final AuthRequestInterceptor authRequestInterceptor;
+    private final AspspConsentDataService tokenService;
+    private final ObjectMapper objectMapper;
 
-	public PeriodicPaymentSpiImpl(PaymentRestClient ledgersRestClient, LedgersSpiPaymentMapper paymentMapper,
-			GeneralPaymentService paymentService, AuthRequestInterceptor authRequestInterceptor,
-			AspspConsentDataService tokenService) {
-		super();
-		this.ledgersRestClient = ledgersRestClient;
-		this.paymentMapper = paymentMapper;
-		this.paymentService = paymentService;
-		this.authRequestInterceptor = authRequestInterceptor;
-		this.tokenService = tokenService;
-	}
+    public PeriodicPaymentSpiImpl(PaymentRestClient ledgersRestClient, LedgersSpiPaymentMapper paymentMapper,
+                                  GeneralPaymentService paymentService, AuthRequestInterceptor authRequestInterceptor,
+                                  AspspConsentDataService tokenService, ObjectMapper objectMapper) {
+        super();
+        this.ledgersRestClient = ledgersRestClient;
+        this.paymentMapper = paymentMapper;
+        this.paymentService = paymentService;
+        this.authRequestInterceptor = authRequestInterceptor;
+        this.tokenService = tokenService;
+        this.objectMapper = objectMapper;
+    }
 
-	@Override
+    @Override
     public @NotNull SpiResponse<SpiPeriodicPaymentInitiationResponse> initiatePayment(@NotNull SpiContextData contextData, @NotNull SpiPeriodicPayment payment, @NotNull AspspConsentData initialAspspConsentData) {
-		if(initialAspspConsentData.getAspspConsentData()==null) {
-			return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.PERIODIC, payment, initialAspspConsentData, new SpiPeriodicPaymentInitiationResponse());
-		}
-		try {
-			SCAPaymentResponseTO response = initiatePaymentInternal(payment, initialAspspConsentData);
-	        SpiPeriodicPaymentInitiationResponse spiInitiationResponse = Optional.ofNullable(response)
-	        		.map(paymentMapper::toSpiPeriodicResponse)
-	        		.orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 201, but body was empty!", Response.builder().status(400).build()));
-	        return SpiResponse.<SpiPeriodicPaymentInitiationResponse>builder()
-	        		.aspspConsentData(tokenService.store(response, initialAspspConsentData))
-	        		.message(response.getScaStatus().name())
-	        		.payload(spiInitiationResponse)
-	        		.success();
+        if (initialAspspConsentData.getAspspConsentData() == null) {
+            return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.PERIODIC, payment, initialAspspConsentData, new SpiPeriodicPaymentInitiationResponse());
+        }
+        try {
+            SCAPaymentResponseTO response = initiatePaymentInternal(payment, initialAspspConsentData);
+            SpiPeriodicPaymentInitiationResponse spiInitiationResponse = Optional.ofNullable(response)
+                                                                                 .map(paymentMapper::toSpiPeriodicResponse)
+                                                                                 .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 201, but body was empty!", Response.builder().status(400).build()));
+            return SpiResponse.<SpiPeriodicPaymentInitiationResponse>builder()
+                           .aspspConsentData(tokenService.store(response, initialAspspConsentData))
+                           .message(response.getScaStatus().name())
+                           .payload(spiInitiationResponse)
+                           .success();
         } catch (FeignException e) {
             return SpiResponse.<SpiPeriodicPaymentInitiationResponse>builder()
                            .aspspConsentData(initialAspspConsentData.respondWith(initialAspspConsentData.getAspspConsentData()))
                            .fail(getSpiFailureResponse(e));
-		}
+        }
     }
 
     @Override
     public @NotNull SpiResponse<SpiPeriodicPayment> getPaymentById(@NotNull SpiContextData contextData, @NotNull SpiPeriodicPayment payment, @NotNull AspspConsentData aspspConsentData) {
         try {
-			SCAPaymentResponseTO sca = tokenService.response(aspspConsentData, SCAPaymentResponseTO.class);
-			authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
+            SCAPaymentResponseTO sca = tokenService.response(aspspConsentData, SCAPaymentResponseTO.class);
+            authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
-			logger.info("Get payment by id with type={}, and id={}", PaymentTypeTO.PERIODIC, payment.getPaymentId());
+            logger.info("Get payment by id with type={}, and id={}", PaymentTypeTO.PERIODIC, payment.getPaymentId());
             logger.debug("Periodic payment body={}", payment);
 
             // String paymentId = sca.getPaymentId(); This could also be used.
             // TODO: store payment type in sca.
-            PeriodicPaymentTO response = (PeriodicPaymentTO) ledgersRestClient.getPaymentById(payment.getPaymentId()).getBody();
+            PeriodicPaymentTO response = objectMapper.convertValue(ledgersRestClient.getPaymentById(payment.getPaymentId()).getBody(), PeriodicPaymentTO.class);
             SpiPeriodicPayment spiPeriodicPayment = Optional.ofNullable(response)
                                                             .map(paymentMapper::mapToSpiPeriodicPayment)
                                                             .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 200, but body was empty!", Response.builder().status(400).build()));
@@ -108,9 +110,9 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
             return SpiResponse.<SpiPeriodicPayment>builder()
                            .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
                            .fail(getSpiFailureResponse(e));
-		} finally {
-			authRequestInterceptor.setAccessToken(null);
-		}
+        } finally {
+            authRequestInterceptor.setAccessToken(null);
+        }
     }
 
     @Override
@@ -120,7 +122,7 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
 
     @Override
     public @NotNull SpiResponse<SpiResponse.VoidResponse> executePaymentWithoutSca(@NotNull SpiContextData contextData, @NotNull SpiPeriodicPayment payment, @NotNull AspspConsentData aspspConsentData) {
-    	return paymentService.executePaymentWithoutSca(contextData, payment, aspspConsentData);
+        return paymentService.executePaymentWithoutSca(contextData, payment, aspspConsentData);
     }
 
     @Override
@@ -138,21 +140,21 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
                        ? SpiResponseStatus.TECHNICAL_FAILURE
                        : SpiResponseStatus.LOGICAL_FAILURE;
     }
-    
-	private SCAPaymentResponseTO initiatePaymentInternal(SpiPeriodicPayment payment,
-			AspspConsentData initialAspspConsentData) {
-		try {
-			SCAResponseTO sca = tokenService.response(initialAspspConsentData);
-			authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
-			logger.info("Initiate periodic payment with type={}", PaymentTypeTO.PERIODIC);
-		    logger.debug("Periodic payment body={}", payment);
-		    PeriodicPaymentTO request = paymentMapper.toPeriodicPaymentTO(payment);
-		    return ledgersRestClient.initiatePayment(PaymentTypeTO.PERIODIC, request).getBody();
-		} finally {
-			authRequestInterceptor.setAccessToken(null);
-		}
-	}
+    private SCAPaymentResponseTO initiatePaymentInternal(SpiPeriodicPayment payment,
+                                                         AspspConsentData initialAspspConsentData) {
+        try {
+            SCAResponseTO sca = tokenService.response(initialAspspConsentData);
+            authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
-    
+            logger.info("Initiate periodic payment with type={}", PaymentTypeTO.PERIODIC);
+            logger.debug("Periodic payment body={}", payment);
+            PeriodicPaymentTO request = paymentMapper.toPeriodicPaymentTO(payment);
+            return ledgersRestClient.initiatePayment(PaymentTypeTO.PERIODIC, request).getBody();
+        } finally {
+            authRequestInterceptor.setAccessToken(null);
+        }
+    }
+
+
 }
