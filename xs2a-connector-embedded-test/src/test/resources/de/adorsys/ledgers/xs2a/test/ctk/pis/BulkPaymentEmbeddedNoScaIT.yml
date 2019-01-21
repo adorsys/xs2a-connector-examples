@@ -4,18 +4,21 @@ payment:
   debtorAccount:
     iban: DE69760700240340283600
     currency: EUR
+  creditorAccount:
+    iban: DE67760700240243265400
+    currency: EUR
+  creditorAgent: DEUTDEDB760
+  creditorName: Maria Brueckner
+  remittanceInformationUnstructured: remittance
   instructedAmount:
     currency: EUR
     amount: 100
   creditorAccount:
-    iban: DE38760700240320465700
+    iban: DE23760700240234367800
     currency: EUR
   creditorAgent: DEUTDEDB760
-  creditorName: Max Musterman
-  creditorAddress:
-    street: SomeStreet
-    buildingNumber: 666
-    city: Kiev
-    postalCode: 04210
-    country: UA
+  creditorName: Patrick Brueckner
   remittanceInformationUnstructured: remittance
+  instructedAmount:
+    currency: EUR
+    amount: 150
