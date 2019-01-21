@@ -35,12 +35,6 @@
 			<artifactId>xs2a-server-api</artifactId>
 			<version>${xs2a.version}</version>
 		</dependency>
-        <dependency>
-            <groupId>de.adorsys.multibanking</groupId>
-            <artifactId>xs2a-adapter</artifactId>
-            <version>1.2.5</version>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 </project>
 
