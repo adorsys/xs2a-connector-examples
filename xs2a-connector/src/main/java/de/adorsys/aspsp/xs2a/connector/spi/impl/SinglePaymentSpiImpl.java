@@ -106,10 +106,10 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
 
             logger.info("Get payment by id with type={}, and id={}", PaymentTypeTO.SINGLE, payment.getPaymentId());
             logger.debug("Single payment body={}", payment);
-            // Normally the paymentid contained here must match the payment id 
+            // Normally the paymentId contained here must match the payment id
             // String paymentId = sca.getPaymentId(); This could also be used.
             // TODO: store payment type in sca.
-            SinglePaymentTO response = objectMapper.convertValue(ledgersRestClient.getPaymentById(payment.getPaymentId()).getBody(), SinglePaymentTO.class);
+            SinglePaymentTO response = objectMapper.convertValue(ledgersRestClient.getPaymentById(sca.getPaymentId()).getBody(), SinglePaymentTO.class);
             SpiSinglePayment spiPayment = Optional.ofNullable(response)
                                                   .map(paymentMapper::toSpiSinglePayment)
                                                   .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 200, but body was empty!", Response.builder().status(400).build()));

@@ -16,17 +16,6 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ChallengeDataMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaLoginToPaymentResponseMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
@@ -57,12 +46,18 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiati
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
-import de.adorsys.psd2.xs2a.spi.service.BulkPaymentSpi;
-import de.adorsys.psd2.xs2a.spi.service.PaymentAuthorisationSpi;
-import de.adorsys.psd2.xs2a.spi.service.PeriodicPaymentSpi;
-import de.adorsys.psd2.xs2a.spi.service.SinglePaymentSpi;
-import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
+import de.adorsys.psd2.xs2a.spi.service.*;
 import feign.FeignException;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Component
 public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
@@ -165,7 +160,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
 		} catch (IOException e) {
 			// bad credentials
             return SpiResponse.<List<SpiAuthenticationObject>>builder()
-            		.message(String.format("Bad credentials %s" + e.getMessage()))
+            		.message(String.format("Bad credentials %s", e.getMessage()))
                     .fail(SpiResponseStatus.TECHNICAL_FAILURE);
 		}
     	List<ScaUserDataTO> scaMethods = Optional.ofNullable(sca.getScaMethods()).orElse(Collections.emptyList());
@@ -182,7 +177,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
 		} catch (IOException e) {
 			// bad credentials
             return SpiResponse.<SpiAuthorizationCodeResult>builder()
-            		.message(String.format("Bad credentials %s" + e.getMessage()))
+            		.message(String.format("Bad credentials %s", e.getMessage()))
                     .fail(SpiResponseStatus.TECHNICAL_FAILURE);
 		}
 		
@@ -237,7 +232,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
         	throw new IOException("Missing payment product");
         }
         final String pp = paymentProduct2;
-        paymentResponse.setPaymentProduct(PaymentProductTO.getByValue(paymentProduct2).orElseThrow(() -> new IOException(String.format("Unsupported payment product ", pp))));
+        paymentResponse.setPaymentProduct(PaymentProductTO.getByValue(paymentProduct2).orElseThrow(() -> new IOException(String.format("Unsupported payment product %s", pp))));
         return paymentResponse;
 	}
 	
@@ -260,7 +255,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
 				periodicPaymentSpi.initiatePayment(contextData, (@NotNull SpiPeriodicPayment) spiPayment, paymentAspspConsentData);
             return new SpiResponse<>(authorisePsu.getPayload(), initiatePayment3.getAspspConsentData());
 		default:
-			// throw unssuported payment type
+			// throw unsupported payment type
             return SpiResponse.<SpiAuthorisationStatus>builder()
             		.message(String.format("Unknown payment type %s", paymentType.getValue()))
                     .fail(SpiResponseStatus.LOGICAL_FAILURE);

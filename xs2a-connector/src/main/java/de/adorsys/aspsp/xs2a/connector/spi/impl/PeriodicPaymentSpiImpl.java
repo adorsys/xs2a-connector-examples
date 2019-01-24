@@ -97,7 +97,7 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
 
             // String paymentId = sca.getPaymentId(); This could also be used.
             // TODO: store payment type in sca.
-            PeriodicPaymentTO response = objectMapper.convertValue(ledgersRestClient.getPaymentById(payment.getPaymentId()).getBody(), PeriodicPaymentTO.class);
+            PeriodicPaymentTO response = objectMapper.convertValue(ledgersRestClient.getPaymentById(sca.getPaymentId()).getBody(), PeriodicPaymentTO.class);
             SpiPeriodicPayment spiPeriodicPayment = Optional.ofNullable(response)
                                                             .map(paymentMapper::mapToSpiPeriodicPayment)
                                                             .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 200, but body was empty!", Response.builder().status(400).build()));
