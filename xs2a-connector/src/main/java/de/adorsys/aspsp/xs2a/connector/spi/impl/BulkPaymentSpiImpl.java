@@ -101,7 +101,7 @@ public class BulkPaymentSpiImpl implements BulkPaymentSpi {
             // Normally the paymentid contained here must match the payment id 
             // String paymentId = sca.getPaymentId(); This could also be used.
             // TODO: store payment type in sca.
-            BulkPaymentTO response = objectMapper.convertValue(ledgersPayment.getPaymentById(payment.getPaymentId()).getBody(), BulkPaymentTO.class);
+            BulkPaymentTO response = objectMapper.convertValue(ledgersPayment.getPaymentById(sca.getPaymentId()).getBody(), BulkPaymentTO.class);
             SpiBulkPayment spiBulkPayment = Optional.ofNullable(response)
                                                     .map(paymentMapper::mapToSpiBulkPayment)
                                                     .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 200, but body was empty!", Response.builder().status(400).build()));
@@ -157,6 +157,15 @@ public class BulkPaymentSpiImpl implements BulkPaymentSpi {
             logger.info("Initiate bulk payment with type={}", PaymentTypeTO.BULK);
             logger.debug("Bulk payment body={}", payment);
             BulkPaymentTO request = paymentMapper.toBulkPaymentTO(payment);
+            // If the payment product is missing, get it from the sca object.
+            if (request.getPaymentProduct() == null) {
+                if (sca instanceof SCAPaymentResponseTO) {
+                    SCAPaymentResponseTO scaPaymentResponse = (SCAPaymentResponseTO) sca;
+                    request.setPaymentProduct(scaPaymentResponse.getPaymentProduct());
+                } else {
+                    throw new IllegalStateException(String.format("Missing payment product for payment with id %s ", payment.getPaymentId()));
+                }
+            }
             return ledgersPayment.initiatePayment(PaymentTypeTO.BULK, request).getBody();
         } finally {
             authRequestInterceptor.setAccessToken(null);

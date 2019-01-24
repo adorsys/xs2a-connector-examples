@@ -133,13 +133,17 @@ public abstract class LedgersSpiPaymentMapper {
     public abstract List<SpiSinglePayment> toSpiSinglePaymentsList(List<SinglePaymentTO> payments);
 
     public LocalTime toTime(OffsetDateTime time) {
-        return Optional.<OffsetDateTime>ofNullable(time)
+        return Optional.ofNullable(time)
                        .map(OffsetDateTime::toLocalTime)
                        .orElse(null);
     } //Direct mapping no need for testing
 
     public OffsetDateTime toDateTime(LocalDate date, LocalTime time) {
-        return LocalDateTime.of(date, time).atOffset(ZoneOffset.UTC);
+        return Optional.ofNullable(date)
+                       .map(d -> LocalDateTime.of(d, Optional.ofNullable(time)
+                                                             .orElse(LocalTime.ofSecondOfDay(0)))
+                                         .atOffset(ZoneOffset.UTC))
+                       .orElse(null);
     } //Direct mapping no need for testing
 
     private SpiAddress toSpiAddress(AddressTO address) {
