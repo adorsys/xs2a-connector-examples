@@ -169,7 +169,7 @@
 				<artifactId>process-exec-maven-plugin</artifactId>
 				<version>0.7</version>
 				<configuration>
-					<skip>true</skip>
+					<skip>${skipITs}</skip>
 				</configuration>
 				<executions>
 					<!-- MAIL SERVER -->
@@ -181,7 +181,6 @@
 						</goals>
 						<configuration>
 							<name>FAKE SMTP</name>
-							<skip>false</skip>
 							<workingDir>${project.build.directory}/fakesmtp</workingDir>
 							<waitForInterrupt>false</waitForInterrupt>
 							<!-- java -jar target/fakesmtp/fakesmtp.jar -s -b -p 2500 -o target/fakesmtp/mails -->
@@ -207,7 +206,6 @@
 							<goal>start</goal>
 						</goals>
 						<configuration>
-							<skip>false</skip>
 							<name>LEDGERS</name>
 							<workingDir>${project.build.directory}/ledgers</workingDir>
 							<waitForInterrupt>false</waitForInterrupt>
@@ -233,7 +231,6 @@
 						</goals>
 						<configuration>
 							<name>ASPSP PROFILE</name>
-							<skip>false</skip>
 							<workingDir>${project.build.directory}/aspsp-profile</workingDir>
 							<waitForInterrupt>false</waitForInterrupt>
 							<healthcheckUrl>http://localhost:48080/api/v1/health</healthcheckUrl>
@@ -255,7 +252,6 @@
 						</goals>
 						<configuration>
 							<name>CMS</name>
-							<skip>false</skip>
 							<workingDir>${project.build.directory}/consents</workingDir>
 							<waitForInterrupt>false</waitForInterrupt>
 							<healthcheckUrl>http://localhost:38080/health</healthcheckUrl>
@@ -280,7 +276,6 @@
 						</goals>
 						<configuration>
 							<name>GATEWAY</name>
-							<skip>false</skip>
 							<workingDir>${project.build.directory}/gateway</workingDir>
 							<waitForInterrupt>false</waitForInterrupt>
 							<healthcheckUrl>http://localhost:8089/health</healthcheckUrl>
@@ -304,7 +299,6 @@
 						</goals>
 						<configuration>
 							<name>ONLINE BANKING</name>
-							<skip>false</skip>
 							<workingDir>${project.build.directory}/online-banking</workingDir>
 							<waitForInterrupt>false</waitForInterrupt>
 							<healthcheckUrl>http://localhost:8090/actuator/health</healthcheckUrl>

@@ -183,7 +183,7 @@
 				<artifactId>process-exec-maven-plugin</artifactId>
 				<version>0.7</version>
 				<configuration>
-					<skip>false</skip>
+					<skip>${skipITs}</skip>
 				</configuration>
 				<executions>
 					<!-- ASPSP PROFILE -->
@@ -195,7 +195,6 @@
 						</goals>
 						<configuration>
 							<name>ASPSP PROFILE</name>
-							<skip>false</skip>
 							<workingDir>${project.build.directory}/aspsp-profile</workingDir>
 							<waitForInterrupt>false</waitForInterrupt>
 							<healthcheckUrl>http://localhost:48080/api/v1/health</healthcheckUrl>
