@@ -106,7 +106,7 @@
 				<artifactId>process-exec-maven-plugin</artifactId>
 				<version>0.7</version>
 				<configuration>
-					<skip>false</skip>
+					<skip>${skipITs}</skip>
 				</configuration>
 				<executions>
 					<!-- CONSENT MANAGEMENT SYSTEM -->
