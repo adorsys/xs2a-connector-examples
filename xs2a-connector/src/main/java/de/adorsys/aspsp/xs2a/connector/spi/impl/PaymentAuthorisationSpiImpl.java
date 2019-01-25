@@ -16,6 +16,17 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ChallengeDataMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaLoginToPaymentResponseMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
@@ -46,18 +57,12 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiati
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
-import de.adorsys.psd2.xs2a.spi.service.*;
+import de.adorsys.psd2.xs2a.spi.service.BulkPaymentSpi;
+import de.adorsys.psd2.xs2a.spi.service.PaymentAuthorisationSpi;
+import de.adorsys.psd2.xs2a.spi.service.PeriodicPaymentSpi;
+import de.adorsys.psd2.xs2a.spi.service.SinglePaymentSpi;
+import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
 import feign.FeignException;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 @Component
 public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
@@ -170,18 +175,10 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
 
     @Override
     public @NotNull SpiResponse<SpiAuthorizationCodeResult> requestAuthorisationCode(@NotNull SpiContextData contextData, @NotNull String authenticationMethodId, @NotNull SpiPayment spiPayment, @NotNull AspspConsentData aspspConsentData) {
-    	// Check sca status, if already selected, then return.
-    	SCAPaymentResponseTO sca;
-		try {
-			sca = tokenStorageService.fromBytes(aspspConsentData.getAspspConsentData(), SCAPaymentResponseTO.class);
-		} catch (IOException e) {
-			// bad credentials
-            return SpiResponse.<SpiAuthorizationCodeResult>builder()
-            		.message(String.format("Bad credentials %s", e.getMessage()))
-                    .fail(SpiResponseStatus.TECHNICAL_FAILURE);
-		}
-		
-		if(ScaStatusTO.PSUIDENTIFIED.equals(sca.getScaStatus()) ){
+
+    	SCAPaymentResponseTO sca = tokenService.response(aspspConsentData, SCAPaymentResponseTO.class);
+
+		if(ScaStatusTO.PSUIDENTIFIED.equals(sca.getScaStatus()) || ScaStatusTO.PSUAUTHENTICATED.equals(sca.getScaStatus())){
 	        try {
 	        	authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 	        	logger.info("Request to generate SCA {}", sca.getPaymentId());

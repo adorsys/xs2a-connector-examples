@@ -55,7 +55,7 @@ variables: &variables
 
 .java_artifacts: &java_artifacts
   paths:
-  - "gateway-app/target/xs2a-connector-examples*jar"
+  - "gateway-app/target/gateway-app*jar"
   - "ledgers-rest-client/target/ledgers-rest-client*jar"
   - "xs2a-connector/target/xs2a-connector*jar"
   name: "$CI_PROJECT_NAME-${CI_BUILD_REF_NAME#*v}"

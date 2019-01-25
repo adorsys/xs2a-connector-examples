@@ -18,16 +18,27 @@ public class AspspConsentDataService {
 	@Autowired
 	private TokenStorageService tokenStorageService;
 
+	/**
+	 * Default storage, makes sure there is a bearer token in the response object.
+	 * @param response
+	 * @param aspspConsentData
+	 * @return
+	 */
 	public AspspConsentData store(SCAResponseTO response, AspspConsentData aspspConsentData){
-		byte[] bytes;
+		return store(response, aspspConsentData, true);
+	}
+
+	public AspspConsentData store(SCAResponseTO response, AspspConsentData aspspConsentData, boolean checkCredentials){
+		if(checkCredentials && response.getBearerToken()==null) {
+			throw new IllegalStateException("Missing credentials. response must contain a bearer token by default.");
+		}
 		try {
-			bytes = tokenStorageService.toBytes(response);
+			return aspspConsentData.respondWith(tokenStorageService.toBytes(response));
 		} catch (IOException e) {
 			throw FeignException.errorStatus(e.getMessage(), error(500));
 		}
-		return aspspConsentData.respondWith(bytes);
 	}
-
+	
 	public <T extends SCAResponseTO> T response(AspspConsentData aspspConsentData, Class<T> klass) {
 		return response(aspspConsentData, klass, true);
 	}
@@ -63,7 +74,7 @@ public class AspspConsentDataService {
 	private <T extends SCAResponseTO> void checkBearerTokenPresent(boolean checkCredentials, T sca) {
 		if(checkCredentials && sca.getBearerToken()==null) {
 			throw FeignException.errorStatus("Missing credentials. Expecting a bearer token in the consent data object.", 
-					Response.builder().status(401).build());
+					error(401));
 		}
 	}
 

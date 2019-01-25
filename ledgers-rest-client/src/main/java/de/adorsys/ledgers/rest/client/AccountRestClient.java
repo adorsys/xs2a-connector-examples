@@ -20,5 +20,5 @@ import org.springframework.cloud.netflix.feign.FeignClient;
 
 import de.adorsys.ledgers.middleware.rest.resource.AccountRestAPI;
 
-@FeignClient(value = "ledgersAccount", url = "${ledgers.url}", path=AccountRestAPI.BASE_PATH)
+@FeignClient(value = "ledgersAccount", url = "${ledgers.url}", path=AccountRestAPI.BASE_PATH, configuration=FeignConfig.class)
 public interface AccountRestClient extends AccountRestAPI {}

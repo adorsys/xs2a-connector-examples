@@ -20,5 +20,5 @@ import org.springframework.cloud.netflix.feign.FeignClient;
 
 import de.adorsys.ledgers.middleware.rest.resource.ConsentRestAPI;
 
-@FeignClient(value = "ledgersConsent", url = "${ledgers.url}", path=ConsentRestAPI.BASE_PATH)
+@FeignClient(value = "ledgersConsent", url = "${ledgers.url}", path=ConsentRestAPI.BASE_PATH, configuration=FeignConfig.class)
 public interface ConsentRestClient extends ConsentRestAPI{}
