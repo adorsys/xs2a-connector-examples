@@ -10,6 +10,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.springframework.http.ResponseEntity;
 
+import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
 import de.adorsys.ledgers.oba.rest.api.domain.AuthorizeResponse;
 import de.adorsys.ledgers.oba.rest.api.domain.PaymentAuthorizeResponse;
@@ -17,6 +19,7 @@ import de.adorsys.ledgers.oba.rest.client.ObaPisApiClient;
 import de.adorsys.ledgers.xs2a.api.client.PaymentApiClient;
 import de.adorsys.psd2.model.PaymentInitationRequestResponse201;
 import de.adorsys.psd2.model.PaymentInitiationStatusResponse200Json;
+import de.adorsys.psd2.model.TransactionStatus;
 
 public class PaymentExecutionHelper {
 
@@ -103,11 +106,10 @@ public class PaymentExecutionHelper {
 		
 		ResponseEntity<AuthorizeResponse> pisAuth = pisApiClient.pisAuth(redirectId, encryptedPaymentId);
 		URI location = pisAuth.getHeaders().getLocation();
-		String scaId = QuerryParser.param(location.toString(), "scaId");
 		String authorisationId = QuerryParser.param(location.toString(), "authorisationId");
 		List<String> cookieStrings = pisAuth.getHeaders().get("Set-Cookie");
 		String consentCookieString = readCookie(cookieStrings, "CONSENT");
-		ResponseEntity<PaymentAuthorizeResponse> loginResponse = pisApiClient.login(scaId, authorisationId, paymentCase.getPsuId(), "12345", resetCookies(cookieStrings));
+		ResponseEntity<PaymentAuthorizeResponse> loginResponse = pisApiClient.login(encryptedPaymentId, authorisationId, paymentCase.getPsuId(), "12345", resetCookies(cookieStrings));
 		
 		Assert.assertNotNull(loginResponse);
 		Assert.assertTrue(loginResponse.getStatusCode().is2xxSuccessful());
@@ -149,17 +151,18 @@ public class PaymentExecutionHelper {
 	}
 
 
-	public PaymentInitiationStatusResponse200Json loadPaymentStatus(String encryptedPaymentId) {
+	public ResponseEntity<PaymentInitiationStatusResponse200Json> loadPaymentStatus(String encryptedPaymentId) {
 		UUID xRequestID = UUID.randomUUID();
-		PaymentInitiationStatusResponse200Json paymentInitiationStatus = paymentApi
+		ResponseEntity<PaymentInitiationStatusResponse200Json> _getPaymentInitiationStatus = paymentApi
 				._getPaymentInitiationStatus(paymentService, paymentProduct, encryptedPaymentId, xRequestID, digest, signature,
 						tpPSignatureCertificate, psUIPAddress, psUIPPort, psUAccept, psUAcceptCharset,
-						psUAcceptEncoding, psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation)
-				.getBody();
+						psUAcceptEncoding, psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation);
 
+		PaymentInitiationStatusResponse200Json paymentInitiationStatus = _getPaymentInitiationStatus.getBody();
+		
 		Assert.assertNotNull(paymentInitiationStatus);
 
-		return paymentInitiationStatus;
+		return _getPaymentInitiationStatus;
 	}
 
 	private String getScaRedirect(PaymentInitationRequestResponse201 resp) {
@@ -177,7 +180,7 @@ public class PaymentExecutionHelper {
 
 		PaymentAuthorizeResponse paymentAuthorizeResponse = paymentResponse.getBody();
 		ResponseEntity<PaymentAuthorizeResponse> authrizedPaymentResponse = 
-				pisApiClient.authrizedPayment(paymentAuthorizeResponse.getScaId(), paymentAuthorizeResponse.getAuthorisationId(), 
+				pisApiClient.authrizedPayment(paymentAuthorizeResponse.getEncryptedConsentId(), paymentAuthorizeResponse.getAuthorisationId(), 
 						resetCookies(cookieStrings), "123456");
 		Assert.assertNotNull(authrizedPaymentResponse);
 		Assert.assertTrue(authrizedPaymentResponse.getStatusCode().is2xxSuccessful());
@@ -201,7 +204,7 @@ public class PaymentExecutionHelper {
 
 		PaymentAuthorizeResponse paymentAuthorizeResponse = paymentResponse.getBody();
 		ScaUserDataTO scaUserDataTO = paymentAuthorizeResponse.getScaMethods().iterator().next();
-		ResponseEntity<PaymentAuthorizeResponse> authrizedPaymentResponse = pisApiClient.selectMethod(paymentAuthorizeResponse.getScaId(), paymentAuthorizeResponse.getAuthorisationId(), 
+		ResponseEntity<PaymentAuthorizeResponse> authrizedPaymentResponse = pisApiClient.selectMethod(paymentAuthorizeResponse.getEncryptedConsentId(), paymentAuthorizeResponse.getAuthorisationId(), 
 				scaUserDataTO.getId(), resetCookies(cookieStrings));
 		Assert.assertNotNull(authrizedPaymentResponse);
 		Assert.assertTrue(authrizedPaymentResponse.getStatusCode().is2xxSuccessful());
@@ -212,6 +215,23 @@ public class PaymentExecutionHelper {
 		Assert.assertNotNull(accessTokenCookieString);
 
 		return authrizedPaymentResponse;
+	}
+	
+	public void checkTxStatus(String paymentId, TransactionStatus expectedStatus) {
+		ResponseEntity<PaymentInitiationStatusResponse200Json> loadPaymentStatusResponseWrapper;
+		loadPaymentStatusResponseWrapper = loadPaymentStatus(paymentId);
+		PaymentInitiationStatusResponse200Json loadPaymentStatusResponse = loadPaymentStatusResponseWrapper.getBody();
+		Assert.assertNotNull(loadPaymentStatusResponse);
+		TransactionStatus currentStatus = loadPaymentStatusResponse.getTransactionStatus();
+		Assert.assertNotNull(currentStatus);
+		Assert.assertEquals(expectedStatus, currentStatus);
+	}
+
+	public void validateResponseStatus(PaymentAuthorizeResponse authResponse, ScaStatusTO expectedScaStatus, TransactionStatusTO expectedPaymentStatus) {
+		ScaStatusTO scaStatus = authResponse.getScaStatus();
+		Assert.assertNotNull(scaStatus);
+		Assert.assertEquals(expectedScaStatus, scaStatus);
+		Assert.assertEquals(expectedPaymentStatus, authResponse.getSinglePayment().getPaymentStatus());
 	}
 	
 }

@@ -102,44 +102,21 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
 	@Override
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
     public SpiResponse<SpiAuthorisationStatus> authorisePsu(@NotNull SpiContextData contextData, @NotNull SpiPsuData psuLoginData, String pin, SpiPayment spiPayment, AspspConsentData aspspConsentData) {
-		
-		SCAPaymentResponseTO originalResponse = null;
-		
-		if(aspspConsentData!=null && aspspConsentData.getAspspConsentData()!=null) {
-			try {
-				originalResponse = tokenStorageService.fromBytes(aspspConsentData.getAspspConsentData(), SCAPaymentResponseTO.class);
-			} catch (IOException e) {
-		        return SpiResponse.<SpiAuthorisationStatus>builder()
-		        		.message(e.getMessage())
-		        		.aspspConsentData(aspspConsentData)
-		                .fail(SpiResponseStatus.LOGICAL_FAILURE);
-			}
-			
-		}
-
-		String paymentId = aspspConsentData.getConsentId();
+    	SCAPaymentResponseTO originalResponse = tokenService.response(aspspConsentData, SCAPaymentResponseTO.class, false);
         String authorisationId = originalResponse!=null && originalResponse.getAuthorisationId()!=null
         		? originalResponse.getAuthorisationId()
         		: Ids.id();
-		SpiResponse<SpiAuthorisationStatus> authorisePsu = authorisationService.authorisePsuForConsent(psuLoginData, pin, paymentId, authorisationId, OpTypeTO.PAYMENT, aspspConsentData);
+		SpiResponse<SpiAuthorisationStatus> authorisePsu = authorisationService.authorisePsuForConsent(
+				psuLoginData, pin, originalResponse.getPaymentId(), authorisationId, OpTypeTO.PAYMENT, aspspConsentData);
         
         if(!authorisePsu.isSuccessful()) {
         	return authorisePsu;
         }
         SCAPaymentResponseTO scaPaymentResponse;
+        AspspConsentData paymentAspspConsentData;
 		try {
 			scaPaymentResponse = toPaymentConsent(spiPayment, authorisePsu, originalResponse);
-		} catch (IOException e) {
-	        return SpiResponse.<SpiAuthorisationStatus>builder()
-	        		.message(e.getMessage())
-	        		.aspspConsentData(aspspConsentData)
-	                .fail(SpiResponseStatus.LOGICAL_FAILURE);
-		}
-		
-		AspspConsentData paymentAspspConsentData;
-		try {
-	        byte[] responseAspspConsentData = tokenStorageService.toBytes(scaPaymentResponse);
-	        paymentAspspConsentData = authorisePsu.getAspspConsentData().respondWith(responseAspspConsentData);
+	        paymentAspspConsentData = authorisePsu.getAspspConsentData().respondWith(tokenStorageService.toBytes(scaPaymentResponse));
 		} catch (IOException e) {
 	        return SpiResponse.<SpiAuthorisationStatus>builder()
 	        		.message(e.getMessage())
@@ -159,15 +136,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
 
 	@Override
     public SpiResponse<List<SpiAuthenticationObject>> requestAvailableScaMethods(@NotNull SpiContextData contextData, SpiPayment spiPayment, AspspConsentData aspspConsentData) {
-    	SCAPaymentResponseTO sca;
-		try {
-			sca = tokenStorageService.fromBytes(aspspConsentData.getAspspConsentData(), SCAPaymentResponseTO.class);
-		} catch (IOException e) {
-			// bad credentials
-            return SpiResponse.<List<SpiAuthenticationObject>>builder()
-            		.message(String.format("Bad credentials %s", e.getMessage()))
-                    .fail(SpiResponseStatus.TECHNICAL_FAILURE);
-		}
+		SCAPaymentResponseTO sca = tokenService.response(aspspConsentData, SCAPaymentResponseTO.class);
     	List<ScaUserDataTO> scaMethods = Optional.ofNullable(sca.getScaMethods()).orElse(Collections.emptyList());
 		return SpiResponse.<List<SpiAuthenticationObject>>builder().
     			payload(scaMethodConverter.toSpiAuthenticationObjectList(scaMethods)).aspspConsentData(aspspConsentData).success();

@@ -1,79 +1,35 @@
 package de.adorsys.ledgers.xs2a.test.ctk.pis;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import java.net.MalformedURLException;
 
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import org.junit.Test;
+import org.springframework.http.ResponseEntity;
 
-import de.adorsys.ledgers.oba.rest.client.ObaPisApiClient;
-import de.adorsys.ledgers.xs2a.api.client.PaymentApiClient;
-import de.adorsys.ledgers.xs2a.test.ctk.StarterApplication;
+import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
+import de.adorsys.ledgers.oba.rest.api.domain.PaymentAuthorizeResponse;
+import de.adorsys.psd2.model.PaymentInitationRequestResponse201;
+import de.adorsys.psd2.model.TransactionStatus;
 
-@Ignore
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = StarterApplication.class)
-public class SinglePaymentRedirectManyScaMethodIT {
-	private final YAMLMapper ymlMapper = new YAMLMapper();
-	private final String paymentService = "payments";
-	private final String paymentProduct = "sepa-credit-transfers";
+public class SinglePaymentRedirectManyScaMethodIT extends AbstractSinglePaymentRedirect {
 
-	@Autowired
-	private PaymentApiClient paymentApi;
-	@Autowired
-	private ObaPisApiClient obaPisApiClient;
+	@Test
+	public void test_create_payment() throws MalformedURLException {
+		// Initiate Payment
+		PaymentInitationRequestResponse201 initiatedPayment = paymentInitService.initiatePayment();
+		String paymentId = initiatedPayment.getPaymentId();
 
-	private PaymentExecutionHelper paymentInitService;
-
-	@Before
-	public void beforeClass() {
-		PaymentCase paymentCase = LoadPayment.loadPayment(SinglePaymentRedirectManyScaMethodIT.class,
-				SinglePaymentRedirectManyScaMethodIT.class.getSimpleName() + ".yml", ymlMapper);
-		paymentInitService = new PaymentExecutionHelper(paymentApi, obaPisApiClient, paymentCase, paymentService, paymentProduct);
+		// Login User
+		ResponseEntity<PaymentAuthorizeResponse> loginResponseWrapper = paymentInitService.login(initiatedPayment);
+		paymentInitService.validateResponseStatus(loginResponseWrapper.getBody(), ScaStatusTO.PSUIDENTIFIED, TransactionStatusTO.ACCP);
+		paymentInitService.checkTxStatus(paymentId, TransactionStatus.ACCP);
+		
+		ResponseEntity<PaymentAuthorizeResponse> choseScaMethodResponseWrapper = paymentInitService.choseScaMethod(loginResponseWrapper);
+		paymentInitService.validateResponseStatus(choseScaMethodResponseWrapper.getBody(), ScaStatusTO.SCAMETHODSELECTED, TransactionStatusTO.ACCP);
+		paymentInitService.checkTxStatus(paymentId, TransactionStatus.ACCP);
+		
+		ResponseEntity<PaymentAuthorizeResponse> authCodeResponseWrapper = paymentInitService.authCode(choseScaMethodResponseWrapper);
+		paymentInitService.validateResponseStatus(authCodeResponseWrapper.getBody(), ScaStatusTO.FINALISED, TransactionStatusTO.ACSP);
+		paymentInitService.checkTxStatus(paymentId, TransactionStatus.ACSP);
 	}
-//
-//	@Test
-//	public void test_create_payment() {
-//		// Initiate Payment
-//		PaymentInitationRequestResponse201 initiatedPayment = paymentInitService.initiatePayment();
-//
-//		// Login User
-//		UpdatePsuAuthenticationResponse psuAuthenticationResponse = paymentInitService.login(initiatedPayment);
-//		// TODO: check why not PSUIDENTIFIED
-//		checkScaStatus(ScaStatus.PSUAUTHENTICATED, psuAuthenticationResponse);
-//		checkTransactionStatusStatus(TransactionStatus.ACCP, psuAuthenticationResponse);
-//
-//		Assert.assertNull(psuAuthenticationResponse.getChosenScaMethod());
-//		Assert.assertNotNull(psuAuthenticationResponse.getScaMethods());
-//		Assert.assertEquals(2, psuAuthenticationResponse.getScaMethods().size());
-//
-//		UpdatePsuAuthenticationResponse choseScaMethodResponse = paymentInitService
-//				.choseScaMethod(psuAuthenticationResponse);
-//		checkScaStatus(ScaStatus.SCAMETHODSELECTED, choseScaMethodResponse);
-//		checkTransactionStatusStatus(TransactionStatus.ACCP, choseScaMethodResponse);
-//
-//		psuAuthenticationResponse = paymentInitService.authCode(psuAuthenticationResponse);
-//		checkScaStatus(ScaStatus.FINALISED, psuAuthenticationResponse);
-//		checkTransactionStatusStatus(TransactionStatus.ACSP, psuAuthenticationResponse);
-//	}
-//
-//	private void checkTransactionStatusStatus(TransactionStatus t,
-//			UpdatePsuAuthenticationResponse psuAuthenticationResponse) {
-//		PaymentInitiationStatusResponse200Json paymentStatus = paymentInitService
-//				.loadPaymentStatus(psuAuthenticationResponse);
-//		Assert.assertNotNull(paymentStatus);
-//		TransactionStatus transactionStatus = paymentStatus.getTransactionStatus();
-//		Assert.assertNotNull(transactionStatus);
-//		Assert.assertEquals(t, transactionStatus);
-//	}
-//
-//	private void checkScaStatus(ScaStatus s, UpdatePsuAuthenticationResponse psuAuthenticationResponse) {
-//		Assert.assertNotNull(psuAuthenticationResponse);
-//		ScaStatus scaStatus = psuAuthenticationResponse.getScaStatus();
-//		Assert.assertNotNull(scaStatus);
-//		Assert.assertEquals(s, scaStatus);
-//	}
 }

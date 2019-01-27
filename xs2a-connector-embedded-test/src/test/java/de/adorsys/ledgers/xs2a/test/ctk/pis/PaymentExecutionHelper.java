@@ -6,12 +6,15 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
+import org.springframework.http.ResponseEntity;
 
 import de.adorsys.ledgers.xs2a.api.client.PaymentApiClient;
 import de.adorsys.psd2.model.PaymentInitationRequestResponse201;
 import de.adorsys.psd2.model.PaymentInitiationStatusResponse200Json;
 import de.adorsys.psd2.model.PsuData;
+import de.adorsys.psd2.model.ScaStatus;
 import de.adorsys.psd2.model.SelectPsuAuthenticationMethod;
+import de.adorsys.psd2.model.TransactionStatus;
 import de.adorsys.psd2.model.UpdatePsuAuthentication;
 import de.adorsys.psd2.model.UpdatePsuAuthenticationResponse;
 
@@ -60,12 +63,13 @@ public class PaymentExecutionHelper {
 		String tpPRedirectURI = null;
 		String tpPNokRedirectURI = null;
 		Boolean tpPExplicitAuthorisationPreferred = true;
-		PaymentInitationRequestResponse201 resp = paymentApi._initiatePayment(payment, xRequestID, psUIPAddress,
+		ResponseEntity<PaymentInitationRequestResponse201> respWrapper = paymentApi._initiatePayment(payment, xRequestID, psUIPAddress,
 				paymentService, paymentProduct, digest, signature, tpPSignatureCertificate, PSU_ID, psUIDType,
 				psUCorporateID, psUCorporateIDType, consentID, tpPRedirectPreferred, tpPRedirectURI, tpPNokRedirectURI,
 				tpPExplicitAuthorisationPreferred, psUIPPort, psUAccept, psUAcceptCharset, psUAcceptEncoding,
-				psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation).getBody();
+				psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation);
 
+		PaymentInitationRequestResponse201 resp = respWrapper.getBody();
 		Assert.assertNotNull(resp);
 		Assert.assertNotNull(getStartAuthorisationWithPsuAuthentication(resp));
 
@@ -87,34 +91,21 @@ public class PaymentExecutionHelper {
 		UUID xRequestID = UUID.randomUUID();
 		String PSU_ID = paymentCase.getPsuId();
 
-		// For explicite
-//		paymentApi._startPaymentAuthorisation(paymentService, paymentId, xRequestID, PSU_ID, psUIDType, psUCorporateID, psUCorporateIDType, digest, signature, tpPSignatureCertificate, psUIPAddress, psUIPPort, psUAccept, psUAcceptCharset, psUAcceptEncoding, psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation);
-
-		UpdatePsuAuthenticationResponse updatePaymentPsuData = paymentApi
+		return paymentApi
 				._updatePaymentPsuData(xRequestID, paymentService, paymentProduct, paymentId, authorisationId,
 						updatePsuAuthentication, digest, signature, tpPSignatureCertificate, PSU_ID, psUIDType,
 						psUCorporateID, psUCorporateIDType, psUIPAddress, psUIPPort, psUAccept, psUAcceptCharset,
-						psUAcceptEncoding, psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation)
-				.getBody();
-
-		Assert.assertNotNull(updatePaymentPsuData);
-
-		return updatePaymentPsuData;
+						psUAcceptEncoding, psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation).getBody();
 	}
 
-	public PaymentInitiationStatusResponse200Json loadPaymentStatus(UpdatePsuAuthenticationResponse authResponse) {
-		String self = (String) authResponse.getLinks().get("self");
+	public ResponseEntity<PaymentInitiationStatusResponse200Json> loadPaymentStatus(UpdatePsuAuthenticationResponse resp) {
+		String self = (String) resp.getLinks().get("self");
 		String paymentId = StringUtils.substringAfterLast(self, "/");
 		UUID xRequestID = UUID.randomUUID();
-		PaymentInitiationStatusResponse200Json paymentInitiationStatus = paymentApi
+		return paymentApi
 				._getPaymentInitiationStatus(paymentService, paymentProduct, paymentId, xRequestID, digest, signature,
 						tpPSignatureCertificate, psUIPAddress, psUIPPort, psUAccept, psUAcceptCharset,
-						psUAcceptEncoding, psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation)
-				.getBody();
-
-		Assert.assertNotNull(paymentInitiationStatus);
-
-		return paymentInitiationStatus;
+						psUAcceptEncoding, psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation);
 	}
 
 	private String getStartAuthorisationWithPsuAuthentication(PaymentInitationRequestResponse201 resp) {
@@ -157,4 +148,23 @@ public class PaymentExecutionHelper {
 
 		return updatePaymentPsuData;
 	}
+	
+	
+	public void checkTxStatus(UpdatePsuAuthenticationResponse resp, TransactionStatus expectedStatus) {
+		ResponseEntity<PaymentInitiationStatusResponse200Json> loadPaymentStatusResponseWrapper = loadPaymentStatus(resp);
+		PaymentInitiationStatusResponse200Json loadPaymentStatusResponse = loadPaymentStatusResponseWrapper.getBody();
+		Assert.assertNotNull(loadPaymentStatusResponse);
+		TransactionStatus currentStatus = loadPaymentStatusResponse.getTransactionStatus();
+		Assert.assertNotNull(currentStatus);
+		Assert.assertEquals(expectedStatus, currentStatus);
+	}
+
+	public void validateResponseStatus(UpdatePsuAuthenticationResponse authResponse, ScaStatus expectedScaStatus) {
+		Assert.assertNotNull(authResponse);
+		ScaStatus scaStatus = authResponse.getScaStatus();
+		Assert.assertNotNull(scaStatus);
+		Assert.assertEquals(expectedScaStatus, scaStatus);
+	}
+	
+	
 }
