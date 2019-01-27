@@ -2,83 +2,30 @@ package de.adorsys.ledgers.xs2a.test.ctk.pis;
 
 import java.net.MalformedURLException;
 
-import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.oba.rest.api.domain.PaymentAuthorizeResponse;
-import de.adorsys.ledgers.oba.rest.client.ObaPisApiClient;
-import de.adorsys.ledgers.xs2a.api.client.PaymentApiClient;
-import de.adorsys.ledgers.xs2a.test.ctk.StarterApplication;
 import de.adorsys.psd2.model.PaymentInitationRequestResponse201;
-import de.adorsys.psd2.model.PaymentInitiationStatusResponse200Json;
 import de.adorsys.psd2.model.TransactionStatus;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = StarterApplication.class)
-public class SinglePaymentRedirectOneScaMethodIT {
-	private final YAMLMapper ymlMapper = new YAMLMapper();
-	private final String paymentService = "payments";
-	private final String paymentProduct = "sepa-credit-transfers";
-
-	@Autowired
-	private PaymentApiClient paymentApi;
-	@Autowired
-	private ObaPisApiClient obaPisApiClient;
-
-	private PaymentExecutionHelper paymentInitService;
-
-	@Before
-	public void beforeClass() {
-		PaymentCase paymentCase = LoadPayment.loadPayment(SinglePaymentRedirectNoScaIT.class,
-				SinglePaymentRedirectOneScaMethodIT.class.getSimpleName() + ".yml", ymlMapper);
-		paymentInitService = new PaymentExecutionHelper(paymentApi, obaPisApiClient, paymentCase, paymentService, paymentProduct);
-	}
+public class SinglePaymentRedirectOneScaMethodIT extends AbstractSinglePaymentRedirect {
 
 	@Test
 	public void test_create_payment() throws MalformedURLException {
 		// Initiate Payment
 		PaymentInitationRequestResponse201 initiatedPayment = paymentInitService.initiatePayment();
+		String paymentId = initiatedPayment.getPaymentId();
 
 		// Login User
-		ResponseEntity<PaymentAuthorizeResponse> login = paymentInitService.login(initiatedPayment);
-		PaymentAuthorizeResponse loginResponse = login.getBody();
-		Assert.assertNotNull(loginResponse);
-		ScaStatusTO scaStatus = loginResponse.getScaStatus();;
-		Assert.assertNotNull(scaStatus);
-		Assert.assertEquals(ScaStatusTO.SCAMETHODSELECTED, scaStatus);
-		// TODO: CHeck why not ACCP
-		Assert.assertEquals(TransactionStatusTO.RCVD, loginResponse.getSinglePayment().getPaymentStatus());
-
-		PaymentInitiationStatusResponse200Json paymentStatus = paymentInitService
-				.loadPaymentStatus(initiatedPayment.getPaymentId());
-		Assert.assertNotNull(paymentStatus);
-		TransactionStatus transactionStatus = paymentStatus.getTransactionStatus();
-		Assert.assertNotNull(transactionStatus);
-		Assert.assertEquals(TransactionStatus.ACCP, transactionStatus);
+		ResponseEntity<PaymentAuthorizeResponse> loginResponseWrapper = paymentInitService.login(initiatedPayment);
+		paymentInitService.validateResponseStatus(loginResponseWrapper.getBody(), ScaStatusTO.SCAMETHODSELECTED, TransactionStatusTO.ACCP);
+		paymentInitService.checkTxStatus(paymentId, TransactionStatus.ACCP);
 		
-		ResponseEntity<PaymentAuthorizeResponse> authCode = paymentInitService.authCode(login);
-		PaymentAuthorizeResponse psuAuthenticationResponse = authCode.getBody();
-		Assert.assertEquals(ScaStatusTO.FINALISED, psuAuthenticationResponse.getScaStatus());
-		// TODO: CHeck why not ACSP
-		Assert.assertEquals(TransactionStatusTO.ACCP, psuAuthenticationResponse.getSinglePayment().getPaymentStatus());
-
-		paymentStatus = paymentInitService
-				.loadPaymentStatus(initiatedPayment.getPaymentId());
-		Assert.assertNotNull(paymentStatus);
-		transactionStatus = paymentStatus.getTransactionStatus();
-		Assert.assertNotNull(transactionStatus);
-		// TODO: CHeck why not ACSP
-		Assert.assertEquals(TransactionStatus.ACCP, transactionStatus);
+		ResponseEntity<PaymentAuthorizeResponse> authCodeResponseWrapper = paymentInitService.authCode(loginResponseWrapper);
+		paymentInitService.validateResponseStatus(authCodeResponseWrapper.getBody(), ScaStatusTO.FINALISED, TransactionStatusTO.ACSP);
+		paymentInitService.checkTxStatus(paymentId, TransactionStatus.ACSP);
 	}
-	
 }

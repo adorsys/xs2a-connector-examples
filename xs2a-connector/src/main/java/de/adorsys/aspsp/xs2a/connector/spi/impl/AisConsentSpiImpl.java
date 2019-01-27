@@ -137,11 +137,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
     public <T extends SpiInitiateAisConsentResponse> SpiResponse<T> firstCallInstantiatingConsent(
     		@NotNull SpiAccountConsent accountConsent, 
     		@NotNull AspspConsentData initialAspspConsentData, T responsePayload){
-		String consentId = initialAspspConsentData.getConsentId()!=null
-				? initialAspspConsentData.getConsentId()
-						: Ids.id();
 		SCAConsentResponseTO response = new SCAConsentResponseTO();
-		response.setConsentId(consentId);
 		response.setScaStatus(ScaStatusTO.STARTED);
 		responsePayload.setAccountAccess(accountConsent.getAccess());
 		return SpiResponse.<T>builder()
@@ -204,12 +200,11 @@ public class AisConsentSpiImpl implements AisConsentSpi {
 
 		SCAConsentResponseTO originalResponse = tokenService.response(aspspConsentData, SCAConsentResponseTO.class, false);		
 
-		String consentid = aspspConsentData.getConsentId();
         String authorisationId = originalResponse!=null && originalResponse.getAuthorisationId()!=null
         		? originalResponse.getAuthorisationId()
         		: Ids.id();
 		SpiResponse<SpiAuthorisationStatus> authorisePsu = authorisationService.authorisePsuForConsent(
-				psuLoginData, password, consentid, authorisationId, OpTypeTO.CONSENT, aspspConsentData);
+				psuLoginData, password, businessObject.getId(), authorisationId, OpTypeTO.CONSENT, aspspConsentData);
         
         if(!authorisePsu.isSuccessful()) {
         	return authorisePsu;
@@ -242,7 +237,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         SCALoginResponseTO scaResponseTO = tokenStorageService.fromBytes(authorisePsu.getAspspConsentData().getAspspConsentData(), SCALoginResponseTO.class);
         SCAConsentResponseTO consentResponse = scaLoginToConsentResponseMapper.toConsentResponse(scaResponseTO);
         consentResponse.setObjectType(SCAConsentResponseTO.class.getSimpleName());
-        consentResponse.setConsentId(originalResponse.getConsentId());
+        consentResponse.setConsentId(businessObject.getId());
         return consentResponse;
 	}
 
