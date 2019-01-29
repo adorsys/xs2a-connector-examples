@@ -2,20 +2,25 @@ package de.adorsys.ledgers.xs2a.test.ctk.pis;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import de.adorsys.ledgers.oba.rest.api.domain.ConsentAuthorizeResponse;
+import de.adorsys.ledgers.xs2a.test.ctk.StarterApplication;
 import de.adorsys.psd2.model.ConsentStatus;
 import de.adorsys.psd2.model.ConsentsResponse201;
-import de.adorsys.psd2.model.UpdatePsuAuthenticationResponse;
 import feign.FeignException;
 
-public class ConsentEmbeddedNoScaIT extends AbstractConsentEmbedded {
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringBootTest(classes = StarterApplication.class)
+public class ConsentRedirectUnknownUser  extends AbstractConsentRedirect {
 	@Override
 	protected String getPsuId() {
-		return "marion.mueller";
+		return "user.unknown";
 	}
-
 	@Test
 	public void test_create_payment() {
 		
@@ -29,11 +34,14 @@ public class ConsentEmbeddedNoScaIT extends AbstractConsentEmbedded {
 		Assert.assertEquals(ConsentStatus.RECEIVED, consentStatus);
 		
 		try {
-			ResponseEntity<UpdatePsuAuthenticationResponse> loginResponse = consentHelper.login(createConsentResp);
+			ResponseEntity<ConsentAuthorizeResponse> loginResponseWrapper = consentHelper.login(createConsentResp);
 			Assert.fail("Expecting a bad request");
 		} catch(FeignException f) {
-			// TODO: create Ticket why bad request. Middleware return exempted.
+			// TODO:  Middleware return not found. SPI design does not allow
+			// pass thru of code. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/629
+			//			Assert.assertEquals(HttpStatus.NOT_FOUND.value(), f.status());		
 			Assert.assertEquals(HttpStatus.BAD_REQUEST.value(), f.status());		
 		}
+
 	}
 }
