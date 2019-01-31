@@ -20,7 +20,7 @@ setting:
  allPsd2Support: true
  transactionsWithoutBalancesSupported: true
  signingBasketSupported: false
- paymentCancellationAuthorizationMandated: false
+ paymentCancellationAuthorizationMandated: true
  piisConsentSupported: false
  deltaReportSupported: false
  redirectUrlExpirationTimeMs: 600000
