@@ -51,18 +51,18 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
     private final LedgersSpiPaymentMapper paymentMapper;
     private final GeneralPaymentService paymentService;
     private final AuthRequestInterceptor authRequestInterceptor;
-    private final AspspConsentDataService tokenService;
+    private final AspspConsentDataService consentDataService;
     private final ObjectMapper objectMapper;
 
     public SinglePaymentSpiImpl(PaymentRestClient ledgersRestClient, LedgersSpiPaymentMapper paymentMapper,
                                 GeneralPaymentService paymentService, AuthRequestInterceptor authRequestInterceptor,
-                                AspspConsentDataService tokenService, ObjectMapper objectMapper) {
+                                AspspConsentDataService consentDataService, ObjectMapper objectMapper) {
         super();
         this.ledgersRestClient = ledgersRestClient;
         this.paymentMapper = paymentMapper;
         this.paymentService = paymentService;
         this.authRequestInterceptor = authRequestInterceptor;
-        this.tokenService = tokenService;
+        this.consentDataService = consentDataService;
         this.objectMapper = objectMapper;
     }
 
@@ -83,7 +83,7 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
                                                                                .map(paymentMapper::toSpiSingleResponse)
                                                                                .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 201, but body was empty!", Response.builder().status(400).build()));
             return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
-                           .aspspConsentData(tokenService.store(response, initialAspspConsentData))
+                           .aspspConsentData(consentDataService.store(response, initialAspspConsentData))
                            .message(response.getScaStatus().name())
                            .payload(spiInitiationResponse)
                            .success();
@@ -101,7 +101,7 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
     @Override
     public @NotNull SpiResponse<SpiSinglePayment> getPaymentById(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
         try {
-            SCAPaymentResponseTO sca = tokenService.response(aspspConsentData, SCAPaymentResponseTO.class);
+            SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
             logger.info("Get payment by id with type={}, and id={}", PaymentTypeTO.SINGLE, payment.getPaymentId());
@@ -164,7 +164,7 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
     private SCAPaymentResponseTO initiatePaymentInternal(SpiSinglePayment payment,
                                                          AspspConsentData initialAspspConsentData) throws FeignException {
         try {
-            SCAResponseTO sca = tokenService.response(initialAspspConsentData);
+            SCAResponseTO sca = consentDataService.response(initialAspspConsentData);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
             logger.info("Initiate single payment with type={}", PaymentTypeTO.SINGLE);
