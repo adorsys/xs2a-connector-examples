@@ -16,6 +16,10 @@ public class ConsentEmbeddedManyScaIT extends AbstractConsentEmbedded {
 	protected String getPsuId() {
 		return "max.musterman";
 	}
+	@Override
+	protected String getIban() {
+		return "DE38760700240320465700";
+	}
 
 	@Test
 	public void test_initiate_consent() {

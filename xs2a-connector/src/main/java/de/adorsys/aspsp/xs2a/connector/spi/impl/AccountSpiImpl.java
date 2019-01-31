@@ -51,7 +51,7 @@ import feign.Response;
 
 @Component
 public class AccountSpiImpl implements AccountSpi {
-	private static final Logger logger = LoggerFactory.getLogger(SinglePaymentSpiImpl.class);
+	private static final Logger logger = LoggerFactory.getLogger(AccountSpiImpl.class);
 
 	private final AccountRestClient accountRestClient;
 	private final LedgersSpiAccountMapper accountMapper;
@@ -145,7 +145,9 @@ public class AccountSpiImpl implements AccountSpi {
 					.aspspConsentData(aspspConsentData).success();
 		} catch (FeignException e) {
 			logger.error(e.getMessage());
-			return SpiResponse.<SpiTransactionReport>builder().fail(getSpiResponseStatus(e));
+			return SpiResponse.<SpiTransactionReport>builder()
+					.aspspConsentData(aspspConsentData)
+					.fail(getSpiResponseStatus(e));
 		} finally {
 			authRequestInterceptor.setAccessToken(null);
 		}
