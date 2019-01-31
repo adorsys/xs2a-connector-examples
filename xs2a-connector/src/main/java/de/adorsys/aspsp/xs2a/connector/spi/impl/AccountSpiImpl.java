@@ -174,7 +174,7 @@ public class AccountSpiImpl implements AccountSpi {
 					.success();
 		} catch (FeignException e) {
 			logger.error(e.getMessage());
-			return SpiResponse.<SpiTransaction>builder().fail(getSpiResponseStatus(e));
+			return SpiResponse.<SpiTransaction>builder().aspspConsentData(aspspConsentData).fail(getSpiResponseStatus(e));
 		} finally {
 			authRequestInterceptor.setAccessToken(null);
 		}

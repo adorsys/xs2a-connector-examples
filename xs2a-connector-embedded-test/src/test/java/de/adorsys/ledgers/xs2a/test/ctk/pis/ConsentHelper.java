@@ -1,7 +1,6 @@
 package de.adorsys.ledgers.xs2a.test.ctk.pis;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -16,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import de.adorsys.ledgers.xs2a.api.client.AccountApiClient;
 import de.adorsys.ledgers.xs2a.api.client.ConsentApiClient;
 import de.adorsys.psd2.model.AccountAccess;
-import de.adorsys.psd2.model.AccountAccess.AllPsd2Enum;
 import de.adorsys.psd2.model.AccountDetails;
 import de.adorsys.psd2.model.AccountList;
 import de.adorsys.psd2.model.AccountReference;
@@ -79,7 +77,7 @@ public class ConsentHelper {
 		access.setAccounts(accounts);
 		access.setBalances(accounts);
 		access.setTransactions(accounts);
-		access.setAllPsd2(AllPsd2Enum.ALLACCOUNTS);
+//		access.setAllPsd2(AllPsd2Enum.ALLACCOUNTS);
 		consents.setAccess(access);
 		consents.setFrequencyPerDay(4);
 		consents.setRecurringIndicator(true);
@@ -228,22 +226,9 @@ public class ConsentHelper {
 		AccountReport transactions = transactionsResponse200Json.getTransactions();
 		TransactionList booked = transactions.getBooked();
 		Map<String, List<TransactionDetails>> result = new HashMap<>();
-		List<TransactionDetails> bookedTx = readDetails(a, authUrl, xRequestID, booked);
-		result.put("BOOKED", bookedTx);
+		result.put("BOOKED", booked);
 		TransactionList pending = transactions.getPending();
-		List<TransactionDetails> pendingTx = readDetails(a, authUrl, xRequestID, pending);
-		result.put("PENDING", pendingTx);
+		result.put("PENDING", pending);
 		return result;
-	}
-
-	private List<TransactionDetails> readDetails(AccountDetails a, AuthUrl authUrl, UUID xRequestID, TransactionList transactionList) {
-		List<TransactionDetails> tx = new ArrayList<>();
-		transactionList.stream().forEach(b -> {
-			TransactionDetails transactionDetails = accountApi._getTransactionDetails(a.getResourceId(), b.getTransactionId(), xRequestID, authUrl.getEncryptedConsentId(), digest, signature,
-					tpPSignatureCertificate, psUIPAddress, psUIPPort, psUAccept, psUAcceptCharset, psUAcceptEncoding,
-					psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation).getBody();
-			tx.add(transactionDetails);
-		});
-		return tx;
 	}
 }
