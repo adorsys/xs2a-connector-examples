@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import de.adorsys.ledgers.xs2a.api.client.AccountApiClient;
 import de.adorsys.ledgers.xs2a.api.client.ConsentApiClient;
 import de.adorsys.psd2.model.AccountAccess;
+import de.adorsys.psd2.model.AccountAccess.AllPsd2Enum;
 import de.adorsys.psd2.model.AccountDetails;
 import de.adorsys.psd2.model.AccountList;
 import de.adorsys.psd2.model.AccountReference;
@@ -62,26 +63,20 @@ public class ConsentHelper {
 		this.iban = iban;
 	}
 
-	public ResponseEntity<ConsentsResponse201> createConsent() {
+	public ResponseEntity<ConsentsResponse201> createDedicatedConsent() {
+		return createConsent(dedicatedConsent());
+	}
+
+	public ResponseEntity<ConsentsResponse201> createAllPSD2Consent() {
+		return createConsent(allPSD2Consent());
+	}
+	
+	private ResponseEntity<ConsentsResponse201> createConsent(Consents consents) {
 		UUID xRequestID = UUID.randomUUID();
 		String tpPRedirectPreferred = "false";
 		String tpPRedirectURI = null;
 		String tpPNokRedirectURI = null;
 		Boolean tpPExplicitAuthorisationPreferred = false;
-		Consents consents = new Consents();
-		AccountAccess access = new AccountAccess();
-		AccountReference accountRef = new AccountReference();
-		accountRef.setIban(iban);
-		accountRef.setCurrency("EUR");
-		List<AccountReference> accounts = Arrays.asList(accountRef);
-		access.setAccounts(accounts);
-		access.setBalances(accounts);
-		access.setTransactions(accounts);
-//		access.setAllPsd2(AllPsd2Enum.ALLACCOUNTS);
-		consents.setAccess(access);
-		consents.setFrequencyPerDay(4);
-		consents.setRecurringIndicator(true);
-		consents.setValidUntil(LocalDate.of(2021, 11, 30));
 		ResponseEntity<ConsentsResponse201> consentsResponse201 = consentApi._createConsent(xRequestID, consents,
 				digest, signature, tpPSignatureCertificate, PSU_ID, psUIDType, psUCorporateID, psUCorporateIDType,
 				tpPRedirectPreferred, tpPRedirectURI, tpPNokRedirectURI, tpPExplicitAuthorisationPreferred,
@@ -99,7 +94,34 @@ public class ConsentHelper {
 
 		return consentsResponse201;
 	}
+	
+	private Consents dedicatedConsent() {
+		Consents consents = new Consents();
+		AccountAccess access = new AccountAccess();
+		AccountReference accountRef = new AccountReference();
+		accountRef.setIban(iban);
+		accountRef.setCurrency("EUR");
+		List<AccountReference> accounts = Arrays.asList(accountRef);
+		access.setAccounts(accounts);
+		access.setBalances(accounts);
+		access.setTransactions(accounts);
+//		access.setAllPsd2(AllPsd2Enum.ALLACCOUNTS);
+		consents.setAccess(access);
+		consents.setFrequencyPerDay(4);
+		consents.setRecurringIndicator(true);
+		consents.setValidUntil(LocalDate.of(2021, 11, 30));
+		return consents;
+	}
 
+	private Consents allPSD2Consent() {
+		Consents consents = new Consents()
+				.access(new AccountAccess().allPsd2(AllPsd2Enum.ALLACCOUNTS))
+				.frequencyPerDay(4)
+				.recurringIndicator(true)
+				.validUntil(LocalDate.of(2021, 11, 30));
+		return consents;
+	}
+	
 	public ResponseEntity<UpdatePsuAuthenticationResponse> login(
 			ResponseEntity<ConsentsResponse201> createConsentResp) {
 		ConsentsResponse201 consentsResponse201 = createConsentResp.getBody();

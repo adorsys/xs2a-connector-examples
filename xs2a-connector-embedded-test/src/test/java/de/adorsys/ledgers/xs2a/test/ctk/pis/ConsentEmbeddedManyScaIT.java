@@ -25,7 +25,7 @@ public class ConsentEmbeddedManyScaIT extends AbstractConsentEmbedded {
 	public void test_initiate_consent() {
 		
 		// ============= INITIATE CONSENT =======================//
-		ResponseEntity<ConsentsResponse201> createConsentResp = consentHelper.createConsent();
+		ResponseEntity<ConsentsResponse201> createConsentResp = consentHelper.createDedicatedConsent();
 		ConsentsResponse201 consents = createConsentResp.getBody();
 		Assert.assertNotNull(consents);
 		Assert.assertEquals(ConsentStatus.RECEIVED, consents.getConsentStatus());

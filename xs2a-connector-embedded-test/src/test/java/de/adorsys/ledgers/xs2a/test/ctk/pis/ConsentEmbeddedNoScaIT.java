@@ -23,7 +23,7 @@ public class ConsentEmbeddedNoScaIT extends AbstractConsentEmbedded {
 	@Test
 	public void test_create_payment() {
 		
-		ResponseEntity<ConsentsResponse201> createConsentResp = consentHelper.createConsent();
+		ResponseEntity<ConsentsResponse201> createConsentResp = consentHelper.createDedicatedConsent();
 
 		ConsentsResponse201 consents = createConsentResp.getBody();
 		// Login User
