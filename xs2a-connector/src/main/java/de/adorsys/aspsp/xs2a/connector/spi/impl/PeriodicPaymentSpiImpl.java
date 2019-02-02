@@ -16,7 +16,14 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
+import java.util.Optional;
+
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
@@ -29,17 +36,13 @@ import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiTransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPeriodicPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.PeriodicPaymentSpi;
 import feign.FeignException;
 import feign.Response;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
-import java.util.Optional;
 
 @Component
 public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
@@ -121,12 +124,12 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
     }
 
     @Override
-    public @NotNull SpiResponse<SpiResponse.VoidResponse> executePaymentWithoutSca(@NotNull SpiContextData contextData, @NotNull SpiPeriodicPayment payment, @NotNull AspspConsentData aspspConsentData) {
+    public @NotNull SpiResponse<SpiPaymentExecutionResponse> executePaymentWithoutSca(@NotNull SpiContextData contextData, @NotNull SpiPeriodicPayment payment, @NotNull AspspConsentData aspspConsentData) {
         return paymentService.executePaymentWithoutSca(contextData, payment, aspspConsentData);
     }
 
     @Override
-    public @NotNull SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiContextData contextData, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiPeriodicPayment payment, @NotNull AspspConsentData aspspConsentData) {
+    public @NotNull SpiResponse<SpiPaymentExecutionResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiContextData contextData, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiPeriodicPayment payment, @NotNull AspspConsentData aspspConsentData) {
         return paymentService.verifyScaAuthorisationAndExecutePayment(
                 spiScaConfirmation,
                 aspspConsentData

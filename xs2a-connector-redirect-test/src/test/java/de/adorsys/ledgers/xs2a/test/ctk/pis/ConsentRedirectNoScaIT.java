@@ -24,6 +24,7 @@ public class ConsentRedirectNoScaIT extends AbstractConsentRedirect {
 		
 		try {
 			ResponseEntity<ConsentAuthorizeResponse> loginResponseWrapper = consentHelper.login(createConsentResp);
+			ConsentAuthorizeResponse body = loginResponseWrapper.getBody();
 			Assert.fail("Expecting a bad request");
 		} catch(FeignException f) {
 			// TODO: create Ticket why bad request. Middleware return exempted.

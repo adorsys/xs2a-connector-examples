@@ -24,10 +24,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 import de.adorsys.psd2.consent.api.ais.AisAccountConsent;
-import de.adorsys.psd2.consent.api.ais.CmsAisConsentResponse;
+import de.adorsys.psd2.consent.psu.api.ais.CmsAisConsentAccessRequest;
+import de.adorsys.psd2.consent.psu.api.ais.CmsAisConsentResponse;
+import de.adorsys.psd2.xs2a.core.psu.PsuIdData;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -39,22 +42,19 @@ import io.swagger.annotations.ApiResponses;
 public interface CmsPsuAisClient {
     String DEFAULT_SERVICE_INSTANCE_ID = "UNDEFINED";
 
-    @PutMapping(path = "/redirects/{redirect-id}/psu-data")
+    @PutMapping(path = "/{consent-id}/authorisation/{authorisation-id}/psu-data")
     @ApiOperation(value = "Updates PSU Data in consent, based on the trusted information about PSU known to ASPSP (i.e. after authorisation).")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "OK", response = Boolean.class)})
-    ResponseEntity<Boolean> updatePsuDataInConsent(
-        @ApiParam(name = "redirect-id", value = "The redirect identification assigned to the created account consent.", example = "bf489af6-a2cb-4b75-b71d-d66d58b934d7")
-        @PathVariable("redirect-id") String redirectId,
-        @ApiParam(value = "Client ID of the PSU in the ASPSP client interface. Might be mandated in the ASPSP's documentation. Is not contained if an OAuth2 based authentication was performed in a pre-step or an OAuth2 based SCA was performed in an preceeding AIS service in the same session. ")
-        @RequestHeader(value = "psu-id", required = false) String psuId,
-        @ApiParam(value = "Type of the PSU-ID, needed in scenarios where PSUs have several PSU-IDs as access possibility. ")
-        @RequestHeader(value = "psu-id-type", required = false) String psuIdType,
-        @ApiParam(value = "Might be mandated in the ASPSP's documentation. Only used in a corporate context. ")
-        @RequestHeader(value = "psu-corporate-id", required = false) String psuCorporateId,
-        @ApiParam(value = "Might be mandated in the ASPSP's documentation. Only used in a corporate context. ")
-        @RequestHeader(value = "psu-corporate-id-type", required = false) String psuCorporateIdType,
-        @RequestHeader(value = "instance-id", required = false, defaultValue = DEFAULT_SERVICE_INSTANCE_ID) String instanceId);
+        @ApiResponse(code = 200, message = "OK"),
+        @ApiResponse(code = 400, message = "Bad Request"),
+    })
+    ResponseEntity<Void> updatePsuDataInConsent(
+        @SuppressWarnings("unused") @ApiParam(name = "consent-id", value = "The consent identifier", example = "bf489af6-a2cb-4b75-b71d-d66d58b934d7", required = true)
+        @PathVariable("consent-id") String consentId,
+        @ApiParam(name = "authorisation-id", value = "The authorisation identifier of the current authorisation session", example = "bf489af6-a2cb-4b75-b71d-d66d58b934d7", required = true)
+        @PathVariable("authorisation-id") String authorisationId,
+        @RequestHeader(value = "instance-id", required = false, defaultValue = DEFAULT_SERVICE_INSTANCE_ID) String instanceId,
+        @RequestBody PsuIdData psuIdData);
 
     @GetMapping(path = "/{consent-id}")
     @ApiOperation(value = "Returns AIS Consent object by its ID.")
@@ -74,7 +74,7 @@ public interface CmsPsuAisClient {
         @RequestHeader(value = "psu-corporate-id-type", required = false) String psuCorporateIdType,
         @RequestHeader(value = "instance-id", required = false, defaultValue = DEFAULT_SERVICE_INSTANCE_ID) String instanceId);
 
-    @PutMapping(path = "/{consent-id}/authorizations/{authorization-id}/status/{status}")
+    @PutMapping(path = "/{consent-id}/authorisation/{authorisation-id}/status/{status}")
     @ApiOperation(value = "Updates a Status of AIS Consent Authorisation by its ID and PSU ID")
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "OK", response = Boolean.class),
@@ -84,8 +84,8 @@ public interface CmsPsuAisClient {
         @PathVariable("consent-id") String consentId,
         @ApiParam(value = "The following code values are permitted 'received', 'psuIdentified', 'psuAuthenticated', 'scaMethodSelected', 'started', 'finalised' 'failed' 'exempted'.", example = "RECEIVED")
         @PathVariable("status") String status,
-        @ApiParam(name = "authorization-id", value = "The consent authorization identification assigned to the created authorization.", example = "bf489af6-a2cb-4b75-b71d-d66d58b934d7")
-        @PathVariable("authorization-id") String authorizationId,
+        @ApiParam(name = "authorisation-id", value = "The consent authorisation identification assigned to the created authorisation.", example = "bf489af6-a2cb-4b75-b71d-d66d58b934d7")
+        @PathVariable("authorisation-id") String authorisationId,
         @ApiParam(value = "Client ID of the PSU in the ASPSP client interface. Might be mandated in the ASPSP's documentation. Is not contained if an OAuth2 based authentication was performed in a pre-step or an OAuth2 based SCA was performed in an preceeding AIS service in the same session. ")
         @RequestHeader(value = "psu-id", required = false) String psuId,
         @ApiParam(value = "Type of the PSU-ID, needed in scenarios where PSUs have several PSU-IDs as access possibility. ")
@@ -166,7 +166,7 @@ public interface CmsPsuAisClient {
         @RequestHeader(value = "psu-corporate-id-type", required = false) String psuCorporateIdType,
         @RequestHeader(value = "instance-id", required = false, defaultValue = DEFAULT_SERVICE_INSTANCE_ID) String instanceId);
 
-    @GetMapping(path = "/redirects/{redirect-id}")
+    @GetMapping(path = "/redirect/{redirect-id}")
     @ApiOperation(value = "Gets consent response by redirect id")
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "OK", response = CmsAisConsentResponse.class),
@@ -183,4 +183,14 @@ public interface CmsPsuAisClient {
         @ApiParam(name = "redirect-id", value = "The redirect identification assigned to the created payment", required = true, example = "bf489af6-a2cb-4b75-b71d-d66d58b934d7")
         @PathVariable("redirect-id") String redirectId,
         @RequestHeader(value = "instance-id", required = false, defaultValue = DEFAULT_SERVICE_INSTANCE_ID) String instanceId);
+
+    @PutMapping(path = "/{consent-id}/save-access")
+    @ApiOperation(value = "Stores list of accounts with their identifiers in AIS Consent object by its ID. Consent should not be revoked, cancelled or expired.")
+    @ApiResponses(value = {
+        @ApiResponse(code = 200, message = "OK", reference = "Access saved"),
+        @ApiResponse(code = 404, message = "Not Found", reference = "Consent not found or not active")})
+    ResponseEntity<Void> putAccountAccessInConsent(
+        @ApiParam(name = "consent-id", value = "The account consent identification assigned to the created account consent.", example = "bf489af6-a2cb-4b75-b71d-d66d58b934d7")
+        @PathVariable("consent-id") String consentId,
+        @RequestBody CmsAisConsentAccessRequest accountAccessRequest);
 }

@@ -38,6 +38,7 @@ import io.swagger.annotations.ApiResponses;
 public interface CmsPsuPiisClient {
     String DEFAULT_SERVICE_INSTANCE_ID = "UNDEFINED";
 
+
     @GetMapping(path = "/{consent-id}")
     @ApiOperation(value = "Returns PIIS Consent object by its ID.")
     @ApiResponses(value = {
@@ -55,7 +56,7 @@ public interface CmsPsuPiisClient {
         @ApiParam(value = "Might be mandated in the ASPSP's documentation. Only used in a corporate context. ")
         @RequestHeader(value = "psu-corporate-id-type", required = false) String psuCorporateIdType,
         @RequestHeader(value = "instance-id", required = false, defaultValue = DEFAULT_SERVICE_INSTANCE_ID) String instanceId);
-    
+
     @GetMapping
     @ApiOperation(value = "Returns a list of PIIS Consent objects by PSU ID")
     @ApiResponses(value = {
