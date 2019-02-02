@@ -66,8 +66,6 @@ public class ConsentEmbeddedOneScaIT extends AbstractConsentEmbedded {
 		
 	}
 
-
-//	@Ignore
 	@Test
 	public void test_initiate_allpsd2_consent() {
 		

@@ -1,5 +1,8 @@
 package de.adorsys.ledgers.xs2a.test.ctk.pis;
 
+import java.util.List;
+import java.util.Map;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.http.HttpStatus;
@@ -9,6 +12,7 @@ import de.adorsys.psd2.model.ConsentStatus;
 import de.adorsys.psd2.model.ConsentStatusResponse200;
 import de.adorsys.psd2.model.ConsentsResponse201;
 import de.adorsys.psd2.model.ScaStatus;
+import de.adorsys.psd2.model.TransactionDetails;
 import de.adorsys.psd2.model.UpdatePsuAuthenticationResponse;
 
 public class ConsentEmbeddedManyScaIT extends AbstractConsentEmbedded {
@@ -67,5 +71,8 @@ public class ConsentEmbeddedManyScaIT extends AbstractConsentEmbedded {
 		consentStatusResponse200 = loadConsentStatusResponse.getBody();
 		Assert.assertEquals(ConsentStatus.VALID, consentStatusResponse200.getConsentStatus());
 		
+		// ============== READ TRANSACTIONS ========================//
+		Map<String, Map<String, List<TransactionDetails>>> loadTransactions = consentHelper.loadTransactions(authCodeResponse, false);
+		Assert.assertTrue(loadTransactions.size()>0);
 	}
 }
