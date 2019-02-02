@@ -2,6 +2,8 @@ package de.adorsys.ledgers.xs2a.test.ctk.pis;
 
 import java.net.URI;
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -18,13 +20,21 @@ import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
 import de.adorsys.ledgers.oba.rest.api.domain.AuthorizeResponse;
 import de.adorsys.ledgers.oba.rest.api.domain.ConsentAuthorizeResponse;
 import de.adorsys.ledgers.oba.rest.client.ObaAisApiClient;
+import de.adorsys.ledgers.xs2a.api.client.AccountApiClient;
 import de.adorsys.ledgers.xs2a.api.client.ConsentApiClient;
 import de.adorsys.psd2.model.AccountAccess;
 import de.adorsys.psd2.model.AccountAccess.AllPsd2Enum;
+import de.adorsys.psd2.model.AccountDetails;
+import de.adorsys.psd2.model.AccountList;
+import de.adorsys.psd2.model.AccountReference;
+import de.adorsys.psd2.model.AccountReport;
 import de.adorsys.psd2.model.ConsentStatus;
 import de.adorsys.psd2.model.ConsentStatusResponse200;
 import de.adorsys.psd2.model.Consents;
 import de.adorsys.psd2.model.ConsentsResponse201;
+import de.adorsys.psd2.model.TransactionDetails;
+import de.adorsys.psd2.model.TransactionList;
+import de.adorsys.psd2.model.TransactionsResponse200Json;
 
 public class ConsentHelper {
 
@@ -48,28 +58,36 @@ public class ConsentHelper {
 	private final CookiesUtils cu = new CookiesUtils();
 
 	private final String PSU_ID;
+	private final String iban;
 	private final ConsentApiClient consentApi;
 	private final ObaAisApiClient obaAisApiClient;
+	private final AccountApiClient accountApi;
 
-	public ConsentHelper(ObaAisApiClient obaAisApiClient, ConsentApiClient consentApi, String PSU_ID) {
-		this.obaAisApiClient = obaAisApiClient;
+	public ConsentHelper(String pSU_ID, String iban, ConsentApiClient consentApi, ObaAisApiClient obaAisApiClient,
+			AccountApiClient accountApi) {
+		super();
+		PSU_ID = pSU_ID;
+		this.iban = iban;
 		this.consentApi = consentApi;
-		this.PSU_ID = PSU_ID;
+		this.obaAisApiClient = obaAisApiClient;
+		this.accountApi = accountApi;
 	}
 
-	public ResponseEntity<ConsentsResponse201> createConsent() {
+	public ResponseEntity<ConsentsResponse201> createDedicatedConsent() {
+		return createConsent(dedicatedConsent());
+	}
+
+	public ResponseEntity<ConsentsResponse201> createAllPsd2Consent() {
+		return createConsent(allPSD2Consent());
+	}
+	
+	private ResponseEntity<ConsentsResponse201> createConsent(Consents consents) {
 		UUID xRequestID = UUID.randomUUID();
 		String tpPRedirectPreferred = "true";
 		String tpPRedirectURI = null;
 		String tpPNokRedirectURI = null;
 		Boolean tpPExplicitAuthorisationPreferred = false;
-		Consents consents = new Consents();
-		AccountAccess access = new AccountAccess();
-		access.setAllPsd2(AllPsd2Enum.ALLACCOUNTS);
-		consents.setAccess(access);
-		consents.setFrequencyPerDay(4);
-		consents.setRecurringIndicator(true);
-		consents.setValidUntil(LocalDate.of(2019, 11, 30));
+
 		ResponseEntity<ConsentsResponse201> consentsResponse201 = consentApi._createConsent(xRequestID, consents,
 				digest, signature, tpPSignatureCertificate, PSU_ID, psUIDType, psUCorporateID, psUCorporateIDType,
 				tpPRedirectPreferred, tpPRedirectURI, tpPNokRedirectURI, tpPExplicitAuthorisationPreferred,
@@ -211,5 +229,79 @@ public class ConsentHelper {
 		Assert.assertNotNull(consentStatus);
 		Assert.assertEquals(ConsentStatus.RECEIVED, consentStatus);
 	}
+	
+	private Consents dedicatedConsent() {
+		Consents consents = new Consents();
+		AccountAccess access = new AccountAccess();
+		AccountReference accountRef = new AccountReference();
+		accountRef.setIban(iban);
+		accountRef.setCurrency("EUR");
+		List<AccountReference> accounts = Arrays.asList(accountRef);
+		access.setAccounts(accounts);
+		access.setBalances(accounts);
+		access.setTransactions(accounts);
+		consents.setAccess(access);
+		consents.setFrequencyPerDay(4);
+		consents.setRecurringIndicator(true);
+		consents.setValidUntil(LocalDate.of(2021, 11, 30));
+		return consents;
+	}
+
+	private Consents allPSD2Consent() {
+		Consents consents = new Consents()
+				.access(new AccountAccess()
+				.allPsd2(AllPsd2Enum.ALLACCOUNTS))
+				.frequencyPerDay(4)
+				.recurringIndicator(true)
+				.validUntil(LocalDate.of(2021, 11, 30));
+		return consents;
+	}
+	
+	public Map<String, Map<String, List<TransactionDetails>>> loadTransactions(ConsentAuthorizeResponse consentAuthorizeResponse, Boolean withBalance) {
+		String encryptedConsentId = consentAuthorizeResponse.getEncryptedConsentId();
+		AccountList accountList = lisftOfAccounts(withBalance, encryptedConsentId);
+		List<AccountDetails> accounts = accountList.getAccounts();
+		Map<String, Map<String, List<TransactionDetails>>> result = new HashMap<>();
+		accounts.stream().forEach(a -> {
+			Map<String, List<TransactionDetails>> loadTransactions = loadTransactions(a, encryptedConsentId, withBalance);
+			result.put(a.getResourceId(), loadTransactions);
+		});
+		return result;
+	}
+
+	private AccountList lisftOfAccounts(Boolean withBalance, String encryptedConsentId) {
+		UUID xRequestID = UUID.randomUUID();
+		AccountList accountList = accountApi
+				._getAccountList(xRequestID, encryptedConsentId, withBalance, digest, signature,
+						tpPSignatureCertificate, psUIPAddress, psUIPPort, psUAccept, psUAcceptCharset,
+						psUAcceptEncoding, psUAcceptLanguage, psUUserAgent, psUHttpMethod, psUDeviceID, psUGeoLocation)
+				.getBody();
+		return accountList;
+	}
+
+	private Map<String, List<TransactionDetails>> loadTransactions(AccountDetails a, String encryptedConsentId, Boolean withBalance) {
+		UUID xRequestID = UUID.randomUUID();
+
+		LocalDate dateFrom = LocalDate.of(2017, 01, 01);
+		LocalDate dateTo = LocalDate.of(2020, 01, 01);
+		// WARNING case sensitive
+		String bookingStatus = "both";
+		String entryReferenceFrom = null;
+		Boolean deltaList = false;
+		TransactionsResponse200Json transactionsResponse200Json = accountApi
+				._getTransactionList(a.getResourceId(), bookingStatus, xRequestID, encryptedConsentId,
+						dateFrom, dateTo, entryReferenceFrom, deltaList, withBalance, digest, signature,
+						tpPSignatureCertificate, psUIPAddress, psUIPPort, psUAccept, psUAcceptCharset,
+						psUAcceptEncoding, psUAcceptLanguage, psUUserAgent, psUHttpMethod, xRequestID, psUGeoLocation)
+				.getBody();
+		AccountReport transactions = transactionsResponse200Json.getTransactions();
+		TransactionList booked = transactions.getBooked();
+		Map<String, List<TransactionDetails>> result = new HashMap<>();
+		result.put("BOOKED", booked);
+		TransactionList pending = transactions.getPending();
+		result.put("PENDING", pending);
+		return result;
+	}
+	
 	
 }

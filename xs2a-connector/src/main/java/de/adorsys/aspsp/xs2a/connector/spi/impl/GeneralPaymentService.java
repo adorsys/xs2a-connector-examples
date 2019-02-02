@@ -1,5 +1,15 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
@@ -12,25 +22,17 @@ import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiTransactionStatus;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
 import feign.FeignException;
 import feign.Response;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
 
 @Component
 public class GeneralPaymentService {
-    private static final Logger logger = LoggerFactory.getLogger(PaymentAuthorisationSpiImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(GeneralPaymentService.class);
     private final PaymentRestClient paymentRestClient;
     private final AuthRequestInterceptor authRequestInterceptor;
     private final AspspConsentDataService consentDataService;
@@ -67,7 +69,7 @@ public class GeneralPaymentService {
         }
     }
 
-    public SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiScaConfirmation spiScaConfirmation, @NotNull AspspConsentData aspspConsentData) {
+    public SpiResponse<SpiPaymentExecutionResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiScaConfirmation spiScaConfirmation, @NotNull AspspConsentData aspspConsentData) {
         try {
             SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
@@ -75,11 +77,11 @@ public class GeneralPaymentService {
             ResponseEntity<SCAPaymentResponseTO> authorizePaymentResponse = paymentRestClient.authorizePayment(sca.getPaymentId(), sca.getAuthorisationId(), spiScaConfirmation.getTanNumber());
             SCAPaymentResponseTO consentResponse = authorizePaymentResponse.getBody();
 
-            return SpiResponse.<SpiResponse.VoidResponse>builder().payload(SpiResponse.voidResponse())
+            return SpiResponse.<SpiPaymentExecutionResponse>builder().payload(spiPaymentExecutionResponse(consentResponse.getTransactionStatus()))
                            .aspspConsentData(consentDataService.store(consentResponse, aspspConsentData))
                            .message(consentResponse.getScaStatus().name()).success();
         } catch (Exception e) {
-            return SpiResponse.<SpiResponse.VoidResponse>builder()
+            return SpiResponse.<SpiPaymentExecutionResponse>builder()
                            .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
                            .fail(SpiResponseStatus.LOGICAL_FAILURE);
         } finally {
@@ -87,7 +89,11 @@ public class GeneralPaymentService {
         }
     }
 
-    /**
+    private SpiPaymentExecutionResponse spiPaymentExecutionResponse(TransactionStatusTO transactionStatus) {
+    	return new SpiPaymentExecutionResponse(SpiTransactionStatus.valueOf(transactionStatus.name()));
+	}
+
+	/**
      * Instantiating the very first response object.
      *
      * @param paymentType             the payment type
@@ -115,7 +121,7 @@ public class GeneralPaymentService {
                        .payload(responsePayload).success();
     }
 
-    public <T> @NotNull SpiResponse<SpiResponse.VoidResponse> executePaymentWithoutSca(@NotNull SpiContextData contextData, @NotNull T payment, @NotNull AspspConsentData aspspConsentData) {
+    public <T> @NotNull SpiResponse<SpiPaymentExecutionResponse> executePaymentWithoutSca(@NotNull SpiContextData contextData, @NotNull T payment, @NotNull AspspConsentData aspspConsentData) {
         try {
             // First check if there is any payment response ongoing.
             SCAPaymentResponseTO response = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class);
@@ -126,18 +132,18 @@ public class GeneralPaymentService {
                 List<String> messages = Arrays.asList(response.getScaStatus().name(),
                         String.format("Payment scheduled for execution. Transaction status is %s. Als see sca status",
                                 response.getTransactionStatus()));
-                return SpiResponse.<SpiResponse.VoidResponse>builder()
+                return SpiResponse.<SpiPaymentExecutionResponse>builder()
                                .aspspConsentData(aspspConsentData).message(messages)
-                               .payload(SpiResponse.voidResponse()).success();
+                               .payload(spiPaymentExecutionResponse(response.getTransactionStatus())).success();
             }
             List<String> messages = Arrays.asList(response.getScaStatus().name(),
                     String.format("Payment not executed. Transaction status is %s. Als see sca status",
                             response.getTransactionStatus()));
-            return SpiResponse.<SpiResponse.VoidResponse>builder()
+            return SpiResponse.<SpiPaymentExecutionResponse>builder()
                            .aspspConsentData(consentDataService.store(response, aspspConsentData)).message(messages)
                            .fail(SpiResponseStatus.LOGICAL_FAILURE);
         } catch (FeignException e) {
-            return SpiResponse.<SpiResponse.VoidResponse>builder()
+            return SpiResponse.<SpiPaymentExecutionResponse>builder()
                            .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
                            .fail(getSpiFailureResponse(e));
         }
@@ -150,4 +156,5 @@ public class GeneralPaymentService {
                        ? SpiResponseStatus.TECHNICAL_FAILURE
                        : SpiResponseStatus.LOGICAL_FAILURE;
     }
+    
 }

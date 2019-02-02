@@ -15,11 +15,15 @@ public class ConsentEmbeddedNoScaIT extends AbstractConsentEmbedded {
 	protected String getPsuId() {
 		return "marion.mueller";
 	}
+	@Override
+	protected String getIban() {
+		return "DE69760700240340283600";
+	}
 
 	@Test
 	public void test_create_payment() {
 		
-		ResponseEntity<ConsentsResponse201> createConsentResp = consentHelper.createConsent();
+		ResponseEntity<ConsentsResponse201> createConsentResp = consentHelper.createDedicatedConsent();
 
 		ConsentsResponse201 consents = createConsentResp.getBody();
 		// Login User

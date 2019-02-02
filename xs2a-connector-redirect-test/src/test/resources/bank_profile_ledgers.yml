@@ -21,7 +21,7 @@ setting:
  transactionsWithoutBalancesSupported: true
  signingBasketSupported: false
  paymentCancellationAuthorizationMandated: true
- piisConsentSupported: false
+ piisConsentSupported: true
  deltaReportSupported: false
  redirectUrlExpirationTimeMs: 600000
  notConfirmedConsentExpirationPeriodMs: 86400000
@@ -37,3 +37,5 @@ setting:
    - sepa-credit-transfers
    - instant-sepa-credit-transfers
  paymentCancellationRedirectUrlExpirationTimeMs: 600000
+ availableAccountsConsentSupported: true
+ scaByOneTimeAvailableAccountsConsentRequired: true

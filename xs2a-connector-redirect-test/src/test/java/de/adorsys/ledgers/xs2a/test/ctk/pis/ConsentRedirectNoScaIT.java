@@ -15,15 +15,20 @@ public class ConsentRedirectNoScaIT extends AbstractConsentRedirect {
 	protected String getPsuId() {
 		return "marion.mueller";
 	}
+	@Override
+	protected String getIban() {
+		return "DE69760700240340283600";
+	}
 
 	@Test
 	public void test_initiate_consent() {
 		
-		ResponseEntity<ConsentsResponse201> createConsentResp = consentHelper.createConsent();
+		ResponseEntity<ConsentsResponse201> createConsentResp = consentHelper.createDedicatedConsent();
 		consentHelper.checkConsentStatus(createConsentResp, ConsentStatus.RECEIVED);
 		
 		try {
 			ResponseEntity<ConsentAuthorizeResponse> loginResponseWrapper = consentHelper.login(createConsentResp);
+			ConsentAuthorizeResponse body = loginResponseWrapper.getBody();
 			Assert.fail("Expecting a bad request");
 		} catch(FeignException f) {
 			// TODO: create Ticket why bad request. Middleware return exempted.

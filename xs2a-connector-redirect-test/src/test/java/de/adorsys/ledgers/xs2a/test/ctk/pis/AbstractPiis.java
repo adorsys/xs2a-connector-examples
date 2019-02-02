@@ -6,24 +6,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import de.adorsys.ledgers.xs2a.api.client.AccountApiClient;
-import de.adorsys.ledgers.xs2a.api.client.ConsentApiClient;
+import de.adorsys.ledgers.oba.rest.client.ObaAisApiClient;
+import de.adorsys.ledgers.oba.rest.client.ObaScaApiClient;
+import de.adorsys.ledgers.xs2a.api.client.FundsConfirmationApiClient;
 import de.adorsys.ledgers.xs2a.test.ctk.StarterApplication;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = StarterApplication.class)
-public abstract class AbstractConsentEmbedded {
+public abstract class AbstractPiis {
 
 	@Autowired
-	private ConsentApiClient consentApi;
+	private ObaAisApiClient obaAisApiClient;
 	@Autowired
-	private AccountApiClient accountApi;
+	private FundsConfirmationApiClient fundsConfirmationApiClient;
+	@Autowired
+	private ObaScaApiClient obaScaApiClient;
 
-	protected ConsentHelper consentHelper;
+	protected PiisHelper cifHelper;
 	
 	@Before
 	public void beforeClass() {
-		consentHelper = new ConsentHelper(accountApi, consentApi, getPsuId(), getIban());
+		cifHelper = new PiisHelper(getPsuId(), getIban(), obaAisApiClient, fundsConfirmationApiClient, obaScaApiClient);
 	}
 
 	protected abstract String getIban();

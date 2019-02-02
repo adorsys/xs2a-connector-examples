@@ -22,38 +22,33 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 import de.adorsys.psd2.consent.api.pis.CmsPayment;
 import de.adorsys.psd2.consent.api.pis.CmsPaymentResponse;
 import de.adorsys.psd2.consent.api.pis.proto.CreatePisCommonPaymentResponse;
+import de.adorsys.psd2.xs2a.core.psu.PsuIdData;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
-@FeignClient(value = "cmsPsuPis", url = "${cms.url}", path="/psu-api/v1/pis/consent", primary=false, configuration=FeignConfig.class)
-@Api(value = "psu-api/v1/pis/consent", tags = "PSU PIS, Consents", description = "Controller for cms-psu-api providing access for PIS consents")
+@FeignClient(value = "cmsPsuPis", url = "${cms.url}", path="/psu-api/v1/payment", primary=false, configuration=FeignConfig.class)
+@Api(value = "psu-api/v1/payment", tags = "PSU PIS, Consents", description = "Controller for cms-psu-api providing access for PIS consents")
 public interface CmsPsuPisClient {
     String DEFAULT_SERVICE_INSTANCE_ID = "UNDEFINED";
 
-    @PutMapping(path = "/redirects/{redirect-id}/psu-data")
+    @PutMapping(path = "/authorisation/{authorisation-id}/psu-data")
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "OK", response = CreatePisCommonPaymentResponse.class),
         @ApiResponse(code = 400, message = "Bad request")})
     ResponseEntity<CreatePisCommonPaymentResponse> updatePsuInPayment(
-        @ApiParam(value = "Client ID of the PSU in the ASPSP client interface. Might be mandated in the ASPSP's documentation. Is not contained if an OAuth2 based authentication was performed in a pre-step or an OAuth2 based SCA was performed in an preceeding AIS service in the same session. ")
-        @RequestHeader(value = "psu-id", required = false) String psuId,
-        @ApiParam(value = "Type of the PSU-ID, needed in scenarios where PSUs have several PSU-IDs as access possibility. ")
-        @RequestHeader(value = "psu-id-type", required = false) String psuIdType,
-        @ApiParam(value = "Might be mandated in the ASPSP's documentation. Only used in a corporate context. ")
-        @RequestHeader(value = "psu-corporate-id", required = false) String psuCorporateId,
-        @ApiParam(value = "Might be mandated in the ASPSP's documentation. Only used in a corporate context. ")
-        @RequestHeader(value = "psu-corporate-id-type", required = false) String psuCorporateIdType,
-        @ApiParam(name = "redirect-id", value = "The redirect identification assigned to the created payment.", example = "bf489af6-a2cb-4b75-b71d-d66d58b934d7")
-        @PathVariable("redirect-id") String redirectId,
-        @RequestHeader(value = "instance-id", required = false, defaultValue = DEFAULT_SERVICE_INSTANCE_ID) String instanceId);
+        @ApiParam(name = "authorisation-id", value = "The authorisation's identifier", example = "bf489af6-a2cb-4b75-b71d-d66d58b934d7")
+        @PathVariable("authorisation-id") String authorisationId,
+        @RequestHeader(value = "instance-id", required = false, defaultValue = DEFAULT_SERVICE_INSTANCE_ID) String instanceId,
+        @RequestBody PsuIdData psuIdData);
 
     @GetMapping(path = "/{payment-id}")
     @ApiOperation(value = "")
@@ -73,12 +68,12 @@ public interface CmsPsuPisClient {
         @PathVariable("payment-id") String paymentId,
         @RequestHeader(value = "instance-id", required = false, defaultValue = DEFAULT_SERVICE_INSTANCE_ID) String instanceId);
 
-    @GetMapping(path = "/redirects/{redirect-id}")
+    @GetMapping(path = "/redirect/{redirect-id}")
     @ApiOperation(value = "")
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "OK", response = CmsPaymentResponse.class),
         @ApiResponse(code = 404, message = "Not Found"),
-        @ApiResponse(code = 408, message = "Request Timeout")})
+        @ApiResponse(code = 408, message = "Request Timeout", response = CmsPaymentResponse.class)})
     ResponseEntity<CmsPaymentResponse> getPaymentByRedirectId(
         @ApiParam(value = "Client ID of the PSU in the ASPSP client interface. Might be mandated in the ASPSP's documentation. Is not contained if an OAuth2 based authentication was performed in a pre-step or an OAuth2 based SCA was performed in an preceeding AIS service in the same session. ")
         @RequestHeader(value = "psu-id", required = false) String psuId,
@@ -92,7 +87,7 @@ public interface CmsPsuPisClient {
         @PathVariable("redirect-id") String redirectId,
         @RequestHeader(value = "instance-id", required = false, defaultValue = DEFAULT_SERVICE_INSTANCE_ID) String instanceId);
 
-    @GetMapping(path = "/redirects/cancellation/{redirect-id}")
+    @GetMapping(path = "/cancellation/redirect/{redirect-id}")
     @ApiOperation(value = "")
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "OK", response = CmsPaymentResponse.class),
@@ -111,7 +106,7 @@ public interface CmsPsuPisClient {
         @PathVariable("redirect-id") String redirectId,
         @RequestHeader(value = "instance-id", required = false, defaultValue = DEFAULT_SERVICE_INSTANCE_ID) String instanceId);
 
-    @PutMapping(path = "/{payment-id}/{authorisation-id}/status/{status}")
+    @PutMapping(path = "/{payment-id}/authorisation/{authorisation-id}/status/{status}")
     @ApiOperation(value = "")
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "OK"),

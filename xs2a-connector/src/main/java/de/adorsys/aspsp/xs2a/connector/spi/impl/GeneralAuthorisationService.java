@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class GeneralAuthorisationService {
-    private static final Logger logger = LoggerFactory.getLogger(PaymentAuthorisationSpiImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(GeneralAuthorisationService.class);
     private final UserMgmtRestClient userMgmtRestClient;
     private final AuthRequestInterceptor authRequestInterceptor;
     private final AspspConsentDataService tokenService;
