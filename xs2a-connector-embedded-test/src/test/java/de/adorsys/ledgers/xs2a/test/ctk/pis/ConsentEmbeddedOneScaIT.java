@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -68,7 +67,7 @@ public class ConsentEmbeddedOneScaIT extends AbstractConsentEmbedded {
 	}
 
 
-	@Ignore
+//	@Ignore
 	@Test
 	public void test_initiate_allpsd2_consent() {
 		

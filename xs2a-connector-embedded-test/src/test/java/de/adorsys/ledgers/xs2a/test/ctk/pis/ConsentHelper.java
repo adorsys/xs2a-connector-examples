@@ -16,7 +16,6 @@ import de.adorsys.ledgers.xs2a.api.client.AccountApiClient;
 import de.adorsys.ledgers.xs2a.api.client.ConsentApiClient;
 import de.adorsys.psd2.model.AccountAccess;
 import de.adorsys.psd2.model.AccountAccess.AllPsd2Enum;
-import de.adorsys.psd2.model.AccountAccess.AvailableAccountsEnum;
 import de.adorsys.psd2.model.AccountDetails;
 import de.adorsys.psd2.model.AccountList;
 import de.adorsys.psd2.model.AccountReference;
@@ -117,8 +116,7 @@ public class ConsentHelper {
 	private Consents allPSD2Consent() {
 		Consents consents = new Consents()
 				.access(new AccountAccess()
-				.allPsd2(AllPsd2Enum.ALLACCOUNTS)
-				.availableAccounts(AvailableAccountsEnum.ALLACCOUNTS))
+				.allPsd2(AllPsd2Enum.ALLACCOUNTS))
 				.frequencyPerDay(4)
 				.recurringIndicator(true)
 				.validUntil(LocalDate.of(2021, 11, 30));

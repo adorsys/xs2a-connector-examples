@@ -53,6 +53,7 @@ import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
+import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccessType;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiInitiateAisConsentResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
@@ -100,7 +101,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
 	@Override
 	public SpiResponse<SpiInitiateAisConsentResponse> initiateAisConsent(@NotNull SpiContextData contextData,
 			SpiAccountConsent accountConsent, AspspConsentData initialAspspConsentData) {
-
+		
 		if (initialAspspConsentData.getAspspConsentData() == null) {
 			return firstCallInstantiatingConsent(accountConsent, initialAspspConsentData, new SpiInitiateAisConsentResponse());
 		}
@@ -113,11 +114,28 @@ public class AisConsentSpiImpl implements AisConsentSpi {
 				.message(consentResponse.getScaStatus().name()).success();
 	}
 
+	/*
+	 * Cehck is there is any consent information in this consent object.
+	 */
+	private boolean isEmpty(SpiAccountConsent accountConsent) {
+		return accountConsent.getAccess()==null ||
+				(accountConsent.getAccess().getAccounts()==null || accountConsent.getAccess().getAccounts().isEmpty()) &&
+				(accountConsent.getAccess().getBalances()==null || accountConsent.getAccess().getBalances().isEmpty()) &&
+				(accountConsent.getAccess().getTransactions()==null || accountConsent.getAccess().getTransactions().isEmpty()) &&
+				accountConsent.getAccess().getAllPsd2()==null &&
+				accountConsent.getAccess().getAvailableAccounts()==null;
+	}
+
 	private SCAConsentResponseTO initiateConsentInternal(SpiAccountConsent accountConsent, AspspConsentData initialAspspConsentData) {
 		try {
 			SCAResponseTO sca = tokenService.response(initialAspspConsentData);
 			authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
+			// Issue: https://git.adorsys.de/adorsys/xs2a/ledgers/issues/169
+			// TODO FIXME waiting for Issue https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/647
+			if(isEmpty(accountConsent)) {
+				accountConsent.getAccess().setAllPsd2(SpiAccountAccessType.ALL_ACCOUNTS);
+			}
 			AisConsentTO aisConsent = aisConsentMapper.toTo(accountConsent);
 			
 			// Bearer token only returned in case of exempted consent.
