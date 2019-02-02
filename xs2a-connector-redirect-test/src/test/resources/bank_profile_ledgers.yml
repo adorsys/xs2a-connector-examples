@@ -21,7 +21,7 @@ setting:
  transactionsWithoutBalancesSupported: true
  signingBasketSupported: false
  paymentCancellationAuthorizationMandated: true
- piisConsentSupported: false
+ piisConsentSupported: true
  deltaReportSupported: false
  redirectUrlExpirationTimeMs: 600000
  notConfirmedConsentExpirationPeriodMs: 86400000

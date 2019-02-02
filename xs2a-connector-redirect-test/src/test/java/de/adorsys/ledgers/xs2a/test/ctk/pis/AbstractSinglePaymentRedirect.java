@@ -27,7 +27,7 @@ public abstract class AbstractSinglePaymentRedirect {
 	protected PaymentExecutionHelper paymentInitService;
 
 	@Before
-	public void beforeClass() {
+	public void before() {
 		PaymentCase paymentCase = LoadPayment.loadPayment(getClass(),getClass().getSimpleName() + ".yml", ymlMapper);
 		paymentInitService = new PaymentExecutionHelper(paymentApi, obaPisApiClient, paymentCase, paymentService, paymentProduct);
 	}
