@@ -16,37 +16,38 @@ import feign.FeignException;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = StarterApplication.class)
-public class ConsentRedirectUnknownUser  extends AbstractConsentRedirect {
-	@Override
-	protected String getPsuId() {
-		return "user.unknown";
-	}
-	@Override
-	protected String getIban() {
-		return "DE80760700240271232400";
-	}
+public class ConsentRedirectUnknownUser extends AbstractConsentRedirect {
+    @Override
+    protected String getPsuId() {
+        return "user.unknown";
+    }
 
-	@Test
-	public void test_create_payment() {
-		
-		ResponseEntity<ConsentsResponse201> createConsentResp = consentHelper.createDedicatedConsent();
+    @Override
+    protected String getIban() {
+        return "DE80760700240271232400";
+    }
 
-		ConsentsResponse201 consents = createConsentResp.getBody();
-		// Login User
-		Assert.assertNotNull(consents);
-		ConsentStatus consentStatus = consents.getConsentStatus();
-		Assert.assertNotNull(consentStatus);
-		Assert.assertEquals(ConsentStatus.RECEIVED, consentStatus);
-		
-		try {
-			ResponseEntity<ConsentAuthorizeResponse> loginResponseWrapper = consentHelper.login(createConsentResp);
-			Assert.fail("Expecting a bad request");
-		} catch(FeignException f) {
-			// TODO:  Middleware return not found. SPI design does not allow
-			// pass thru of code. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/629
-			//			Assert.assertEquals(HttpStatus.NOT_FOUND.value(), f.status());		
-			Assert.assertEquals(HttpStatus.BAD_REQUEST.value(), f.status());		
-		}
+    @Test
+    public void test_create_payment() {
 
-	}
+        ResponseEntity<ConsentsResponse201> createConsentResp = consentHelper.createDedicatedConsent();
+
+        ConsentsResponse201 consents = createConsentResp.getBody();
+        // Login User
+        Assert.assertNotNull(consents);
+        ConsentStatus consentStatus = consents.getConsentStatus();
+        Assert.assertNotNull(consentStatus);
+        Assert.assertEquals(ConsentStatus.RECEIVED, consentStatus);
+
+        try {
+            ResponseEntity<ConsentAuthorizeResponse> loginResponseWrapper = consentHelper.login(createConsentResp);
+            Assert.fail("Expecting a bad request");
+        } catch (FeignException f) {
+            // TODO:  Middleware return not found. SPI design does not allow
+            // pass thru of code. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/629
+            //			Assert.assertEquals(HttpStatus.NOT_FOUND.value(), f.status());
+            Assert.assertTrue(f.getMessage().contains("404_NotFoundRestException"));
+        }
+
+    }
 }

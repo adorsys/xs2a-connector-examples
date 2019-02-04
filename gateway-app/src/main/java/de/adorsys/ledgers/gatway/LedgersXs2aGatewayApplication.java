@@ -18,15 +18,18 @@ package de.adorsys.ledgers.gatway;
 
 import de.adorsys.aspsp.xs2a.remote.connector.EnableLedgersXS2AConnectorRemote;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
+import de.adorsys.psd2.xs2a.config.EnableXs2aInterface;
 import de.adorsys.psd2.xs2a.web.config.EnableXs2aSwagger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 
 
 @EnableFeignClients(basePackageClasses = PaymentRestClient.class)
-@SpringBootApplication
+@SpringBootApplication(exclude = {HypermediaAutoConfiguration.class})
 @EnableLedgersXS2AConnectorRemote
+@EnableXs2aInterface
 @EnableXs2aSwagger
 public class LedgersXs2aGatewayApplication {
 
