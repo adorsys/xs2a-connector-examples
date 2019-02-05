@@ -8,8 +8,3 @@ feign:
 
 logging.level.de.adorsys.ledgers.xs2a: DEBUG        
 logging.level.de.adorsys.ledgers.oba.rest: DEBUG
-
-spring:
-  jackson:
-    deserialization:
-      unwrap-root-value: true

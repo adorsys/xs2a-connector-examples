@@ -16,25 +16,25 @@
 
 package de.adorsys.aspsp.xs2a.remote.connector.test;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.feign.EnableFeignClients;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.test.context.ActiveProfiles;
-
 import de.adorsys.aspsp.xs2a.remote.connector.EnableLedgersXS2AConnectorRemote;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
+import de.adorsys.psd2.xs2a.config.EnableXs2aInterface;
 import de.adorsys.psd2.xs2a.web.config.EnableXs2aSwagger;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration;
+import org.springframework.cloud.netflix.feign.EnableFeignClients;
+import org.springframework.test.context.ActiveProfiles;
 
-@EnableFeignClients(basePackageClasses=PaymentRestClient.class)
-@SpringBootApplication
+@EnableFeignClients(basePackageClasses = PaymentRestClient.class)
+@SpringBootApplication(exclude = {HypermediaAutoConfiguration.class})
 @EnableXs2aSwagger
+@EnableXs2aInterface
 @EnableLedgersXS2AConnectorRemote
 @ActiveProfiles({"mockspi"})
-@ComponentScan
 public class LedgersXs2aGatewayApplication {
     public static void main(String[] args) {
-    	System.setProperty("spring.main.allow-bean-definition-overriding", "true");
+        System.setProperty("spring.main.allow-bean-definition-overriding", "true");
         SpringApplication.run(LedgersXs2aGatewayApplication.class, "--spring.profiles.active=h2,mockspi", "--security.basic.enabled=false");
     }
 }
