@@ -103,6 +103,12 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
 
     @Override
     public @NotNull SpiResponse<SpiSinglePayment> getPaymentById(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
+        if(!SpiTransactionStatus.ACSP.equals(payment.getPaymentStatus())){
+            return SpiResponse.<SpiSinglePayment>builder()
+                    .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
+                    .payload(payment)
+                    .success();
+        }
         try {
             SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
@@ -131,7 +137,7 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
 
     @Override
     public @NotNull SpiResponse<SpiTransactionStatus> getPaymentStatusById(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
-        return paymentService.getPaymentStatusById(PaymentTypeTO.valueOf(payment.getPaymentType().name()), payment.getPaymentId(), aspspConsentData);
+        return paymentService.getPaymentStatusById(PaymentTypeTO.valueOf(payment.getPaymentType().name()), payment.getPaymentId(), payment.getPaymentStatus(), aspspConsentData);
     }
 
     /*
