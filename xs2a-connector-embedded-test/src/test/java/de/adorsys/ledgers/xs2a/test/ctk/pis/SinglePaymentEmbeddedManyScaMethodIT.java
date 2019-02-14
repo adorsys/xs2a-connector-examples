@@ -18,11 +18,11 @@ public class SinglePaymentEmbeddedManyScaMethodIT extends AbstractPaymentEmbedde
 		// Login User
 		UpdatePsuAuthenticationResponse loginResponse = paymentInitService.login(initiatedPaymentResponse);
 		paymentInitService.validateResponseStatus(loginResponse, ScaStatus.PSUAUTHENTICATED);
-		paymentInitService.checkTxStatus(loginResponse, TransactionStatus.ACCP);
+		paymentInitService.checkTxStatus(loginResponse, TransactionStatus.RCVD);//TODO: to fix this after implementation status update, TransactionStatus.ACCP
 		
 		UpdatePsuAuthenticationResponse choseScaMethodResponse = paymentInitService.choseScaMethod(loginResponse);
 		paymentInitService.validateResponseStatus(choseScaMethodResponse, ScaStatus.SCAMETHODSELECTED);
-		paymentInitService.checkTxStatus(choseScaMethodResponse, TransactionStatus.ACCP);
+		paymentInitService.checkTxStatus(choseScaMethodResponse, TransactionStatus.RCVD);//TODO: to fix this after implementation status update, TransactionStatus.ACCP
 		
 		UpdatePsuAuthenticationResponse psuAuthenticationResponse = paymentInitService.authCode(choseScaMethodResponse);
 		paymentInitService.validateResponseStatus(psuAuthenticationResponse, ScaStatus.FINALISED);
