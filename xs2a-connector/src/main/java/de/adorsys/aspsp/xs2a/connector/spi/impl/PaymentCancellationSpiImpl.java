@@ -95,7 +95,9 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
      */
     @Override
     public @NotNull SpiResponse<SpiResponse.VoidResponse> cancelPaymentWithoutSca(@NotNull SpiContextData contextData, @NotNull SpiPayment payment, @NotNull AspspConsentData aspspConsentData) {
-        throw new UnsupportedOperationException("Can not proceed without sca.");
+        // TODO: current implementation of Ledgers doesn't support the payment cancellation without authorisation,
+        // maybe this will be implemented in the future: https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/669
+        return SpiResponse.<SpiResponse.VoidResponse>builder().aspspConsentData(aspspConsentData).fail(SpiResponseStatus.NOT_SUPPORTED);
     }
 
     @Override
