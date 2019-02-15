@@ -30,7 +30,7 @@ spring:
       wrap-root-value: true
 
 ledgers.url: http://localhost:8088
-
+cms.url: http://localhost:38080
 
 # ----------------------------------------------
 # number of characters in a json string

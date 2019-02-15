@@ -29,7 +29,12 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-feign</artifactId>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>de.adorsys.psd2</groupId>
+            <artifactId>consent-xs2a-api</artifactId>
+            <version>${xs2a.version}</version>
+        </dependency>
+    </dependencies>
 
 	<build>
 		<plugins>

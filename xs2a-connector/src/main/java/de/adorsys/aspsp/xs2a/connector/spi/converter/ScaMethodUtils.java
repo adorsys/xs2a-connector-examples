@@ -16,24 +16,24 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.converter;
 
+import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
+import org.apache.commons.collections4.CollectionUtils;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
-
 public abstract class ScaMethodUtils {
 
-    public static List<String> toScaMethods(List<ScaUserDataTO> scaMethods){
-    	if(scaMethods==null || scaMethods.isEmpty()) {
-    		return Collections.emptyList();
-    	}
-    	return scaMethods.stream().map(s -> s.getId()).collect(Collectors.toList());
+    public static List<String> toScaMethods(List<ScaUserDataTO> scaMethods) {
+        return CollectionUtils.isEmpty(scaMethods)
+                       ? Collections.emptyList()
+                       : scaMethods.stream().map(ScaUserDataTO::getId).collect(Collectors.toList());
     }
-    
+
     public static String toScaMethod(ScaUserDataTO m) {
-    	return m==null
-    			? null
-    					: m.getId();
+        return m == null
+                       ? null
+                       : m.getId();
     }
 }

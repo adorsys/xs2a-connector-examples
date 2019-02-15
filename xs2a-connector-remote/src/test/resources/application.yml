@@ -31,6 +31,7 @@ spring:
       wrap-root-value: true
 
 ledgers.url: http://localhost:8088/
+cms.url: http://localhost:38080
 
 # ----------------------------------------------
 

@@ -60,7 +60,6 @@ public class AccountSpiImpl implements AccountSpi {
 
 	public AccountSpiImpl(AccountRestClient restClient, LedgersSpiAccountMapper accountMapper,
 			AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService tokenService) {
-		super();
 		this.accountRestClient = restClient;
 		this.accountMapper = accountMapper;
 		this.authRequestInterceptor = authRequestInterceptor;
