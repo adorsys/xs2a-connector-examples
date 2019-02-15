@@ -25,7 +25,7 @@ spring:
     username: ${db.user}
     password: ${db.password}
   jpa:
-    show-sql: true
+    show-sql: false
     generate-ddl: true
     hibernate:
       ddl-auto: update
