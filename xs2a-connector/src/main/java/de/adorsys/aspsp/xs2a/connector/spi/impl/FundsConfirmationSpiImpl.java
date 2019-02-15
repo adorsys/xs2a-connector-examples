@@ -16,12 +16,6 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.ledgers.middleware.api.domain.account.FundsConfirmationRequestTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
@@ -36,6 +30,13 @@ import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.FundsConfirmationSpi;
 import feign.FeignException;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 @Component
 public class FundsConfirmationSpiImpl implements FundsConfirmationSpi {
@@ -48,7 +49,6 @@ public class FundsConfirmationSpiImpl implements FundsConfirmationSpi {
 
     public FundsConfirmationSpiImpl(AccountRestClient restClient, LedgersSpiAccountMapper accountMapper,
 			AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService tokenService) {
-		super();
 		this.restClient = restClient;
 		this.accountMapper = accountMapper;
 		this.authRequestInterceptor = authRequestInterceptor;
@@ -73,7 +73,7 @@ public class FundsConfirmationSpiImpl implements FundsConfirmationSpi {
             logger.info("And got the response ={}", fundsAvailable);
 
             SpiFundsConfirmationResponse spiFundsConfirmationResponse = new SpiFundsConfirmationResponse();
-            spiFundsConfirmationResponse.setFundsAvailable(fundsAvailable);
+            spiFundsConfirmationResponse.setFundsAvailable(Optional.ofNullable(fundsAvailable).orElse(false));
             return SpiResponse.<SpiFundsConfirmationResponse>builder()
                            .aspspConsentData(aspspConsentData)
                            .payload(spiFundsConfirmationResponse)
