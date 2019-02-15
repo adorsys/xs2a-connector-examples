@@ -65,7 +65,7 @@ spring:
   profiles: dev
 
 logging.level.org.postgresql: INFO
-logging.level.org.hibernate.SQL: DEBUG
+logging.level.org.hibernate.SQL: WARN
 logging.level.org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 logging.level.org.springframework: TRACE
 
