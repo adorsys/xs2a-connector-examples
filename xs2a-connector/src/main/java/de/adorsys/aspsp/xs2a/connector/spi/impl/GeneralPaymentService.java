@@ -9,9 +9,9 @@ import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.ledgers.util.Ids;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
+import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
-import de.adorsys.psd2.xs2a.spi.domain.common.SpiTransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
@@ -43,9 +43,9 @@ public class GeneralPaymentService {
         this.consentDataService = consentDataService;
     }
 
-    public SpiResponse<SpiTransactionStatus> getPaymentStatusById(@NotNull PaymentTypeTO paymentType, @NotNull String paymentId, @NotNull SpiTransactionStatus spiTransactionStatus, @NotNull AspspConsentData aspspConsentData) {
-        if (!SpiTransactionStatus.ACSP.equals(spiTransactionStatus)) {
-            return SpiResponse.<SpiTransactionStatus>builder()
+    public SpiResponse<TransactionStatus> getPaymentStatusById(@NotNull PaymentTypeTO paymentType, @NotNull String paymentId, @NotNull TransactionStatus spiTransactionStatus, @NotNull AspspConsentData aspspConsentData) {
+        if (!TransactionStatus.ACSP.equals(spiTransactionStatus)) {
+            return SpiResponse.<TransactionStatus>builder()
                            .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
                            .payload(spiTransactionStatus)
                            .success();
@@ -56,16 +56,16 @@ public class GeneralPaymentService {
 
             logger.info("Get payment status by id with type={}, and id={}", paymentType, paymentId);
             TransactionStatusTO response = paymentRestClient.getPaymentStatusById(sca.getPaymentId()).getBody();
-            SpiTransactionStatus status = Optional.ofNullable(response)
-                                                  .map(r -> SpiTransactionStatus.valueOf(r.name()))
+            TransactionStatus status = Optional.ofNullable(response)
+                                                  .map(r -> TransactionStatus.valueOf(r.name()))
                                                   .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 200, but body was empty!", Response.builder().status(400).build()));
             logger.info("The status was:{}", status);
-            return SpiResponse.<SpiTransactionStatus>builder()
+            return SpiResponse.<TransactionStatus>builder()
                            .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
                            .payload(status)
                            .success();
         } catch (FeignException e) {
-            return SpiResponse.<SpiTransactionStatus>builder()
+            return SpiResponse.<TransactionStatus>builder()
                            .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
                            .fail(getSpiFailureResponse(e));
         } finally {
@@ -115,7 +115,7 @@ public class GeneralPaymentService {
         response.setPaymentType(paymentType);
         responsePayload.setPaymentId(paymentId);
 //		responsePayload.setAspspAccountId();// TODO ID of the deposit account
-        responsePayload.setTransactionStatus(SpiTransactionStatus.valueOf(response.getTransactionStatus().name()));
+        responsePayload.setTransactionStatus(TransactionStatus.valueOf(response.getTransactionStatus().name()));
         return SpiResponse.<T>builder()
                        .aspspConsentData(consentDataService.store(response, initialAspspConsentData, false))
                        .payload(responsePayload).success();
@@ -175,6 +175,6 @@ public class GeneralPaymentService {
     }
 
     private SpiPaymentExecutionResponse spiPaymentExecutionResponse(TransactionStatusTO transactionStatus) {
-        return new SpiPaymentExecutionResponse(SpiTransactionStatus.valueOf(transactionStatus.name()));
+        return new SpiPaymentExecutionResponse(TransactionStatus.valueOf(transactionStatus.name()));
     }
 }

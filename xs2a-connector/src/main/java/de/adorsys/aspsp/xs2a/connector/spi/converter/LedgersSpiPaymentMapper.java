@@ -9,8 +9,8 @@ import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.psd2.xs2a.core.pis.PisDayOfExecution;
 import de.adorsys.psd2.xs2a.core.pis.PisExecutionRule;
+import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.code.SpiFrequencyCode;
-import de.adorsys.psd2.xs2a.spi.domain.common.SpiTransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiAddress;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
@@ -85,7 +85,7 @@ public abstract class LedgersSpiPaymentMapper {
         spiPayment.setCreditorName(payment.getCreditorName());
         spiPayment.setCreditorAddress(toSpiAddress(payment.getCreditorAddress()));
         spiPayment.setRemittanceInformationUnstructured(payment.getRemittanceInformationUnstructured());
-        spiPayment.setPaymentStatus(SpiTransactionStatus.valueOf(payment.getPaymentStatus().name()));
+        spiPayment.setPaymentStatus(TransactionStatus.valueOf(payment.getPaymentStatus().name()));
         spiPayment.setRequestedExecutionDate(payment.getRequestedExecutionDate());
         spiPayment.setRequestedExecutionTime(Optional.ofNullable(payment.getRequestedExecutionDate())
                                                      .map(d -> toDateTime(d, payment.getRequestedExecutionTime()))
@@ -104,7 +104,7 @@ public abstract class LedgersSpiPaymentMapper {
         spiPayment.setCreditorName(payment.getCreditorName());
         spiPayment.setCreditorAddress(toSpiAddress(payment.getCreditorAddress()));
         spiPayment.setRemittanceInformationUnstructured(payment.getRemittanceInformationUnstructured());
-        spiPayment.setPaymentStatus(SpiTransactionStatus.valueOf(payment.getPaymentStatus().name()));
+        spiPayment.setPaymentStatus(TransactionStatus.valueOf(payment.getPaymentStatus().name()));
         spiPayment.setRequestedExecutionDate(payment.getRequestedExecutionDate());
         spiPayment.setRequestedExecutionTime(toDateTime(payment.getRequestedExecutionDate(), payment.getRequestedExecutionTime()));
         spiPayment.setStartDate(payment.getStartDate());
@@ -123,7 +123,7 @@ public abstract class LedgersSpiPaymentMapper {
                            spiBulkPayment.setBatchBookingPreferred(p.getBatchBookingPreferred());
                            spiBulkPayment.setDebtorAccount(accountMapper.toSpiAccountReference(p.getDebtorAccount()));
                            spiBulkPayment.setRequestedExecutionDate(p.getRequestedExecutionDate());
-                           spiBulkPayment.setPaymentStatus(SpiTransactionStatus.valueOf(p.getPaymentStatus().name()));
+                           spiBulkPayment.setPaymentStatus(TransactionStatus.valueOf(p.getPaymentStatus().name()));
                            spiBulkPayment.setPayments(toSpiSinglePaymentsList(p.getPayments()));
                            spiBulkPayment.setPaymentProduct(p.getPaymentProduct().getValue());
                            return spiBulkPayment;
@@ -162,7 +162,7 @@ public abstract class LedgersSpiPaymentMapper {
                        .map(t -> {
                            SpiPaymentCancellationResponse cancellation = new SpiPaymentCancellationResponse();
                            cancellation.setCancellationAuthorisationMandated(needAuthorization(response));
-                           cancellation.setTransactionStatus(SpiTransactionStatus.valueOf(response.getTransactionStatus().name()));
+                           cancellation.setTransactionStatus(TransactionStatus.valueOf(response.getTransactionStatus().name()));
                            return cancellation;
                        }).orElseGet(SpiPaymentCancellationResponse::new);
     }//Direct mapping no testing necessary

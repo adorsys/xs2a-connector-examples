@@ -7,10 +7,10 @@ import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
 import de.adorsys.psd2.xs2a.core.pis.PisDayOfExecution;
 import de.adorsys.psd2.xs2a.core.pis.PisExecutionRule;
+import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.code.SpiFrequencyCode;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
-import de.adorsys.psd2.xs2a.spi.domain.common.SpiTransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiAddress;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
@@ -137,7 +137,7 @@ public class LedgersSpiPaymentMapperTest {
         spiPayment.setCreditorName("Rozetka.ua");
         spiPayment.setCreditorAddress(new SpiAddress("SomeStreet", "666", "Kiev", "04210", "Ukraine"));
         spiPayment.setRemittanceInformationUnstructured("remittance");
-        spiPayment.setPaymentStatus(SpiTransactionStatus.RCVD);
+        spiPayment.setPaymentStatus(TransactionStatus.RCVD);
         spiPayment.setRequestedExecutionDate(LocalDate.of(2018, 12, 12));
         spiPayment.setRequestedExecutionTime(OffsetDateTime.of(LocalDate.of(2018, 12, 12), LocalTime.of(12, 0), ZoneOffset.UTC));
         return spiPayment;
@@ -154,7 +154,7 @@ public class LedgersSpiPaymentMapperTest {
         spiPayment.setCreditorName("Rozetka.ua");
         spiPayment.setCreditorAddress(new SpiAddress("SomeStreet", "666", "Kiev", "04210", "Ukraine"));
         spiPayment.setRemittanceInformationUnstructured("remittance");
-        spiPayment.setPaymentStatus(SpiTransactionStatus.RCVD);
+        spiPayment.setPaymentStatus(TransactionStatus.RCVD);
         spiPayment.setRequestedExecutionDate(LocalDate.of(2018, 12, 12));
         spiPayment.setRequestedExecutionTime(OffsetDateTime.of(LocalDate.of(2018, 12, 12), LocalTime.of(12, 0), ZoneOffset.UTC));
 
@@ -172,7 +172,7 @@ public class LedgersSpiPaymentMapperTest {
         payment.setBatchBookingPreferred(false);
         payment.setDebtorAccount(getDebtorAcc());
         payment.setRequestedExecutionDate(LocalDate.of(2018, 12, 12));
-        payment.setPaymentStatus(SpiTransactionStatus.RCVD);
+        payment.setPaymentStatus(TransactionStatus.RCVD);
         SpiSinglePayment one = getSpiSingle();
         one.setPaymentId("myPaymentId1");
         one.setEndToEndIdentification("123456788");
@@ -206,7 +206,7 @@ public class LedgersSpiPaymentMapperTest {
     private SpiBulkPaymentInitiationResponse getBulkResponse() {
         SpiBulkPaymentInitiationResponse resp = new SpiBulkPaymentInitiationResponse();
         resp.setPaymentId("myPaymentId");
-        resp.setTransactionStatus(SpiTransactionStatus.RCVD);
+        resp.setTransactionStatus(TransactionStatus.RCVD);
         resp.setPayments(getBulk().getPayments());
         return resp;
     }
