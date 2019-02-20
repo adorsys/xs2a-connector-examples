@@ -122,9 +122,9 @@ spring:
     change-log: classpath:/master.xml
 db:
   host: localhost
-  user: cms
-  password: cms
-  database: consent
+  user: ledgers
+  password: ledgers
+  database: ledgers
   port: 5432
   url: jdbc:postgresql://${db.host}:${db.port}/${db.database}?currentSchema=consent
   
