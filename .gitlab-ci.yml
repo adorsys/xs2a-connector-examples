@@ -65,7 +65,7 @@ variables: &variables
 
 .build_java: &build_java
   stage: "build:src"
-  image: "adorsys/openjdk-build-base:8"
+  image: "adorsys/ci-build"
   script:
   - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
   - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
@@ -133,7 +133,7 @@ build_package:
 
 pmd_report:
   stage: "build:src"
-  image: "adorsys/openjdk-build-base:8"
+  image: "adorsys/ci-build"
   script:
   - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
   - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
@@ -148,7 +148,7 @@ pmd_report:
 
 check_pmd:
   stage: "build:qa"
-  image: "adorsys/openjdk-build-base:8"
+  image: "adorsys/ci-build"
   script:
   - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
   - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
@@ -156,7 +156,7 @@ check_pmd:
 
 check_javadoc:
   stage: "build:qa"
-  image: "adorsys/openjdk-build-base:8"
+  image: "adorsys/ci-build"
   script:
   - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
   - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
@@ -169,7 +169,7 @@ check_javadoc:
 
 unit_tests:
   stage: "build:qa"
-  image: "adorsys/openjdk-build-base:8"
+  image: "adorsys/ci-build"
   script:
   - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
   - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
