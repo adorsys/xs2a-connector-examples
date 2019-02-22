@@ -34,6 +34,7 @@ spring:
       hibernate.jdbc.lob.non_contextual_creation: true
       hibernate.naming-strategy: org.hibernate.cfg.ImprovedNamingStrategy
       hibernate.default_schema: consent
+      hibernate.show_sql: false
   jackson:
     serialization:
       write_dates_as_timestamps: false
@@ -96,6 +97,8 @@ spring:
   jpa:
     properties:
       hibernate.default_schema: consent
+      hibernate.show_sql: false
+    show-sql: false
 
 db:
   host: localhost
@@ -110,8 +113,8 @@ spring:
 
 logging.level.org.postgresql: INFO
 logging.level.org.hibernate.SQL: WARN
-logging.level.org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-logging.level.org.springframework: TRACE
+logging.level.org.hibernate.type.descriptor.sql.BasicBinder: WARN
+logging.level.org.springframework: WARN
 
 management.endpoints.web.exposure.include: "*"
 management.endpoints.web.exposure.exclude: env,beans
