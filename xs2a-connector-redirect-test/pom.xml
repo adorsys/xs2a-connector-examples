@@ -220,6 +220,9 @@
 								<argument>--spring.profiles.active=h2</argument>
 								<argument>--ledgers.mockbank.data.load=true</argument>
 								<argument>--spring.jpa.show-sql=false</argument>
+								<argument>--log4j.logger.org.springframework=WARN</argument>
+								<argument>--logging.level.root=WARN</argument>
+								<argument>--logging.level.org.springframework.boot=WARN</argument>
 							</arguments>
 						</configuration>
 					</execution>
@@ -241,6 +244,9 @@
 								<argument>-jar</argument>
 								<argument>${project.build.directory}/aspsp-profile/aspsp-profile.jar</argument>
 								<argument>--bank_profile.path=${project.build.directory}/test-classes/bank_profile_ledgers.yml</argument>
+								<argument>--log4j.logger.org.springframework=WARN</argument>
+								<argument>--logging.level.root=WARN</argument>
+								<argument>--logging.level.org.springframework.boot=WARN</argument>
 							</arguments>
 						</configuration>
 					</execution>
@@ -265,6 +271,9 @@
 								<argument>--spring.profiles.active=h2</argument>
 								<argument>--security.basic.enabled=false</argument>
 								<argument>--spring.config.location=${project.build.directory}/test-classes/consent-management-application.yml</argument>
+								<argument>--log4j.logger.org.springframework=WARN</argument>
+								<argument>--logging.level.root=WARN</argument>
+								<argument>--logging.level.org.springframework.boot=WARN</argument>
 							</arguments>
 						</configuration>
 					</execution>
@@ -288,6 +297,9 @@
 								<argument>${project.build.directory}/gateway/gateway-app.jar</argument>
 								<argument>--spring.profiles.active=mockspi</argument>
 								<argument>--security.basic.enabled=false</argument>
+								<argument>--log4j.logger.org.springframework=WARN</argument>
+								<argument>--logging.level.root=WARN</argument>
+								<argument>--logging.level.org.springframework.boot=WARN</argument>
 							</arguments>
 						</configuration>
 					</execution>
@@ -309,6 +321,9 @@
 								<argument>java</argument>
 								<argument>-jar</argument>
 								<argument>${project.build.directory}/online-banking/online-banking-app.jar</argument>
+								<argument>--log4j.logger.org.springframework=WARN</argument>
+								<argument>--logging.level.root=WARN</argument>
+								<argument>--logging.level.org.springframework.boot=WARN</argument>
 							</arguments>
 						</configuration>
 					</execution>
