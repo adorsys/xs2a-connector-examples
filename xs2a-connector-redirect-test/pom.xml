@@ -219,6 +219,7 @@
 								<argument>${project.build.directory}/ledgers/ledgers-app.jar</argument>
 								<argument>--spring.profiles.active=h2</argument>
 								<argument>--ledgers.mockbank.data.load=true</argument>
+								<argument>--spring.jpa.show-sql=false</argument>
 							</arguments>
 						</configuration>
 					</execution>
