@@ -8,7 +8,7 @@ ENV JAVA_TOOL_OPTIONS -Xmx1024m
 
 WORKDIR /opt/ledgers
 
-COPY ./xs2a-connector-starter/target/ledgers/ledgers-app.jar /opt/ledgers/ledgers-app.jar
+COPY ./target/ledgers/ledgers-app.jar /opt/ledgers/ledgers-app.jar
 
 EXPOSE 8088
 
