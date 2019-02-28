@@ -7,6 +7,8 @@ import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
 
 import java.util.List;
 import java.util.Optional;
@@ -83,6 +85,12 @@ public abstract class LedgersSpiAccountMapper {
     } //Full manual mapping here, no extra tests necessary
 
     public abstract List<SpiAccountBalance> toSpiAccountBalancesList(List<AccountBalanceTO> accountBalanceTOS);
+
+    @Mappings({
+            @Mapping(constant = "INTERIM_AVAILABLE", target = "spiBalanceType"),//TODO fix this after update of balanceType at Ledgers
+            // @Mapping(source = "balanceType", target = "spiBalanceType"),
+            @Mapping(source = "amount", target = "spiBalanceAmount")})
+    public abstract SpiAccountBalance accountBalanceTOToSpiAccountBalance(AccountBalanceTO accountBalanceTO);
 
     public abstract List<SpiExchangeRate> toSpiExchangeRateList(List<ExchangeRateTO> exchangeRates);
 

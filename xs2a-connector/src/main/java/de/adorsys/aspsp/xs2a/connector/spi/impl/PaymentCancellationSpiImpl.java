@@ -82,8 +82,10 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     @Override
     public @NotNull SpiResponse<SpiPaymentCancellationResponse> initiatePaymentCancellation(@NotNull SpiContextData contextData, @NotNull SpiPayment payment, @NotNull AspspConsentData aspspConsentData) {
         SpiPaymentCancellationResponse response = new SpiPaymentCancellationResponse();
-        response.setCancellationAuthorisationMandated(true);
-        response.setTransactionStatus(payment.getPaymentStatus()); //TODO to be fixed after implementation of https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/633
+        boolean cancellationMandated = payment.getPaymentStatus() != TransactionStatus.RCVD;
+        response.setCancellationAuthorisationMandated(cancellationMandated);
+        response.setTransactionStatus(payment.getPaymentStatus());
+        //TODO to be fixed after implementation of https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/633
         return SpiResponse.<SpiPaymentCancellationResponse>builder().aspspConsentData(aspspConsentData).payload(response).success();
     }
 
@@ -143,6 +145,10 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     public SpiResponse<List<SpiAuthenticationObject>> requestAvailableScaMethods(@NotNull SpiContextData contextData, SpiPayment businessObject, @NotNull AspspConsentData aspspConsentData) {
         SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class);
         authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
+        if (businessObject.getPaymentStatus()==TransactionStatus.RCVD)
+        {
+            return SpiResponse.<List<SpiAuthenticationObject>>builder().payload(Collections.emptyList()).aspspConsentData(aspspConsentData).success();
+        }
         ResponseEntity<SCAPaymentResponseTO> cancelSCA = paymentRestClient.getCancelSCA(sca.getPaymentId(), sca.getAuthorisationId());
 
         List<SpiAuthenticationObject> authenticationObjectList = Optional.ofNullable(cancelSCA.getBody())
