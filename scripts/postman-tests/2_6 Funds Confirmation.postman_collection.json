@@ -1,0 +1,126 @@
+{
+	"info": {
+		"_postman_id": "91b1a8a5-2832-462e-9c05-955320638d5d",
+		"name": "2_6 Funds Confirmation",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Local",
+			"item": [
+				{
+					"name": "Fund confirmation request(sufficient)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "02b43079-3a6d-4e12-b69f-0a6d74a5c9b9",
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"const jsonData = pm.response.json();",
+									"",
+									"pm.test(\"Funds are available\", () => {",
+									"    pm.expect(jsonData).to.have.property('fundsAvailable'/*,true*/);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Request-ID",
+								"value": "{{x_request_id}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"account\": {\n   \"currency\": \"EUR\",\n   \"iban\": \"DE80760700240271232400\"\n},\n  \"cardNumber\": \"12345\",\n  \"instructedAmount\": {\n    \"amount\": \"160.00\",\n    \"currency\": \"EUR\"\n  },\n  \"payee\": \"Check24\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{url_xs2a}}/v1/funds-confirmations",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{url_xs2a}}"
+							],
+							"path": [
+								"v1",
+								"funds-confirmations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Fund confirmation request failure - no consent",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ff8da433-7a07-44be-8f3b-18b88ed71393",
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"const jsonData = pm.response.json();",
+									"",
+									"pm.test(\"Funds are available\", () => {",
+									"    pm.expect(jsonData.tppMessages[0]).to.have.property('code', \"NO_PIIS_ACTIVATION\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Request-ID",
+								"value": "{{x_request_id}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"account\": {\n   \"currency\": \"EUR\",\n   \"iban\": \"DE89370400440532013000\"\n},\n  \"cardNumber\": \"12345\",\n  \"instructedAmount\": {\n    \"amount\": \"1600.00\",\n    \"currency\": \"EUR\"\n  },\n  \"payee\": \"Check24\"\n}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{url_xs2a}}/v1/funds-confirmations",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{url_xs2a}}"
+							],
+							"path": [
+								"v1",
+								"funds-confirmations"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
