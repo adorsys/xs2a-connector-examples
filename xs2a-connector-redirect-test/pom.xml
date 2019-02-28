@@ -172,6 +172,30 @@
 					<skip>${skipITs}</skip>
 				</configuration>
 				<executions>
+					<!-- ONLINE BANKING APP -->
+					<execution>
+						<id>online-banking-app</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>start</goal>
+						</goals>
+						<configuration>
+							<name>ONLINE BANKING</name>
+							<workingDir>${project.build.directory}/online-banking</workingDir>
+							<waitForInterrupt>false</waitForInterrupt>
+							<healthcheckUrl>http://localhost:8090/actuator/health</healthcheckUrl>
+							<!-- java -jar target/online-banking/online-banking-app.jar - -spring.profiles.active=mockspi 
+								- -security.basic.enabled=false -->
+							<arguments>
+								<argument>java</argument>
+								<argument>-jar</argument>
+								<argument>${project.build.directory}/online-banking/online-banking-app.jar</argument>
+								<argument>--log4j.logger.org.springframework=WARN</argument>
+								<argument>--logging.level.root=WARN</argument>
+								<argument>--logging.level.org.springframework.boot=WARN</argument>
+							</arguments>
+						</configuration>
+					</execution>
 					<!-- MAIL SERVER -->
 					<execution>
 						<id>faksmtp-process</id>
@@ -219,6 +243,10 @@
 								<argument>${project.build.directory}/ledgers/ledgers-app.jar</argument>
 								<argument>--spring.profiles.active=h2</argument>
 								<argument>--ledgers.mockbank.data.load=true</argument>
+								<argument>--spring.jpa.show-sql=false</argument>
+								<argument>--log4j.logger.org.springframework=WARN</argument>
+								<argument>--logging.level.root=WARN</argument>
+								<argument>--logging.level.org.springframework.boot=WARN</argument>
 							</arguments>
 						</configuration>
 					</execution>
@@ -240,6 +268,9 @@
 								<argument>-jar</argument>
 								<argument>${project.build.directory}/aspsp-profile/aspsp-profile.jar</argument>
 								<argument>--bank_profile.path=${project.build.directory}/test-classes/bank_profile_ledgers.yml</argument>
+								<argument>--log4j.logger.org.springframework=WARN</argument>
+								<argument>--logging.level.root=WARN</argument>
+								<argument>--logging.level.org.springframework.boot=WARN</argument>
 							</arguments>
 						</configuration>
 					</execution>
@@ -264,6 +295,9 @@
 								<argument>--spring.profiles.active=h2</argument>
 								<argument>--security.basic.enabled=false</argument>
 								<argument>--spring.config.location=${project.build.directory}/test-classes/consent-management-application.yml</argument>
+								<argument>--log4j.logger.org.springframework=WARN</argument>
+								<argument>--logging.level.root=WARN</argument>
+								<argument>--logging.level.org.springframework.boot=WARN</argument>
 							</arguments>
 						</configuration>
 					</execution>
@@ -287,27 +321,9 @@
 								<argument>${project.build.directory}/gateway/gateway-app.jar</argument>
 								<argument>--spring.profiles.active=mockspi</argument>
 								<argument>--security.basic.enabled=false</argument>
-							</arguments>
-						</configuration>
-					</execution>
-					<!-- ONLINE BANKING APP -->
-					<execution>
-						<id>online-banking-app</id>
-						<phase>pre-integration-test</phase>
-						<goals>
-							<goal>start</goal>
-						</goals>
-						<configuration>
-							<name>ONLINE BANKING</name>
-							<workingDir>${project.build.directory}/online-banking</workingDir>
-							<waitForInterrupt>false</waitForInterrupt>
-							<healthcheckUrl>http://localhost:8090/actuator/health</healthcheckUrl>
-							<!-- java -jar target/online-banking/online-banking-app.jar - -spring.profiles.active=mockspi 
-								- -security.basic.enabled=false -->
-							<arguments>
-								<argument>java</argument>
-								<argument>-jar</argument>
-								<argument>${project.build.directory}/online-banking/online-banking-app.jar</argument>
+								<argument>--log4j.logger.org.springframework=WARN</argument>
+								<argument>--logging.level.root=WARN</argument>
+								<argument>--logging.level.org.springframework.boot=WARN</argument>
 							</arguments>
 						</configuration>
 					</execution>

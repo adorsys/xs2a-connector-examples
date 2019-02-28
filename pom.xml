@@ -30,10 +30,9 @@
 		<module>online-banking-app</module>
 		<module>consent-psu-rest-client</module>
 		<module>xs2a-connector-remote</module>
-		<module>xs2a-connector-redirect-test</module>
-		<module>xs2a-connector-embedded-test</module>
 		<module>xs2a-rest-client</module>
 		<module>oba-rest-client</module>
+		<module>xs2a-connector-redirect-test</module>
 	</modules>
 
 	<url>https://github.com/adorsys/xs2a-connector-examples</url>
@@ -100,6 +99,8 @@
 		<sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
 		<sonar.language>java</sonar.language>
 		<sonar.coverage.exclusions>**/*Entity.java,**/*TO.java,**/*Exception.java,**/*Config.java</sonar.coverage.exclusions>
+		<skipITs>true</skipITs>
+		<skipTests>false</skipTests>
 	</properties>
 
 	<repositories>

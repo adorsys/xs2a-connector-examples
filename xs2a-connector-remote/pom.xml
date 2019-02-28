@@ -204,6 +204,9 @@
 								<argument>-jar</argument>
 								<argument>${project.build.directory}/aspsp-profile/aspsp-profile.jar</argument>
 								<argument>--bank_profile.path=${project.build.directory}/test-classes/bank_profile_ledgers.yml</argument>
+								<argument>--log4j.logger.org.springframework=WARN</argument>
+								<argument>--logging.level.root=WARN</argument>
+								<argument>--logging.level.org.springframework.boot=WARN</argument>
 							</arguments>
 						</configuration>
 					</execution>
