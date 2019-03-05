@@ -28,7 +28,7 @@ variables: &variables
   GITLAB_REGISTRY: "gitlab-registry.adorsys.de"
   GITLAB_NAMESPACE: "adorsys/xs2a/xs2a-connector-examples"
 
-  SONAR_HOST: "https://bg-sonarqube.cloud.adorsys.de"
+  SONAR_HOST: "https://psd2-quality.cloud.adorsys.de"
 
   DOCKER_NAMESPACE: "adorsys"
 
