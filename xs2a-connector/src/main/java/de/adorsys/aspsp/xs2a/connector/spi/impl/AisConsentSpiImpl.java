@@ -29,7 +29,9 @@ import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
 import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.ConsentRestClient;
+import de.adorsys.psd2.xs2a.core.ais.AccountAccessType;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
+import de.adorsys.psd2.xs2a.core.consent.ConsentStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountConsent;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
@@ -37,8 +39,8 @@ import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
-import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccessType;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiInitiateAisConsentResponse;
+import de.adorsys.psd2.xs2a.spi.domain.consent.SpiVerifyScaAuthorisationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse.VoidResponse;
@@ -99,7 +101,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         SCAConsentResponseTO consentResponse = initiateConsentInternal(accountConsent, initialAspspConsentData);
         SpiAccountAccess accountAccess = accountConsent.getAccess();
         return SpiResponse.<SpiInitiateAisConsentResponse>builder()
-                       .payload(new SpiInitiateAisConsentResponse(accountAccess))
+                       .payload(new SpiInitiateAisConsentResponse(accountAccess, false))
                        .aspspConsentData(consentDataService.store(consentResponse, initialAspspConsentData))
                        // Pass sca status as message.
                        .message(consentResponse.getScaStatus().name()).success();
@@ -130,9 +132,9 @@ public class AisConsentSpiImpl implements AisConsentSpi {
      *
      */
     @Override
-    public @NotNull SpiResponse<VoidResponse> verifyScaAuthorisation(@NotNull SpiContextData contextData,
-                                                                     @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiAccountConsent accountConsent,
-                                                                     @NotNull AspspConsentData aspspConsentData) {
+    public @NotNull SpiResponse<SpiVerifyScaAuthorisationResponse> verifyScaAuthorisation(@NotNull SpiContextData contextData,
+                                                                                          @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiAccountConsent accountConsent,
+                                                                                          @NotNull AspspConsentData aspspConsentData) {
         try {
             SCAConsentResponseTO sca = consentDataService.response(aspspConsentData, SCAConsentResponseTO.class);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
@@ -141,7 +143,8 @@ public class AisConsentSpiImpl implements AisConsentSpi {
                                                                                     .authorizeConsent(sca.getConsentId(), sca.getAuthorisationId(), spiScaConfirmation.getTanNumber());
             SCAConsentResponseTO consentResponse = authorizeConsentResponse.getBody();
 
-            return SpiResponse.<SpiResponse.VoidResponse>builder().payload(SpiResponse.voidResponse())
+            // TODO use real sca status from Ledgers for resolving consent status https://git.adorsys.de/adorsys/xs2a/ledgers/issues/206
+            return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder().payload(new SpiVerifyScaAuthorisationResponse(ConsentStatus.VALID))
                            .aspspConsentData(consentDataService.store(consentResponse, aspspConsentData))
                            .message(consentResponse.getScaStatus().name()).success();
         } finally {
@@ -282,7 +285,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             // Issue: https://git.adorsys.de/adorsys/xs2a/ledgers/issues/169
             // TODO FIXME waiting for Issue https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/647
             if (isEmpty(accountConsent)) {
-                accountConsent.getAccess().setAllPsd2(SpiAccountAccessType.ALL_ACCOUNTS);
+                accountConsent.getAccess().setAllPsd2(AccountAccessType.ALL_ACCOUNTS);
             }
             AisConsentTO aisConsent = aisConsentMapper.toTo(accountConsent);
 

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
 import org.apache.commons.collections4.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -121,6 +122,7 @@ public class AccountSpiImpl implements AccountSpi {
 	@Override
 	public SpiResponse<SpiTransactionReport> requestTransactionsForAccount(@NotNull SpiContextData contextData,
 			String acceptMediaType, boolean withBalance, @NotNull LocalDate dateFrom, @NotNull LocalDate dateTo,
+			@NotNull BookingStatus bookingStatus,
 			@NotNull SpiAccountReference accountReference, @NotNull SpiAccountConsent accountConsent,
 			@NotNull AspspConsentData aspspConsentData) {
 		try {
@@ -243,7 +245,7 @@ public class AccountSpiImpl implements AccountSpi {
 			AspspConsentData aspspConsentData) {
 		try {
 			auth(aspspConsentData);
-			
+
 			return Optional.ofNullable(accountRestClient.getListOfAccounts().getBody())
 					.map(l -> l.stream().map(accountMapper::toSpiAccountDetails).collect(Collectors.toList()))
 					.orElseGet(Collections::emptyList);
@@ -276,11 +278,11 @@ public class AccountSpiImpl implements AccountSpi {
 
 		try {
 			auth(aspspConsentData);
-			
+
 			// TODO don't use IBAN as an account identifier
 			// https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/440
 			AccountDetailsTO response = accountRestClient.getAccountDetailsByIban(reference.getIban()).getBody();
-	
+
 			// TODO don't use currency as an account identifier
 			// https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/440
 			return Optional.ofNullable(response).map(accountMapper::toSpiAccountDetails);
@@ -301,7 +303,7 @@ public class AccountSpiImpl implements AccountSpi {
 		logger.error(e.getMessage());
 		return e.status() == 500 ? SpiResponseStatus.TECHNICAL_FAILURE : SpiResponseStatus.LOGICAL_FAILURE;
 	}
-	
+
 	private SCAResponseTO auth(AspspConsentData aspspConsentData) {
 		SCAResponseTO sca = tokenService.response(aspspConsentData);
 		authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());

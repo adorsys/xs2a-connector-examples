@@ -63,6 +63,12 @@
 			<organization>LLC Golden Dimension</organization>
 			<organizationUrl>https://adorsys.com.ua/</organizationUrl>
 		</developer>
+		<developer>
+			<name>Petro Rudenko</name>
+			<email>pru@adorsys.com.ua</email>
+			<organization>LLC Golden Dimension</organization>
+			<organizationUrl>https://adorsys.com.ua/</organizationUrl>
+		</developer>
 	</developers>
 
 	<properties>
@@ -77,7 +83,7 @@
 		<java.version>1.8</java.version>
 		<pmd.plugin.version>3.10.0</pmd.plugin.version>
 		<!-- xs2a version -->
-		<xs2a.version>1.17</xs2a.version>
+		<xs2a.version>2.0</xs2a.version>
 		<!-- other properties -->
 		<spring-boot-dependencies.version>2.1.1.RELEASE</spring-boot-dependencies.version>
 		<spring-cloud-dependencies.version>Greenwich.M3</spring-cloud-dependencies.version>
