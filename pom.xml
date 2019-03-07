@@ -22,16 +22,13 @@
 	<description>OpenSource Implementation Of XS2A connector examples</description>
 
 	<modules>
-		<module>oba-rest-api</module>
 		<module>ledgers-rest-client</module>
 		<module>xs2a-connector</module>
 		<module>consent-management-server</module>
 		<module>gateway-app</module>
-		<module>online-banking-app</module>
 		<module>consent-psu-rest-client</module>
 		<module>xs2a-connector-remote</module>
 		<module>xs2a-rest-client</module>
-		<module>oba-rest-client</module>
 		<module>xs2a-connector-redirect-test</module>
 	</modules>
 
