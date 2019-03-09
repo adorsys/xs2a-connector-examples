@@ -292,7 +292,7 @@
 							"    pm.expect(chosenScaMethod.authenticationType).to.eql('SMS_OTP');*/",
 							"    ",
 							"    pm.expect(chosenScaMethod).to.have.property('authenticationMethodId');",
-							"    pm.expect(chosenScaMethod.authenticationMethodId).to.eql('bKLq119_SJomg8FlC_Y4Gs');",
+							"    //pm.expect(chosenScaMethod.authenticationMethodId).to.eql(pm.globals.get(\"authentication_method_id\"));",
 							"});",
 							"",
 							"pm.test(\"Challenge data exist\", () => {",
@@ -563,7 +563,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"scaAuthenticationData\": \"123456\"\n}"
+					"raw": "{\n\t\"scaAuthenticationData\": \"{{tan}}\"\n}"
 				},
 				"url": {
 					"raw": "{{protocol}}://{{url_xs2a}}/v1/consents/{{consent_id}}/authorisations/{{authorisation_id}}",

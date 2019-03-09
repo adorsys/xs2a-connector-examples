@@ -813,7 +813,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n\t\"scaAuthenticationData\": \"123456\"\n}"
+					"raw": "{\n\t\"scaAuthenticationData\": \"{{tan}}\"\n}"
 				},
 				"url": {
 					"raw": "{{protocol}}://{{url_xs2a}}/v1/{{payment_service}}/{{payment_product}}/{{payment_id}}/authorisations/{{authorisation_id}}",

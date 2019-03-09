@@ -97,14 +97,14 @@
 									"script": {
 										"id": "898a97c1-12fd-4166-82b5-9a8f4fc1106c",
 										"exec": [
-											"pm.test(\"Status code is 200\", () => {",
-											"    pm.response.to.have.status(200);",
+											"pm.test(\"Status code is 201\", () => {",
+											"    pm.response.to.have.status(201);",
 											"});",
 											"",
 											"const jsonData = pm.response.json();",
 											"",
-											"pm.test(\"Sca status is psuAuthenticated\", () => {",
-											"    pm.expect(jsonData.scaStatus).to.eql('psuAuthenticated');",
+											"pm.test(\"Sca status is started\", () => {",
+											"    pm.expect(jsonData.scaStatus).to.eql('started');",
 											"});",
 											"",
 											"// splits string link by '/' to array and gets the last element - authorisationId",
@@ -327,14 +327,14 @@
 									"script": {
 										"id": "898a97c1-12fd-4166-82b5-9a8f4fc1106c",
 										"exec": [
-											"pm.test(\"Status code is 200\", () => {",
-											"    pm.response.to.have.status(200);",
+											"pm.test(\"Status code is 201\", () => {",
+											"    pm.response.to.have.status(201);",
 											"});",
 											"",
 											"const jsonData = pm.response.json();",
 											"",
-											"pm.test(\"Sca status is psuAuthenticated\", () => {",
-											"    pm.expect(jsonData.scaStatus).to.eql('psuAuthenticated');",
+											"pm.test(\"Sca status is started\", () => {",
+											"    pm.expect(jsonData.scaStatus).to.eql('started');",
 											"});",
 											"",
 											"// splits string link by '/' to array and gets the last element - authorisationId",
@@ -519,7 +519,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"scaAuthenticationData\": \"123456\"\n}"
+									"raw": "{\n\t\"scaAuthenticationData\": \"{{tan}}\"\n}"
 								},
 								"url": {
 									"raw": "{{protocol}}://{{url_xs2a}}/v1/consents/{{consent_id}}/authorisations/{{authorisation_id}}",
@@ -667,7 +667,7 @@
 											"",
 											"const jsonData = pm.response.json();",
 											"",
-											"pm.test(\"Sca status is psuAuthenticated\", () => {",
+											"pm.test(\"Sca status is started\", () => {",
 											"    pm.expect(jsonData.scaStatus).to.eql('started');",
 											"});",
 											"",
@@ -924,7 +924,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"scaAuthenticationData\": \"123456\"\n}"
+									"raw": "{\n\t\"scaAuthenticationData\": \"{{tan}}\"\n}"
 								},
 								"url": {
 									"raw": "{{protocol}}://{{url_xs2a}}/v1/consents/{{consent_id}}/authorisations/{{authorisation_id}}",
@@ -989,7 +989,7 @@
 											"// splits string link by '/' to array and gets the last element - authorisationId",
 											"// e.g. \"http://localhost:8080/v1/consents/d917f39f-6308-4f81-9b51-bfbd8bc934c6/authorisations/554fda7d-bc70-44da-8670-15e299f817a6\"",
 											"      // needs to get 554fda7d-bc70-44da-8670-15e299f817a6 value",
-											"const authorisationId = jsonData.links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+											"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
 											"",
 											"pm.globals.set(\"authorisation_id\", authorisationId);"
 										],
@@ -1027,7 +1027,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n      \"access\": {\n        \"accounts\": [\n          {\n            \"currency\": \"EUR\",\n            \"iban\": \"DE52500105173911841934\"\n          }\n        ],\n        \"balances\": [\n          {\n            \"currency\": \"EUR\",\n            \"iban\": \"DE52500105173911841934\"\n          }\n        ],\n        \"transactions\": [\n          {\n            \"currency\": \"EUR\",\n            \"iban\": \"DE52500105173911841934\"\n          }\n        ]\n      },\n      \"combinedServiceIndicator\": false,\n      \"frequencyPerDay\": 400,\n      \"recurringIndicator\": false,\n      \"validUntil\": \"2018-11-30\"\n    }"
+									"raw": "{\n  \"access\": {\n    \"accounts\": [\n      {\n        \"currency\": \"EUR\",\n        \"iban\": \"DE69760700240340283600\"\n      }\n    ],\n    \"balances\": [\n      {\n        \"currency\": \"EUR\",\n        \"iban\": \"DE69760700240340283600\"\n      }\n    ],\n    \"transactions\": [\n      {\n       \"currency\": \"EUR\",\n        \"iban\": \"DE69760700240340283600\"\n      }\n    ]\n  },\n  \"combinedServiceIndicator\": true,\n  \"frequencyPerDay\": 15,\n  \"recurringIndicator\": true,\n  \"validUntil\": \"2019-10-10\"\n}"
 								},
 								"url": {
 									"raw": "{{protocol}}://{{url_xs2a}}/v1/consents",
@@ -1142,7 +1142,7 @@
 											"// splits string link by '/' to array and gets the last element - authorisationId",
 											"// e.g. \"http://localhost:8080/v1/consents/d917f39f-6308-4f81-9b51-bfbd8bc934c6/authorisations/554fda7d-bc70-44da-8670-15e299f817a6\"",
 											"      // needs to get 554fda7d-bc70-44da-8670-15e299f817a6 value",
-											"const authorisationId = jsonData.links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+											"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
 											"",
 											"pm.globals.set(\"authorisation_id\", authorisationId);"
 										],
@@ -1180,7 +1180,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n      \"access\": {\n        \"accounts\": [\n          {\n            \"currency\": \"EUR\",\n            \"iban\": \"DE52500105173911841934\"\n          }\n        ],\n        \"balances\": [\n          {\n            \"currency\": \"EUR\",\n            \"iban\": \"DE52500105173911841934\"\n          }\n        ],\n        \"transactions\": [\n          {\n            \"currency\": \"EUR\",\n            \"iban\": \"DE52500105173911841934\"\n          }\n        ]\n      },\n      \"combinedServiceIndicator\": false,\n      \"frequencyPerDay\": 400,\n      \"recurringIndicator\": false,\n      \"validUntil\": \"2018-11-30\"\n    }"
+									"raw": "{\n  \"access\": {\n    \"accounts\": [\n      {\n        \"currency\": \"EUR\",\n        \"iban\": \"DE80760700240271232400\"\n      }\n    ],\n    \"balances\": [\n      {\n        \"currency\": \"EUR\",\n        \"iban\": \"DE80760700240271232400\"\n      }\n    ],\n    \"transactions\": [\n      {\n       \"currency\": \"EUR\",\n        \"iban\": \"DE80760700240271232400\"\n      }\n    ]\n  },\n  \"combinedServiceIndicator\": true,\n  \"frequencyPerDay\": 15,\n  \"recurringIndicator\": true,\n  \"validUntil\": \"2019-10-10\"\n}"
 								},
 								"url": {
 									"raw": "{{protocol}}://{{url_xs2a}}/v1/consents",
@@ -1317,7 +1317,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"scaAuthenticationData\": \"cD9GLi\"\n}"
+									"raw": "{\n\t\"scaAuthenticationData\": \"{{tan}}\"\n}"
 								},
 								"url": {
 									"raw": "{{protocol}}://{{url_xs2a}}/v1/consents/{{consent_id}}/authorisations/{{authorisation_id}}",
@@ -1399,7 +1399,7 @@
 											"// splits string link by '/' to array and gets the last element - authorisationId",
 											"// e.g. \"http://localhost:8080/v1/consents/d917f39f-6308-4f81-9b51-bfbd8bc934c6/authorisations/554fda7d-bc70-44da-8670-15e299f817a6\"",
 											"      // needs to get 554fda7d-bc70-44da-8670-15e299f817a6 value",
-											"const authorisationId = jsonData.links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+											"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
 											"",
 											"pm.globals.set(\"authorisation_id\", authorisationId);"
 										],
@@ -1437,7 +1437,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n      \"access\": {\n        \"accounts\": [\n          {\n            \"currency\": \"EUR\",\n            \"iban\": \"DE52500105173911841934\"\n          }\n        ],\n        \"balances\": [\n          {\n            \"currency\": \"EUR\",\n            \"iban\": \"DE52500105173911841934\"\n          }\n        ],\n        \"transactions\": [\n          {\n            \"currency\": \"EUR\",\n            \"iban\": \"DE52500105173911841934\"\n          }\n        ]\n      },\n      \"combinedServiceIndicator\": false,\n      \"frequencyPerDay\": 400,\n      \"recurringIndicator\": false,\n      \"validUntil\": \"2018-11-30\"\n    }"
+									"raw": "{\n  \"access\": {\n    \"accounts\": [\n      {\n        \"currency\": \"EUR\",\n        \"iban\": \"DE38760700240320465700\"\n      }\n    ],\n    \"balances\": [\n      {\n        \"currency\": \"EUR\",\n        \"iban\": \"DE38760700240320465700\"\n      }\n    ],\n    \"transactions\": [\n      {\n       \"currency\": \"EUR\",\n        \"iban\": \"DE38760700240320465700\"\n      }\n    ]\n  },\n  \"combinedServiceIndicator\": true,\n  \"frequencyPerDay\": 15,\n  \"recurringIndicator\": true,\n  \"validUntil\": \"2019-10-10\"\n}"
 								},
 								"url": {
 									"raw": "{{protocol}}://{{url_xs2a}}/v1/consents",
@@ -1476,7 +1476,14 @@
 											"    pm.expect(jsonData).to.have.property('_links');",
 											"    const _links = jsonData._links;",
 											"    pm.expect(_links).to.have.property('selectAuthenticationMethod');",
-											"});"
+											"});",
+											"",
+											"pm.test(\"Expect to have 2 authenticationMethods\", () =>{",
+											"    pm.expect(jsonData.scaMethods[0]).to.have.property('authenticationMethodId');",
+											"    pm.globals.set(\"authentication_method_id\", jsonData.scaMethods[0].authenticationMethodId);",
+											"    ",
+											"    pm.expect(jsonData.scaMethods[1]).to.have.property('authenticationMethodId');",
+											"})"
 										],
 										"type": "text/javascript"
 									}
@@ -1574,7 +1581,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"authenticationMethodId\": \"sms\"\n}"
+									"raw": "{\n\t\"authenticationMethodId\": \"{{authentication_method_id}}\"\n}"
 								},
 								"url": {
 									"raw": "{{protocol}}://{{url_xs2a}}/v1/consents/{{consent_id}}/authorisations/{{authorisation_id}}",
@@ -1644,7 +1651,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"scaAuthenticationData\": \"vtjDOD\"\n}"
+									"raw": "{\n\t\"scaAuthenticationData\": \"{{tan}}\"\n}"
 								},
 								"url": {
 									"raw": "{{protocol}}://{{url_xs2a}}/v1/consents/{{consent_id}}/authorisations/{{authorisation_id}}",
@@ -1706,7 +1713,7 @@
 									"// splits string link by '/' to array and gets the last element - authorisationId",
 									"// e.g. \"http://localhost:8080/v1/consents/d917f39f-6308-4f81-9b51-bfbd8bc934c6/authorisations/554fda7d-bc70-44da-8670-15e299f817a6\"",
 									"      // needs to get 554fda7d-bc70-44da-8670-15e299f817a6 value",
-									"const authorisationId = jsonData.links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+									"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
 									"",
 									"pm.globals.set(\"authorisation_id\", authorisationId);"
 								],
@@ -1744,7 +1751,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"access\": {\n    \"accounts\": [],\n    \"balances\": [],\n    \"allPsd2\": \"allAccounts\",\n    \"transactions\": []\n  },\n  \"combinedServiceIndicator\": true,\n  \"frequencyPerDay\": 10,\n  \"recurringIndicator\": true,\n  \"validUntil\": \"2018-10-10\"\n}"
+							"raw": "{\n  \"access\": {\n    \"accounts\": [],\n    \"balances\": [],\n    \"allPsd2\": \"allAccounts\",\n    \"transactions\": []\n  },\n  \"combinedServiceIndicator\": true,\n  \"frequencyPerDay\": 10,\n  \"recurringIndicator\": true,\n  \"validUntil\": \"2019-10-10\"\n}"
 						},
 						"url": {
 							"raw": "{{protocol}}://{{url_xs2a}}/v1/consents",
@@ -1881,7 +1888,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"scaAuthenticationData\": \"LYHYAr\"\n}"
+							"raw": "{\n\t\"scaAuthenticationData\": \"{{tan}}\"\n}"
 						},
 						"url": {
 							"raw": "{{protocol}}://{{url_xs2a}}/v1/consents/{{consent_id}}/authorisations/{{authorisation_id}}",
@@ -1962,7 +1969,7 @@
 									"// splits string link by '/' to array and gets the last element - authorisationId",
 									"// e.g. \"http://localhost:8080/v1/consents/d917f39f-6308-4f81-9b51-bfbd8bc934c6/authorisations/554fda7d-bc70-44da-8670-15e299f817a6\"",
 									"      // needs to get 554fda7d-bc70-44da-8670-15e299f817a6 value",
-									"const authorisationId = jsonData.links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+									"const authorisationId = jsonData._links.scaStatus.split('/').pop();",
 									"",
 									"pm.globals.set(\"authorisation_id\", authorisationId);"
 								],
@@ -1996,11 +2003,16 @@
 							{
 								"key": "PSU-ID",
 								"value": "{{psu_id_single}}"
+							},
+							{
+								"key": "TPP-REDIRECT-PREFERRED",
+								"value": "true",
+								"type": "text"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n      \"access\": {\n        \"accounts\": [\n        ],\n        \"balances\": [\n        ],\n        \"transactions\": [\n        ]\n      },\n      \"combinedServiceIndicator\": false,\n      \"frequencyPerDay\": 400,\n      \"recurringIndicator\": false,\n      \"validUntil\": \"2018-11-30\"\n    }"
+							"raw": "{\n  \"access\": {\n    \"accounts\": [],\n    \"balances\": [],\n    \"transactions\": []\n  },\n  \"combinedServiceIndicator\": true,\n  \"frequencyPerDay\": 10,\n  \"recurringIndicator\": true,\n  \"validUntil\": \"2019-10-10\"\n}"
 						},
 						"url": {
 							"raw": "{{protocol}}://{{url_xs2a}}/v1/consents",
@@ -2218,7 +2230,7 @@
 									"// splits string link by '/' to array and gets the last element - authorisationId",
 									"// e.g. \"http://localhost:8080/v1/consents/d917f39f-6308-4f81-9b51-bfbd8bc934c6/authorisations/554fda7d-bc70-44da-8670-15e299f817a6\"",
 									"      // needs to get 554fda7d-bc70-44da-8670-15e299f817a6 value",
-									"const authorisationId = jsonData.links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+									"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
 									"",
 									"pm.globals.set(\"authorisation_id\", authorisationId);"
 								],
@@ -2256,7 +2268,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"access\": {\n    \"accounts\": [],\n    \"balances\": [],\n    \"availableAccounts\": \"allAccounts\",\n    \"transactions\": []\n  },\n  \"combinedServiceIndicator\": true,\n  \"frequencyPerDay\": 10,\n  \"recurringIndicator\": true,\n  \"validUntil\": \"2018-10-10\"\n}"
+							"raw": "{\n  \"access\": {\n    \"accounts\": [],\n    \"balances\": [],\n    \"availableAccounts\": \"allAccounts\",\n    \"transactions\": []\n  },\n  \"combinedServiceIndicator\": true,\n  \"frequencyPerDay\": 10,\n  \"recurringIndicator\": true,\n  \"validUntil\": \"2019-10-10\"\n}"
 						},
 						"url": {
 							"raw": "{{protocol}}://{{url_xs2a}}/v1/consents",
@@ -2393,7 +2405,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"scaAuthenticationData\": \"W6PNzJ\"\n}"
+							"raw": "{\n\t\"scaAuthenticationData\": \"{{tan}}\"\n}"
 						},
 						"url": {
 							"raw": "{{protocol}}://{{url_xs2a}}/v1/consents/{{consent_id}}/authorisations/{{authorisation_id}}",
