@@ -132,7 +132,13 @@
 			"enabled": true
 		},
 		{
-			"key": "payment_id",
+			"key": "tan",
+			"value": "123456",
+			"description": "",
+			"enabled": true
+		},
+		{
+			"key": "consent_id",
 			"value": "",
 			"enabled": true
 		},
@@ -142,13 +148,13 @@
 			"enabled": true
 		},
 		{
-			"key": "consent_id",
+			"key": "payment_id",
 			"value": "",
 			"enabled": true
 		}
 	],
 	"name": "My Workspace Globals",
 	"_postman_variable_scope": "globals",
-	"_postman_exported_at": "2019-02-25T12:04:41.329Z",
-	"_postman_exported_using": "Postman/6.7.3"
+	"_postman_exported_at": "2019-03-06T13:19:10.793Z",
+	"_postman_exported_using": "Postman/6.7.4"
 }

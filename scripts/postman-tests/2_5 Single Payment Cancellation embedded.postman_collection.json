@@ -206,171 +206,7 @@
 					"response": []
 				},
 				{
-					"name": "3. Start cancellation authorisation",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "8e454a71-e2cb-4276-8ffa-3afbf0638728",
-								"exec": [
-									"const jsonData = pm.response.json();",
-									"",
-									"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
-									"",
-									"pm.globals.set(\"authorisation_id\", authorisationId);",
-									"",
-									"pm.test(\"Status code is 201\", function () {",
-									"    pm.response.to.have.status(201);",
-									"});",
-									"",
-									"pm.test(\"Select scaStatus \", () => {",
-									"    pm.expect(jsonData).to.have.property('scaStatus');",
-									"    const scaStatus = jsonData.scaStatus;",
-									"    pm.expect(scaStatus).to.eql('started');",
-									"});",
-									"",
-									"pm.test(\"Links exist\", () => {",
-									"    pm.expect(jsonData).to.have.property('_links');",
-									"    const _links = jsonData._links;",
-									"    ",
-									"    pm.expect(_links).to.have.property('status');",
-									"    pm.expect(_links).to.have.property('self');",
-									"    pm.expect(_links).to.have.property('startAuthorisationWithPsuAuthentication');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "PSU-ID",
-								"value": "{{psu_id_none}}"
-							},
-							{
-								"key": "PSU-IP-Address",
-								"value": "{{ip_address}}"
-							},
-							{
-								"key": "X-Request-ID",
-								"value": "{{x_request_id}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
-						"url": {
-							"raw": "{{protocol}}://{{url_xs2a}}/v1/payments/{{payment_product}}/{{payment_id}}/cancellation-authorisations",
-							"protocol": "{{protocol}}",
-							"host": [
-								"{{url_xs2a}}"
-							],
-							"path": [
-								"v1",
-								"payments",
-								"{{payment_product}}",
-								"{{payment_id}}",
-								"cancellation-authorisations"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "4. Update PSU Data for cancellation (password stage)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"id": "548b34dc-4d7d-4eae-9857-6c7a289bbecc",
-								"exec": [
-									"pm.test('Status code is 200', () => {",
-									"   pm.response.to.have.status(200);",
-									"});",
-									"",
-									"const jsonData = pm.response.json();",
-									"",
-									"pm.test('Sca status is finalised', () => {",
-									"   pm.expect(jsonData.scaStatus).to.eql('finalised');",
-									"});",
-									"",
-									"pm.test(\"Select scaStatus link exists\", () => {",
-									"    pm.expect(jsonData).to.have.property('_links');",
-									"    const _links = jsonData._links;",
-									"    pm.expect(_links).to.have.property('scaStatus');",
-									"});",
-									"",
-									"pm.test(\"Select other links exist\", () => {",
-									"    pm.expect(jsonData).to.have.property('_links');",
-									"    const _links = jsonData._links;",
-									"    ",
-									"    pm.expect(_links).to.have.property('status');",
-									"    pm.expect(_links).to.have.property('self');",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "PSU-ID",
-								"value": "{{psu_id_none}}"
-							},
-							{
-								"key": "PSU-IP-Address",
-								"value": "{{ip_address}}"
-							},
-							{
-								"key": "X-Request-ID",
-								"value": "{{x_request_id}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n\t\"psuData\": {\n\t\t\"password\": \"{{psu_id_password}}\"\n\t}\n}"
-						},
-						"url": {
-							"raw": "{{protocol}}://{{url_xs2a}}/v1/payments/{{payment_product}}/{{payment_id}}/cancellation-authorisations/{{authorisation_id}}",
-							"protocol": "{{protocol}}",
-							"host": [
-								"{{url_xs2a}}"
-							],
-							"path": [
-								"v1",
-								"payments",
-								"{{payment_product}}",
-								"{{payment_id}}",
-								"cancellation-authorisations",
-								"{{authorisation_id}}"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "5. Payment initiation status request",
+					"name": "3. Payment initiation status request",
 					"event": [
 						{
 							"listen": "test",
@@ -1962,7 +1798,7 @@
 									"    pm.expect(chosenScaMethod.authenticationType).to.eql('SMS_OTP');*/",
 									"    ",
 									"    pm.expect(chosenScaMethod).to.have.property('authenticationMethodId');",
-									"    pm.expect(chosenScaMethod.authenticationMethodId).to.eql('bKLq119_SJomg8FlC_Y4Gs');",
+									"    //pm.expect(chosenScaMethod.authenticationMethodId).to.eql('bKLq119_SJomg8FlC_Y4Gs');",
 									"});",
 									"",
 									"pm.test(\"Challenge data exist\", () => {",
@@ -2088,7 +1924,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"scaAuthenticationData\": \"123456\"\n}"
+							"raw": "{\n\t\"scaAuthenticationData\": \"{{tan}}\"\n}"
 						},
 						"url": {
 							"raw": "http://localhost:8089/v1/payments/{{payment_product}}/{{payment_id}}/cancellation-authorisations/{{authorisation_id}}",
@@ -2876,13 +2712,14 @@
 									"    pm.expect(scaMethods[0].authenticationType).to.eql('SMS_OTP');*/",
 									"",
 									"    pm.expect(scaMethods[0]).to.have.property('authenticationMethodId');",
-									"    pm.expect(scaMethods[0].authenticationMethodId).to.eql('TCI_bX9rRQohgiba31INDw');",
+									"    pm.globals.set(\"authentication_method_id\", scaMethods[0].authenticationMethodId)",
+									"    //pm.expect(scaMethods[0].authenticationMethodId).to.eql('TCI_bX9rRQohgiba31INDw');",
 									"    ",
 									"    /*pm.expect(scaMethods[1]).to.have.property('authenticationType');",
 									"    pm.expect(scaMethods[1].authenticationType).to.eql('PUSH_OTP');*/",
 									"    ",
 									"    pm.expect(scaMethods[1]).to.have.property('authenticationMethodId');",
-									"    pm.expect(scaMethods[1].authenticationMethodId).to.eql('push');",
+									"    //pm.expect(scaMethods[1].authenticationMethodId).to.eql('push');",
 									"});",
 									"",
 									""
@@ -2977,7 +2814,7 @@
 									"    pm.expect(chosenScaMethod.authenticationType).to.eql('SMS_OTP');*/",
 									"    ",
 									"    pm.expect(chosenScaMethod).to.have.property('authenticationMethodId');",
-									"    pm.expect(chosenScaMethod.authenticationMethodId).to.eql('TCI_bX9rRQohgiba31INDw');",
+									"    pm.expect(chosenScaMethod.authenticationMethodId).to.eql(pm.globals.get(\"authentication_method_id\"));",
 									"});",
 									"",
 									"pm.test(\"Challenge data exist\", () => {",
@@ -3102,7 +2939,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n\t\"scaAuthenticationData\": \"123456\"\n}"
+							"raw": "{\n\t\"scaAuthenticationData\": \"{{tan}}\"\n}"
 						},
 						"url": {
 							"raw": "{{protocol}}://{{url_xs2a}}/v1/payments/{{payment_product}}/{{payment_id}}/cancellation-authorisations/{{authorisation_id}}",

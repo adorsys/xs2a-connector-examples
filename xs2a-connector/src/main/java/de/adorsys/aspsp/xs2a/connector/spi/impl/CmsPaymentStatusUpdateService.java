@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.EnumSet;
 
 import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.*;
 
@@ -35,7 +36,7 @@ public class CmsPaymentStatusUpdateService {
     }
 
     private String getTransactionStatus(ScaStatusTO scaStatus) {
-        if (scaStatus == PSUIDENTIFIED) {
+        if (EnumSet.of(PSUIDENTIFIED, EXEMPTED).contains(scaStatus)) {
             return "ACCP";
         } else if (scaStatus == PSUAUTHENTICATED) {
             return "ACTC";

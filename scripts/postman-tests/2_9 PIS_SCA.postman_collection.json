@@ -73,7 +73,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"endToEndIdentification\": \"RI-1234567890\",\n\"debtorAccount\": {\n  \"currency\": \"EUR\",\n  \"iban\": \"DE89370400440532013000\"\n },\n\"instructedAmount\": {\n  \"amount\": 1000,\n  \"currency\": \"EUR\"\n },\n\"creditorAccount\": {\n  \"currency\": \"EUR\",\n  \"iban\": \"DE89370400440532013000\"\n },\n\"creditorAgent\": \"Some AGENT\",\n\"creditorName\": \"Telekom\",\n \"creditorAddress\": {\n  \"buildingNumber\": \"123-34\",\n  \"city\": \"Nürnberg\",\n  \"country\": \"49\",\n  \"postalCode\": 90431,\n  \"street\": \"Herrnstraße\"\n },\n \"remittanceInformationUnstructured\": \"Ref. Number TELEKOM-1222\"\n }"
+									"raw": "{\n    \"endToEndIdentification\": \"WBG-123456789\",\n    \"debtorAccount\": {\n      \"currency\": \"EUR\",\n      \"iban\": \"DE69760700240340283600\"\n    },\n    \"instructedAmount\": {\n      \"currency\": \"EUR\",\n      \"amount\": \"20.00\"\n    },\n    \"creditorAccount\": {\n      \"currency\": \"EUR\",\n      \"iban\": \"DE15500105172295759744\"\n    },\n    \"creditorAgent\" : \"AAAADEBBXXX\",\n    \"creditorName\": \"WBG\",\n    \"creditorAddress\": {\n      \"buildingNumber\": \"56\",\n      \"city\": \"Nürnberg\",\n      \"country\": \"DE\",\n      \"postalCode\": \"90543\",\n      \"street\": \"WBG Straße\"\n    },\n    \"remittanceInformationUnstructured\": \"Ref. Number WBG-1222\"\n  }"
 								},
 								"url": {
 									"raw": "{{protocol}}://{{url_xs2a}}/v1/payments/sepa-credit-transfers",
@@ -105,7 +105,7 @@
 											"",
 											"const jsonData = pm.response.json();",
 											"",
-											"const authorisationId = jsonData.links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+											"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
 											"pm.globals.set(\"authorisation_id\", authorisationId);"
 										],
 										"type": "text/javascript"
@@ -148,14 +148,15 @@
 									"raw": ""
 								},
 								"url": {
-									"raw": "{{protocol}}://{{url_xs2a}}/v1/payments/{{payment_id}}/authorisations",
+									"raw": "{{protocol}}://{{url_xs2a}}/v1/{{payment_service}}/{{payment_product}}/{{payment_id}}/authorisations",
 									"protocol": "{{protocol}}",
 									"host": [
 										"{{url_xs2a}}"
 									],
 									"path": [
 										"v1",
-										"payments",
+										"{{payment_service}}",
+										"{{payment_product}}",
 										"{{payment_id}}",
 										"authorisations"
 									]
@@ -212,17 +213,18 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\"psuData\":{\n   \"password\":\"zzz\"\n}}"
+									"raw": "{\"psuData\":{\n   \"password\":\"{{psu_id_password}}\"\n}}"
 								},
 								"url": {
-									"raw": "{{protocol}}://{{url_xs2a}}/v1/payments/{{payment_id}}/authorisations/{{authorisation_id}}",
+									"raw": "{{protocol}}://{{url_xs2a}}/v1/{{payment_service}}/{{payment_product}}/{{payment_id}}/authorisations/{{authorisation_id}}",
 									"protocol": "{{protocol}}",
 									"host": [
 										"{{url_xs2a}}"
 									],
 									"path": [
 										"v1",
-										"payments",
+										"{{payment_service}}",
+										"{{payment_product}}",
 										"{{payment_id}}",
 										"authorisations",
 										"{{authorisation_id}}"
@@ -300,18 +302,18 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"endToEndIdentification\": \"RI-1234567890\",\n\"debtorAccount\": {\n  \"currency\": \"EUR\",\n  \"iban\": \"DE89370400440532013000\"\n },\n\"instructedAmount\": {\n  \"amount\": 1000,\n  \"currency\": \"EUR\"\n },\n\"creditorAccount\": {\n  \"currency\": \"EUR\",\n  \"iban\": \"DE89370400440532013000\"\n },\n\"creditorAgent\": \"Some AGENT\",\n\"creditorName\": \"Telekom\",\n \"creditorAddress\": {\n  \"buildingNumber\": \"123-34\",\n  \"city\": \"Nürnberg\",\n  \"country\": \"49\",\n  \"postalCode\": 90431,\n  \"street\": \"Herrnstraße\"\n },\n \"remittanceInformationUnstructured\": \"Ref. Number TELEKOM-1222\"\n }"
+									"raw": "{\n    \"endToEndIdentification\": \"D1\",\n    \"debtorAccount\": {\n      \"currency\": \"EUR\",\n      \"iban\": \"DE80760700240271232400\"\n    },\n    \"instructedAmount\": {\n      \"currency\": \"EUR\",\n      \"amount\": \"50.00\"\n    },\n    \"creditorAccount\": {\n      \"currency\": \"EUR\",\n      \"iban\": \"DE15500105172295759744\"\n    },\n    \"creditorAgent\" : \"AAAADEBBXXX\",\n    \"creditorName\": \"WBG\",\n    \"creditorAddress\": {\n      \"buildingNumber\": \"56\",\n      \"city\": \"Nürnberg\",\n      \"country\": \"DE\",\n      \"postalCode\": \"90543\",\n      \"street\": \"WBG Straße\"\n    },\n    \"remittanceInformationUnstructured\": \"Ref. Number WBG-1222\"\n  }"
 								},
 								"url": {
-									"raw": "{{protocol}}://{{url_xs2a}}/v1/payments/sepa-credit-transfers",
+									"raw": "{{protocol}}://{{url_xs2a}}/v1/{{payment_service}}/{{payment_product}}",
 									"protocol": "{{protocol}}",
 									"host": [
 										"{{url_xs2a}}"
 									],
 									"path": [
 										"v1",
-										"payments",
-										"sepa-credit-transfers"
+										"{{payment_service}}",
+										"{{payment_product}}"
 									]
 								},
 								"description": "This method is used to initiate a payment at the ASPSP.  ## Variants of Payment Initiation Requests  This method to initiate a payment initiation at the ASPSP can be sent with either a JSON body or an pain.001 body depending on the payment product in the path.  There are the following **payment products**:    - Payment products with payment information in *JSON* format:     - ***sepa-credit-transfers***     - ***instant-sepa-credit-transfers***     - ***target-2-payments***     - ***cross-border-credit-transfers***   - Payment products with payment information in *pain.001* XML format:     - ***pain.001-sepa-credit-transfers***     - ***pain.001-instant-sepa-credit-transfers***     - ***pain.001-target-2-payments***     - ***pain.001-cross-border-credit-transfers***  Furthermore the request body depends on the **payment-service**   * ***payments***: A single payment initiation request.   * ***bulk-payments***: A collection of several payment iniatiation requests.        In case of a *pain.001* message there are more than one payments contained in the *pain.001 message.          In case of a *JSON* there are several JSON payment blocks contained in a joining list.   * ***periodic-payments***:      Create a standing order initiation resource for recurrent i.e. periodic payments addressable under {paymentId}       with all data relevant for the corresponding payment product and the execution of the standing order contained in a JSON body.   This is the first step in the API to initiate the related recurring/periodic payment.    ## Single and mulitilevel SCA Processes  The Payment Initiation Requests are independent from the need of one ore multilevel  SCA processing, i.e. independent from the number of authorisations needed for the execution of payments.   But the response messages are specific to either one SCA processing or multilevel SCA processing.   For payment initiation with multilevel SCA, this specification requires an explicit start of the authorisation,  i.e. links directly associated with SCA processing like 'scaRedirect' or 'scaOAuth' cannot be contained in the  response message of a Payment Initation Request for a payment, where multiple authorisations are needed.  Also if any data is needed for the next action, like selecting an SCA method is not supported in the response,  since all starts of the multiple authorisations are fully equal.  In these cases, first an authorisation sub-resource has to be generated following the 'startAuthorisation' link. "
@@ -332,7 +334,7 @@
 											"",
 											"const jsonData = pm.response.json();",
 											"",
-											"const authorisationId = jsonData.links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+											"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
 											"pm.globals.set(\"authorisation_id\", authorisationId);"
 										],
 										"type": "text/javascript"
@@ -375,14 +377,15 @@
 									"raw": ""
 								},
 								"url": {
-									"raw": "{{protocol}}://{{url_xs2a}}/v1/payments/{{payment_id}}/authorisations",
+									"raw": "{{protocol}}://{{url_xs2a}}/v1/{{payment_service}}/{{payment_product}}/{{payment_id}}/authorisations",
 									"protocol": "{{protocol}}",
 									"host": [
 										"{{url_xs2a}}"
 									],
 									"path": [
 										"v1",
-										"payments",
+										"{{payment_service}}",
+										"{{payment_product}}",
 										"{{payment_id}}",
 										"authorisations"
 									]
@@ -399,7 +402,48 @@
 									"script": {
 										"id": "06adf1b3-cff1-4ff3-a698-6295757d8474",
 										"exec": [
-											""
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"const jsonData = pm.response.json();",
+											"",
+											"pm.test('Sca status is scaMethodSelected', () => {",
+											"   pm.expect(jsonData.scaStatus).to.eql('scaMethodSelected');",
+											"});",
+											"",
+											"pm.test(\"Select authoriseTransaction method link exists\", () => {",
+											"    pm.expect(jsonData).to.have.property('_links');",
+											"    const _links = jsonData._links;",
+											"    pm.expect(_links).to.have.property('authoriseTransaction');",
+											"});",
+											"",
+											"pm.test(\"Select other links exist\", () => {",
+											"    pm.expect(jsonData).to.have.property('_links');",
+											"    const _links = jsonData._links;",
+											"    ",
+											"    pm.expect(_links).to.have.property('status');",
+											"    pm.expect(_links).to.have.property('self');",
+											"});",
+											"",
+											"pm.test(\"Select chosenScaMethod exist\", () => {",
+											"    pm.expect(jsonData).to.have.property('chosenScaMethod');",
+											"    const chosenScaMethod = jsonData.chosenScaMethod;",
+											"    ",
+											"    pm.expect(chosenScaMethod).to.have.property('authenticationMethodId');",
+											"   ",
+											"    pm.expect(chosenScaMethod).to.have.property('name');",
+											"});",
+											"",
+											"pm.test(\"Challenge data exist\", () => {",
+											"    pm.expect(jsonData).to.have.property('challengeData');",
+											"    /*const challengeData = jsonData.challengeData;",
+											"    ",
+											"    pm.expect(challengeData).to.have.property('data');",
+											"    pm.expect(challengeData).to.have.property('imageLink');",
+											"    pm.expect(challengeData).to.have.property('otpMaxLength');",
+											"    pm.expect(challengeData).to.have.property('additionalInformation');*/",
+											"});"
 										],
 										"type": "text/javascript"
 									}
@@ -431,17 +475,18 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\"psuData\":{\n   \"password\":\"zzz\"\n}}"
+									"raw": "{\n\t\"psuData\": {\n\t\t\"password\": \"{{psu_id_password}}\"\n\t}\n}"
 								},
 								"url": {
-									"raw": "{{protocol}}://{{url_xs2a}}/v1/payments/{{payment_id}}/authorisations/{{authorisation_id}}",
+									"raw": "{{protocol}}://{{url_xs2a}}/v1/{{payment_service}}/{{payment_product}}/{{payment_id}}/authorisations/{{authorisation_id}}",
 									"protocol": "{{protocol}}",
 									"host": [
 										"{{url_xs2a}}"
 									],
 									"path": [
 										"v1",
-										"payments",
+										"{{payment_service}}",
+										"{{payment_product}}",
 										"{{payment_id}}",
 										"authorisations",
 										"{{authorisation_id}}"
@@ -499,17 +544,18 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"scaAuthenticationData\": \"Em7bxc\"\n}"
+									"raw": "{\n    \"scaAuthenticationData\": \"{{tan}}\"\n}"
 								},
 								"url": {
-									"raw": "{{protocol}}://{{url_xs2a}}/v1/payments/{{payment_id}}/authorisations/{{authorisation_id}}",
+									"raw": "{{protocol}}://{{url_xs2a}}/v1/{{payment_service}}/{{payment_product}}/{{payment_id}}/authorisations/{{authorisation_id}}",
 									"protocol": "{{protocol}}",
 									"host": [
 										"{{url_xs2a}}"
 									],
 									"path": [
 										"v1",
-										"payments",
+										"{{payment_service}}",
+										"{{payment_product}}",
 										"{{payment_id}}",
 										"authorisations",
 										"{{authorisation_id}}"
@@ -587,18 +633,18 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\"endToEndIdentification\": \"RI-1234567890\",\n\"debtorAccount\": {\n  \"currency\": \"EUR\",\n  \"iban\": \"DE89370400440532013000\"\n },\n\"instructedAmount\": {\n  \"amount\": 1000,\n  \"currency\": \"EUR\"\n },\n\"creditorAccount\": {\n  \"currency\": \"EUR\",\n  \"iban\": \"DE89370400440532013000\"\n },\n\"creditorAgent\": \"Some AGENT\",\n\"creditorName\": \"Telekom\",\n \"creditorAddress\": {\n  \"buildingNumber\": \"123-34\",\n  \"city\": \"Nürnberg\",\n  \"country\": \"49\",\n  \"postalCode\": 90431,\n  \"street\": \"Herrnstraße\"\n },\n \"remittanceInformationUnstructured\": \"Ref. Number TELEKOM-1222\"\n }"
+									"raw": "{\n    \"endToEndIdentification\": \"WBG-123456789\",\n    \"debtorAccount\": {\n      \"currency\": \"EUR\",\n      \"iban\": \"DE38760700240320465700\"\n    },\n    \"instructedAmount\": {\n      \"currency\": \"EUR\",\n      \"amount\": \"100.00\"\n    },\n    \"creditorAccount\": {\n      \"currency\": \"EUR\",\n      \"iban\": \"DE38760700240320465700\"\n    },\n    \"creditorAgent\" : \"AAAADEBBXXX\",\n    \"creditorName\": \"WBG\",\n    \"creditorAddress\": {\n      \"buildingNumber\": \"56\",\n      \"city\": \"Nürnberg\",\n      \"country\": \"DE\",\n      \"postalCode\": \"90543\",\n      \"street\": \"WBG Straße\"\n    },\n    \"remittanceInformationUnstructured\": \"Ref. Number WBG-1222\"\n  }"
 								},
 								"url": {
-									"raw": "{{protocol}}://{{url_xs2a}}/v1/payments/sepa-credit-transfers",
+									"raw": "{{protocol}}://{{url_xs2a}}/v1/{{payment_service}}/{{payment_product}}",
 									"protocol": "{{protocol}}",
 									"host": [
 										"{{url_xs2a}}"
 									],
 									"path": [
 										"v1",
-										"payments",
-										"sepa-credit-transfers"
+										"{{payment_service}}",
+										"{{payment_product}}"
 									]
 								},
 								"description": "This method is used to initiate a payment at the ASPSP.  ## Variants of Payment Initiation Requests  This method to initiate a payment initiation at the ASPSP can be sent with either a JSON body or an pain.001 body depending on the payment product in the path.  There are the following **payment products**:    - Payment products with payment information in *JSON* format:     - ***sepa-credit-transfers***     - ***instant-sepa-credit-transfers***     - ***target-2-payments***     - ***cross-border-credit-transfers***   - Payment products with payment information in *pain.001* XML format:     - ***pain.001-sepa-credit-transfers***     - ***pain.001-instant-sepa-credit-transfers***     - ***pain.001-target-2-payments***     - ***pain.001-cross-border-credit-transfers***  Furthermore the request body depends on the **payment-service**   * ***payments***: A single payment initiation request.   * ***bulk-payments***: A collection of several payment iniatiation requests.        In case of a *pain.001* message there are more than one payments contained in the *pain.001 message.          In case of a *JSON* there are several JSON payment blocks contained in a joining list.   * ***periodic-payments***:      Create a standing order initiation resource for recurrent i.e. periodic payments addressable under {paymentId}       with all data relevant for the corresponding payment product and the execution of the standing order contained in a JSON body.   This is the first step in the API to initiate the related recurring/periodic payment.    ## Single and mulitilevel SCA Processes  The Payment Initiation Requests are independent from the need of one ore multilevel  SCA processing, i.e. independent from the number of authorisations needed for the execution of payments.   But the response messages are specific to either one SCA processing or multilevel SCA processing.   For payment initiation with multilevel SCA, this specification requires an explicit start of the authorisation,  i.e. links directly associated with SCA processing like 'scaRedirect' or 'scaOAuth' cannot be contained in the  response message of a Payment Initation Request for a payment, where multiple authorisations are needed.  Also if any data is needed for the next action, like selecting an SCA method is not supported in the response,  since all starts of the multiple authorisations are fully equal.  In these cases, first an authorisation sub-resource has to be generated following the 'startAuthorisation' link. "
@@ -619,7 +665,7 @@
 											"",
 											"const jsonData = pm.response.json();",
 											"",
-											"const authorisationId = jsonData.links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+											"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
 											"pm.globals.set(\"authorisation_id\", authorisationId);"
 										],
 										"type": "text/javascript"
@@ -662,14 +708,15 @@
 									"raw": ""
 								},
 								"url": {
-									"raw": "{{protocol}}://{{url_xs2a}}/v1/payments/{{payment_id}}/authorisations",
+									"raw": "{{protocol}}://{{url_xs2a}}/v1/{{payment_service}}/{{payment_product}}/{{payment_id}}/authorisations",
 									"protocol": "{{protocol}}",
 									"host": [
 										"{{url_xs2a}}"
 									],
 									"path": [
 										"v1",
-										"payments",
+										"{{payment_service}}",
+										"{{payment_product}}",
 										"{{payment_id}}",
 										"authorisations"
 									]
@@ -686,7 +733,34 @@
 									"script": {
 										"id": "06adf1b3-cff1-4ff3-a698-6295757d8474",
 										"exec": [
-											""
+											"pm.test('Status code is 200', () => {",
+											"   pm.response.to.have.status(200);",
+											"});",
+											"",
+											"const jsonData = pm.response.json();",
+											"",
+											"pm.test('Sca status is psuAuthenticated', () => {",
+											"   pm.expect(jsonData.scaStatus).to.eql('psuAuthenticated');",
+											"});",
+											"",
+											"pm.test(\"SelectAuthenticationMethod method link exists\", () => {",
+											"    pm.expect(jsonData).to.have.property('_links');",
+											"    const _links = jsonData._links;",
+											"    pm.expect(_links).to.have.property('selectAuthenticationMethod');",
+											"});",
+											"",
+											"pm.test(\"scaMethods exist\", () => {",
+											"    pm.expect(jsonData).to.have.property('scaMethods');",
+											"    const scaMethods = jsonData.scaMethods;",
+											"    ",
+											"    pm.expect(scaMethods.length).to.eql(2);",
+											"    ",
+											"    pm.expect(scaMethods[0]).to.have.property('authenticationMethodId');",
+											"    ",
+											"    pm.expect(scaMethods[1]).to.have.property('authenticationMethodId');",
+											"});",
+											"",
+											"pm.globals.set(\"authentication_method_id\", jsonData.scaMethods[0].authenticationMethodId);"
 										],
 										"type": "text/javascript"
 									}
@@ -718,17 +792,18 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\"psuData\":{\n   \"password\":\"zzz\"\n}}"
+									"raw": "{\n\t\"psuData\": {\n\t\t\"password\": \"{{psu_id_password}}\"\n\t}\n}"
 								},
 								"url": {
-									"raw": "{{protocol}}://{{url_xs2a}}/v1/payments/{{payment_id}}/authorisations/{{authorisation_id}}",
+									"raw": "{{protocol}}://{{url_xs2a}}/v1/{{payment_service}}/{{payment_product}}/{{payment_id}}/authorisations/{{authorisation_id}}",
 									"protocol": "{{protocol}}",
 									"host": [
 										"{{url_xs2a}}"
 									],
 									"path": [
 										"v1",
-										"payments",
+										"{{payment_service}}",
+										"{{payment_product}}",
 										"{{payment_id}}",
 										"authorisations",
 										"{{authorisation_id}}"
@@ -752,8 +827,8 @@
 											"",
 											"const jsonData = pm.response.json();",
 											"",
-											"pm.test('Sca status is finalised', () => {",
-											"   pm.expect(jsonData.scaStatus).to.eql('finalised');",
+											"pm.test('Sca status is scaMethodSelected', () => {",
+											"   pm.expect(jsonData.scaStatus).to.eql('scaMethodSelected');",
 											"});"
 										],
 										"type": "text/javascript"
@@ -786,17 +861,18 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n\t\"authenticationMethodId\": \"sms\"\n}"
+									"raw": "{\n    \"authenticationMethodId\": \"{{authentication_method_id}}\"        \n}"
 								},
 								"url": {
-									"raw": "{{protocol}}://{{url_xs2a}}/v1/payments/{{payment_id}}/authorisations/{{authorisation_id}}",
+									"raw": "{{protocol}}://{{url_xs2a}}/v1/{{payment_service}}/{{payment_product}}/{{payment_id}}/authorisations/{{authorisation_id}}",
 									"protocol": "{{protocol}}",
 									"host": [
 										"{{url_xs2a}}"
 									],
 									"path": [
 										"v1",
-										"payments",
+										"{{payment_service}}",
+										"{{payment_product}}",
 										"{{payment_id}}",
 										"authorisations",
 										"{{authorisation_id}}"
@@ -854,17 +930,18 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"scaAuthenticationData\": \"oUm7zU\"\n}"
+									"raw": "{\n    \"scaAuthenticationData\": \"{{tan}}\"\n}"
 								},
 								"url": {
-									"raw": "{{protocol}}://{{url_xs2a}}/v1/payments/{{payment_id}}/authorisations/{{authorisation_id}}",
+									"raw": "{{protocol}}://{{url_xs2a}}/v1/{{payment_service}}/{{payment_product}}/{{payment_id}}/authorisations/{{authorisation_id}}",
 									"protocol": "{{protocol}}",
 									"host": [
 										"{{url_xs2a}}"
 									],
 									"path": [
 										"v1",
-										"payments",
+										"{{payment_service}}",
+										"{{payment_product}}",
 										"{{payment_id}}",
 										"authorisations",
 										"{{authorisation_id}}"
