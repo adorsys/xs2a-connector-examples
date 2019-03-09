@@ -61,8 +61,5 @@ public class ConsentRedirectOneScaIT extends AbstractConsentRedirect {
 		consentHelper.validateResponseStatus(authCodeResponseWrapper, ScaStatusTO.FINALISED);
 		consentHelper.checkConsentStatus(authCodeResponseWrapper.getBody().getEncryptedConsentId(), ConsentStatus.VALID);
 
-		// ============== READ TRANSACTIONS ========================//
-		Map<String, Map<String, List<TransactionDetails>>> loadTransactions = consentHelper.loadTransactions(authCodeResponseWrapper.getBody(), false);
-		Assert.assertTrue(loadTransactions.size()>0);
-}
+	}
 }

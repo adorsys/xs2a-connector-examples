@@ -20,6 +20,7 @@
 		<skipProfile>${skipITs}</skipProfile>
 		<skipCMS>${skipITs}</skipCMS>
 		<skipGateway>${skipITs}</skipGateway>
+		<UI>false</UI>
 	</properties>
 
 	<dependencies>
@@ -91,6 +92,22 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 			<scope>test</scope>
 		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-chrome-driver -->
+		<dependency>
+		    <groupId>org.seleniumhq.selenium</groupId>
+		    <artifactId>selenium-chrome-driver</artifactId>
+		    <version>3.141.59</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/io.github.bonigarcia/webdrivermanager -->
+		<dependency>
+		    <groupId>io.github.bonigarcia</groupId>
+		    <artifactId>webdrivermanager</artifactId>
+		    <version>3.3.0</version>
+			<scope>test</scope>
+		</dependency>
+		
 	</dependencies>
 
 	<build>
@@ -200,6 +217,7 @@
 								<argument>--log4j.logger.org.springframework=WARN</argument>
 								<argument>--logging.level.root=WARN</argument>
 								<argument>--logging.level.org.springframework.boot=WARN</argument>
+								<argument>--online-banking.sca.uiRedirect=${UI}</argument>
 							</arguments>
 						</configuration>
 					</execution>

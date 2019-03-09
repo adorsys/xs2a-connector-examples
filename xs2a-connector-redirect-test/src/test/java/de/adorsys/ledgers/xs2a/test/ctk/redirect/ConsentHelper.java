@@ -84,8 +84,8 @@ public class ConsentHelper {
 	private ResponseEntity<ConsentsResponse201> createConsent(Consents consents) {
 		UUID xRequestID = UUID.randomUUID();
 		String tpPRedirectPreferred = "true";
-		String tpPRedirectURI = null;
-		String tpPNokRedirectURI = null;
+		String tpPRedirectURI = "http://localhost:8080/tpp/ok";
+		String tpPNokRedirectURI =  "http://localhost:8080/tpp/nok";
 		Boolean tpPExplicitAuthorisationPreferred = false;
 
 		ResponseEntity<ConsentsResponse201> consentsResponse201 = consentApi._createConsent(xRequestID, consents,
@@ -112,7 +112,7 @@ public class ConsentHelper {
 		String scaRedirectLink = getScaRedirect(consentsResponse201.getLinks());
 		String encryptedConsentId = consentsResponse201.getConsentId();
 		String redirectId = QuerryParser.param(scaRedirectLink, "redirectId");
-		String encryptedConsentIdFromOnlineBanking = QuerryParser.param(scaRedirectLink, "consentId");
+		String encryptedConsentIdFromOnlineBanking = QuerryParser.param(scaRedirectLink, "encryptedConsentId");
 
 		Assert.assertEquals(encryptedConsentId, encryptedConsentIdFromOnlineBanking);
 
@@ -147,7 +147,7 @@ public class ConsentHelper {
 		return consentStatus;
 	}
 
-	private String getScaRedirect(@NotNull @Valid Map map) {
+	String getScaRedirect(@NotNull @Valid Map map) {
 		return (String) map.get("scaRedirect");
 	}
 

@@ -100,10 +100,5 @@ public class ConsentEmbeddedOneScaIT extends AbstractConsentEmbedded {
 		Assert.assertEquals(HttpStatus.OK, loadonsentStatusResponse.getStatusCode());
 		consentStatusResponse200 = loadonsentStatusResponse.getBody();
 		Assert.assertEquals(ConsentStatus.VALID, consentStatusResponse200.getConsentStatus());
-		
-		// ============== READ TRANSACTIONS ========================//
-		Map<String, Map<String, List<TransactionDetails>>> loadTransactions = consentHelper.loadTransactions(authCodeResponse, false);
-		Assert.assertTrue(loadTransactions.size()>0);
-		
 	}
 }

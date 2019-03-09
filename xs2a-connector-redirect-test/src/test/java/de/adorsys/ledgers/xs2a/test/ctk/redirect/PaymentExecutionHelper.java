@@ -63,8 +63,8 @@ public class PaymentExecutionHelper {
 		String PSU_ID = paymentCase.getPsuId();
 		String consentID = null;
 		String tpPRedirectPreferred = "true";
-		String tpPRedirectURI = null;
-		String tpPNokRedirectURI = null;
+		String tpPRedirectURI = "http://localhost:8080/tpp/ok";
+		String tpPNokRedirectURI =  "http://localhost:8080/tpp/nok";
 		Boolean tpPExplicitAuthorisationPreferred = true;
 		PaymentInitationRequestResponse201 initiatedPayment = paymentApi._initiatePayment(payment, xRequestID, psUIPAddress,
 				paymentService, paymentProduct, digest, signature, tpPSignatureCertificate, PSU_ID, psUIDType,

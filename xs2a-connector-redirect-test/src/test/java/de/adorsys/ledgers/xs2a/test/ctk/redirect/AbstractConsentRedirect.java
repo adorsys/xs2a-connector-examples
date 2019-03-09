@@ -25,7 +25,7 @@ public abstract class AbstractConsentRedirect {
 	protected ConsentHelper consentHelper;
 	
 	@Before
-	public void beforeClass() {
+	public void before() {
 		consentHelper = new ConsentHelper(getPsuId(), getIban(), consentApi, obaAisApiClient, accountApi);
 	}
 

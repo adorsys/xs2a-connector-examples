@@ -19,7 +19,7 @@ services:
     - SPRING_PROFILES_ACTIVE=mockspi
     - LEDGERS_URL=http://ledgers:8088
     - ASPSP_PROFILE_BASEURL=http://profile:48080/api/v1
-    - CONSENT_SERVICE_BASEURL=http://consent:38080
+    - CONSENT_SERVICE_BASEURL=http://consent:38080/api/v1
     - SECURITY_BASIC_ENABLED=false
     - LOGGING_LEVEL_ROOT=INFO
     networks:
@@ -48,6 +48,8 @@ services:
     - CMS_URL=http://consent:38080
     - FEIGN_CLIENT_CONFIG_DEFAULT_LOGGERLEVEL=NONE
     - LOGGING_LEVEL_ROOT=INFO
+    - ONLINE_BANKING_SCA_LOGINPAGE=http://localhost:4400/
+    - ONLINE_BANKING_SCA_UIREDIRECT=true
     networks:
     - xs2a-net
     depends_on:
