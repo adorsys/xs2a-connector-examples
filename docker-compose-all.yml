@@ -19,7 +19,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=mockspi
       - ASPSP-PROFILE_BASEURL=http://xs2a-aspsp-profile:8080/api/v1
-      - CONSENT-SERVICE.BASEURL=http://xs2a-consent-management:8080
+      - CONSENT-SERVICE_BASEURL=http://xs2a-consent-management:8080/api/v1
       - LEDGERS_URL=http://ledgers:8088
     networks:
       - xs2a-net
@@ -51,6 +51,7 @@ services:
     networks:
       - xs2a-net
     environment:
+      - ASPSP-PROFILE_BASEURL=http://xs2a-aspsp-profile:8080/api/v1
       - SPRING_DATASOURCE_URL=jdbc:postgresql://xs2a-consent-management-db/consent?currentSchema=consent
       - SPRING_DATASOURCE_USERNAME=cms
       - SPRING_DATASOURCE_PASSWORD=cms
@@ -79,26 +80,6 @@ services:
       - POSTGRESQL_USER=cms
       - POSTGRESQL_PASSWORD=cms
 
-  # Online banking
-  xs2a-online-banking:
-    image: adorsys/xs2a-online-banking
-    container_name: xs2a_online_banking
-    restart: on-failure
-    build:
-      context: online-banking-app
-      dockerfile: Dockerfile
-    ports:
-      - "8090:8090"
-      - "8190:8000"
-    depends_on:
-      - ledgers
-      - xs2a-connector-examples
-    networks:
-      - xs2a-net
-    environment:
-      - XS2A_URL=http://xs2a-connector-examples:8089
-      - LEDGERS_URL=http://ledgers:8088
-
   # Ledgers
   ledgers:
     image: adorsys/ledgers:0.3
@@ -110,11 +91,14 @@ services:
       - "8088:8088"
       - "8188:8000"
     environment:
-      - SPRING_PROFILES_ACTIVE=h2
+      - SPRING_PROFILES_ACTIVE=postgres
       - SPRING_JPA_SHOW_SQL=false
-      - DB_URL=jdbc:h2:/var/lib/data/xs2adbs/ledgers;DB_CLOSE_DELAY=-1
-      - DB_USER=sa
-      - DB_PASSWORD=sa
+      - DB_HOST=xs2a-consent-management-db
+      - DB_URL=jdbc:postgresql://xs2a-consent-management-db/consent?currentSchema=ledgers
+      - DB_DATABASE=consent
+      - DB_USER=cms
+      - DB_PASSWORD=cms
+      - LIQUIBASE_ENABLED=true
       - LEDGERS_MOCKBANK_DATA_LOAD=true
     volumes:
       - xs2a-connector-data:/var/lib/data
