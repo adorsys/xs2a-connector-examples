@@ -6,3 +6,6 @@
 set -e
 echo "Create schema='consent' for local postgres installation"
 psql -U postgres -d consent -c 'CREATE SCHEMA IF NOT EXISTS consent AUTHORIZATION cms;'
+
+echo "Create schema='ledgers' for local postgres installation"
+psql -U postgres -d consent -c 'CREATE SCHEMA IF NOT EXISTS ledgers AUTHORIZATION cms;'
