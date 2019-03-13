@@ -89,7 +89,7 @@ services:
       - xs2a-net
     ports:
       - "8088:8088"
-      - "8188:8000"
+      - "8188:8001"
     environment:
       - SPRING_PROFILES_ACTIVE=postgres
       - SPRING_JPA_SHOW_SQL=false
