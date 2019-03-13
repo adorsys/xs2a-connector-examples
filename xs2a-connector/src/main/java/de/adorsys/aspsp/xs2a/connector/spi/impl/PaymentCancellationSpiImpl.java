@@ -20,6 +20,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
@@ -96,8 +97,20 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     public @NotNull SpiResponse<SpiResponse.VoidResponse> cancelPaymentWithoutSca(@NotNull SpiContextData contextData, @NotNull SpiPayment payment, @NotNull AspspConsentData aspspConsentData) {
         // TODO: current implementation of Ledgers doesn't support the payment cancellation without authorisation,
         // maybe this will be implemented in the future: https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/669
+
         if (payment.getPaymentStatus() == TransactionStatus.RCVD) {
             return SpiResponse.<SpiResponse.VoidResponse>builder().payload(SpiResponse.voidResponse()).aspspConsentData(aspspConsentData).success();
+        }
+        SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class);
+        if (sca.getScaStatus() == ScaStatusTO.EXEMPTED) {
+            authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
+            try {
+                paymentRestClient.initiatePmtCancellation(payment.getPaymentId());
+                return SpiResponse.<SpiResponse.VoidResponse>builder().payload(SpiResponse.voidResponse()).aspspConsentData(aspspConsentData).success();
+            } catch (FeignException f) {
+                logger.error("An error occured during Payment Cancellation Process: {}, with message: {}", f.status(), f.getLocalizedMessage());
+                return SpiResponse.<SpiResponse.VoidResponse>builder().aspspConsentData(aspspConsentData).fail(SpiResponseStatus.LOGICAL_FAILURE);
+            }
         }
         return SpiResponse.<SpiResponse.VoidResponse>builder().aspspConsentData(aspspConsentData).fail(SpiResponseStatus.NOT_SUPPORTED);
     }
@@ -144,11 +157,10 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     @Override
     public SpiResponse<List<SpiAuthenticationObject>> requestAvailableScaMethods(@NotNull SpiContextData contextData, SpiPayment businessObject, @NotNull AspspConsentData aspspConsentData) {
         SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class);
-        authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
-        if (businessObject.getPaymentStatus()==TransactionStatus.RCVD)
-        {
+        if (businessObject.getPaymentStatus() == TransactionStatus.RCVD || sca.getScaStatus() == ScaStatusTO.EXEMPTED) {
             return SpiResponse.<List<SpiAuthenticationObject>>builder().payload(Collections.emptyList()).aspspConsentData(aspspConsentData).success();
         }
+        authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
         ResponseEntity<SCAPaymentResponseTO> cancelSCA = paymentRestClient.getCancelSCA(sca.getPaymentId(), sca.getAuthorisationId());
 
         List<SpiAuthenticationObject> authenticationObjectList = Optional.ofNullable(cancelSCA.getBody())
