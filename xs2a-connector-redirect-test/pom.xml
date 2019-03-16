@@ -24,52 +24,48 @@
 	</properties>
 
 	<dependencies>
-		<!-- Project dependencies -->
-		<dependency>
-			<groupId>de.adorsys.ledgers</groupId>
-			<artifactId>oba-rest-client</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>de.adorsys.ledgers</groupId>
-			<artifactId>xs2a-rest-client</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-
-		<!-- swagger -->
-		<dependency>
-			<groupId>io.swagger</groupId>
-			<artifactId>swagger-annotations</artifactId>
-		</dependency>
 
 		<!-- Spring -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 			<version>2.0.2.RELEASE</version>
-		</dependency>		<!-- https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp <dependency> 
-			<groupId>com.squareup.okhttp3</groupId> <artifactId>okhttp</artifactId> </dependency> -->
+		</dependency>		
 
-		<!-- XS2A -->
+
+		<!-- Test dependencies -->
+		<dependency>
+			<groupId>de.adorsys.psd2.sandbox</groupId>
+			<artifactId>oba-rest-client</artifactId>
+			<version>${dynamic-sandbox.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>de.adorsys.ledgers</groupId>
+			<artifactId>xs2a-rest-client</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>de.adorsys.psd2</groupId>
 			<artifactId>xs2a-server-api</artifactId>
 			<version>${xs2a.version}</version>
+			<scope>test</scope>
 		</dependency>
 
 		<!-- Commons -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
+			<scope>test</scope>
 		</dependency>
 
 		<!-- Jackson -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>
 			<artifactId>jackson-dataformat-yaml</artifactId>
+			<scope>test</scope>
 		</dependency>
-
-		<!-- test dependencies -->
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
@@ -100,6 +96,7 @@
 		    <version>3.141.59</version>
 			<scope>test</scope>
 		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/io.github.bonigarcia/webdrivermanager -->
 		<dependency>
 		    <groupId>io.github.bonigarcia</groupId>
@@ -174,9 +171,9 @@
 							<destFileName>fakesmtp.jar</destFileName>
 						</artifactItem>
 						<artifactItem>
-							<groupId>de.adorsys.ledgers</groupId>
+							<groupId>de.adorsys.psd2.sandbox</groupId>
 							<artifactId>online-banking-app</artifactId>
-							<version>${project.version}</version>
+							<version>${dynamic-sandbox.version}</version>
 							<type>jar</type>
 							<overWrite>true</overWrite>
 							<outputDirectory>${project.build.directory}/online-banking</outputDirectory>
