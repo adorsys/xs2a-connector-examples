@@ -26,10 +26,8 @@
 		<module>xs2a-connector</module>
 		<module>consent-management-server</module>
 		<module>gateway-app</module>
-		<module>consent-psu-rest-client</module>
 		<module>xs2a-connector-remote</module>
 		<module>xs2a-rest-client</module>
-		<module>xs2a-connector-redirect-test</module>
 	</modules>
 
 	<url>https://github.com/adorsys/xs2a-connector-examples</url>
