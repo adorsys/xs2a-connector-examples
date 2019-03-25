@@ -92,7 +92,7 @@
 		<google.guava.version>23.0</google.guava.version>
 		<cucumber.version>1.2.5</cucumber.version> <!--//TODO remove if not used-->
 		<nimbus-jose-jwt.version>6.1.1</nimbus-jose-jwt.version>
-		<ledgers.version>0.3</ledgers.version>
+		<ledgers.version>0.3.6.1</ledgers.version>
 		<!--Sonar -->
 		<sonar.core.coveragePlugin>jacoco</sonar.core.coveragePlugin>
 		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
