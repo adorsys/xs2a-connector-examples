@@ -19,6 +19,7 @@ import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
 import feign.FeignException;
 import feign.Response;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,8 +58,8 @@ public class GeneralPaymentService {
             logger.info("Get payment status by id with type={}, and id={}", paymentType, paymentId);
             TransactionStatusTO response = paymentRestClient.getPaymentStatusById(sca.getPaymentId()).getBody();
             TransactionStatus status = Optional.ofNullable(response)
-                                                  .map(r -> TransactionStatus.valueOf(r.name()))
-                                                  .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 200, but body was empty!", Response.builder().status(400).build()));
+                                               .map(r -> TransactionStatus.valueOf(r.name()))
+                                               .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 200, but body was empty!", Response.builder().status(400).build()));
             logger.info("The status was:{}", status);
             return SpiResponse.<TransactionStatus>builder()
                            .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
@@ -105,7 +106,7 @@ public class GeneralPaymentService {
     public <T extends SpiPaymentInitiationResponse> SpiResponse<T> firstCallInstantiatingPayment(
             @NotNull PaymentTypeTO paymentType, @NotNull SpiPayment payment,
             @NotNull AspspConsentData initialAspspConsentData, T responsePayload) {
-        String paymentId = initialAspspConsentData.getConsentId() != null
+        String paymentId = StringUtils.isNotBlank(initialAspspConsentData.getConsentId())
                                    ? initialAspspConsentData.getConsentId()
                                    : Ids.id();
         SCAPaymentResponseTO response = new SCAPaymentResponseTO();
@@ -129,15 +130,15 @@ public class GeneralPaymentService {
             if (ScaStatusTO.EXEMPTED.equals(response.getScaStatus()) || ScaStatusTO.FINALISED.equals(response.getScaStatus())) {
                 // Success
                 List<String> messages = Arrays.asList(response.getScaStatus().name(),
-                        String.format("Payment scheduled for execution. Transaction status is %s. Als see sca status",
-                                response.getTransactionStatus()));
+                                                      String.format("Payment scheduled for execution. Transaction status is %s. Als see sca status",
+                                                                    response.getTransactionStatus()));
                 return SpiResponse.<SpiPaymentExecutionResponse>builder()
                                .aspspConsentData(aspspConsentData).message(messages)
                                .payload(spiPaymentExecutionResponse(response.getTransactionStatus())).success();
             }
             List<String> messages = Arrays.asList(response.getScaStatus().name(),
-                    String.format("Payment not executed. Transaction status is %s. Als see sca status",
-                            response.getTransactionStatus()));
+                                                  String.format("Payment not executed. Transaction status is %s. Als see sca status",
+                                                                response.getTransactionStatus()));
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
                            .aspspConsentData(consentDataService.store(response, aspspConsentData)).message(messages)
                            .fail(SpiResponseStatus.LOGICAL_FAILURE);

@@ -17,7 +17,7 @@ services:
     - "8189:8000"
     environment:
     - LEDGERS_URL=http://ledgers:8088
-    - SPRING_PROFILES_ACTIVE=postgres,mockspi
+    - SPRING_PROFILES_ACTIVE=postgres,mock-qwac
     - DB_HOST=xs2a_connector_examples_db
     - DB_DATABASE=consent
     - DB_USER=cms

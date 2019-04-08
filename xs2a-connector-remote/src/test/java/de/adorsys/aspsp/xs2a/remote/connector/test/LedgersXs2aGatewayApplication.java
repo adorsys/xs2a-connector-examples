@@ -31,10 +31,10 @@ import org.springframework.test.context.ActiveProfiles;
 @EnableXs2aSwagger
 @EnableXs2aInterface
 @EnableLedgersXS2AConnectorRemote
-@ActiveProfiles({"mockspi"})
+@ActiveProfiles({"mock-qwac"})
 public class LedgersXs2aGatewayApplication {
     public static void main(String[] args) {
         System.setProperty("spring.main.allow-bean-definition-overriding", "true");
-        SpringApplication.run(LedgersXs2aGatewayApplication.class, "--spring.profiles.active=h2,mockspi", "--security.basic.enabled=false");
+        SpringApplication.run(LedgersXs2aGatewayApplication.class, "--spring.profiles.active=h2,mock-qwac", "--security.basic.enabled=false");
     }
 }
