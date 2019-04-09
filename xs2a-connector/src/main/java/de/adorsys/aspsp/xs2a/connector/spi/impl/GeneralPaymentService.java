@@ -19,6 +19,7 @@ import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
 import feign.FeignException;
 import feign.Response;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +106,7 @@ public class GeneralPaymentService {
     public <T extends SpiPaymentInitiationResponse> SpiResponse<T> firstCallInstantiatingPayment(
             @NotNull PaymentTypeTO paymentType, @NotNull SpiPayment payment,
             @NotNull AspspConsentData initialAspspConsentData, T responsePayload) {
-        String paymentId = initialAspspConsentData.getConsentId() != null
+        String paymentId = StringUtils.isNotBlank(initialAspspConsentData.getConsentId())
                                    ? initialAspspConsentData.getConsentId()
                                    : Ids.id();
         SCAPaymentResponseTO response = new SCAPaymentResponseTO();
