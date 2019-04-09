@@ -43,11 +43,6 @@
 			"enabled": true
 		},
 		{
-			"key": "startAuthorisation",
-			"value": null,
-			"enabled": true
-		},
-		{
 			"key": "authentication_method_id",
 			"value": "",
 			"description": "",
@@ -56,15 +51,6 @@
 		{
 			"key": "transaction_id",
 			"value": "0001",
-			"description": {
-				"content": "",
-				"type": "text/plain"
-			},
-			"enabled": true
-		},
-		{
-			"key": "basket_id",
-			"value": "",
 			"description": {
 				"content": "",
 				"type": "text/plain"
@@ -122,11 +108,6 @@
 			"enabled": true
 		},
 		{
-			"key": "account_id",
-			"value": "",
-			"enabled": true
-		},
-		{
 			"key": "resource_id",
 			"value": "",
 			"enabled": true
@@ -138,23 +119,29 @@
 			"enabled": true
 		},
 		{
-			"key": "consent_id",
-			"value": "",
-			"enabled": true
-		},
-		{
-			"key": "authorisation_id",
-			"value": "",
+			"key": "tpp-redirect-uri",
+			"value": "http://redirect:8089",
+			"description": "",
 			"enabled": true
 		},
 		{
 			"key": "payment_id",
 			"value": "",
 			"enabled": true
+		},
+		{
+			"key": "psu_iban_none",
+			"value": "",
+			"enabled": true
+		},
+		{
+			"key": "piis_consent_id",
+			"value": "",
+			"enabled": true
 		}
 	],
 	"name": "My Workspace Globals",
 	"_postman_variable_scope": "globals",
-	"_postman_exported_at": "2019-03-06T13:19:10.793Z",
+	"_postman_exported_at": "2019-04-03T10:40:02.409Z",
 	"_postman_exported_using": "Postman/6.7.4"
 }
