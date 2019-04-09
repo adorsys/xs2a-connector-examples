@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "f7a54e2c-8490-4a3d-a3d3-27ad07885c29",
+		"_postman_id": "0489f25d-6fd2-464e-ba5a-4485f43b094c",
 		"name": "xs2a-connector-tests",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -110,7 +110,7 @@
 										"exec": [
 											"const jsonData = pm.response.json();",
 											"",
-											"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+											"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 											"",
 											"pm.test(\"Status code is 201\", () => {",
 											"    pm.response.to.have.status(201);",
@@ -1215,7 +1215,7 @@
 										"exec": [
 											"const jsonData = pm.response.json();",
 											"",
-											"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+											"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 											"",
 											"pm.test(\"Status code is 201\", () => {",
 											"    pm.response.to.have.status(201);",
@@ -2246,6 +2246,11 @@
 										"key": "TPP-REDIRECT-PREFERRED",
 										"value": "true",
 										"type": "text"
+									},
+									{
+										"key": "TPP-Redirect-URI",
+										"value": "{{tpp-redirect-uri}}",
+										"type": "text"
 									}
 								],
 								"body": {
@@ -2276,7 +2281,7 @@
 										"exec": [
 											"const jsonData = pm.response.json();",
 											"",
-											"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+											"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 											"",
 											"pm.test(\"Status code is 201\", () => {",
 											"    pm.response.to.have.status(201);",
@@ -3333,7 +3338,7 @@
 										"exec": [
 											"const jsonData = pm.response.json();",
 											"",
-											"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+											"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 											"",
 											"pm.test(\"Status code is 201\", () => {",
 											"    pm.response.to.have.status(201);",
@@ -4560,7 +4565,7 @@
 										"exec": [
 											"const jsonData = pm.response.json();",
 											"",
-											"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+											"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 											"",
 											"pm.test(\"Status code is 201\", () => {",
 											"    pm.response.to.have.status(201);",
@@ -5619,7 +5624,7 @@
 													"",
 													"const jsonData = pm.response.json();",
 													"",
-													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 													"pm.globals.set(\"authorisation_id\", authorisationId);"
 												],
 												"type": "text/javascript"
@@ -5848,7 +5853,7 @@
 													"",
 													"const jsonData = pm.response.json();",
 													"",
-													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 													"pm.globals.set(\"authorisation_id\", authorisationId);"
 												],
 												"type": "text/javascript"
@@ -6179,7 +6184,7 @@
 													"",
 													"const jsonData = pm.response.json();",
 													"",
-													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 													"pm.globals.set(\"authorisation_id\", authorisationId);"
 												],
 												"type": "text/javascript"
@@ -6727,7 +6732,7 @@
 												"exec": [
 													"const jsonData = pm.response.json();",
 													"",
-													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 													"",
 													"pm.globals.set(\"authorisation_id\", authorisationId);",
 													"",
@@ -7745,7 +7750,7 @@
 												"exec": [
 													"const jsonData = pm.response.json();",
 													"",
-													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 													"",
 													"pm.globals.set(\"authorisation_id\", authorisationId);",
 													"",
@@ -8080,8 +8085,8 @@
 											"script": {
 												"id": "ef4667ac-3dac-4708-9349-51c833ff2ad2",
 												"exec": [
-													"pm.test(\"Status code is 200\", function () {",
-													"    pm.response.to.have.status(200);",
+													"pm.test(\"Status code is 404\", function () {",
+													"    pm.response.to.have.status(404);",
 													"});"
 												],
 												"type": "text/javascript"
@@ -8941,7 +8946,7 @@
 												"exec": [
 													"const jsonData = pm.response.json();",
 													"",
-													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 													"",
 													"pm.globals.set(\"authorisation_id\", authorisationId);",
 													"",
@@ -9442,8 +9447,8 @@
 											"script": {
 												"id": "f3e03308-7fd2-47cd-96bb-9d187a805961",
 												"exec": [
-													"pm.test(\"Status code is 200\", function () {",
-													"    pm.response.to.have.status(200);",
+													"pm.test(\"Status code is 404\", function () {",
+													"    pm.response.to.have.status(404);",
 													"});"
 												],
 												"type": "text/javascript"
@@ -10206,7 +10211,7 @@
 											},
 											{
 												"key": "PSU-ID",
-												"value": "{{psu_id_none_method}}"
+												"value": "{{psu_id_none}}"
 											},
 											{
 												"key": "PSU-ID-Type",
@@ -10291,7 +10296,7 @@
 												"exec": [
 													"const jsonData = pm.response.json();",
 													"",
-													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 													"",
 													"pm.globals.set(\"authorisation_id\", authorisationId);",
 													"",
@@ -10617,8 +10622,8 @@
 											"script": {
 												"id": "24a05f20-8df4-406f-9638-7694ffe5979c",
 												"exec": [
-													"pm.test(\"Status code is 200\", function () {",
-													"    pm.response.to.have.status(200);",
+													"pm.test(\"Status code is 404\", function () {",
+													"    pm.response.to.have.status(404);",
 													"});"
 												],
 												"type": "text/javascript"
@@ -11207,7 +11212,7 @@
 															"// splits string link by '/' to array and gets the last element - authorisationId",
 															"// e.g. \"http://localhost:8080/v1/consents/d917f39f-6308-4f81-9b51-bfbd8bc934c6/authorisations/554fda7d-bc70-44da-8670-15e299f817a6\"",
 															"      // needs to get 554fda7d-bc70-44da-8670-15e299f817a6 value",
-															"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+															"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 															"",
 															"pm.globals.set(\"authorisation_id\", authorisationId);"
 														],
@@ -11437,7 +11442,7 @@
 															"// splits string link by '/' to array and gets the last element - authorisationId",
 															"// e.g. \"http://localhost:8080/v1/consents/d917f39f-6308-4f81-9b51-bfbd8bc934c6/authorisations/554fda7d-bc70-44da-8670-15e299f817a6\"",
 															"      // needs to get 554fda7d-bc70-44da-8670-15e299f817a6 value",
-															"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+															"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 															"",
 															"pm.globals.set(\"authorisation_id\", authorisationId);"
 														],
@@ -11771,7 +11776,7 @@
 															"// splits string link by '/' to array and gets the last element - authorisationId",
 															"// e.g. \"http://localhost:8080/v1/consents/d917f39f-6308-4f81-9b51-bfbd8bc934c6/authorisations/554fda7d-bc70-44da-8670-15e299f817a6\"",
 															"      // needs to get 554fda7d-bc70-44da-8670-15e299f817a6 value",
-															"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+															"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 															"",
 															"pm.globals.set(\"authorisation_id\", authorisationId);"
 														],
@@ -12087,7 +12092,7 @@
 															"// splits string link by '/' to array and gets the last element - authorisationId",
 															"// e.g. \"http://localhost:8080/v1/consents/d917f39f-6308-4f81-9b51-bfbd8bc934c6/authorisations/554fda7d-bc70-44da-8670-15e299f817a6\"",
 															"      // needs to get 554fda7d-bc70-44da-8670-15e299f817a6 value",
-															"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+															"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 															"",
 															"pm.globals.set(\"authorisation_id\", authorisationId);"
 														],
@@ -12240,7 +12245,7 @@
 															"// splits string link by '/' to array and gets the last element - authorisationId",
 															"// e.g. \"http://localhost:8080/v1/consents/d917f39f-6308-4f81-9b51-bfbd8bc934c6/authorisations/554fda7d-bc70-44da-8670-15e299f817a6\"",
 															"      // needs to get 554fda7d-bc70-44da-8670-15e299f817a6 value",
-															"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+															"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 															"",
 															"pm.globals.set(\"authorisation_id\", authorisationId);"
 														],
@@ -12497,7 +12502,7 @@
 															"// splits string link by '/' to array and gets the last element - authorisationId",
 															"// e.g. \"http://localhost:8080/v1/consents/d917f39f-6308-4f81-9b51-bfbd8bc934c6/authorisations/554fda7d-bc70-44da-8670-15e299f817a6\"",
 															"      // needs to get 554fda7d-bc70-44da-8670-15e299f817a6 value",
-															"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+															"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 															"",
 															"pm.globals.set(\"authorisation_id\", authorisationId);"
 														],
@@ -12812,7 +12817,7 @@
 													"// splits string link by '/' to array and gets the last element - authorisationId",
 													"// e.g. \"http://localhost:8080/v1/consents/d917f39f-6308-4f81-9b51-bfbd8bc934c6/authorisations/554fda7d-bc70-44da-8670-15e299f817a6\"",
 													"      // needs to get 554fda7d-bc70-44da-8670-15e299f817a6 value",
-													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 													"",
 													"pm.globals.set(\"authorisation_id\", authorisationId);"
 												],
@@ -13069,7 +13074,7 @@
 													"// splits string link by '/' to array and gets the last element - authorisationId",
 													"// e.g. \"http://localhost:8080/v1/consents/d917f39f-6308-4f81-9b51-bfbd8bc934c6/authorisations/554fda7d-bc70-44da-8670-15e299f817a6\"",
 													"      // needs to get 554fda7d-bc70-44da-8670-15e299f817a6 value",
-													"const authorisationId = jsonData._links.scaStatus.split('/').pop();",
+													"const authorisationId = jsonData._links.scaStatus.href.split('/').pop();",
 													"",
 													"pm.globals.set(\"authorisation_id\", authorisationId);"
 												],
@@ -13136,7 +13141,7 @@
 												"exec": [
 													"const jsonData = pm.response.json();",
 													"",
-													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 													"",
 													"pm.test(\"Status code is 201\", () => {",
 													"    pm.response.to.have.status(201);",
@@ -13495,7 +13500,7 @@
 													"// splits string link by '/' to array and gets the last element - authorisationId",
 													"// e.g. \"http://localhost:8080/v1/consents/d917f39f-6308-4f81-9b51-bfbd8bc934c6/authorisations/554fda7d-bc70-44da-8670-15e299f817a6\"",
 													"      // needs to get 554fda7d-bc70-44da-8670-15e299f817a6 value",
-													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 													"",
 													"pm.globals.set(\"authorisation_id\", authorisationId);"
 												],
@@ -13823,7 +13828,7 @@
 												"exec": [
 													"const jsonData = pm.response.json();",
 													"",
-													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 													"",
 													"pm.test(\"Status code is 201\", () => {",
 													"    pm.response.to.have.status(201);",
@@ -15481,7 +15486,7 @@
 												"exec": [
 													"const jsonData = pm.response.json();",
 													"",
-													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 													"",
 													"pm.globals.set(\"authorisation_id\", authorisationId);",
 													"",
@@ -15883,7 +15888,7 @@
 												"exec": [
 													"const jsonData = pm.response.json();",
 													"",
-													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 													"",
 													"pm.globals.set(\"authorisation_id\", authorisationId);",
 													"",
@@ -16298,7 +16303,7 @@
 												"exec": [
 													"const jsonData = pm.response.json();",
 													"",
-													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 													"",
 													"pm.globals.set(\"authorisation_id\", authorisationId);",
 													"",
@@ -16713,7 +16718,7 @@
 												"exec": [
 													"const jsonData = pm.response.json();",
 													"",
-													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 													"",
 													"pm.globals.set(\"authorisation_id\", authorisationId);",
 													"",
@@ -17224,7 +17229,7 @@
 												"exec": [
 													"const jsonData = pm.response.json();",
 													"",
-													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 													"",
 													"pm.globals.set(\"authorisation_id\", authorisationId);",
 													"",
@@ -17625,7 +17630,7 @@
 												"exec": [
 													"const jsonData = pm.response.json();",
 													"",
-													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.split('/').pop();",
+													"const authorisationId = jsonData._links.startAuthorisationWithPsuAuthentication.href.split('/').pop();",
 													"",
 													"pm.globals.set(\"authorisation_id\", authorisationId);",
 													"",
@@ -18114,6 +18119,209 @@
 					"name": "Local",
 					"item": [
 						{
+							"name": "login at Ledgers",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "e7ea774b-c570-4abc-a3aa-902eb2bd18f0",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"const jsonData = pm.response.json();",
+											"pm.environment.set(\"token\", jsonData.bearerToken.access_token);",
+											"pm.globals.set(\"psu_iban_none\", jsonData.bearerToken.accessTokenObject.account_accesses[0].iban)"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{protocol}}://{{url_ledgers}}/users/login?login={{psu_id_none}}&pin={{psu_id_password}}&role=CUSTOMER",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{url_ledgers}}"
+									],
+									"path": [
+										"users",
+										"login"
+									],
+									"query": [
+										{
+											"key": "login",
+											"value": "{{psu_id_none}}"
+										},
+										{
+											"key": "pin",
+											"value": "{{psu_id_password}}"
+										},
+										{
+											"key": "role",
+											"value": "CUSTOMER"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create PIIS Consent",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "7db8ab8d-4915-4b32-a623-e56cef2dae4f",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"const jsonData = pm.response.json();",
+											"pm.globals.set(\"piis_consent_id\", jsonData.consentId)"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "psu-id",
+										"value": "{{psu_id_none}}",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"accounts\": [\n    {\n      \"currency\": \"EUR\",\n      \"iban\": \"{{psu_iban_none}}\"\n    }\n  ],\n  \"allowedFrequencyPerDay\": 4,\n  \n  \"validUntil\": \"2020-10-10\"\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{url_cms}}/aspsp-api/v1/piis/consents/",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{url_cms}}"
+									],
+									"path": [
+										"aspsp-api",
+										"v1",
+										"piis",
+										"consents",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "create piis consent ledgers",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "25802938-5aa8-4e13-95e2-30f1ee93acb3",
+										"exec": [
+											"var CryptoJS = require(\"crypto-js\");",
+											"",
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"const string = pm.response.text();",
+											"",
+											"//Encrypt",
+											"const encryptedWord = CryptoJS.enc.Utf8.parse(string);",
+											"const encrypted = CryptoJS.enc.Base64.stringify(encryptedWord);",
+											"pm.environment.set(\"token\", encrypted);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{token}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"access\": {\n    \"accounts\": [\n      \"{{psu_iban_none}}\"\n    ],\n    \"allPsd2\": \"ALL_ACCOUNTS\",\n    \"availableAccounts\": \"ALL_ACCOUNTS\",\n    \"balances\": [\n      \"{{psu_iban_none}}\"\n    ],\n    \"transactions\": [\n      \"{{psu_iban_none}}\"\n    ]\n  },\n  \"frequencyPerDay\": 4,\n  \"recurringIndicator\": false,\n  \"tppId\": \"PSDDE-FAKENCA-87B2AC\",\n  \"userId\": \"{{psu_id_none}}\",\n  \"validUntil\": \"2020-10-10\"\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{url_ledgers}}/consents/piis",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{url_ledgers}}"
+									],
+									"path": [
+										"consents",
+										"piis"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "update piis consent at cms",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"aspspConsentDataBase64\": \"{{token}}\",\n  \"consentId\": \"{{piis_consent_id}}\"\n}"
+								},
+								"url": {
+									"raw": "{{protocol}}://{{url_cms}}/psu-api/v1/aspsp-consent-data/consents/{{piis_consent_id}}",
+									"protocol": "{{protocol}}",
+									"host": [
+										"{{url_cms}}"
+									],
+									"path": [
+										"psu-api",
+										"v1",
+										"aspsp-consent-data",
+										"consents",
+										"{{piis_consent_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "Fund confirmation request(sufficient)",
 							"event": [
 								{
@@ -18153,7 +18361,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"account\": {\n   \"currency\": \"EUR\",\n   \"iban\": \"DE80760700240271232400\"\n},\n  \"cardNumber\": \"12345\",\n  \"instructedAmount\": {\n    \"amount\": \"160.00\",\n    \"currency\": \"EUR\"\n  },\n  \"payee\": \"Check24\"\n}"
+									"raw": "{\n  \"account\": {\n   \"currency\": \"EUR\",\n   \"iban\": \"DE69760700240340283600\"\n},\n  \"cardNumber\": \"12345\",\n  \"instructedAmount\": {\n    \"amount\": \"160.00\",\n    \"currency\": \"EUR\"\n  },\n  \"payee\": \"Check24\"\n}"
 								},
 								"url": {
 									"raw": "{{protocol}}://{{url_xs2a}}/v1/funds-confirmations",
