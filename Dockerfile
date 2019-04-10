@@ -1,4 +1,4 @@
-FROM adorsys/java:8
+FROM adorsys/openjdk-jre-base:8-minideb
 
 MAINTAINER https://github.com/adorsys/xs2a-connector-examples
 
