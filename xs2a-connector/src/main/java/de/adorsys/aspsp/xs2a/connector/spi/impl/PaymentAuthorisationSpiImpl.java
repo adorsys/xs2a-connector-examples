@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2018 adorsys GmbH & Co KG
+ * Copyright 2018-2019 adorsys GmbH & Co KG
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,9 +36,6 @@ import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
-import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiBulkPaymentInitiationResponse;
-import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPeriodicPaymentInitiationResponse;
-import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
@@ -94,7 +91,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
 
     @Override
     public SpiResponse<SpiAuthorisationStatus> authorisePsu(@NotNull SpiContextData contextData, @NotNull SpiPsuData psuLoginData, String pin, SpiPayment spiPayment, @NotNull AspspConsentData aspspConsentData) {
-        SCAPaymentResponseTO originalResponse = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class, false);
+        SCAPaymentResponseTO originalResponse = consentDataService.response(aspspConsentData.getAspspConsentData(), SCAPaymentResponseTO.class, false);
 
         SpiResponse<SpiAuthorisationStatus> authorisePsu = authorisationService.authorisePsuForConsent(
                 psuLoginData, pin, originalResponse.getPaymentId(), originalResponse, OpTypeTO.PAYMENT, aspspConsentData);
@@ -118,7 +115,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
 
     @Override
     public SpiResponse<List<SpiAuthenticationObject>> requestAvailableScaMethods(@NotNull SpiContextData contextData, SpiPayment spiPayment, @NotNull AspspConsentData aspspConsentData) {
-        SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class);
+        SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData.getAspspConsentData(), SCAPaymentResponseTO.class);
         List<ScaUserDataTO> scaMethods = Optional.ofNullable(sca.getScaMethods()).orElse(Collections.emptyList());
         return SpiResponse.<List<SpiAuthenticationObject>>builder().payload(scaMethodConverter.toSpiAuthenticationObjectList(scaMethods))
                        .aspspConsentData(aspspConsentData).success();
@@ -126,7 +123,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
 
     @Override
     public @NotNull SpiResponse<SpiAuthorizationCodeResult> requestAuthorisationCode(@NotNull SpiContextData contextData, @NotNull String authenticationMethodId, @NotNull SpiPayment spiPayment, @NotNull AspspConsentData aspspConsentData) {
-        SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class);
+        SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData.getAspspConsentData(), SCAPaymentResponseTO.class);
         if (EnumSet.of(PSUIDENTIFIED, PSUAUTHENTICATED).contains(sca.getScaStatus())) {
             try {
                 authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
@@ -178,19 +175,21 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
 
         // Payment initiation can only be called if exemption.
         PaymentType paymentType = spiPayment.getPaymentType();
+
+        // Don't know who came to idea to call external API internally, but it causes now to bring this tricky hack in play
+        // TODO remove after full SpiAspspConsentDataProvider implementation is done https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/796
+        TemporaryAspspConsentDataProvider temporaryAspspConsentDataProvider = new TemporaryAspspConsentDataProvider(paymentAspspConsentData);
+
         switch (paymentType) {
             case SINGLE:
-                SpiResponse<SpiSinglePaymentInitiationResponse> initiatePayment =
-                        singlePaymentSpi.initiatePayment(contextData, (@NotNull SpiSinglePayment) spiPayment, paymentAspspConsentData);
-                return new SpiResponse<>(authorisePsu.getPayload(), initiatePayment.getAspspConsentData());
+                singlePaymentSpi.initiatePayment(contextData, (@NotNull SpiSinglePayment) spiPayment, temporaryAspspConsentDataProvider);
+                return new SpiResponse<>(authorisePsu.getPayload(), temporaryAspspConsentDataProvider.getAspspConsentData());
             case BULK:
-                SpiResponse<SpiBulkPaymentInitiationResponse> initiatePayment2 =
-                        bulkPaymentSpi.initiatePayment(contextData, (@NotNull SpiBulkPayment) spiPayment, paymentAspspConsentData);
-                return new SpiResponse<>(authorisePsu.getPayload(), initiatePayment2.getAspspConsentData());
+                bulkPaymentSpi.initiatePayment(contextData, (@NotNull SpiBulkPayment) spiPayment, temporaryAspspConsentDataProvider);
+                return new SpiResponse<>(authorisePsu.getPayload(), temporaryAspspConsentDataProvider.getAspspConsentData());
             case PERIODIC:
-                SpiResponse<SpiPeriodicPaymentInitiationResponse> initiatePayment3 =
-                        periodicPaymentSpi.initiatePayment(contextData, (@NotNull SpiPeriodicPayment) spiPayment, paymentAspspConsentData);
-                return new SpiResponse<>(authorisePsu.getPayload(), initiatePayment3.getAspspConsentData());
+                periodicPaymentSpi.initiatePayment(contextData, (@NotNull SpiPeriodicPayment) spiPayment, temporaryAspspConsentDataProvider);
+                return new SpiResponse<>(authorisePsu.getPayload(), temporaryAspspConsentDataProvider.getAspspConsentData());
             default:
                 // throw unsupported payment type
                 return SpiResponse.<SpiAuthorisationStatus>builder()

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2018 adorsys GmbH & Co KG
+ * Copyright 2018-2019 adorsys GmbH & Co KG
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,7 +102,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         SpiAccountAccess accountAccess = accountConsent.getAccess();
         return SpiResponse.<SpiInitiateAisConsentResponse>builder()
                        .payload(new SpiInitiateAisConsentResponse(accountAccess, false))
-                       .aspspConsentData(consentDataService.store(consentResponse, initialAspspConsentData))
+                       .aspspConsentData(initialAspspConsentData.respondWith(consentDataService.store(consentResponse)))
                        // Pass sca status as message.
                        .message(consentResponse.getScaStatus().name()).success();
     }
@@ -117,12 +117,13 @@ public class AisConsentSpiImpl implements AisConsentSpi {
     @Override
     public SpiResponse<VoidResponse> revokeAisConsent(@NotNull SpiContextData contextData,
                                                       SpiAccountConsent accountConsent, AspspConsentData aspspConsentData) {
-        SCAConsentResponseTO sca = consentDataService.response(aspspConsentData, SCAConsentResponseTO.class);
+        SCAConsentResponseTO sca = consentDataService.response(aspspConsentData.getAspspConsentData(), SCAConsentResponseTO.class);
         sca.setScaStatus(FINALISED);
         sca.setStatusDate(LocalDateTime.now());
         sca.setBearerToken(new BearerTokenTO());// remove existing token.
         return SpiResponse.<SpiResponse.VoidResponse>builder().payload(SpiResponse.voidResponse())
-                       .aspspConsentData(consentDataService.store(sca, aspspConsentData)).message(sca.getScaStatus().name())
+                       .aspspConsentData(aspspConsentData.respondWith(consentDataService.store(sca)))
+                       .message(sca.getScaStatus().name())
                        .success();
     }
 
@@ -136,7 +137,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
                                                                                           @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiAccountConsent accountConsent,
                                                                                           @NotNull AspspConsentData aspspConsentData) {
         try {
-            SCAConsentResponseTO sca = consentDataService.response(aspspConsentData, SCAConsentResponseTO.class);
+            SCAConsentResponseTO sca = consentDataService.response(aspspConsentData.getAspspConsentData(), SCAConsentResponseTO.class);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
             ResponseEntity<SCAConsentResponseTO> authorizeConsentResponse = consentRestClient
@@ -145,7 +146,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
 
             // TODO use real sca status from Ledgers for resolving consent status https://git.adorsys.de/adorsys/xs2a/ledgers/issues/206
             return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder().payload(new SpiVerifyScaAuthorisationResponse(ConsentStatus.VALID))
-                           .aspspConsentData(consentDataService.store(consentResponse, aspspConsentData))
+                           .aspspConsentData(aspspConsentData.respondWith(consentDataService.store(consentResponse)))
                            .message(consentResponse.getScaStatus().name()).success();
         } finally {
             authRequestInterceptor.setAccessToken(null);
@@ -161,7 +162,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
                                                             @NotNull SpiPsuData psuLoginData, String password, SpiAccountConsent businessObject,
                                                             @NotNull AspspConsentData aspspConsentData) {
 
-        SCAConsentResponseTO originalResponse = consentDataService.response(aspspConsentData, SCAConsentResponseTO.class, false);
+        SCAConsentResponseTO originalResponse = consentDataService.response(aspspConsentData.getAspspConsentData(), SCAConsentResponseTO.class, false);
 
         SpiResponse<SpiAuthorisationStatus> authorisePsu = authorisationService.authorisePsuForConsent(
                 psuLoginData, password, businessObject.getId(), originalResponse, OpTypeTO.CONSENT, aspspConsentData);
@@ -182,7 +183,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         if (EnumSet.of(EXEMPTED, PSUAUTHENTICATED, PSUIDENTIFIED)
                     .contains(scaConsentResponse.getScaStatus())) {
             SCAConsentResponseTO resp = initiateConsentInternal(businessObject, authorisePsu.getAspspConsentData());
-            return new SpiResponse<>(authorisePsu.getPayload(), consentDataService.store(resp, authorisePsu.getAspspConsentData()));
+            return new SpiResponse<>(authorisePsu.getPayload(), authorisePsu.getAspspConsentData().respondWith(consentDataService.store(resp)));
         }// DO not change. AuthorizePsu is mutable. //TODO @fpo fix this
         return new SpiResponse<>(authorisePsu.getPayload(), authorisePsu.getAspspConsentData());
     }
@@ -196,7 +197,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
     public SpiResponse<List<SpiAuthenticationObject>> requestAvailableScaMethods(@NotNull SpiContextData contextData,
                                                                                  SpiAccountConsent businessObject, @NotNull AspspConsentData aspspConsentData) {
         try {
-            SCAConsentResponseTO sca = consentDataService.response(aspspConsentData, SCAConsentResponseTO.class);
+            SCAConsentResponseTO sca = consentDataService.response(aspspConsentData.getAspspConsentData(), SCAConsentResponseTO.class);
             if (sca.getScaMethods() != null) {
 
                 // Validate the access token
@@ -207,7 +208,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
                 List<ScaUserDataTO> scaMethods = sca.getScaMethods();
                 List<SpiAuthenticationObject> authenticationObjects = scaMethodConverter.toSpiAuthenticationObjectList(scaMethods);
                 return SpiResponse.<List<SpiAuthenticationObject>>builder()
-                               .aspspConsentData(consentDataService.store(sca, aspspConsentData))
+                               .aspspConsentData(aspspConsentData.respondWith(consentDataService.store(sca)))
                                .payload(authenticationObjects).success();
             } else {
                 logger.error("Process mismatch. Current SCA Status is %s", sca.getScaStatus());
@@ -224,7 +225,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
 
     @Override
     public @NotNull SpiResponse<SpiAuthorizationCodeResult> requestAuthorisationCode(@NotNull SpiContextData contextData, @NotNull String authenticationMethodId, @NotNull SpiAccountConsent businessObject, @NotNull AspspConsentData aspspConsentData) {
-        SCAConsentResponseTO sca = consentDataService.response(aspspConsentData, SCAConsentResponseTO.class);
+        SCAConsentResponseTO sca = consentDataService.response(aspspConsentData.getAspspConsentData(), SCAConsentResponseTO.class);
         if (EnumSet.of(PSUIDENTIFIED,PSUAUTHENTICATED).contains(sca.getScaStatus())) {
             try {
                 authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
@@ -253,7 +254,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         response.setScaStatus(STARTED);
         responsePayload.setAccountAccess(accountConsent.getAccess());
         return SpiResponse.<T>builder()
-                       .aspspConsentData(consentDataService.store(response, initialAspspConsentData, false))
+                       .aspspConsentData(initialAspspConsentData.respondWith(consentDataService.store(response, false)))
                        .payload(responsePayload).success();
     }
 
@@ -279,7 +280,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
 
     private SCAConsentResponseTO initiateConsentInternal(SpiAccountConsent accountConsent, AspspConsentData initialAspspConsentData) {
         try {
-            SCAResponseTO sca = consentDataService.response(initialAspspConsentData);
+            SCAResponseTO sca = consentDataService.response(initialAspspConsentData.getAspspConsentData());
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
             // Issue: https://git.adorsys.de/adorsys/xs2a/ledgers/issues/169

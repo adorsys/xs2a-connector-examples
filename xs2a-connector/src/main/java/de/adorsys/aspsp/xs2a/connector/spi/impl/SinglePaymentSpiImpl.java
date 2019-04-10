@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2018 adorsys GmbH & Co KG
+ * Copyright 2018-2019 adorsys GmbH & Co KG
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
-import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
+import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
@@ -35,6 +35,7 @@ import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.SinglePaymentSpi;
 import feign.FeignException;
 import feign.Response;
+import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,44 +69,41 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
      * Initiating a payment you need a valid bearer token if not we just return ok.
      */
     @Override
-    public @NotNull SpiResponse<SpiSinglePaymentInitiationResponse> initiatePayment(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData initialAspspConsentData) {
-        if (initialAspspConsentData.getAspspConsentData() == null) {
-            return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, payment, initialAspspConsentData, new SpiSinglePaymentInitiationResponse());
+    public @NotNull SpiResponse<SpiSinglePaymentInitiationResponse> initiatePayment(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        byte[] initialAspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
+        if (ArrayUtils.isEmpty(initialAspspConsentData)) {
+            return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, payment, aspspConsentDataProvider, new SpiSinglePaymentInitiationResponse());
         }
         try {
             SCAPaymentResponseTO response = initiatePaymentInternal(payment, initialAspspConsentData);
             SpiSinglePaymentInitiationResponse spiInitiationResponse = Optional.ofNullable(response)
                                                                                .map(paymentMapper::toSpiSingleResponse)
                                                                                .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 201, but body was empty!", Response.builder().status(400).build()));
+            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
             return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
-                           .aspspConsentData(consentDataService.store(response, initialAspspConsentData))
                            .message(response.getScaStatus().name())
                            .payload(spiInitiationResponse)
                            .success();
         } catch (FeignException e) {
             return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
-                           .aspspConsentData(initialAspspConsentData.respondWith(initialAspspConsentData.getAspspConsentData()))
                            .fail(getSpiFailureResponse(e));
         } catch (IllegalStateException e) {
             return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
-                           .aspspConsentData(initialAspspConsentData.respondWith(initialAspspConsentData.getAspspConsentData()))
                            .fail(SpiResponseStatus.TECHNICAL_FAILURE);
         }
     }
 
     @Override
-    public @NotNull SpiResponse<SpiSinglePayment> getPaymentById(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
+    public @NotNull SpiResponse<SpiSinglePayment> getPaymentById(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         if (!TransactionStatus.ACSP.equals(payment.getPaymentStatus())) {
             return SpiResponse.<SpiSinglePayment>builder()
-                           .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
                            .payload(payment)
                            .success();
         }
-        return paymentService.getPaymentById(payment.getPaymentId(), payment.toString(), aspspConsentData)
+        return paymentService.getPaymentById(payment.getPaymentId(), payment.toString(), aspspConsentDataProvider.loadAspspConsentData())
                        .map(p -> objectMapper.convertValue(p, SinglePaymentTO.class))
                        .map(paymentMapper::toSpiSinglePayment)
                        .map(p -> SpiResponse.<SpiSinglePayment>builder()
-                                         .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
                                          .payload(p)
                                          .success())
                        .orElseGet(() -> SpiResponse.<SpiSinglePayment>builder()
@@ -113,8 +111,8 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
     }
 
     @Override
-    public @NotNull SpiResponse<TransactionStatus> getPaymentStatusById(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
-        return paymentService.getPaymentStatusById(PaymentTypeTO.valueOf(payment.getPaymentType().name()), payment.getPaymentId(), payment.getPaymentStatus(), aspspConsentData);
+    public @NotNull SpiResponse<TransactionStatus> getPaymentStatusById(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        return paymentService.getPaymentStatusById(PaymentTypeTO.valueOf(payment.getPaymentType().name()), payment.getPaymentId(), payment.getPaymentStatus(), aspspConsentDataProvider.loadAspspConsentData());
     }
 
     /*
@@ -127,13 +125,13 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
      *
      */
     @Override
-    public @NotNull SpiResponse<SpiPaymentExecutionResponse> executePaymentWithoutSca(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
-        return paymentService.executePaymentWithoutSca(contextData, payment, aspspConsentData);
+    public @NotNull SpiResponse<SpiPaymentExecutionResponse> executePaymentWithoutSca(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        return paymentService.executePaymentWithoutSca(aspspConsentDataProvider);
     }
 
     @Override
-    public @NotNull SpiResponse<SpiPaymentExecutionResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiContextData contextData, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiSinglePayment payment, @NotNull AspspConsentData aspspConsentData) {
-        return paymentService.verifyScaAuthorisationAndExecutePayment(spiScaConfirmation, aspspConsentData);
+    public @NotNull SpiResponse<SpiPaymentExecutionResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiContextData contextData, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiSinglePayment payment, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        return paymentService.verifyScaAuthorisationAndExecutePayment(spiScaConfirmation, aspspConsentDataProvider);
     }
 
     @NotNull
@@ -144,7 +142,7 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
                        : SpiResponseStatus.LOGICAL_FAILURE;
     }
 
-    private SCAPaymentResponseTO initiatePaymentInternal(SpiSinglePayment payment, AspspConsentData initialAspspConsentData) throws FeignException {
+    private SCAPaymentResponseTO initiatePaymentInternal(SpiSinglePayment payment, byte[] initialAspspConsentData) {
         try {
             SCAPaymentResponseTO sca = consentDataService.response(initialAspspConsentData, SCAPaymentResponseTO.class, true);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());

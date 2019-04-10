@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2018 adorsys GmbH & Co KG
+ * Copyright 2018-2019 adorsys GmbH & Co KG
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,39 +16,33 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
-import org.apache.commons.collections4.CollectionUtils;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.ledgers.middleware.api.domain.account.AccountDetailsTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
 import de.adorsys.ledgers.rest.client.AccountRestClient;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
+import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
-import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountBalance;
-import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountConsent;
-import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountDetails;
-import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
-import de.adorsys.psd2.xs2a.spi.domain.account.SpiTransaction;
-import de.adorsys.psd2.xs2a.spi.domain.account.SpiTransactionReport;
+import de.adorsys.psd2.xs2a.spi.domain.account.*;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.AccountSpi;
 import feign.FeignException;
 import feign.Response;
+import org.apache.commons.collections4.CollectionUtils;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 public class AccountSpiImpl implements AccountSpi {
@@ -305,7 +299,7 @@ public class AccountSpiImpl implements AccountSpi {
 	}
 
 	private SCAResponseTO auth(AspspConsentData aspspConsentData) {
-		SCAResponseTO sca = tokenService.response(aspspConsentData);
+		SCAResponseTO sca = tokenService.response(aspspConsentData.getAspspConsentData());
 		authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 		return sca;
 	}

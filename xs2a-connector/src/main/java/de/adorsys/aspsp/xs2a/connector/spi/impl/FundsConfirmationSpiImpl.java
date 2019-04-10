@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2018 adorsys GmbH & Co KG
+ * Copyright 2018-2019 adorsys GmbH & Co KG
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,7 +64,7 @@ public class FundsConfirmationSpiImpl implements FundsConfirmationSpi {
 			@Nullable PiisConsent piisConsent, @NotNull SpiFundsConfirmationRequest spiFundsConfirmationRequest,
 			@NotNull AspspConsentData aspspConsentData) {
         try {
-			SCAResponseTO sca = tokenService.response(aspspConsentData);
+			SCAResponseTO sca = tokenService.response(aspspConsentData.getAspspConsentData());
 			authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
             logger.info("Funds confirmation request e={}", spiFundsConfirmationRequest);
