@@ -1,3 +1,19 @@
+/*
+ * Copyright 2018-2019 adorsys GmbH & Co KG
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
@@ -8,9 +24,8 @@ import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.ledgers.util.Ids;
-import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
-import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
+import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
@@ -44,10 +59,9 @@ public class GeneralPaymentService {
         this.consentDataService = consentDataService;
     }
 
-    public SpiResponse<TransactionStatus> getPaymentStatusById(@NotNull PaymentTypeTO paymentType, @NotNull String paymentId, @NotNull TransactionStatus spiTransactionStatus, @NotNull AspspConsentData aspspConsentData) {
+    public SpiResponse<TransactionStatus> getPaymentStatusById(@NotNull PaymentTypeTO paymentType, @NotNull String paymentId, @NotNull TransactionStatus spiTransactionStatus, @NotNull byte[] aspspConsentData) {
         if (!TransactionStatus.ACSP.equals(spiTransactionStatus)) {
             return SpiResponse.<TransactionStatus>builder()
-                           .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
                            .payload(spiTransactionStatus)
                            .success();
         }
@@ -62,32 +76,29 @@ public class GeneralPaymentService {
                                                   .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 200, but body was empty!", Response.builder().status(400).build()));
             logger.info("The status was:{}", status);
             return SpiResponse.<TransactionStatus>builder()
-                           .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
                            .payload(status)
                            .success();
         } catch (FeignException e) {
             return SpiResponse.<TransactionStatus>builder()
-                           .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
                            .fail(getSpiFailureResponse(e));
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
     }
 
-    public SpiResponse<SpiPaymentExecutionResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiScaConfirmation spiScaConfirmation, @NotNull AspspConsentData aspspConsentData) {
+    public SpiResponse<SpiPaymentExecutionResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         try {
-            SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class);
+            SCAPaymentResponseTO sca = consentDataService.response(aspspConsentDataProvider.loadAspspConsentData(), SCAPaymentResponseTO.class);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
             ResponseEntity<SCAPaymentResponseTO> authorizePaymentResponse = paymentRestClient.authorizePayment(sca.getPaymentId(), sca.getAuthorisationId(), spiScaConfirmation.getTanNumber());
             SCAPaymentResponseTO consentResponse = authorizePaymentResponse.getBody();
 
+            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(consentResponse));
             return SpiResponse.<SpiPaymentExecutionResponse>builder().payload(spiPaymentExecutionResponse(consentResponse.getTransactionStatus()))
-                           .aspspConsentData(consentDataService.store(consentResponse, aspspConsentData))
                            .message(consentResponse.getScaStatus().name()).success();
         } catch (Exception e) {
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
                            .fail(SpiResponseStatus.LOGICAL_FAILURE);
         } finally {
             authRequestInterceptor.setAccessToken(null);
@@ -99,15 +110,15 @@ public class GeneralPaymentService {
      *
      * @param paymentType             the payment type
      * @param payment                 the payment object
-     * @param initialAspspConsentData the credential data container
+     * @param aspspConsentDataProvider the credential data container access
      * @param responsePayload         the instantiated payload object
-     * @return
      */
-    public <T extends SpiPaymentInitiationResponse> SpiResponse<T> firstCallInstantiatingPayment(
+    <T extends SpiPaymentInitiationResponse> SpiResponse<T> firstCallInstantiatingPayment(
             @NotNull PaymentTypeTO paymentType, @NotNull SpiPayment payment,
-            @NotNull AspspConsentData initialAspspConsentData, T responsePayload) {
-        String paymentId = StringUtils.isNotBlank(initialAspspConsentData.getConsentId())
-                                   ? initialAspspConsentData.getConsentId()
+            @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, T responsePayload
+                                                                                         ) {
+        String paymentId = StringUtils.isNotBlank(payment.getPaymentId())
+                                   ? payment.getPaymentId()
                                    : Ids.id();
         SCAPaymentResponseTO response = new SCAPaymentResponseTO();
         response.setPaymentId(paymentId);
@@ -117,15 +128,18 @@ public class GeneralPaymentService {
         responsePayload.setPaymentId(paymentId);
 //		responsePayload.setAspspAccountId();// TODO ID of the deposit account
         responsePayload.setTransactionStatus(TransactionStatus.valueOf(response.getTransactionStatus().name()));
+
+        aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response, false));
+
         return SpiResponse.<T>builder()
-                       .aspspConsentData(consentDataService.store(response, initialAspspConsentData, false))
-                       .payload(responsePayload).success();
+                       .payload(responsePayload)
+                       .success();
     }
 
-    public <T> @NotNull SpiResponse<SpiPaymentExecutionResponse> executePaymentWithoutSca(@NotNull SpiContextData contextData, @NotNull T payment, @NotNull AspspConsentData aspspConsentData) {
+    @NotNull SpiResponse<SpiPaymentExecutionResponse> executePaymentWithoutSca(@NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         try {
             // First check if there is any payment response ongoing.
-            SCAPaymentResponseTO response = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class);
+            SCAPaymentResponseTO response = consentDataService.response(aspspConsentDataProvider.loadAspspConsentData(), SCAPaymentResponseTO.class);
 
             if (ScaStatusTO.EXEMPTED.equals(response.getScaStatus()) || ScaStatusTO.FINALISED.equals(response.getScaStatus())) {
                 // Success
@@ -133,23 +147,24 @@ public class GeneralPaymentService {
                         String.format("Payment scheduled for execution. Transaction status is %s. Als see sca status",
                                 response.getTransactionStatus()));
                 return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                               .aspspConsentData(aspspConsentData).message(messages)
-                               .payload(spiPaymentExecutionResponse(response.getTransactionStatus())).success();
+                               .message(messages)
+                               .payload(spiPaymentExecutionResponse(response.getTransactionStatus()))
+                               .success();
             }
             List<String> messages = Arrays.asList(response.getScaStatus().name(),
                     String.format("Payment not executed. Transaction status is %s. Als see sca status",
                             response.getTransactionStatus()));
+            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .aspspConsentData(consentDataService.store(response, aspspConsentData)).message(messages)
+                           .message(messages)
                            .fail(SpiResponseStatus.LOGICAL_FAILURE);
         } catch (FeignException e) {
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .aspspConsentData(aspspConsentData.respondWith(aspspConsentData.getAspspConsentData()))
                            .fail(getSpiFailureResponse(e));
         }
     }
 
-    public Optional<Object> getPaymentById(String paymentId, String toString, AspspConsentData aspspConsentData) {
+    Optional<Object> getPaymentById(String paymentId, String toString, byte[] aspspConsentData) {
         try {
             SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());

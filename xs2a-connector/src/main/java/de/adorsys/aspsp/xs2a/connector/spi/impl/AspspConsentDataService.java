@@ -1,16 +1,30 @@
+/*
+ * Copyright 2018-2019 adorsys GmbH & Co KG
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
-
-import java.io.IOException;
-import java.util.Collections;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
 import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
-import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import feign.FeignException;
 import feign.Response;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.util.Collections;
 
 @Service
 public class AspspConsentDataService {
@@ -20,37 +34,33 @@ public class AspspConsentDataService {
 
 	/**
 	 * Default storage, makes sure there is a bearer token in the response object.
-	 * @param response
-	 * @param aspspConsentData
-	 * @return
 	 */
-	public AspspConsentData store(SCAResponseTO response, AspspConsentData aspspConsentData){
-		return store(response, aspspConsentData, true);
+	public byte[] store(SCAResponseTO response){
+		return store(response, true);
 	}
 
-	public AspspConsentData store(SCAResponseTO response, AspspConsentData aspspConsentData, boolean checkCredentials){
+	public byte[] store(SCAResponseTO response, boolean checkCredentials){
 		if(checkCredentials && response.getBearerToken()==null) {
 			throw new IllegalStateException("Missing credentials. response must contain a bearer token by default.");
 		}
 		try {
-			return aspspConsentData.respondWith(tokenStorageService.toBytes(response));
+			return tokenStorageService.toBytes(response);
 		} catch (IOException e) {
 			throw FeignException.errorStatus(e.getMessage(), error(500));
 		}
 	}
 	
-	public <T extends SCAResponseTO> T response(AspspConsentData aspspConsentData, Class<T> klass) {
+	public <T extends SCAResponseTO> T response(byte[] aspspConsentData, Class<T> klass) {
 		return response(aspspConsentData, klass, true);
 	}
 
-	public SCAResponseTO response(AspspConsentData aspspConsentData) {
+	public SCAResponseTO response(byte[] aspspConsentData) {
 		return response(aspspConsentData, true);
 	}
 
-	public SCAResponseTO response(AspspConsentData aspspConsentData, boolean checkCredentials) {
-		byte[] aspspConsentDataBytes = aspspConsentData.getAspspConsentData();
+	public SCAResponseTO response(byte[] aspspConsentData, boolean checkCredentials) {
 		try {
-			SCAResponseTO sca = tokenStorageService.fromBytes(aspspConsentDataBytes);
+			SCAResponseTO sca = tokenStorageService.fromBytes(aspspConsentData);
 			checkScaPresent(sca);
 			checkBearerTokenPresent(checkCredentials, sca);
 			return sca;
@@ -59,10 +69,9 @@ public class AspspConsentDataService {
 		}
 	}
 	
-	public <T extends SCAResponseTO> T response(AspspConsentData aspspConsentData, Class<T> klass, boolean checkCredentials) {
-		byte[] aspspConsentDataBytes = aspspConsentData.getAspspConsentData();
+	public <T extends SCAResponseTO> T response(byte[] aspspConsentData, Class<T> klass, boolean checkCredentials) {
 		try {
-			T sca = tokenStorageService.fromBytes(aspspConsentDataBytes, klass);
+			T sca = tokenStorageService.fromBytes(aspspConsentData, klass);
 			checkScaPresent(sca);
 			checkBearerTokenPresent(checkCredentials, sca);
 			return sca;
