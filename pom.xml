@@ -22,7 +22,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.adorsys.ledgers</groupId>
 	<artifactId>xs2a-connector-examples</artifactId>
-	<version>0.4-SNAPSHOT</version>
+	<version>3.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>XS2A Connector Examples</name>
@@ -86,7 +86,7 @@
 		<!-- xs2a version -->
 		<xs2a.version>3.1-SNAPSHOT</xs2a.version>
 		<!-- ledgers version -->
-		<ledgers.version>0.3.6.1</ledgers.version>
+		<ledgers.version>0.3.7</ledgers.version>
 		<!-- other properties -->
 		<spring-boot-dependencies.version>2.1.1.RELEASE</spring-boot-dependencies.version>
 		<spring-cloud-dependencies.version>Greenwich.M3</spring-cloud-dependencies.version>
@@ -107,7 +107,7 @@
 		<sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
 		<sonar.language>java</sonar.language>
 		<sonar.coverage.exclusions>**/*Entity.java,**/*TO.java,**/*Exception.java,**/*Config.java</sonar.coverage.exclusions>
-		<skipITs>true</skipITs>
+		<skipITs>false</skipITs>
 		<skipTests>false</skipTests>
 	</properties>
 
