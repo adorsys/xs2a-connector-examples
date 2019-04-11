@@ -1,6 +1,5 @@
 # xs2a-connector-examples
 
-XS2A Connector for the ledgers project
+XS2A Connector for the Ledgers project
 
-Follow instruction on the page [Running Test](xs2a-connector-redirect-test/README.md) to see how to run this connector or use it for development.
-
+[These instructions](GETTING_STARTED.md) will get you a copy of the project up and running on your local machine for development and testing purposes.
