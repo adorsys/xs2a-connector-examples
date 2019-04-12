@@ -74,7 +74,7 @@ public class AccountSpiImpl implements AccountSpi {
 					aspspConsentData);
 			logger.info("Details for consent are: {}", accountDetailsList);
 			return SpiResponse.<List<SpiAccountDetails>>builder()
-					.payload(filterAccountDetailsByWithBalance(withBalance, accountDetailsList))
+					.payload(filterAccountDetailsByWithBalance(withBalance, accountDetailsList, accountConsent.getAccess()))
 					.aspspConsentData(aspspConsentData).success();
 		} catch (FeignException e) {
 			logger.error(e.getMessage());
@@ -285,11 +285,14 @@ public class AccountSpiImpl implements AccountSpi {
 		}
 	}
 
-	private List<SpiAccountDetails> filterAccountDetailsByWithBalance(boolean withBalance,
-			List<SpiAccountDetails> details) {
-		if (!withBalance) {
-			details.forEach(SpiAccountDetails::emptyBalances);
+	private List<SpiAccountDetails> filterAccountDetailsByWithBalance(boolean withBalance, List<SpiAccountDetails> details,
+	                                                                  SpiAccountAccess spiAccountAccess) {
+		for (SpiAccountDetails spiAccountDetails : details) {
+			if (!withBalance || !isValidAccountByAccess(spiAccountDetails.getResourceId(), spiAccountAccess.getBalances())) {
+				spiAccountDetails.emptyBalances();
+			}
 		}
+
 		return details;
 	}
 
@@ -302,5 +305,11 @@ public class AccountSpiImpl implements AccountSpi {
 		SCAResponseTO sca = tokenService.response(aspspConsentData.getAspspConsentData());
 		authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 		return sca;
+	}
+
+	private boolean isValidAccountByAccess(String accountId, List<SpiAccountReference> allowedAccountData) {
+		return CollectionUtils.isNotEmpty(allowedAccountData)
+				       && allowedAccountData.stream()
+						          .anyMatch(a -> accountId.equals(a.getResourceId()));
 	}
 }
