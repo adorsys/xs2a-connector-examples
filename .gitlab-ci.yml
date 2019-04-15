@@ -180,7 +180,7 @@ Deploy Openshift (master):
     - master
   variables:
     <<: *variables
-    DOCKER_TAG: master
+    DOCKER_TAG: latest
     OPENSHIFT_NAMESPACE: "${DEMO_NAMESPACE}"
   <<: *deploy_openshift
 
