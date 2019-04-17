@@ -31,7 +31,6 @@
 	<modules>
 		<module>ledgers-rest-client</module>
 		<module>xs2a-connector</module>
-		<module>consent-management-server</module>
 		<module>gateway-app</module>
 		<module>xs2a-connector-remote</module>
 	</modules>
