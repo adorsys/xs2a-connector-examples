@@ -16,9 +16,8 @@
 
 package de.adorsys.ledgers.rest.client;
 
-import org.springframework.cloud.netflix.feign.FeignClient;
-
 import de.adorsys.ledgers.middleware.rest.resource.PaymentRestAPI;
+import org.springframework.cloud.openfeign.FeignClient;
 
 @FeignClient(value = "ledgersPayment", url = "${ledgers.url}", path=PaymentRestAPI.BASE_PATH, configuration=FeignConfig.class)
 public interface PaymentRestClient extends PaymentRestAPI {}

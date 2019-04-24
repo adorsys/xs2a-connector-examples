@@ -87,11 +87,12 @@
 		<!-- ledgers version -->
 		<ledgers.version>0.3.7</ledgers.version>
 		<!-- other properties -->
-		<spring-boot-dependencies.version>2.1.1.RELEASE</spring-boot-dependencies.version>
-		<spring-cloud-dependencies.version>Greenwich.M3</spring-cloud-dependencies.version>
+		<spring-boot-dependencies.version>2.1.4.RELEASE</spring-boot-dependencies.version>
+		<spring-cloud-dependencies.version>Greenwich.RELEASE</spring-cloud-dependencies.version>
+		<spring-cloud-starter-feign.version>1.4.6.RELEASE</spring-cloud-starter-feign.version>
 		<slf4j.version>1.7.25</slf4j.version>
 		<jetbrains.annotations.version>15.0</jetbrains.annotations.version>
-		<javatar-commons.version>LATEST</javatar-commons.version>
+		<javatar-commons.version>0.6</javatar-commons.version>
 		<org.mapstruct.version>1.2.0.Final</org.mapstruct.version>
 		<springfox-swagger2.version>2.9.2</springfox-swagger2.version>
 		<swagger-annotations.version>1.5.20</swagger-annotations.version>
@@ -99,6 +100,8 @@
 		<lombok.version>1.18.6</lombok.version>
 		<google.guava.version>23.0</google.guava.version>
 		<nimbus-jose-jwt.version>6.1.1</nimbus-jose-jwt.version>
+		<springfox-bean-validators.version>2.9.2</springfox-bean-validators.version>
+		<commons-io.version>2.6</commons-io.version>
 		<!--Sonar -->
 		<sonar.core.coveragePlugin>jacoco</sonar.core.coveragePlugin>
 		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
@@ -151,6 +154,13 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-starter-feign</artifactId>
+				<version>${spring-cloud-starter-feign.version}</version>
+			</dependency>
+
 			<!-- swagger -->
 
 			<dependency>
@@ -219,6 +229,18 @@
 				<artifactId>cucumber-junit</artifactId>
 				<version>${cucumber.version}</version>
 				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>io.springfox</groupId>
+				<artifactId>springfox-bean-validators</artifactId>
+				<version>${springfox-bean-validators.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>commons-io</groupId>
+				<artifactId>commons-io</artifactId>
+				<version>${commons-io.version}</version>
 			</dependency>
 
 			<dependency>
