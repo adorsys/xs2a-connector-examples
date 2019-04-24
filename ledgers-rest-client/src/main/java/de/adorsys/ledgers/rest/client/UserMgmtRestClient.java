@@ -16,9 +16,8 @@
 
 package de.adorsys.ledgers.rest.client;
 
-import org.springframework.cloud.netflix.feign.FeignClient;
-
 import de.adorsys.ledgers.middleware.rest.resource.UserMgmtRestAPI;
+import org.springframework.cloud.openfeign.FeignClient;
 
 @FeignClient(value = "ledgersUserMgmt", url = "${ledgers.url}", path=UserMgmtRestAPI.BASE_PATH, configuration=FeignConfig.class)
 public interface UserMgmtRestClient extends UserMgmtRestAPI {}

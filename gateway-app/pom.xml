@@ -13,9 +13,6 @@
 
 	<properties>
 		<ruleset.basedir>..</ruleset.basedir>
-		<spring-boot-dependencies.version>1.5.17.RELEASE</spring-boot-dependencies.version>
-		<spring-cloud-dependencies.version>Edgware.SR5</spring-cloud-dependencies.version>
-		<google.guava.version>23.0</google.guava.version>
 	</properties>
 
 	<dependencies>

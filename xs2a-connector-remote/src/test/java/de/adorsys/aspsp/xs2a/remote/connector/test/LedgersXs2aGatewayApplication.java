@@ -23,7 +23,7 @@ import de.adorsys.psd2.xs2a.web.config.EnableXs2aSwagger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration;
-import org.springframework.cloud.netflix.feign.EnableFeignClients;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.test.context.ActiveProfiles;
 
 @EnableFeignClients(basePackageClasses = PaymentRestClient.class)
