@@ -19,10 +19,7 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.AisConsentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaLoginToConsentResponseMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
-import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCALoginResponseTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.*;
 import de.adorsys.ledgers.middleware.api.domain.um.AisConsentTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
@@ -134,7 +131,8 @@ public class AisConsentSpiImpl implements AisConsentSpi {
      */
     @Override
     public @NotNull SpiResponse<SpiVerifyScaAuthorisationResponse> verifyScaAuthorisation(@NotNull SpiContextData contextData,
-                                                                                          @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiAccountConsent accountConsent,
+                                                                                          @NotNull SpiScaConfirmation spiScaConfirmation,
+                                                                                          @NotNull SpiAccountConsent accountConsent,
                                                                                           @NotNull AspspConsentData aspspConsentData) {
         try {
             SCAConsentResponseTO sca = consentDataService.response(aspspConsentData.getAspspConsentData(), SCAConsentResponseTO.class);
@@ -145,7 +143,8 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             SCAConsentResponseTO consentResponse = authorizeConsentResponse.getBody();
 
             // TODO use real sca status from Ledgers for resolving consent status https://git.adorsys.de/adorsys/xs2a/ledgers/issues/206
-            return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder().payload(new SpiVerifyScaAuthorisationResponse(ConsentStatus.VALID))
+            return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder().payload(
+                    new SpiVerifyScaAuthorisationResponse(getConsentStatus(consentResponse)))
                            .aspspConsentData(aspspConsentData.respondWith(consentDataService.store(consentResponse)))
                            .message(consentResponse.getScaStatus().name()).success();
         } finally {
@@ -246,6 +245,15 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         }
     }
 
+    ConsentStatus getConsentStatus(SCAConsentResponseTO consentResponse) {
+        if (consentResponse != null
+                    && consentResponse.isMultilevelScaRequired()
+                    && consentResponse.isPartiallyAuthorised()
+                    && FINALISED.equals(consentResponse.getScaStatus())) {
+            return ConsentStatus.PARTIALLY_AUTHORISED;
+        }
+        return ConsentStatus.VALID;
+    }
 
     private <T extends SpiInitiateAisConsentResponse> SpiResponse<T> firstCallInstantiatingConsent(
             @NotNull SpiAccountConsent accountConsent,
