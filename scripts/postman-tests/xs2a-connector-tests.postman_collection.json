@@ -14317,7 +14317,7 @@
 												"exec": [
 													"const jsonData = pm.response.json();",
 													"",
-													"pm.globals.set(\"account_id_cur\", jsonData.accounts[0].resourceId);",
+													"pm.globals.set(\"account_id\", jsonData.accounts[0].resourceId);",
 													"",
 													"pm.test(\"Status code is 200\", function () {",
 													"    pm.response.to.have.status(200);",
@@ -14328,8 +14328,8 @@
 													"        const firstAccount = jsonData.accounts[0];",
 													"        ",
 													"        pm.expect(firstAccount).to.have.property('_links');",
-													"        pm.expect(firstAccount._links).to.have.property('viewBalances');",
-													"        pm.expect(firstAccount._links).to.have.property('viewTransactions');",
+													"        pm.expect(firstAccount._links).to.have.property('balances');",
+													"        pm.expect(firstAccount._links).to.have.property('transactions');",
 													"        pm.expect(firstAccount).to.have.property('resourceId');",
 													"        ",
 													"        if (pm.globals.get(\"with_balance\") === \"true\") {",
@@ -14477,8 +14477,8 @@
 													"pm.test(\"Data exists\", () => {",
 													"    if (!(jsonData === null || jsonData.length === 0)) {",
 													"        pm.expect(jsonData).to.have.property('_links');",
-													"        pm.expect(jsonData._links).to.have.property('viewBalances');",
-													"        pm.expect(jsonData._links).to.have.property('viewTransactions');",
+													"        pm.expect(jsonData._links).to.have.property('balances');",
+													"        pm.expect(jsonData._links).to.have.property('transactions');",
 													"        pm.expect(jsonData).to.have.property('resourceId');",
 													"        ",
 													"        if (pm.globals.get(\"with_balance\") === \"true\") {",
@@ -14577,7 +14577,7 @@
 											"raw": ""
 										},
 										"url": {
-											"raw": "{{protocol}}://{{url_xs2a}}/v1/accounts/{{account_id_cur}}?withBalance={{with_balance}}",
+											"raw": "{{protocol}}://{{url_xs2a}}/v1/accounts/{{account_id}}?withBalance={{with_balance}}",
 											"protocol": "{{protocol}}",
 											"host": [
 												"{{url_xs2a}}"
@@ -14585,7 +14585,7 @@
 											"path": [
 												"v1",
 												"accounts",
-												"{{account_id_cur}}"
+												"{{account_id}}"
 											],
 											"query": [
 												{
@@ -14712,7 +14712,7 @@
 											"raw": ""
 										},
 										"url": {
-											"raw": "{{protocol}}://{{url_xs2a}}/v1/accounts/{{account_id_cur}}/balances",
+											"raw": "{{protocol}}://{{url_xs2a}}/v1/accounts/{{account_id}}/balances",
 											"protocol": "{{protocol}}",
 											"host": [
 												"{{url_xs2a}}"
@@ -14720,7 +14720,7 @@
 											"path": [
 												"v1",
 												"accounts",
-												"{{account_id_cur}}",
+												"{{account_id}}",
 												"balances"
 											]
 										},
@@ -14870,7 +14870,7 @@
 											"raw": ""
 										},
 										"url": {
-											"raw": "{{protocol}}://{{url_xs2a}}/v1/accounts/{{account_id_cur}}/transactions?bookingStatus={{booking_status}}&dateFrom=2018-01-01&dateTo=&withBalance={{with_balance}}",
+											"raw": "{{protocol}}://{{url_xs2a}}/v1/accounts/{{account_id}}/transactions?bookingStatus={{booking_status}}&dateFrom=2018-01-01&dateTo=&withBalance={{with_balance}}",
 											"protocol": "{{protocol}}",
 											"host": [
 												"{{url_xs2a}}"
@@ -14878,7 +14878,7 @@
 											"path": [
 												"v1",
 												"accounts",
-												"{{account_id_cur}}",
+												"{{account_id}}",
 												"transactions"
 											],
 											"query": [
@@ -14921,7 +14921,7 @@
 													"/*pm.test(\"Links exists\", () => {",
 													"    if (!(jsonData === null || jsonData.length === 0)) {",
 													"        pm.expect(jsonData).to.have.property('_links');",
-													"        pm.expect(jsonData._links).to.have.property('viewBalances');",
+													"        pm.expect(jsonData._links).to.have.property('balances');",
 													"    }",
 													"});*/"
 												],
@@ -15015,7 +15015,7 @@
 											"raw": ""
 										},
 										"url": {
-											"raw": "{{protocol}}://{{url_xs2a}}/v1/accounts/{{account_id_cur}}/transactions/{{resource_id}}",
+											"raw": "{{protocol}}://{{url_xs2a}}/v1/accounts/{{account_id}}/transactions/{{resource_id}}",
 											"protocol": "{{protocol}}",
 											"host": [
 												"{{url_xs2a}}"
@@ -15023,7 +15023,7 @@
 											"path": [
 												"v1",
 												"accounts",
-												"{{account_id_cur}}",
+												"{{account_id}}",
 												"transactions",
 												"{{resource_id}}"
 											]
