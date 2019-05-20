@@ -103,7 +103,7 @@
 			"enabled": true
 		},
 		{
-			"key": "account_id_cur",
+			"key": "account_id",
 			"value": "",
 			"enabled": true
 		},
