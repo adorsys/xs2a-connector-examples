@@ -129,6 +129,11 @@ Unit Tests:
     name: "$CI_PROJECT_NAME-${CI_BUILD_REF_NAME#*v}-*"
     expire_in: "10 day"
 
+Test Docker Image:
+  stage: "Test"
+  script:
+    - docker build -t "adorsys/xs2a-connector-examples:test" .
+
 ###########
 # develop #
 ###########
