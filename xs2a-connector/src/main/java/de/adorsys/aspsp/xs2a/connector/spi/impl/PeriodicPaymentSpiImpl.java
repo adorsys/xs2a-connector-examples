@@ -76,8 +76,11 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
                                                                                  .map(paymentMapper::toSpiPeriodicResponse)
                                                                                  .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 201, but body was empty!", Response.builder().status(400).build()));
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
+
+            String scaStatusName = response.getScaStatus().name();
+            logger.info("SCA status` is {}", scaStatusName);
+
             return SpiResponse.<SpiPeriodicPaymentInitiationResponse>builder()
-                           .message(response.getScaStatus().name())
                            .payload(spiInitiationResponse)
                            .success();
         } catch (FeignException e) {

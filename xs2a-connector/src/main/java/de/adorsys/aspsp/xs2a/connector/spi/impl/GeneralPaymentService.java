@@ -20,6 +20,7 @@ import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
@@ -72,8 +73,8 @@ public class GeneralPaymentService {
             logger.info("Get payment status by id with type={}, and id={}", paymentType, paymentId);
             TransactionStatusTO response = paymentRestClient.getPaymentStatusById(sca.getPaymentId()).getBody();
             TransactionStatus status = Optional.ofNullable(response)
-                                                  .map(r -> TransactionStatus.valueOf(r.name()))
-                                                  .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 200, but body was empty!", Response.builder().status(400).build()));
+                                               .map(r -> TransactionStatus.valueOf(r.name()))
+                                               .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 200, but body was empty!", Response.builder().status(400).build()));
             logger.info("The status was:{}", status);
             return SpiResponse.<TransactionStatus>builder()
                            .payload(status)
@@ -95,8 +96,16 @@ public class GeneralPaymentService {
             SCAPaymentResponseTO consentResponse = authorizePaymentResponse.getBody();
 
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(consentResponse));
-            return SpiResponse.<SpiPaymentExecutionResponse>builder().payload(spiPaymentExecutionResponse(consentResponse.getTransactionStatus()))
-                           .message(consentResponse.getScaStatus().name()).success();
+
+            String scaStatus = Optional.ofNullable(consentResponse)
+                                       .map(SCAResponseTO::getScaStatus)
+                                       .map(ScaStatusTO::name)
+                                       .orElse(null);
+
+            logger.info("SCA status is {}", scaStatus);
+            return SpiResponse.<SpiPaymentExecutionResponse>builder()
+                           .payload(spiPaymentExecutionResponse(consentResponse.getTransactionStatus()))
+                           .success();
         } catch (Exception e) {
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
                            .fail(SpiResponseStatus.LOGICAL_FAILURE);
@@ -108,15 +117,15 @@ public class GeneralPaymentService {
     /**
      * Instantiating the very first response object.
      *
-     * @param paymentType             the payment type
-     * @param payment                 the payment object
+     * @param paymentType              the payment type
+     * @param payment                  the payment object
      * @param aspspConsentDataProvider the credential data container access
-     * @param responsePayload         the instantiated payload object
+     * @param responsePayload          the instantiated payload object
      */
     <T extends SpiPaymentInitiationResponse> SpiResponse<T> firstCallInstantiatingPayment(
             @NotNull PaymentTypeTO paymentType, @NotNull SpiPayment payment,
             @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, T responsePayload
-                                                                                         ) {
+    ) {
         String paymentId = StringUtils.isNotBlank(payment.getPaymentId())
                                    ? payment.getPaymentId()
                                    : Ids.id();
@@ -141,19 +150,23 @@ public class GeneralPaymentService {
             // First check if there is any payment response ongoing.
             SCAPaymentResponseTO response = consentDataService.response(aspspConsentDataProvider.loadAspspConsentData(), SCAPaymentResponseTO.class);
 
-            if (ScaStatusTO.EXEMPTED.equals(response.getScaStatus()) || ScaStatusTO.FINALISED.equals(response.getScaStatus())) {
+            ScaStatusTO scaStatus = response.getScaStatus();
+            String scaStatusName = scaStatus.name();
+
+            if (ScaStatusTO.EXEMPTED.equals(scaStatus) || ScaStatusTO.FINALISED.equals(scaStatus)) {
                 // Success
-                List<String> messages = Arrays.asList(response.getScaStatus().name(),
-                        String.format("Payment scheduled for execution. Transaction status is %s. Als see sca status",
-                                response.getTransactionStatus()));
+
+                logger.info("SCA status` is {}", scaStatusName);
+                logger.info("Payment scheduled for execution. Transaction status is {}. Als see sca status", response.getTransactionStatus());
+
                 return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                               .message(messages)
                                .payload(spiPaymentExecutionResponse(response.getTransactionStatus()))
                                .success();
             }
-            List<String> messages = Arrays.asList(response.getScaStatus().name(),
-                    String.format("Payment not executed. Transaction status is %s. Als see sca status",
-                            response.getTransactionStatus()));
+
+            List<String> messages = Arrays.asList(scaStatusName,
+                                                  String.format("Payment not executed. Transaction status is %s. Als see sca status",
+                                                                response.getTransactionStatus()));
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
                            .message(messages)
