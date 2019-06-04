@@ -19,7 +19,10 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.AisConsentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaLoginToConsentResponseMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
-import de.adorsys.ledgers.middleware.api.domain.sca.*;
+import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.SCALoginResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.um.AisConsentTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
@@ -97,11 +100,14 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         }
         SCAConsentResponseTO consentResponse = initiateConsentInternal(accountConsent, initialAspspConsentData);
         SpiAccountAccess accountAccess = accountConsent.getAccess();
+
+        String scaStatusName = consentResponse.getScaStatus().name();
+        logger.info("SCA status` is {}", scaStatusName);
+
         return SpiResponse.<SpiInitiateAisConsentResponse>builder()
                        .payload(new SpiInitiateAisConsentResponse(accountAccess, false))
                        .aspspConsentData(initialAspspConsentData.respondWith(consentDataService.store(consentResponse)))
-                       // Pass sca status as message.
-                       .message(consentResponse.getScaStatus().name()).success();
+                       .success();
     }
 
 
@@ -118,9 +124,12 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         sca.setScaStatus(FINALISED);
         sca.setStatusDate(LocalDateTime.now());
         sca.setBearerToken(new BearerTokenTO());// remove existing token.
+
+        String scaStatusName = sca.getScaStatus().name();
+        logger.info("SCA status` is {}", scaStatusName);
+
         return SpiResponse.<SpiResponse.VoidResponse>builder().payload(SpiResponse.voidResponse())
                        .aspspConsentData(aspspConsentData.respondWith(consentDataService.store(sca)))
-                       .message(sca.getScaStatus().name())
                        .success();
     }
 
@@ -142,11 +151,14 @@ public class AisConsentSpiImpl implements AisConsentSpi {
                                                                                     .authorizeConsent(sca.getConsentId(), sca.getAuthorisationId(), spiScaConfirmation.getTanNumber());
             SCAConsentResponseTO consentResponse = authorizeConsentResponse.getBody();
 
+            String scaStatusName = sca.getScaStatus().name();
+            logger.info("SCA status` is {}", scaStatusName);
+
             // TODO use real sca status from Ledgers for resolving consent status https://git.adorsys.de/adorsys/xs2a/ledgers/issues/206
             return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder().payload(
                     new SpiVerifyScaAuthorisationResponse(getConsentStatus(consentResponse)))
                            .aspspConsentData(aspspConsentData.respondWith(consentDataService.store(consentResponse, !consentResponse.isPartiallyAuthorised())))
-                           .message(consentResponse.getScaStatus().name()).success();
+                           .success();
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
@@ -225,7 +237,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
     @Override
     public @NotNull SpiResponse<SpiAuthorizationCodeResult> requestAuthorisationCode(@NotNull SpiContextData contextData, @NotNull String authenticationMethodId, @NotNull SpiAccountConsent businessObject, @NotNull AspspConsentData aspspConsentData) {
         SCAConsentResponseTO sca = consentDataService.response(aspspConsentData.getAspspConsentData(), SCAConsentResponseTO.class);
-        if (EnumSet.of(PSUIDENTIFIED,PSUAUTHENTICATED).contains(sca.getScaStatus())) {
+        if (EnumSet.of(PSUIDENTIFIED, PSUAUTHENTICATED).contains(sca.getScaStatus())) {
             try {
                 authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
                 logger.info("Request to generate SCA {}", sca.getConsentId());
@@ -300,7 +312,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
 
             // Bearer token only returned in case of exempted consent.
             ResponseEntity<SCAConsentResponseTO> consentResponse = consentRestClient.startSCA(accountConsent.getId(),
-                    aisConsent);
+                                                                                              aisConsent);
             SCAConsentResponseTO response = consentResponse.getBody();
 
             if (response != null && response.getBearerToken() == null) {
