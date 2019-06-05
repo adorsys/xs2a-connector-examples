@@ -32,9 +32,11 @@ import de.adorsys.psd2.xs2a.spi.service.AccountSpi;
 import feign.FeignException;
 import feign.Response;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -47,6 +49,9 @@ import java.util.stream.Collectors;
 @Component
 public class AccountSpiImpl implements AccountSpi {
     private static final Logger logger = LoggerFactory.getLogger(AccountSpiImpl.class);
+
+    private static final String DEFAULT_ACCEPT_MEDIA_TYPE = MediaType.APPLICATION_JSON_VALUE;
+    private static final String WILDCARD_ACCEPT_HEADER = "*/*";
 
     private final AccountRestClient accountRestClient;
     private final LedgersSpiAccountMapper accountMapper;
@@ -129,10 +134,9 @@ public class AccountSpiImpl implements AccountSpi {
             List<SpiAccountBalance> balances = getSpiAccountBalances(contextData, withBalance, accountReference,
                                                                      accountConsent, aspspConsentData);
 
-            // TODO: Check what is to be done here. We can return a json array with those
-            // transactions.
-            SpiTransactionReport transactionReport = new SpiTransactionReport(transactions, balances, acceptMediaType,
-                                                                              null);
+            // TODO: Check what is to be done here. We can return a json array with those transactions.
+            SpiTransactionReport transactionReport = new SpiTransactionReport(transactions, balances,
+                                                                              processAcceptMediaType(acceptMediaType), null);
             logger.info("Finally found {} transactions.", transactionReport.getTransactions().size());
             return SpiResponse.<SpiTransactionReport>builder().payload(transactionReport)
                            .aspspConsentData(aspspConsentData).success();
@@ -144,6 +148,11 @@ public class AccountSpiImpl implements AccountSpi {
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
+    }
+
+    private String processAcceptMediaType(String acceptMediaType) {
+        return StringUtils.isBlank(acceptMediaType) || WILDCARD_ACCEPT_HEADER.equals(acceptMediaType) ?
+                       DEFAULT_ACCEPT_MEDIA_TYPE : acceptMediaType;
     }
 
     @Override
