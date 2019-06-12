@@ -1,0 +1,19 @@
+@startuml
+entity XS2A as xs2a
+entity CONNECTOR as con
+entity ASPSP as aspsp
+xs2a->con: Java call Initiate performFundsSuffiecientCheck\n"SpiContexData\nPiiSConsent\nSpiFundsConfirmationRequest\nSpiAspspConsentDataProvider"
+|||
+alt PiiS Consnet invalid
+|||
+con-->xs2a: SpiPiiSConfirmation Response with ERROR
+|||
+else PiiS Consnet valid
+con->aspsp: REST Call FundsConfirmation Request
+|||
+aspsp-->con: FundsAvailable True/False
+|||
+con-->xs2a: SpiFundsConfirmation Response
+|||
+end
+@enduml
