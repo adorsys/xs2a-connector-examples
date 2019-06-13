@@ -1,0 +1,47 @@
+@startuml
+entity XS2A as xs2a
+entity CONNECTOR as con
+entity ASPSP as aspsp
+xs2a->con: Java call Initiate Payment\n"SpiSinglePayment\nSpiContexData\nSpiAspspConsentDataProvider"
+|||
+con-->xs2a: SpiSinglePayment Response
+|||
+xs2a->con: Java call AuthorisePsu\n"SpiContexData\nSpiPsuData\nPassword(Pin)\nSpiPayment\nSpiAspspConsentDataProvider"
+|||
+con->aspsp: REST Call AuthoriseForConsent\n"Login\nPin\nPaymentId\nAuthorisationId/nOperationType"
+|||
+aspsp-->con: SCALoginResponse
+|||
+con-->xs2a: SpiAuthorisationStatus
+|||
+xs2a->con: Java call RequestAvailableScaMethod\n"SpiContexData\nSpiSinglePayment\nSpiAspspConsentDataProvider"
+|||
+con-->xs2a: List SpiAuthenticationObject
+|||
+alt List SpiAuthenticationObject is empty
+|||
+xs2a->con: Java call ExecutePaymentWithoutSca
+|||
+con-->xs2a: SPiPaymentExecution Response
+|||
+else List SpiAuthenticationObject with values
+|||
+xs2a->con: Java call Request AuthorisationCode\n"SpiContexData\nAuthenticationMethodId\nSpiSinglePayment\nSpiAspspConsentDataProvider"
+|||
+con->aspsp: REST Call SelectMethod\n"PaymentId\nAuthorisationId\nScaMethodId"
+|||
+aspsp-->con: SCAPayment Response
+|||
+con-->xs2a: SpiAuthorisationCodeResult
+|||
+xs2a->con: Java call VerifyScaAuthorisationAndExecutePayment\n"SpiContexData/nSpiScaConfirmation/nSpiSinglePayment\nSpiAspspConsentDataProvider"
+|||
+con->aspsp: REST Call AuthorisePayment/n"PaymantId\nAuthorisationId\nauthCode"
+|||
+aspsp-->con: SCAPayment Response
+|||
+con-->xs2a: SPiPaymentExecution Response
+|||
+end
+@enduml
+
