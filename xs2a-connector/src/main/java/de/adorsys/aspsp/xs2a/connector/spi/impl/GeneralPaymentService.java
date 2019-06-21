@@ -25,13 +25,14 @@ import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.ledgers.util.Ids;
+import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
+import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
-import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
 import feign.FeignException;
 import feign.Response;
@@ -42,8 +43,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -64,7 +63,7 @@ public class GeneralPaymentService {
         if (!TransactionStatus.ACSP.equals(spiTransactionStatus)) {
             return SpiResponse.<TransactionStatus>builder()
                            .payload(spiTransactionStatus)
-                           .success();
+                           .build();
         }
         try {
             SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class);
@@ -78,10 +77,12 @@ public class GeneralPaymentService {
             logger.info("The status was:{}", status);
             return SpiResponse.<TransactionStatus>builder()
                            .payload(status)
-                           .success();
+                           .build();
         } catch (FeignException e) {
             return SpiResponse.<TransactionStatus>builder()
-                           .fail(getSpiFailureResponse(e));
+                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR, "Couldn't get payment status by ID"))
+                           .build();
+
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
@@ -105,10 +106,11 @@ public class GeneralPaymentService {
             logger.info("SCA status is {}", scaStatus);
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
                            .payload(spiPaymentExecutionResponse(consentResponse.getTransactionStatus()))
-                           .success();
+                           .build();
         } catch (Exception e) {
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .fail(SpiResponseStatus.LOGICAL_FAILURE);
+                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR, "Couldn't execute payment"))
+                           .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
@@ -142,7 +144,7 @@ public class GeneralPaymentService {
 
         return SpiResponse.<T>builder()
                        .payload(responsePayload)
-                       .success();
+                       .build();
     }
 
     @NotNull SpiResponse<SpiPaymentExecutionResponse> executePaymentWithoutSca(@NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
@@ -161,19 +163,20 @@ public class GeneralPaymentService {
 
                 return SpiResponse.<SpiPaymentExecutionResponse>builder()
                                .payload(spiPaymentExecutionResponse(response.getTransactionStatus()))
-                               .success();
+                               .build();
             }
 
-            List<String> messages = Arrays.asList(scaStatusName,
-                                                  String.format("Payment not executed. Transaction status is %s. Als see sca status",
-                                                                response.getTransactionStatus()));
+            String message = String.format("Payment not executed. Transaction status is %s. Als see sca status %s."
+                    ,response.getTransactionStatus(), scaStatusName);
+
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .message(messages)
-                           .fail(SpiResponseStatus.LOGICAL_FAILURE);
+                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR, message))
+                           .build();
         } catch (FeignException e) {
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .fail(getSpiFailureResponse(e));
+                           .error(getFailureMessageFromFeignException(e))
+                           .build();
         }
     }
 
@@ -196,14 +199,15 @@ public class GeneralPaymentService {
         }
     }
 
-    private SpiResponseStatus getSpiFailureResponse(FeignException e) {
-        logger.error(e.getMessage(), e);
-        return e.status() == 500
-                       ? SpiResponseStatus.TECHNICAL_FAILURE
-                       : SpiResponseStatus.LOGICAL_FAILURE;
-    }
-
     private SpiPaymentExecutionResponse spiPaymentExecutionResponse(TransactionStatusTO transactionStatus) {
         return new SpiPaymentExecutionResponse(TransactionStatus.valueOf(transactionStatus.name()));
+    }
+
+    private TppMessage getFailureMessageFromFeignException(FeignException e) {
+        logger.error(e.getMessage(), e);
+
+        return e.status() == 500
+                       ? new TppMessage(MessageErrorCode.INTERNAL_SERVER_ERROR, "Request was failed")
+                       : new TppMessage(MessageErrorCode.FORMAT_ERROR, "Couldn't execute payment");
     }
 }

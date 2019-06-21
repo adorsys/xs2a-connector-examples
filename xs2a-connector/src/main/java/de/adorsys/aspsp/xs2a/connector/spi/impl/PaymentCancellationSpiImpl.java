@@ -25,6 +25,8 @@ import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
+import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
+import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
@@ -34,7 +36,6 @@ import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentCancellationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
-import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.PaymentCancellationSpi;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
 import feign.FeignException;
@@ -87,7 +88,9 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
         response.setCancellationAuthorisationMandated(cancellationMandated);
         response.setTransactionStatus(payment.getPaymentStatus());
         //TODO to be fixed after implementation of https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/633
-        return SpiResponse.<SpiPaymentCancellationResponse>builder().aspspConsentData(aspspConsentData).payload(response).success();
+        return SpiResponse.<SpiPaymentCancellationResponse>builder()
+                       .aspspConsentData(aspspConsentData)
+                       .payload(response).build();
     }
 
     /**
@@ -99,20 +102,29 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
         // maybe this will be implemented in the future: https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/669
 
         if (payment.getPaymentStatus() == TransactionStatus.RCVD) {
-            return SpiResponse.<SpiResponse.VoidResponse>builder().payload(SpiResponse.voidResponse()).aspspConsentData(aspspConsentData).success();
+            return SpiResponse.<SpiResponse.VoidResponse>builder().payload(SpiResponse.voidResponse()).aspspConsentData(aspspConsentData).build();
         }
         SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData.getAspspConsentData(), SCAPaymentResponseTO.class);
         if (sca.getScaStatus() == ScaStatusTO.EXEMPTED) {
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
             try {
                 paymentRestClient.initiatePmtCancellation(payment.getPaymentId());
-                return SpiResponse.<SpiResponse.VoidResponse>builder().payload(SpiResponse.voidResponse()).aspspConsentData(aspspConsentData).success();
+                return SpiResponse.<SpiResponse.VoidResponse>builder()
+                               .aspspConsentData(aspspConsentData)
+                               .payload(SpiResponse.voidResponse())
+                               .build();
             } catch (FeignException f) {
                 logger.error("An error occured during Payment Cancellation Process: {}, with message: {}", f.status(), f.getLocalizedMessage());
-                return SpiResponse.<SpiResponse.VoidResponse>builder().aspspConsentData(aspspConsentData).fail(SpiResponseStatus.LOGICAL_FAILURE);
+                return SpiResponse.<SpiResponse.VoidResponse>builder()
+                               .aspspConsentData(aspspConsentData)
+                               .error(getFailureMessageFromFeignException(f))
+                               .build();
             }
         }
-        return SpiResponse.<SpiResponse.VoidResponse>builder().aspspConsentData(aspspConsentData).fail(SpiResponseStatus.NOT_SUPPORTED);
+        return SpiResponse.<SpiResponse.VoidResponse>builder()
+                       .aspspConsentData(aspspConsentData)
+                       .error(new TppMessage(MessageErrorCode.CANCELLATION_INVALID, "Couldn't execute payment cancellation"))
+                       .build();
     }
 
     @Override
@@ -123,11 +135,17 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
 
             ResponseEntity<SCAPaymentResponseTO> response = paymentRestClient.authorizeCancelPayment(sca.getPaymentId(), sca.getAuthorisationId(), spiScaConfirmation.getTanNumber());
             return response.getStatusCode() == HttpStatus.OK
-                           ? SpiResponse.<SpiResponse.VoidResponse>builder().aspspConsentData(aspspConsentData).payload(SpiResponse.voidResponse()).success()
-                           : SpiResponse.<SpiResponse.VoidResponse>builder().fail(SpiResponseStatus.LOGICAL_FAILURE);
+                           ? SpiResponse.<SpiResponse.VoidResponse>builder()
+                                     .aspspConsentData(aspspConsentData)
+                                     .payload(SpiResponse.voidResponse())
+                                     .build()
+                           : SpiResponse.<SpiResponse.VoidResponse>builder()
+                                     .error(new TppMessage(MessageErrorCode.UNAUTHORIZED, "Couldn't authorise payment cancellation"))
+                                     .build();
         } catch (Exception e) {
             return SpiResponse.<SpiResponse.VoidResponse>builder().aspspConsentData(aspspConsentData)
-                           .fail(SpiResponseStatus.LOGICAL_FAILURE);
+                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR, "Couldn't execute authorisation payment cancellation"))
+                           .build();
         }
     }
 
@@ -145,12 +163,15 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
         try {
             SCAPaymentResponseTO scaPaymentResponse = paymentAuthorisation.toPaymentConsent(businessObject, authorisePsu, originalResponse);
             AspspConsentData paymentAspspConsentData = authorisePsu.getAspspConsentData().respondWith(tokenStorageService.toBytes(scaPaymentResponse));
-            return SpiResponse.<SpiAuthorisationStatus>builder().payload(SpiAuthorisationStatus.SUCCESS).aspspConsentData(paymentAspspConsentData).success();
+            return SpiResponse.<SpiAuthorisationStatus>builder()
+                           .payload(SpiAuthorisationStatus.SUCCESS)
+                           .aspspConsentData(paymentAspspConsentData)
+                           .build();
         } catch (IOException e) {
             return SpiResponse.<SpiAuthorisationStatus>builder()
-                           .message(e.getMessage())
                            .aspspConsentData(aspspConsentData)
-                           .fail(SpiResponseStatus.LOGICAL_FAILURE);
+                           .error(new TppMessage(MessageErrorCode.UNAUTHORIZED, "Couldn't authorise payment cancellation"))
+                           .build();
         }
     }
 
@@ -158,7 +179,7 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     public SpiResponse<List<SpiAuthenticationObject>> requestAvailableScaMethods(@NotNull SpiContextData contextData, SpiPayment businessObject, @NotNull AspspConsentData aspspConsentData) {
         SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData.getAspspConsentData(), SCAPaymentResponseTO.class);
         if (businessObject.getPaymentStatus() == TransactionStatus.RCVD || sca.getScaStatus() == ScaStatusTO.EXEMPTED) {
-            return SpiResponse.<List<SpiAuthenticationObject>>builder().payload(Collections.emptyList()).aspspConsentData(aspspConsentData).success();
+            return SpiResponse.<List<SpiAuthenticationObject>>builder().payload(Collections.emptyList()).aspspConsentData(aspspConsentData).build();
         }
         authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
         ResponseEntity<SCAPaymentResponseTO> cancelSCA = paymentRestClient.getCancelSCA(sca.getPaymentId(), sca.getAuthorisationId());
@@ -168,8 +189,14 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
                                                                          .map(scaMethodConverter::toSpiAuthenticationObjectList)
                                                                          .orElseGet(Collections::emptyList);
         return authenticationObjectList.isEmpty()
-                       ? SpiResponse.<List<SpiAuthenticationObject>>builder().aspspConsentData(aspspConsentData).fail(SpiResponseStatus.LOGICAL_FAILURE)
-                       : SpiResponse.<List<SpiAuthenticationObject>>builder().payload(authenticationObjectList).aspspConsentData(aspspConsentData).success();
+                       ? SpiResponse.<List<SpiAuthenticationObject>>builder()
+                                 .aspspConsentData(aspspConsentData)
+                                 .error(new TppMessage(MessageErrorCode.UNAUTHORIZED, "Getting SCA methods failed"))
+                                 .build()
+                       : SpiResponse.<List<SpiAuthenticationObject>>builder()
+                                 .payload(authenticationObjectList)
+                                 .aspspConsentData(aspspConsentData)
+                                 .build();
     }
 
     @Override
@@ -186,12 +213,21 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
             } catch (FeignException e) {
                 return SpiResponse.<SpiAuthorizationCodeResult>builder()
                                .aspspConsentData(aspspConsentData)
-                               .fail(SpiFailureResponseHelper.getSpiFailureResponse(e, logger));
+                               .error(getFailureMessageFromFeignException(e))
+                               .build();
             } finally {
                 authRequestInterceptor.setAccessToken(null);
             }
         } else {
             return authorisationService.getResponseIfScaSelected(aspspConsentData, sca);
         }
+    }
+
+    private TppMessage getFailureMessageFromFeignException(FeignException e) {
+        logger.error(e.getMessage(), e);
+
+        return e.status() == 500
+                       ? new TppMessage(MessageErrorCode.INTERNAL_SERVER_ERROR, "Request was failed")
+                       : new TppMessage(MessageErrorCode.FORMAT_ERROR, "Couldn't execute payment cancellation");
     }
 }
