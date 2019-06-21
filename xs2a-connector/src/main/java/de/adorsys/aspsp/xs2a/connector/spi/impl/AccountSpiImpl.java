@@ -23,13 +23,15 @@ import de.adorsys.ledgers.rest.client.AccountRestClient;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
+import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
+import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
-import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.AccountSpi;
 import feign.FeignException;
+import feign.Request;
 import feign.Response;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -78,12 +80,15 @@ public class AccountSpiImpl implements AccountSpi {
             List<SpiAccountDetails> accountDetailsList = getSpiAccountDetails(withBalance, accountConsent,
                                                                               aspspConsentData);
             return SpiResponse.<List<SpiAccountDetails>>builder()
+                           .aspspConsentData(aspspConsentData)
                            .payload(filterAccountDetailsByWithBalance(withBalance, accountDetailsList, accountConsent.getAccess()))
-                           .aspspConsentData(aspspConsentData).success();
+                           .build();
         } catch (FeignException e) {
             logger.error(e.getMessage());
-            return SpiResponse.<List<SpiAccountDetails>>builder().aspspConsentData(aspspConsentData)
-                           .fail(getSpiResponseStatus(e));
+            return SpiResponse.<List<SpiAccountDetails>>builder()
+                           .aspspConsentData(aspspConsentData)
+                           .error(getFailureMessageFromFeignException(e))
+                           .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
@@ -102,16 +107,22 @@ public class AccountSpiImpl implements AccountSpi {
                                                        .ofNullable(accountRestClient.getAccountDetailsById(accountReference.getResourceId()).getBody())
                                                        .map(accountMapper::toSpiAccountDetails)
                                                        .orElseThrow(() -> FeignException.errorStatus("Response status was 200, but the body was empty!",
-                                                                                                     Response.builder().status(404).build()));
+                                                                                                     error(404)));
             if (!withBalance) {
                 accountDetails.emptyBalances();
             }
             logger.info("The responded account RESOURCE-ID: {}", accountDetails.getResourceId());
-            return SpiResponse.<SpiAccountDetails>builder().payload(accountDetails).aspspConsentData(aspspConsentData)
-                           .success();
+            return SpiResponse.<SpiAccountDetails>builder()
+                           .aspspConsentData(aspspConsentData)
+                           .payload(accountDetails)
+                           .build();
+
         } catch (FeignException e) {
             logger.error(e.getMessage());
-            return SpiResponse.<SpiAccountDetails>builder().fail(getSpiResponseStatus(e));
+            return SpiResponse.<SpiAccountDetails>builder()
+                           .aspspConsentData(aspspConsentData)
+                           .error(getFailureMessageFromFeignException(e))
+                           .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
@@ -138,13 +149,15 @@ public class AccountSpiImpl implements AccountSpi {
             SpiTransactionReport transactionReport = new SpiTransactionReport(transactions, balances,
                                                                               processAcceptMediaType(acceptMediaType), null);
             logger.info("Finally found {} transactions.", transactionReport.getTransactions().size());
-            return SpiResponse.<SpiTransactionReport>builder().payload(transactionReport)
-                           .aspspConsentData(aspspConsentData).success();
-        } catch (FeignException e) {
-            logger.error(e.getMessage());
             return SpiResponse.<SpiTransactionReport>builder()
                            .aspspConsentData(aspspConsentData)
-                           .fail(getSpiResponseStatus(e));
+                           .payload(transactionReport)
+                           .build();
+        } catch (FeignException e) {
+            return SpiResponse.<SpiTransactionReport>builder()
+                           .aspspConsentData(aspspConsentData)
+                           .error(getFailureMessageFromFeignException(e))
+                           .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
@@ -170,13 +183,17 @@ public class AccountSpiImpl implements AccountSpi {
                                                          accountRestClient.getTransactionById(accountReference.getResourceId(), transactionId).getBody())
                                                  .map(accountMapper::toSpiTransaction)
                                                  .orElseThrow(() -> FeignException.errorStatus("Response status was 200, but the body was empty!",
-                                                                                               Response.builder().status(404).build()));
+                                                                                               error(404)));
             logger.info("Found transaction with TRANSACTION-ID: {}", transaction.getTransactionId());
-            return SpiResponse.<SpiTransaction>builder().payload(transaction).aspspConsentData(aspspConsentData)
-                           .success();
+            return SpiResponse.<SpiTransaction>builder()
+                           .aspspConsentData(aspspConsentData)
+                           .payload(transaction)
+                           .build();
         } catch (FeignException e) {
-            logger.error(e.getMessage());
-            return SpiResponse.<SpiTransaction>builder().aspspConsentData(aspspConsentData).fail(getSpiResponseStatus(e));
+            return SpiResponse.<SpiTransaction>builder()
+                           .aspspConsentData(aspspConsentData)
+                           .error(getFailureMessageFromFeignException(e))
+                           .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
@@ -194,13 +211,17 @@ public class AccountSpiImpl implements AccountSpi {
                                                               .ofNullable(accountRestClient.getBalances(accountReference.getResourceId()).getBody())
                                                               .map(accountMapper::toSpiAccountBalancesList)
                                                               .orElseThrow(() -> FeignException.errorStatus("Response status was 200, but the body was empty!",
-                                                                                                            Response.builder().status(404).build()));
+                                                                                                            error(404)));
             logger.info("Found Balances: {}", accountBalances.size());
-            return SpiResponse.<List<SpiAccountBalance>>builder().payload(accountBalances)
-                           .aspspConsentData(aspspConsentData).success();
+            return SpiResponse.<List<SpiAccountBalance>>builder()
+                           .aspspConsentData(aspspConsentData)
+                           .payload(accountBalances)
+                           .build();
         } catch (FeignException e) {
-            logger.error(e.getMessage());
-            return SpiResponse.<List<SpiAccountBalance>>builder().fail(getSpiResponseStatus(e));
+            return SpiResponse.<List<SpiAccountBalance>>builder()
+                           .aspspConsentData(aspspConsentData)
+                           .error(getFailureMessageFromFeignException(e))
+                           .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
@@ -228,8 +249,7 @@ public class AccountSpiImpl implements AccountSpi {
             if (response.isSuccessful()) {
                 return response.getPayload();
             } else {
-                throw FeignException.errorStatus("Requested transaction can`t be found",
-                                                 Response.builder().status(404).build());
+                throw FeignException.errorStatus("Requested transaction can`t be found", error(404));
             }
         } else {
             return null;
@@ -303,9 +323,12 @@ public class AccountSpiImpl implements AccountSpi {
         return details;
     }
 
-    private SpiResponseStatus getSpiResponseStatus(FeignException e) {
-        logger.error(e.getMessage());
-        return e.status() == 500 ? SpiResponseStatus.TECHNICAL_FAILURE : SpiResponseStatus.LOGICAL_FAILURE;
+    private TppMessage getFailureMessageFromFeignException(FeignException e) {
+        logger.error(e.getMessage(), e);
+
+        return e.status() == 500
+                       ? new TppMessage(MessageErrorCode.INTERNAL_SERVER_ERROR, "Request was failed")
+                       : new TppMessage(MessageErrorCode.FORMAT_ERROR, "The consent-ID cannot be matched by the ASPSP relative to the TPP");
     }
 
     private SCAResponseTO auth(AspspConsentData aspspConsentData) {
@@ -318,5 +341,13 @@ public class AccountSpiImpl implements AccountSpi {
         return CollectionUtils.isNotEmpty(allowedAccountData)
                        && allowedAccountData.stream()
                                   .anyMatch(a -> accountId.equals(a.getResourceId()));
+    }
+
+    private Response error(int code) {
+        return Response.builder()
+                       .status(code)
+                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
+                       .headers(Collections.emptyMap())
+                       .build();
     }
 }

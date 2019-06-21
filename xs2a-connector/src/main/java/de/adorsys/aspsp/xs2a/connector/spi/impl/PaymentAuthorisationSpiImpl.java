@@ -28,6 +28,8 @@ import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
+import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
+import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.profile.PaymentType;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
@@ -38,7 +40,6 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
-import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.*;
 import feign.FeignException;
 import org.jetbrains.annotations.NotNull;
@@ -102,14 +103,14 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
 
         try {
             SCAPaymentResponseTO scaPaymentResponse = toPaymentConsent(spiPayment, authorisePsu, originalResponse);
-            cmsPaymentStatusUpdateService.updatePaymentStatus(spiPayment.getPaymentId(),authorisePsu.getAspspConsentData());
+            cmsPaymentStatusUpdateService.updatePaymentStatus(spiPayment.getPaymentId(), authorisePsu.getAspspConsentData());
             AspspConsentData paymentAspspConsentData = authorisePsu.getAspspConsentData().respondWith(tokenStorageService.toBytes(scaPaymentResponse));
             return initiatePmtOnExemptedIfRequired(contextData, spiPayment, authorisePsu, scaPaymentResponse, paymentAspspConsentData);
         } catch (IOException e) {
             return SpiResponse.<SpiAuthorisationStatus>builder()
-                           .message(e.getMessage())
                            .aspspConsentData(aspspConsentData)
-                           .fail(SpiResponseStatus.LOGICAL_FAILURE);
+                           .error(new TppMessage(MessageErrorCode.TOKEN_UNKNOWN, "Getting PSU token was failed"))
+                           .build();
         }
     }
 
@@ -117,8 +118,10 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
     public SpiResponse<List<SpiAuthenticationObject>> requestAvailableScaMethods(@NotNull SpiContextData contextData, SpiPayment spiPayment, @NotNull AspspConsentData aspspConsentData) {
         SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData.getAspspConsentData(), SCAPaymentResponseTO.class);
         List<ScaUserDataTO> scaMethods = Optional.ofNullable(sca.getScaMethods()).orElse(Collections.emptyList());
-        return SpiResponse.<List<SpiAuthenticationObject>>builder().payload(scaMethodConverter.toSpiAuthenticationObjectList(scaMethods))
-                       .aspspConsentData(aspspConsentData).success();
+        return SpiResponse.<List<SpiAuthenticationObject>>builder()
+                       .aspspConsentData(aspspConsentData)
+                       .payload(scaMethodConverter.toSpiAuthenticationObjectList(scaMethods))
+                       .build();
     }
 
     @Override
@@ -135,7 +138,9 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
             } catch (FeignException e) {
                 return SpiResponse.<SpiAuthorizationCodeResult>builder()
                                .aspspConsentData(aspspConsentData)
-                               .fail(SpiFailureResponseHelper.getSpiFailureResponse(e, logger));
+                               // TODO fix response form ledgers https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/185
+                               .error(new TppMessage(MessageErrorCode.SCA_METHOD_UNKNOWN, "Sending SCA via phone not implemented yet"))
+                               .build();
             } finally {
                 authRequestInterceptor.setAccessToken(null);
             }
@@ -167,7 +172,10 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
                     .contains(scaPaymentResponse.getScaStatus())) {
             return initiatePaymentOnExemptedSCA(contextData, spiPayment, authorisePsu, paymentAspspConsentData);
         }
-        return new SpiResponse<>(authorisePsu.getPayload(), paymentAspspConsentData);
+        return SpiResponse.<SpiAuthorisationStatus>builder()
+                       .aspspConsentData(paymentAspspConsentData)
+                       .payload(authorisePsu.getPayload())
+                       .build();
     }
 
     private SpiResponse<SpiAuthorisationStatus> initiatePaymentOnExemptedSCA(SpiContextData contextData, SpiPayment spiPayment,
@@ -193,8 +201,8 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
             default:
                 // throw unsupported payment type
                 return SpiResponse.<SpiAuthorisationStatus>builder()
-                               .message(String.format("Unknown payment type %s", paymentType.getValue()))
-                               .fail(SpiResponseStatus.LOGICAL_FAILURE);
+                               .error( new TppMessage(MessageErrorCode.PAYMENT_FAILED,  String.format("Unknown payment type %s", paymentType.getValue())))
+                               .build();
         }
     }
 }
