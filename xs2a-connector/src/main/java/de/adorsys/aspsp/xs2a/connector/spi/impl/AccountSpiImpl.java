@@ -21,7 +21,9 @@ import de.adorsys.ledgers.middleware.api.domain.account.AccountDetailsTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
 import de.adorsys.ledgers.rest.client.AccountRestClient;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
+import de.adorsys.psd2.xs2a.core.ais.AccountAccessType;
 import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
+import de.adorsys.psd2.xs2a.core.consent.AisConsentRequestType;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
@@ -230,8 +232,8 @@ public class AccountSpiImpl implements AccountSpi {
     private List<SpiAccountDetails> getSpiAccountDetails(boolean withBalance, @NotNull SpiAccountConsent accountConsent,
                                                          AspspConsentData aspspConsentData) {
         List<SpiAccountDetails> accountDetailsList;
-        if (isBankOfferedConsent(accountConsent.getAccess())) {
-            logger.info("Consent with id: {} is a Bank Offered Consent", accountConsent.getId());
+        if (isGlobalConsent(accountConsent.getAccess()) || isAllAvailableAccountsConsent(accountConsent)) {
+            logger.info("Consent with id: {} is a global or available account Consent", accountConsent.getId());
             accountDetailsList = getAccountDetailsByConsentId(aspspConsentData);
         } else {
             logger.info("Consent with id: {} is a regular consent", accountConsent.getId());
@@ -256,10 +258,12 @@ public class AccountSpiImpl implements AccountSpi {
         }
     }
 
-    private boolean isBankOfferedConsent(SpiAccountAccess accountAccess) {
-        return CollectionUtils.isEmpty(accountAccess.getBalances())
-                       && CollectionUtils.isEmpty(accountAccess.getTransactions())
-                       && CollectionUtils.isEmpty(accountAccess.getAccounts());
+    private boolean isGlobalConsent(SpiAccountAccess accountAccess) {
+        return accountAccess.getAllPsd2() != null;
+    }
+
+    private boolean isAllAvailableAccountsConsent(SpiAccountConsent accountConsent) {
+        return accountConsent.getAisConsentRequestType() == AisConsentRequestType.ALL_AVAILABLE_ACCOUNTS;
     }
 
     private List<SpiAccountDetails> getAccountDetailsByConsentId(
@@ -302,10 +306,8 @@ public class AccountSpiImpl implements AccountSpi {
 
             // TODO don't use IBAN as an account identifier
             // https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/440
-            AccountDetailsTO response = accountRestClient.getAccountDetailsByIban(reference.getIban()).getBody();
+            AccountDetailsTO response = accountRestClient.getAccountDetailsById(reference.getResourceId()).getBody();
 
-            // TODO don't use currency as an account identifier
-            // https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/440
             return Optional.ofNullable(response).map(accountMapper::toSpiAccountDetails);
         } finally {
             authRequestInterceptor.setAccessToken(null);
@@ -314,6 +316,11 @@ public class AccountSpiImpl implements AccountSpi {
 
     private List<SpiAccountDetails> filterAccountDetailsByWithBalance(boolean withBalance, List<SpiAccountDetails> details,
                                                                       SpiAccountAccess spiAccountAccess) {
+
+        if (withBalance && isConsentSupportedBalances(spiAccountAccess)) {
+            return details;
+        }
+
         for (SpiAccountDetails spiAccountDetails : details) {
             if (!withBalance || !isValidAccountByAccess(spiAccountDetails.getResourceId(), spiAccountAccess.getBalances())) {
                 spiAccountDetails.emptyBalances();
@@ -329,6 +336,12 @@ public class AccountSpiImpl implements AccountSpi {
         return e.status() == 500
                        ? new TppMessage(MessageErrorCode.INTERNAL_SERVER_ERROR, "Request was failed")
                        : new TppMessage(MessageErrorCode.FORMAT_ERROR, "The consent-ID cannot be matched by the ASPSP relative to the TPP");
+    }
+
+    private boolean isConsentSupportedBalances(SpiAccountAccess spiAccountAccess) {
+        boolean isConsentGlobal = spiAccountAccess.getAllPsd2() != null;
+        boolean isConsentForAvailableAccountsWithBalances = spiAccountAccess.getAvailableAccountsWithBalances() == AccountAccessType.ALL_ACCOUNTS;
+        return isConsentGlobal || isConsentForAvailableAccountsWithBalances;
     }
 
     private SCAResponseTO auth(AspspConsentData aspspConsentData) {
