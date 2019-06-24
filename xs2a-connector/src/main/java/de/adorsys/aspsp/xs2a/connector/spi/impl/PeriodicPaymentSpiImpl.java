@@ -23,6 +23,8 @@ import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
+import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
+import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
@@ -31,15 +33,16 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPeriodicPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
-import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponseStatus;
 import de.adorsys.psd2.xs2a.spi.service.PeriodicPaymentSpi;
 import feign.FeignException;
+import feign.Request;
 import feign.Response;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.Optional;
 
 @Component
@@ -74,7 +77,7 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
             SCAPaymentResponseTO response = initiatePaymentInternal(payment, initialAspspConsentData);
             SpiPeriodicPaymentInitiationResponse spiInitiationResponse = Optional.ofNullable(response)
                                                                                  .map(paymentMapper::toSpiPeriodicResponse)
-                                                                                 .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 201, but body was empty!", Response.builder().status(400).build()));
+                                                                                 .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 201, but body was empty!", error(400)));
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
 
             String scaStatusName = response.getScaStatus().name();
@@ -82,10 +85,15 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
 
             return SpiResponse.<SpiPeriodicPaymentInitiationResponse>builder()
                            .payload(spiInitiationResponse)
-                           .success();
+                           .build();
         } catch (FeignException e) {
             return SpiResponse.<SpiPeriodicPaymentInitiationResponse>builder()
-                           .fail(getSpiFailureResponse(e));
+                           .error(getFailureMessageFromFeignException(e))
+                           .build();
+        } catch (IllegalStateException e) {
+            return SpiResponse.<SpiPeriodicPaymentInitiationResponse>builder()
+                           .error(new TppMessage(MessageErrorCode.PAYMENT_FAILED, "The payment initiation request failed during the initial process."))
+                           .build();
         }
     }
 
@@ -94,16 +102,17 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
         if (!TransactionStatus.ACSP.equals(payment.getPaymentStatus())) {
             return SpiResponse.<SpiPeriodicPayment>builder()
                            .payload(payment)
-                           .success();
+                           .build();
         }
         return paymentService.getPaymentById(payment.getPaymentId(), payment.toString(), aspspConsentDataProvider.loadAspspConsentData())
                        .map(p -> objectMapper.convertValue(p, PeriodicPaymentTO.class))
                        .map(paymentMapper::mapToSpiPeriodicPayment)
                        .map(p -> SpiResponse.<SpiPeriodicPayment>builder()
                                          .payload(p)
-                                         .success())
+                                         .build())
                        .orElseGet(() -> SpiResponse.<SpiPeriodicPayment>builder()
-                                                .fail(SpiResponseStatus.LOGICAL_FAILURE));
+                                                .error(new TppMessage(MessageErrorCode.PAYMENT_FAILED, "Couldn't get payment by ID"))
+                                                .build());
     }
 
     @Override
@@ -119,14 +128,6 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
     @Override
     public @NotNull SpiResponse<SpiPaymentExecutionResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiContextData contextData, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiPeriodicPayment payment, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         return paymentService.verifyScaAuthorisationAndExecutePayment(spiScaConfirmation, aspspConsentDataProvider);
-    }
-
-    @NotNull
-    private SpiResponseStatus getSpiFailureResponse(FeignException e) {
-        logger.error(e.getMessage(), e);
-        return e.status() == 500
-                       ? SpiResponseStatus.TECHNICAL_FAILURE
-                       : SpiResponseStatus.LOGICAL_FAILURE;
     }
 
     private SCAPaymentResponseTO initiatePaymentInternal(SpiPeriodicPayment payment, byte[] initialAspspConsentData) {
@@ -145,5 +146,22 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
+    }
+
+    private TppMessage getFailureMessageFromFeignException(FeignException e) {
+        logger.error(e.getMessage(), e);
+
+        return e.status() == 500
+                       ? new TppMessage(MessageErrorCode.INTERNAL_SERVER_ERROR, "Request was failed")
+                       : new TppMessage(MessageErrorCode.PAYMENT_FAILED, "The payment initiation request failed during the initial process.");
+
+    }
+
+    private Response error(int code) {
+        return Response.builder()
+                       .status(code)
+                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
+                       .headers(Collections.emptyMap())
+                       .build();
     }
 }

@@ -1,0 +1,58 @@
+@startuml
+entity XS2A as xs2a
+entity CONNECTOR as con
+entity ASPSP as aspsp
+xs2a->con: Java call Initiate PaymentCancellation"\nnSpiContexData\nSpiAPayment\nSpiAspspConsentDataProvider"
+|||
+con-->xs2a: SpiPaymentCancellation Response
+alt paymentCancellationAuthorizationMandated = FALSE
+|||
+xs2a->con: Java Call CancelPaymentWithoutSca
+|||
+con-->xs2a: Cansellation Response "Success / Failure"
+|||
+else paymentCancellationAuthorizationMandated = TRUE
+|||
+xs2a->con: Java Call AuthorisePsu\n"SpiContexData\nSpiPsuData\nPassword(Pin)\nSpiPayment\nSpiAspspConsentDataProvider"
+|||
+con->aspsp: REST Call AuthoriseForConsent\n"Login\nPin\nPaymentId\nAuthorisationId/nOperationType"
+|||
+aspsp-->con: SCALoginResponse
+|||
+con-->xs2a: SpiAuthorisationStatus
+|||
+xs2a->con: Java Call RequestAvailableScaMethod\n"SpiContexData\nSpiPayment\nSpiAspspConsentDataProvider"
+|||
+con->aspsp: REST Call  GetCancelSCA"PaymentId\nCancellationId"
+|||
+aspsp-->con: ScaPayment Response
+|||
+con-->xs2a: List SpiAuthenticationObject
+|||
+alt List SpiAuthenticationObject is empty
+xs2a->con: Java Call CancelPaymentWithoutSca
+|||
+con-->xs2a: Cansellation Response "Success / Failure"
+|||
+else List SpiAuthenticationObject with values
+|||
+xs2a->con: Java Call Request AuthorisationCode\n"SpiContexData\nAuthenticationMethodId\nSpiPayment\nSpiAspspConsentDataProvider"
+|||
+con->aspsp: REST Call SelectCancelPaymentScaMethod"PaymentId\nCancellationId\nScaMethodId"
+|||
+aspsp-->con: SCAPayment Response
+|||
+con-->xs2a: SpiAuthorisationCodeResult
+|||
+xs2a->con: Java Call VerifyScaAuthorisationAndCancelPayment\n"SpiContexData\nSpiScaConfirmation\nSpiPayment\npiAspspConsentDataProvider"
+|||
+con->aspsp: AuthoriseCancelPayment\n"PaymentId\nCancellationId\nAuthCode"
+|||
+aspsp-->con: ScaPayment Response
+|||
+con-->xs2a: Cansellation Response "Success / Failure"
+|||
+end
+|||
+end
+@enduml

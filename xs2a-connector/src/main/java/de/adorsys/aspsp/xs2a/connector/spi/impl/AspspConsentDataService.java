@@ -19,6 +19,7 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
 import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
 import feign.FeignException;
+import feign.Request;
 import feign.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -94,6 +95,10 @@ public class AspspConsentDataService {
 	}
 
 	private Response error(int code) {
-		return Response.builder().status(code).headers(Collections.emptyMap()).build();
+		return Response.builder()
+				       .status(code)
+				       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
+				       .headers(Collections.emptyMap())
+				       .build();
 	}
 }

@@ -1,0 +1,33 @@
+@startuml
+entity XS2A as xs2a
+entity CONNECTOR as con
+entity ASPSP as aspsp
+xs2a->con: Java call Initiate AIS Consent"\nnSpiContexData\nSpiAccountConsent\nSpiAspspConsentDataProvider"
+|||
+con-->xs2a: SpiInitiateAisConsent Response
+|||
+xs2a->con: Java Call AuthorisePsu\n"SpiContexData\nSpiPsuData\nPassword(Pin)\nSpiAccountConsent\nSpiAspspConsentDataProvider"
+|||
+con->aspsp: REST Call AuthoriseForConsent\n"Login\nPin\nConsentId\nAuthorisationId/nOperationType"
+|||
+aspsp-->con: SCALoginResponse
+|||
+con-->xs2a: SpiAuthorisationStatus
+|||
+xs2a->con: Java Call requestAvailableScaMothod\n"SpiContexData\nSpiAccountConsent\nSpiAspspConsentDataProvider"
+|||
+con->aspsp: REST Call Validate "Token"
+|||
+aspsp-->con: BearerToken
+|||
+con-->xs2a: List SpiAuthenticationObject
+|||
+xs2a->con: Java Call Request AuthorisationCode\n"SpiContexData\nAuthenticationMethodId\nSpiAccountConsent\nSpiAspspConsentDataProvider"
+|||
+con->aspsp: REST Call SelectMethod"ConsentId\nAuthorisationId\nScaMethodId"
+|||
+aspsp-->con: SCAConsent Response
+|||
+con-->xs2a: SpiAuthorisationCodeResult
+@enduml
+

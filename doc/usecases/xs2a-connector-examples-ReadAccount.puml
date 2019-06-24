@@ -1,0 +1,29 @@
+@startuml
+entity XS2A as xs2a
+entity CONNECTOR as con
+entity ASPSP as aspsp
+xs2a->con: Java Call Request Account List\n"withBalance (True/False)\nSpiContexData\nSpiAspspConsentDataProvider\nSpiAcountConsent"
+|||
+alt Dedicated Account Consent
+con->aspsp: REST Call getAccountDetailsByIban\n"iban"
+|||
+aspsp-->con: Account Details
+|||
+else BankOffered / Global / AllPsd2 / AllAvailableAccounts Consent
+|||
+con->aspsp: REST Call getListOfAccounts
+|||
+aspsp-->con: list AccountDetails
+|||
+end
+con-->xs2a: List SpiAccountDetails
+|||
+xs2a->con: Java Call Request AccountDetailForAccount\n"SpiContexData\withBalance (True/False)\nSpiAccountReference\nSpiAccountConsrnt\nSpiAspspConsentDataProvider"
+|||
+con->aspsp: REST Call getAccountDetailsById\n"AccountId"
+|||
+aspsp-->con: Account Details
+|||
+con-->xs2a: SpiAccountDetails
+@enduml
+
