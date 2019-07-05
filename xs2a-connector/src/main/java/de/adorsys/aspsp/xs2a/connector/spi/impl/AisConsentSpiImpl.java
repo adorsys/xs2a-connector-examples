@@ -115,7 +115,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
 
         return SpiResponse.<SpiInitiateAisConsentResponse>builder()
                        .aspspConsentData(initialAspspConsentData.respondWith(consentDataService.store(aisConsentResponse)))
-                       .payload(new SpiInitiateAisConsentResponse(accountConsent.getAccess(), false))
+                       .payload(new SpiInitiateAisConsentResponse(accountConsent.getAccess(), false, ""))
                        .build();
     }
 

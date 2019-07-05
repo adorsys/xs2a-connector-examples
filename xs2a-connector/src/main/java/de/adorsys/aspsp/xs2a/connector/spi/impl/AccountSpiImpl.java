@@ -306,7 +306,7 @@ public class AccountSpiImpl implements AccountSpi {
 
             // TODO don't use IBAN as an account identifier
             // https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/440
-            AccountDetailsTO response = accountRestClient.getAccountDetailsById(reference.getResourceId()).getBody();
+            AccountDetailsTO response = accountRestClient.getAccountDetailsByIban(reference.getIban()).getBody();
 
             return Optional.ofNullable(response).map(accountMapper::toSpiAccountDetails);
         } finally {
