@@ -5,6 +5,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapperImpl
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.ledgers.middleware.api.domain.account.AccountDetailsTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.um.AccessTokenTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.rest.client.AccountRestClient;
@@ -13,6 +14,7 @@ import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.core.tpp.TppInfo;
 import de.adorsys.psd2.xs2a.core.tpp.TppRole;
+import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountConsent;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountDetails;
@@ -31,7 +33,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -50,7 +55,6 @@ public class AccountSpiImplTest {
     private final static LocalDate DATE_FROM = LocalDate.of(2019, 1, 1);
     private final static LocalDate DATE_TO = LocalDate.of(2020, 1, 1);
 
-
     @InjectMocks
     private AccountSpiImpl accountSpi;
 
@@ -62,6 +66,10 @@ public class AccountSpiImplTest {
     private AuthRequestInterceptor authRequestInterceptor;
     @Mock
     private AspspConsentDataService tokenService;
+    @Mock
+    private SpiAspspConsentDataProvider aspspConsentDataProvider;
+    @Mock
+    private SCAResponseTO scaResponseTO;
 
     private JsonReader jsonReader = new JsonReader();
     private SpiAccountConsent spiAccountConsent;
@@ -79,6 +87,11 @@ public class AccountSpiImplTest {
         SCAConsentResponseTO sca = new SCAConsentResponseTO();
         sca.setBearerToken(new BearerTokenTO("access_token", 100, "refresh_token", new AccessTokenTO()));
         when(tokenService.response(ASPSP_CONSENT_DATA.getAspspConsentData())).thenReturn(sca);
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn("data".getBytes());
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response("data".getBytes())).thenReturn(scaResponseTO);
     }
 
     @Test
@@ -87,7 +100,7 @@ public class AccountSpiImplTest {
         when(accountRestClient.getBalances(RESOURCE_ID)).thenReturn(ResponseEntity.ok(new ArrayList<>()));
 
         SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, MediaType.APPLICATION_XML_VALUE, true, DATE_FROM, DATE_TO, BookingStatus.BOOKED,
-                                                                                                    accountReference, spiAccountConsent, ASPSP_CONSENT_DATA);
+                                                                                                    accountReference, spiAccountConsent, aspspConsentDataProvider);
 
         verify(accountRestClient, times(1)).getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO);
         verify(accountRestClient, times(1)).getBalances(RESOURCE_ID);
@@ -104,7 +117,7 @@ public class AccountSpiImplTest {
         when(accountRestClient.getBalances(RESOURCE_ID)).thenReturn(ResponseEntity.ok(new ArrayList<>()));
 
         SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, null, true, DATE_FROM, DATE_TO, BookingStatus.BOOKED,
-                                                                                                    accountReference, spiAccountConsent, ASPSP_CONSENT_DATA);
+                                                                                                    accountReference, spiAccountConsent, aspspConsentDataProvider);
 
         verify(accountRestClient, times(1)).getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO);
         verify(accountRestClient, times(1)).getBalances(RESOURCE_ID);
@@ -121,7 +134,7 @@ public class AccountSpiImplTest {
         when(accountRestClient.getBalances(RESOURCE_ID)).thenReturn(ResponseEntity.ok(new ArrayList<>()));
 
         SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, "*/*", true, DATE_FROM, DATE_TO, BookingStatus.BOOKED,
-                                                                                                    accountReference, spiAccountConsent, ASPSP_CONSENT_DATA);
+                                                                                                    accountReference, spiAccountConsent, aspspConsentDataProvider);
 
         verify(accountRestClient, times(1)).getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO);
         verify(accountRestClient, times(1)).getBalances(RESOURCE_ID);
@@ -137,7 +150,7 @@ public class AccountSpiImplTest {
         when(accountRestClient.getAccountDetailsByIban(IBAN)).thenReturn(ResponseEntity.ok(accountDetailsTO));
 
         SpiResponse<List<SpiAccountDetails>> actualResponse = accountSpi.requestAccountList(SPI_CONTEXT_DATA, false,
-                                                                                            spiAccountConsent, ASPSP_CONSENT_DATA);
+                                                                                            spiAccountConsent, aspspConsentDataProvider);
 
         assertTrue(actualResponse.getErrors().isEmpty());
         assertNotNull(actualResponse.getPayload());
@@ -152,7 +165,7 @@ public class AccountSpiImplTest {
         when(accountRestClient.getAccountDetailsByIban(IBAN)).thenReturn(ResponseEntity.ok(accountDetailsTO));
 
         SpiResponse<List<SpiAccountDetails>> actualResponse = accountSpi.requestAccountList(SPI_CONTEXT_DATA, true,
-                                                                                            spiAccountConsent, ASPSP_CONSENT_DATA);
+                                                                                            spiAccountConsent, aspspConsentDataProvider);
 
         assertTrue(actualResponse.getErrors().isEmpty());
         assertNotNull(actualResponse.getPayload());
@@ -167,7 +180,7 @@ public class AccountSpiImplTest {
         when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(Collections.singletonList(accountDetailsTO)));
 
         SpiResponse<List<SpiAccountDetails>> actualResponse = accountSpi.requestAccountList(SPI_CONTEXT_DATA, true,
-                                                                                            spiAccountConsentGlobal, ASPSP_CONSENT_DATA);
+                                                                                            spiAccountConsentGlobal, aspspConsentDataProvider);
 
         assertTrue(actualResponse.getErrors().isEmpty());
         assertNotNull(actualResponse.getPayload());
