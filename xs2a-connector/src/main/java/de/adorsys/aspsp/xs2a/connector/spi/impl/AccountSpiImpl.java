@@ -78,9 +78,9 @@ public class AccountSpiImpl implements AccountSpi {
             auth(aspspConsentData);
 
             logger.info("Requested Details list for consent with id: {} and withBalance : {}", accountConsent.getId(),
-                        withBalance);
+                    withBalance);
             List<SpiAccountDetails> accountDetailsList = getSpiAccountDetails(withBalance, accountConsent,
-                                                                              aspspConsentData);
+                    aspspConsentData);
             return SpiResponse.<List<SpiAccountDetails>>builder()
                            .aspspConsentData(aspspConsentData)
                            .payload(filterAccountDetailsByWithBalance(withBalance, accountDetailsList, accountConsent.getAccess()))
@@ -104,12 +104,12 @@ public class AccountSpiImpl implements AccountSpi {
             auth(aspspConsentData);
 
             logger.info("Requested details for ACCOUNT-ID: {}, and withBalances: {}",
-                        accountReference.getResourceId(), withBalance);
+                    accountReference.getResourceId(), withBalance);
             SpiAccountDetails accountDetails = Optional
                                                        .ofNullable(accountRestClient.getAccountDetailsById(accountReference.getResourceId()).getBody())
                                                        .map(accountMapper::toSpiAccountDetails)
                                                        .orElseThrow(() -> FeignException.errorStatus("Response status was 200, but the body was empty!",
-                                                                                                     error(404)));
+                                                               error(404)));
             if (!withBalance) {
                 accountDetails.emptyBalances();
             }
@@ -140,16 +140,16 @@ public class AccountSpiImpl implements AccountSpi {
             auth(aspspConsentData);
 
             logger.info("Requested transactions for account: {},  dates from: {}, to: {}, withBalance: {}",
-                        accountReference.getResourceId(), dateFrom, dateTo, withBalance);
+                    accountReference.getResourceId(), dateFrom, dateTo, withBalance);
             List<SpiTransaction> transactions = Optional.ofNullable(
                     accountRestClient.getTransactionByDates(accountReference.getResourceId(), dateFrom, dateTo).getBody())
                                                         .map(accountMapper::toSpiTransactions).orElseGet(ArrayList::new);
             List<SpiAccountBalance> balances = getSpiAccountBalances(contextData, withBalance, accountReference,
-                                                                     accountConsent, aspspConsentData);
+                    accountConsent, aspspConsentData);
 
             // TODO: Check what is to be done here. We can return a json array with those transactions.
             SpiTransactionReport transactionReport = new SpiTransactionReport(transactions, balances,
-                                                                              processAcceptMediaType(acceptMediaType), null);
+                    processAcceptMediaType(acceptMediaType), null);
             logger.info("Finally found {} transactions.", transactionReport.getTransactions().size());
             return SpiResponse.<SpiTransactionReport>builder()
                            .aspspConsentData(aspspConsentData)
@@ -179,13 +179,13 @@ public class AccountSpiImpl implements AccountSpi {
             auth(aspspConsentData);
 
             logger.info("Requested transaction with TRANSACTION-ID: {}, for ACCOUNT-ID: {}", transactionId,
-                        accountReference.getResourceId());
+                    accountReference.getResourceId());
             SpiTransaction transaction = Optional
                                                  .ofNullable(
                                                          accountRestClient.getTransactionById(accountReference.getResourceId(), transactionId).getBody())
                                                  .map(accountMapper::toSpiTransaction)
                                                  .orElseThrow(() -> FeignException.errorStatus("Response status was 200, but the body was empty!",
-                                                                                               error(404)));
+                                                         error(404)));
             logger.info("Found transaction with TRANSACTION-ID: {}", transaction.getTransactionId());
             return SpiResponse.<SpiTransaction>builder()
                            .aspspConsentData(aspspConsentData)
@@ -213,7 +213,7 @@ public class AccountSpiImpl implements AccountSpi {
                                                               .ofNullable(accountRestClient.getBalances(accountReference.getResourceId()).getBody())
                                                               .map(accountMapper::toSpiAccountBalancesList)
                                                               .orElseThrow(() -> FeignException.errorStatus("Response status was 200, but the body was empty!",
-                                                                                                            error(404)));
+                                                                      error(404)));
             logger.info("Found Balances: {}", accountBalances.size());
             return SpiResponse.<List<SpiAccountBalance>>builder()
                            .aspspConsentData(aspspConsentData)
@@ -247,7 +247,7 @@ public class AccountSpiImpl implements AccountSpi {
                                                           @NotNull AspspConsentData aspspConsentData) {
         if (withBalance) {
             SpiResponse<List<SpiAccountBalance>> response = requestBalancesForAccount(contextData, accountReference,
-                                                                                      accountConsent, aspspConsentData);
+                    accountConsent, aspspConsentData);
             if (response.isSuccessful()) {
                 return response.getPayload();
             } else {
