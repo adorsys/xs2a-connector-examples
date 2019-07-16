@@ -85,7 +85,12 @@ public class AccountSpiImplTest {
         accountReference = jsonReader.getObjectFromFile("json/spi/impl/account-reference.json", SpiAccountReference.class);
 
         SCAConsentResponseTO sca = new SCAConsentResponseTO();
-        sca.setBearerToken(new BearerTokenTO("access_token", 100, "refresh_token", new AccessTokenTO()));
+        BearerTokenTO token = new BearerTokenTO();
+        token.setExpires_in(100);
+        token.setAccessTokenObject(new AccessTokenTO());
+        token.setRefresh_token("refresh_token");
+        token.setAccess_token("access_token");
+        sca.setBearerToken(token);
         when(tokenService.response(ASPSP_CONSENT_DATA.getAspspConsentData())).thenReturn(sca);
         when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn("data".getBytes());
         BearerTokenTO bearerTokenTO = new BearerTokenTO();

@@ -111,7 +111,7 @@ public class AccountSpiImpl implements AccountSpi {
             SCAResponseTO response = applyAuthorisation(aspspConsentData);
 
             logger.info("Requested details for ACCOUNT-ID: {}, and withBalances: {}",
-                        accountReference.getResourceId(), withBalance);
+                    accountReference.getResourceId(), withBalance);
             SpiAccountDetails accountDetails = Optional
                                                        .ofNullable(accountRestClient.getAccountDetailsById(accountReference.getResourceId()).getBody())
                                                        .map(accountMapper::toSpiAccountDetails)
@@ -163,7 +163,7 @@ public class AccountSpiImpl implements AccountSpi {
 
             // TODO: Check what is to be done here. We can return a json array with those transactions.
             SpiTransactionReport transactionReport = new SpiTransactionReport(transactions, balances,
-                                                                              processAcceptMediaType(acceptMediaType), null);
+                    processAcceptMediaType(acceptMediaType), null);
             logger.info("Finally found {} transactions.", transactionReport.getTransactions().size());
 
             aspspConsentDataProvider.updateAspspConsentData(tokenService.store(response));
@@ -197,7 +197,7 @@ public class AccountSpiImpl implements AccountSpi {
             SCAResponseTO response = applyAuthorisation(aspspConsentData);
 
             logger.info("Requested transaction with TRANSACTION-ID: {}, for ACCOUNT-ID: {}", transactionId,
-                        accountReference.getResourceId());
+                    accountReference.getResourceId());
             SpiTransaction transaction = Optional
                                                  .ofNullable(
                                                          accountRestClient.getTransactionById(accountReference.getResourceId(), transactionId).getBody())
