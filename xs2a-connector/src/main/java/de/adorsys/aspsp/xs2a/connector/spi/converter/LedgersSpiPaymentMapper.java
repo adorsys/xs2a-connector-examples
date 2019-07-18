@@ -7,10 +7,10 @@ import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
+import de.adorsys.psd2.xs2a.core.pis.FrequencyCode;
 import de.adorsys.psd2.xs2a.core.pis.PisDayOfExecution;
 import de.adorsys.psd2.xs2a.core.pis.PisExecutionRule;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
-import de.adorsys.psd2.xs2a.spi.domain.code.SpiFrequencyCode;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiAddress;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
@@ -110,7 +110,7 @@ public abstract class LedgersSpiPaymentMapper {
         spiPayment.setStartDate(payment.getStartDate());
         spiPayment.setEndDate(payment.getEndDate());
         spiPayment.setExecutionRule(PisExecutionRule.valueOf(payment.getExecutionRule()));
-        spiPayment.setFrequency(SpiFrequencyCode.valueOf(payment.getFrequency().name()));
+        spiPayment.setFrequency(FrequencyCode.valueOf(payment.getFrequency().name()));
         spiPayment.setDayOfExecution(PisDayOfExecution.valueOf("" + payment.getDayOfExecution()));
         return spiPayment;
     } //Direct mapping no need for testing

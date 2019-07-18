@@ -5,11 +5,11 @@ import de.adorsys.ledgers.middleware.api.domain.payment.BulkPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
+import de.adorsys.psd2.xs2a.core.pis.FrequencyCode;
 import de.adorsys.psd2.xs2a.core.pis.PisDayOfExecution;
 import de.adorsys.psd2.xs2a.core.pis.PisExecutionRule;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
-import de.adorsys.psd2.xs2a.spi.domain.code.SpiFrequencyCode;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiAddress;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
@@ -161,7 +161,7 @@ public class LedgersSpiPaymentMapperTest {
         spiPayment.setStartDate(LocalDate.of(2018, 12, 12));
         spiPayment.setEndDate(LocalDate.of(2018, 12, 28));
         spiPayment.setExecutionRule(PisExecutionRule.FOLLOWING);
-        spiPayment.setFrequency(SpiFrequencyCode.DAILY);
+        spiPayment.setFrequency(FrequencyCode.DAILY);
         spiPayment.setDayOfExecution(PisDayOfExecution.getByValue("1").get());
         return spiPayment;
     }
