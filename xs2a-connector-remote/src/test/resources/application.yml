@@ -46,6 +46,12 @@ license.url: https://github.com/adorsys/xs2a/blob/master/LICENSE.md
 
 skip.ssl.certificate.verification: true
 
+#TanEncryption
+application:
+  security:
+    masterPassword: 12345
+    encryptorAlgorithm: testAlgorithm
+
 # ENDPOINTS CORS CONFIGURATION
 # Whether credentials are supported. When not set, credentials are not supported.
 xs2a:

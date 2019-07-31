@@ -40,9 +40,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,7 +55,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
+@PropertySource("classpath:transaction.properties")
 public class AccountSpiImpl implements AccountSpi {
+
+    @Value("${test-download-transaction-list}")
+    private String transactionList;
+
     private static final Logger logger = LoggerFactory.getLogger(AccountSpiImpl.class);
 
     private static final String DEFAULT_ACCEPT_MEDIA_TYPE = MediaType.APPLICATION_JSON_VALUE;
@@ -111,7 +120,7 @@ public class AccountSpiImpl implements AccountSpi {
             SCAResponseTO response = applyAuthorisation(aspspConsentData);
 
             logger.info("Requested details for ACCOUNT-ID: {}, and withBalances: {}",
-                    accountReference.getResourceId(), withBalance);
+                        accountReference.getResourceId(), withBalance);
             SpiAccountDetails accountDetails = Optional
                                                        .ofNullable(accountRestClient.getAccountDetailsById(accountReference.getResourceId()).getBody())
                                                        .map(accountMapper::toSpiAccountDetails)
@@ -161,9 +170,8 @@ public class AccountSpiImpl implements AccountSpi {
             List<SpiAccountBalance> balances = getSpiAccountBalances(contextData, withBalance, accountReference,
                                                                      accountConsent, aspspConsentDataProvider);
 
-            // TODO: Check what is to be done here. We can return a json array with those transactions.
-            SpiTransactionReport transactionReport = new SpiTransactionReport(transactions, balances,
-                    processAcceptMediaType(acceptMediaType), null);
+            SpiTransactionReport transactionReport = new SpiTransactionReport("downloadId", transactions, balances,
+                                                                              processAcceptMediaType(acceptMediaType), null);
             logger.info("Finally found {} transactions.", transactionReport.getTransactions().size());
 
             aspspConsentDataProvider.updateAspspConsentData(tokenService.store(response));
@@ -197,7 +205,7 @@ public class AccountSpiImpl implements AccountSpi {
             SCAResponseTO response = applyAuthorisation(aspspConsentData);
 
             logger.info("Requested transaction with TRANSACTION-ID: {}, for ACCOUNT-ID: {}", transactionId,
-                    accountReference.getResourceId());
+                        accountReference.getResourceId());
             SpiTransaction transaction = Optional
                                                  .ofNullable(
                                                          accountRestClient.getTransactionById(accountReference.getResourceId(), transactionId).getBody())
@@ -245,6 +253,37 @@ public class AccountSpiImpl implements AccountSpi {
                            .build();
         } catch (FeignException e) {
             return SpiResponse.<List<SpiAccountBalance>>builder()
+                           .error(getFailureMessageFromFeignException(e))
+                           .build();
+        } finally {
+            authRequestInterceptor.setAccessToken(null);
+        }
+    }
+
+    @Override
+    public SpiResponse<SpiTransactionsDownloadResponse> requestTransactionsByDownloadLink(@NotNull SpiContextData spiContextData,
+                                                                                          @NotNull SpiAccountConsent spiAccountConsent,
+                                                                                          @NotNull String downloadId,
+                                                                                          @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+
+        byte[] aspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
+
+        try {
+            SCAResponseTO response = applyAuthorisation(aspspConsentData);
+
+            logger.info("Requested downloading list of transactions by download ID: {}", downloadId);
+
+            InputStream stream = new ByteArrayInputStream(transactionList.getBytes());
+
+            SpiTransactionsDownloadResponse transactionsDownloadResponse = new SpiTransactionsDownloadResponse(stream, "transactions.json", transactionList.getBytes().length);
+
+            aspspConsentDataProvider.updateAspspConsentData(tokenService.store(response));
+
+            return SpiResponse.<SpiTransactionsDownloadResponse>builder()
+                           .payload(transactionsDownloadResponse)
+                           .build();
+        } catch (FeignException e) {
+            return SpiResponse.<SpiTransactionsDownloadResponse>builder()
                            .error(getFailureMessageFromFeignException(e))
                            .build();
         } finally {
