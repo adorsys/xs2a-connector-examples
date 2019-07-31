@@ -22,6 +22,12 @@ server:
 # Empty string, mean the default setting from xs2a-impl will be used.
 xs2a.swagger.psd2.api.location: #/psd2-api-1.2-Update-2018-08-18-non-oauth.yaml
 
+#TanEncryption
+application:
+  security:
+    masterPassword: 12345
+    encryptorAlgorithm: testAlgorithm
+
 spring:
   application.name: ledgers-xs2a-gateway
   jackson:
