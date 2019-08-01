@@ -103,6 +103,7 @@
 		<springfox-bean-validators.version>2.9.2</springfox-bean-validators.version>
 		<commons-io.version>2.6</commons-io.version>
 		<!--Sonar -->
+		<maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
 		<sonar.core.coveragePlugin>jacoco</sonar.core.coveragePlugin>
 		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
 		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
@@ -354,6 +355,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
+				<version>${maven-failsafe-plugin.version}</version>
 				<configuration>
 					<classpathDependencyScopeExclude>provided</classpathDependencyScopeExclude>
 				</configuration>
