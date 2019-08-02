@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import feign.codec.Encoder;
 import org.springframework.beans.factory.ObjectFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.cloud.openfeign.FeignFormatterRegistrar;
@@ -24,12 +23,8 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 @Configuration
 public class FeignConfig {
 
-    @Autowired
-    @Qualifier(value = "objectMapper")
-    private ObjectMapper originalObjectMapper;
-
     @Bean
-    public Encoder feignEncoder() {
+    public Encoder feignEncoder(@Qualifier(value = "objectMapper") ObjectMapper originalObjectMapper) {
         ObjectMapper objectMapper = originalObjectMapper.copy();
         objectMapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
         @SuppressWarnings("rawtypes")

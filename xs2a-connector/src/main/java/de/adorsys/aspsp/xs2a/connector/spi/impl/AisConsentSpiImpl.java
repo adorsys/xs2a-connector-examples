@@ -111,7 +111,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
                            .build();
         }
 
-        logger.info("SCA status` is {}", aisConsentResponse.getScaStatus().name());
+        logger.info("SCA status is {}", aisConsentResponse.getScaStatus());
         aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(aisConsentResponse));
 
         return SpiResponse.<SpiInitiateAisConsentResponse>builder()
@@ -134,7 +134,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         sca.setBearerToken(new BearerTokenTO());// remove existing token.
 
         String scaStatusName = sca.getScaStatus().name();
-        logger.info("SCA status` is {}", scaStatusName);
+        logger.info("SCA status is {}", scaStatusName);
 
         aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(sca));
 
@@ -162,7 +162,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             SCAConsentResponseTO consentResponse = authorizeConsentResponse.getBody();
 
             String scaStatusName = sca.getScaStatus().name();
-            logger.info("SCA status` is {}", scaStatusName);
+            logger.info("SCA status is {}", scaStatusName);
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(consentResponse, !consentResponse.isPartiallyAuthorised()));
 
             // TODO use real sca status from Ledgers for resolving consent status https://git.adorsys.de/adorsys/xs2a/ledgers/issues/206
@@ -258,7 +258,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
                                .payload(authenticationObjects)
                                .build();
             } else {
-                logger.error("Process mismatch. Current SCA Status is %s", sca.getScaStatus());
+                logger.error("Process mismatch. Current SCA Status is {}", sca.getScaStatus());
                 return SpiResponse.<List<SpiAuthenticationObject>>builder()
                                .error(new TppMessage(MessageErrorCode.SESSIONS_NOT_SUPPORTED, "Process mismatch. Psu doest'n have any sca method"))
                                .build();

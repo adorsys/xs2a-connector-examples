@@ -1,0 +1,37 @@
+{
+  "scaStatus": "exempted",
+  "authorisationId": "-zxPUvmdSwAtZy8VU5Ci4I",
+  "psuMessage": "Account access for TPP with id PSDDE-FAKENCA-87B2AC:\n- Up to 4 accesses per day.\n- Access valid until 10 October 2020.\nAccess to following accounts:.\nThis access has been granted. No TAN entry needed.",
+  "statusDate": "2019-08-01T09:23:34.512148",
+  "expiresInSeconds": 0,
+  "multilevelScaRequired": false,
+  "bearerToken": {
+    "access_token": "eyJraWQiOiJFTXVqaFlTWFNKSWd5SDJFOTNBMjdBIiwiYWxnIjoiSFMyNTYifQ.eyJzdWIiOiJhX3NmemxjX1NlUXBRNjV5cjRwcVhZIiwidG9rZW5fdXNhZ2UiOiJERUxFR0FURURfQUNDRVNTIiwicm9sZSI6IkNVU1RPTUVSIiwiYWN0Ijp7InRwcElkIjoiUFNEREUtRkFLRU5DQS04N0IyQUMifSwic2NhX2lkIjoiVjAwMjAxOTA4MDEwOTIyNTNhX3NmemxjX1NlUXBRNjV5cjRwcVhZIiwiYXV0aG9yaXNhdGlvbl9pZCI6IlYwMDIwMTkwODAxMDkyMjUzYV9zZnpsY19TZVFwUTY1eXI0cHFYWSIsImV4cCI6MTYwMjM2NzE5OSwibG9naW4iOiJtYXJpb24ubXVlbGxlciIsImNvbnNlbnQiOnsiYWNjZXNzIjp7ImJhbGFuY2VzIjpudWxsLCJhdmFpbGFibGVBY2NvdW50cyI6bnVsbCwiYWNjb3VudHMiOltdLCJ0cmFuc2FjdGlvbnMiOltdLCJhbGxQc2QyIjpudWxsfSwidHBwSWQiOiJQU0RERS1GQUtFTkNBLTg3QjJBQyIsInZhbGlkVW50aWwiOiIyMDIwLTEwLTEwIiwicmVjdXJyaW5nSW5kaWNhdG9yIjpmYWxzZSwiaWQiOm51bGwsImZyZXF1ZW5jeVBlckRheSI6NCwidXNlcklkIjoiYV9zZnpsY19TZVFwUTY1eXI0cHFYWSJ9LCJpYXQiOjE1NjQ2NDQyMTQsImp0aSI6IjRoWHg3Y09vUmo4dFo3Y19hdjVTYkUifQ.wC5hgG73F-PlMK0u7Ui1ezXJukH5tW1vyJzE1iTsb-8",
+    "token_type": "Bearer",
+    "expires_in": 37722984,
+    "accessTokenObject": {
+      "sub": "a_sfzlc_SeQpQ65yr4pqXY",
+      "jti": "4hXx7cOoRj8tZ7c_av5SbE",
+      "login": "marion.mueller",
+      "consent": {
+        "userId": "a_sfzlc_SeQpQ65yr4pqXY",
+        "tppId": "PSDDE-FAKENCA-87B2AC",
+        "frequencyPerDay": 4,
+        "access": {},
+        "validUntil": "2020-10-10",
+        "recurringIndicator": false
+      },
+      "role": "CUSTOMER",
+      "iat": "1970-01-19T02:37:24.214+0000",
+      "exp": "1970-01-19T13:06:07.199+0000",
+      "act": {
+        "tppId": "PSDDE-FAKENCA-87B2AC"
+      },
+      "sca_id": "V0020190801092253a_sfzlc_SeQpQ65yr4pqXY",
+      "authorisation_id": "V0020190801092253a_sfzlc_SeQpQ65yr4pqXY",
+      "token_usage": "DELEGATED_ACCESS"
+    }
+  },
+  "objectType": "SCAConsentResponseTO",
+  "partiallyAuthorised": false
+}

@@ -36,7 +36,6 @@ import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import feign.FeignException;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +88,7 @@ public class GeneralAuthorisationService {
                                          : Ids.id();
         try {
             String login = spiPsuData.getPsuId();
-            logger.info("Authorise user with login={} and password={}", login, StringUtils.repeat("*", 10));
+            logger.info("Authorise user with login={}", login);
             ResponseEntity<SCALoginResponseTO> response = userMgmtRestClient.authoriseForConsent(login, pin, consentId, authorisationId, opType);
             SpiAuthorisationStatus status = response != null && response.getBody() != null && response.getBody().getBearerToken() != null
                                                     ? SpiAuthorisationStatus.SUCCESS
