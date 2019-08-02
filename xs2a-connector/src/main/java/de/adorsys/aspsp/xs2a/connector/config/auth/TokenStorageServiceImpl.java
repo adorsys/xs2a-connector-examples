@@ -72,8 +72,10 @@ public class TokenStorageServiceImpl implements TokenStorageService {
         return jsonNode;
     }
 
-    public String objectType(JsonNode jsonNode) {
-        return Optional.ofNullable(jsonNode.get("objectType")).orElse(null).asText();
+    String objectType(JsonNode jsonNode) {
+        return Optional.ofNullable(jsonNode.get("objectType"))
+                       .map(JsonNode::asText)
+                       .orElse(null);
     }
 
     @Override

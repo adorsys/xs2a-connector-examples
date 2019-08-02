@@ -58,6 +58,7 @@ import java.util.stream.Collectors;
 @PropertySource("classpath:transaction.properties")
 public class AccountSpiImpl implements AccountSpi {
 
+    private static final String RESPONSE_STATUS_200_WITH_EMPTY_BODY = "Response status was 200, but the body was empty!";
     @Value("${test-download-transaction-list}")
     private String transactionList;
 
@@ -124,7 +125,7 @@ public class AccountSpiImpl implements AccountSpi {
             SpiAccountDetails accountDetails = Optional
                                                        .ofNullable(accountRestClient.getAccountDetailsById(accountReference.getResourceId()).getBody())
                                                        .map(accountMapper::toSpiAccountDetails)
-                                                       .orElseThrow(() -> FeignException.errorStatus("Response status was 200, but the body was empty!",
+                                                       .orElseThrow(() -> FeignException.errorStatus(RESPONSE_STATUS_200_WITH_EMPTY_BODY,
                                                                                                      buildErrorResponse()));
             if (!withBalance) {
                 accountDetails.emptyBalances();
@@ -210,7 +211,7 @@ public class AccountSpiImpl implements AccountSpi {
                                                  .ofNullable(
                                                          accountRestClient.getTransactionById(accountReference.getResourceId(), transactionId).getBody())
                                                  .map(accountMapper::toSpiTransaction)
-                                                 .orElseThrow(() -> FeignException.errorStatus("Response status was 200, but the body was empty!",
+                                                 .orElseThrow(() -> FeignException.errorStatus(RESPONSE_STATUS_200_WITH_EMPTY_BODY,
                                                                                                buildErrorResponse()));
             logger.info("Found transaction with TRANSACTION-ID: {}", transaction.getTransactionId());
 
@@ -242,7 +243,7 @@ public class AccountSpiImpl implements AccountSpi {
             List<SpiAccountBalance> accountBalances = Optional
                                                               .ofNullable(accountRestClient.getBalances(accountReference.getResourceId()).getBody())
                                                               .map(accountMapper::toSpiAccountBalancesList)
-                                                              .orElseThrow(() -> FeignException.errorStatus("Response status was 200, but the body was empty!",
+                                                              .orElseThrow(() -> FeignException.errorStatus(RESPONSE_STATUS_200_WITH_EMPTY_BODY,
                                                                                                             buildErrorResponse()));
             logger.info("Found Balances: {}", accountBalances.size());
 

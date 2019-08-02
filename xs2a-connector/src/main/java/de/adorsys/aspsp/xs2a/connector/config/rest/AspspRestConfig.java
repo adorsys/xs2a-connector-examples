@@ -31,7 +31,6 @@ public class AspspRestConfig {
     @Value("${http-client.connection-timeout.ms:10000}")
     private int connectionTimeout;
 
-    
     public AspspRestConfig() {
 	}
 
@@ -44,8 +43,7 @@ public class AspspRestConfig {
     @Bean(name = "aspspRestTemplate")
     public RestTemplate restTemplate(){
         RestTemplate rest = new RestTemplate(clientHttpRequestFactory());
-        rest.getMessageConverters().removeIf(m -> m.getClass().getName().equals(MappingJackson2XmlHttpMessageConverter.class.getName()));
-//        rest.getInterceptors().add(new BearerTokenInterceptor(bearerToken.getToken()));
+        rest.getMessageConverters().removeIf(m -> m.getClass().isAssignableFrom(MappingJackson2XmlHttpMessageConverter.class));
         rest.setErrorHandler(new AspspRestErrorHandler());
         return rest;
     }
