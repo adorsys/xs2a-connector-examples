@@ -29,7 +29,6 @@ import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
 import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.ConsentRestClient;
-import de.adorsys.psd2.xs2a.core.ais.AccountAccessType;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.core.consent.ConsentStatus;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
@@ -328,28 +327,11 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         return consentResponse;
     }
 
-    /*
-     * Check is there is any consent information in this consent object.
-     */
-    private boolean isEmpty(SpiAccountConsent accountConsent) { //TODO should be added to SpiApi object @dmiex
-        return accountConsent.getAccess() == null ||
-                       (accountConsent.getAccess().getAccounts() == null || accountConsent.getAccess().getAccounts().isEmpty()) &&
-                               (accountConsent.getAccess().getBalances() == null || accountConsent.getAccess().getBalances().isEmpty()) &&
-                               (accountConsent.getAccess().getTransactions() == null || accountConsent.getAccess().getTransactions().isEmpty()) &&
-                               accountConsent.getAccess().getAllPsd2() == null &&
-                               accountConsent.getAccess().getAvailableAccounts() == null;
-    }
-
     private SCAConsentResponseTO initiateConsentInternal(SpiAccountConsent accountConsent, byte[] initialAspspConsentData) throws FeignException {
         try {
             SCAResponseTO sca = consentDataService.response(initialAspspConsentData);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
-            // Issue: https://git.adorsys.de/adorsys/xs2a/ledgers/issues/169
-            // TODO FIXME waiting for Issue https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/647
-            if (isEmpty(accountConsent)) {
-                accountConsent.getAccess().setAllPsd2(AccountAccessType.ALL_ACCOUNTS);
-            }
             AisConsentTO aisConsent = aisConsentMapper.toTo(accountConsent);
 
             // Bearer token only returned in case of exempted consent.
