@@ -30,6 +30,7 @@ import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiGetPaymentStatusResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
@@ -59,10 +60,10 @@ public class GeneralPaymentService {
         this.consentDataService = consentDataService;
     }
 
-    public SpiResponse<TransactionStatus> getPaymentStatusById(@NotNull PaymentTypeTO paymentType, @NotNull String paymentId, @NotNull TransactionStatus spiTransactionStatus, @NotNull byte[] aspspConsentData) {
+    public SpiResponse<SpiGetPaymentStatusResponse> getPaymentStatusById(@NotNull PaymentTypeTO paymentType, @NotNull String paymentId, @NotNull TransactionStatus spiTransactionStatus, @NotNull byte[] aspspConsentData) {
         if (!TransactionStatus.ACSP.equals(spiTransactionStatus)) {
-            return SpiResponse.<TransactionStatus>builder()
-                           .payload(spiTransactionStatus)
+            return SpiResponse.<SpiGetPaymentStatusResponse>builder()
+                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, null))
                            .build();
         }
         try {
@@ -75,11 +76,11 @@ public class GeneralPaymentService {
                                                .map(r -> TransactionStatus.valueOf(r.name()))
                                                .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 200, but body was empty!", Response.builder().status(400).build()));
             logger.info("The status was:{}", status);
-            return SpiResponse.<TransactionStatus>builder()
-                           .payload(status)
+            return SpiResponse.<SpiGetPaymentStatusResponse>builder()
+                           .payload(new SpiGetPaymentStatusResponse(status, null))
                            .build();
         } catch (FeignException e) {
-            return SpiResponse.<TransactionStatus>builder()
+            return SpiResponse.<SpiGetPaymentStatusResponse>builder()
                            .error(new TppMessage(MessageErrorCode.FORMAT_ERROR, "Couldn't get payment status by ID"))
                            .build();
 
