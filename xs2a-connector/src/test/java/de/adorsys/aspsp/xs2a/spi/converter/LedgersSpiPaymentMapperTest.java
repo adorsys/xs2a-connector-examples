@@ -1,6 +1,6 @@
 package de.adorsys.aspsp.xs2a.spi.converter;
 
-import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
+import de.adorsys.aspsp.xs2a.connector.spi.converter.*;
 import de.adorsys.ledgers.middleware.api.domain.payment.BulkPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
@@ -19,7 +19,10 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiBulkPaymentInitiation
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPeriodicPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiationResponse;
 import org.junit.Test;
-import org.mapstruct.factory.Mappers;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -32,6 +35,9 @@ import java.util.Currency;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@RunWith(SpringRunner.class)
+@ContextConfiguration(classes = {LedgersSpiPaymentMapperImpl.class, LedgersSpiAccountMapperImpl.class,
+        ChallengeDataMapperImpl.class, AddressMapperImpl.class})
 public class LedgersSpiPaymentMapperTest {
     private YamlMapper yamlMapper = new YamlMapper(ScaMethodConverterTest.class);
 
@@ -39,7 +45,8 @@ public class LedgersSpiPaymentMapperTest {
 
     public static final PaymentProductTO PAYMENT_PRODUCT_CROSS_BORDER = PaymentProductTO.CROSS_BORDER;
 
-    private final LedgersSpiPaymentMapper mapper = Mappers.getMapper(LedgersSpiPaymentMapper.class);
+    @Autowired
+    private LedgersSpiPaymentMapper mapper;
 
 
     @Test
