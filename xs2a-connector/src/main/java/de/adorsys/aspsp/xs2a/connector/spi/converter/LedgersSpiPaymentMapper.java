@@ -28,7 +28,7 @@ import java.time.*;
 import java.util.List;
 import java.util.Optional;
 
-@Mapper(componentModel = "spring", uses = LedgersSpiAccountMapper.class)
+@Mapper(componentModel = "spring", uses = {LedgersSpiAccountMapper.class, ChallengeDataMapper.class, AddressMapper.class})
 public abstract class LedgersSpiPaymentMapper {
 
     private LedgersSpiAccountMapper accountMapper = Mappers.getMapper(LedgersSpiAccountMapper.class);
