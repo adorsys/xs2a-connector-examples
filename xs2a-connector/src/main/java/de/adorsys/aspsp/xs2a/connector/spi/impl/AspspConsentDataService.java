@@ -18,14 +18,11 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
 import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
-import feign.FeignException;
-import feign.Request;
-import feign.Response;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.Collections;
 
 @Service
 public class AspspConsentDataService {
@@ -47,7 +44,7 @@ public class AspspConsentDataService {
 		try {
 			return tokenStorageService.toBytes(response);
 		} catch (IOException e) {
-			throw FeignException.errorStatus(e.getMessage(), error(500));
+			throw FeignExceptionHandler.getException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
 		}
 	}
 	
@@ -66,7 +63,7 @@ public class AspspConsentDataService {
 			checkBearerTokenPresent(checkCredentials, sca);
 			return sca;
 		} catch (IOException e) {
-			throw FeignException.errorStatus(e.getMessage(), error(500));
+			throw FeignExceptionHandler.getException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
 		}
 	}
 	
@@ -77,28 +74,19 @@ public class AspspConsentDataService {
 			checkBearerTokenPresent(checkCredentials, sca);
 			return sca;
 		} catch (IOException e) {
-			throw FeignException.errorStatus(e.getMessage(), error(500));
+			throw FeignExceptionHandler.getException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
 		}
 	}
 
 	private <T extends SCAResponseTO> void checkBearerTokenPresent(boolean checkCredentials, T sca) {
 		if(checkCredentials && sca.getBearerToken()==null) {
-			throw FeignException.errorStatus("Missing credentials. Expecting a bearer token in the consent data object.", 
-					error(401));
+			throw FeignExceptionHandler.getException(HttpStatus.UNAUTHORIZED, "Missing credentials. Expecting a bearer token in the consent data object.");
 		}
 	}
 
 	private <T extends SCAResponseTO> void checkScaPresent(T sca) {
 		if(sca==null) {
-			throw FeignException.errorStatus("Missing consent data", error(401));
+			throw FeignExceptionHandler.getException(HttpStatus.UNAUTHORIZED, "Missing consent data");
 		}
-	}
-
-	private Response error(int code) {
-		return Response.builder()
-				       .status(code)
-				       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
-				       .headers(Collections.emptyMap())
-				       .build();
 	}
 }

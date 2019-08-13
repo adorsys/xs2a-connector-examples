@@ -59,6 +59,8 @@ import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.PSUIDENTI
 public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     private static final Logger logger = LoggerFactory.getLogger(PaymentCancellationSpiImpl.class);
 
+    private static final String PAYMENT_CANCELLATION_EXCEPTION_MESSAGE = "Couldn't execute payment cancellation.";
+
     private final PaymentRestClient paymentRestClient;
     private final TokenStorageService tokenStorageService;
     private final ScaMethodConverter scaMethodConverter;
@@ -123,7 +125,7 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
             } catch (FeignException f) {
                 logger.error("An error occurred during Payment Cancellation Process: {}, with message: {}", f.status(), f.getLocalizedMessage());
                 return SpiResponse.<SpiResponse.VoidResponse>builder()
-                               .error(getFailureMessageFromFeignException(f))
+                               .error(FeignExceptionHandler.getFailureMessage(f, MessageErrorCode.FORMAT_ERROR, PAYMENT_CANCELLATION_EXCEPTION_MESSAGE))
                                .build();
             }
         }
@@ -235,7 +237,7 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
                 return authorisationService.returnScaMethodSelection(aspspConsentDataProvider, response);
             } catch (FeignException e) {
                 return SpiResponse.<SpiAuthorizationCodeResult>builder()
-                               .error(getFailureMessageFromFeignException(e))
+                               .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.FORMAT_ERROR, PAYMENT_CANCELLATION_EXCEPTION_MESSAGE))
                                .build();
             } finally {
                 authRequestInterceptor.setAccessToken(null);
@@ -243,13 +245,5 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
         } else {
             return authorisationService.getResponseIfScaSelected(aspspConsentDataProvider, response);
         }
-    }
-
-    private TppMessage getFailureMessageFromFeignException(FeignException e) {
-        logger.error(e.getMessage(), e);
-
-        return e.status() == 500
-                       ? new TppMessage(MessageErrorCode.INTERNAL_SERVER_ERROR, "Request was failed")
-                       : new TppMessage(MessageErrorCode.FORMAT_ERROR, "Couldn't execute payment cancellation");
     }
 }

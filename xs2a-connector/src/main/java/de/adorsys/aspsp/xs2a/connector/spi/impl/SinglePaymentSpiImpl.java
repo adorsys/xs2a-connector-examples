@@ -36,15 +36,13 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiati
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.SinglePaymentSpi;
 import feign.FeignException;
-import feign.Request;
-import feign.Response;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
 import java.util.Optional;
 
 @Component
@@ -82,7 +80,7 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
             SCAPaymentResponseTO response = initiatePaymentInternal(payment, initialAspspConsentData);
             SpiSinglePaymentInitiationResponse spiInitiationResponse = Optional.ofNullable(response)
                                                                                .map(paymentMapper::toSpiSingleResponse)
-                                                                               .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 201, but body was empty!", error(400)));
+                                                                               .orElseThrow(() -> FeignExceptionHandler.getException(HttpStatus.BAD_REQUEST, "Request failed, Response was 201, but body was empty!"));
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
 
 
@@ -94,7 +92,8 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
                            .build();
         } catch (FeignException e) {
             return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
-                           .error(getFailureMessageFromFeignException(e))
+                           .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.PAYMENT_FAILED,
+                                                                          "The payment initiation request failed during the initial process."))
                            .build();
         } catch (IllegalStateException e) {
             return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
@@ -162,22 +161,5 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
-    }
-
-    private TppMessage getFailureMessageFromFeignException(FeignException e) {
-        logger.error(e.getMessage(), e);
-
-        return e.status() == 500
-                       ? new TppMessage(MessageErrorCode.INTERNAL_SERVER_ERROR, "Request was failed")
-                       : new TppMessage(MessageErrorCode.PAYMENT_FAILED, "The payment initiation request failed during the initial process.");
-
-    }
-
-    private Response error(int code) {
-        return Response.builder()
-                       .status(code)
-                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
-                       .headers(Collections.emptyMap())
-                       .build();
     }
 }

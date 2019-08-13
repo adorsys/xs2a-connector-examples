@@ -65,6 +65,8 @@ import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.*;
 public class AisConsentSpiImpl implements AisConsentSpi {
     private static final Logger logger = LoggerFactory.getLogger(AisConsentSpiImpl.class);
 
+    private static final String SCA_STATUS_LOG = "SCA status is {}";
+
     private final ConsentRestClient consentRestClient;
     private final TokenStorageService tokenStorageService;
     private final AisConsentMapper aisConsentMapper;
@@ -106,11 +108,11 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             aisConsentResponse = initiateConsentInternal(accountConsent, initialAspspConsentData);
         } catch (FeignException e) {
             return SpiResponse.<SpiInitiateAisConsentResponse>builder()
-                           .error(getFailureMessageFromFeignException(e))
+                           .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.FORMAT_ERROR, "Addressed account is unknown to the ASPSP or not associated to the PSU."))
                            .build();
         }
 
-        logger.info("SCA status is {}", aisConsentResponse.getScaStatus());
+        logger.info(SCA_STATUS_LOG, aisConsentResponse.getScaStatus());
         aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(aisConsentResponse));
 
         return SpiResponse.<SpiInitiateAisConsentResponse>builder()
@@ -133,7 +135,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         sca.setBearerToken(new BearerTokenTO());// remove existing token.
 
         String scaStatusName = sca.getScaStatus().name();
-        logger.info("SCA status is {}", scaStatusName);
+        logger.info(SCA_STATUS_LOG, scaStatusName);
 
         aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(sca));
 
@@ -161,7 +163,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             SCAConsentResponseTO consentResponse = authorizeConsentResponse.getBody();
 
             String scaStatusName = sca.getScaStatus().name();
-            logger.info("SCA status is {}", scaStatusName);
+            logger.info(SCA_STATUS_LOG, scaStatusName);
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(consentResponse, !consentResponse.isPartiallyAuthorised()));
 
             // TODO use real sca status from Ledgers for resolving consent status https://git.adorsys.de/adorsys/xs2a/ledgers/issues/206
@@ -217,7 +219,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
                 aisConsentResponse = initiateConsentInternal(aisConsent, aspspConsentDataProvider.loadAspspConsentData());
             } catch (FeignException e) {
                 return SpiResponse.<SpiAuthorisationStatus>builder()
-                               .error(getFailureMessageFromFeignException(e))
+                               .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.FORMAT_ERROR, "Addressed account is unknown to the ASPSP or not associated to the PSU."))
                                .build();
             }
 
@@ -346,14 +348,5 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
-    }
-
-    private TppMessage getFailureMessageFromFeignException(FeignException e) {
-        logger.error(e.getMessage(), e);
-
-        return e.status() == 500
-                       ? new TppMessage(MessageErrorCode.INTERNAL_SERVER_ERROR, "Request was failed")
-                       : new TppMessage(MessageErrorCode.FORMAT_ERROR, "Addressed account is unknown to the ASPSP or not associated to the PSU.");
-
     }
 }

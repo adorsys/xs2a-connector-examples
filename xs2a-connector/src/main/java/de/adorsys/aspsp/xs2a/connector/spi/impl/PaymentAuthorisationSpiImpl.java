@@ -157,14 +157,14 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
         paymentResponse.setObjectType(SCAPaymentResponseTO.class.getSimpleName());
         paymentResponse.setPaymentId(spiPayment.getPaymentId());
         paymentResponse.setPaymentType(PaymentTypeTO.valueOf(paymentTypeString));
-        String paymentProduct2 = spiPayment.getPaymentProduct();
-        if (paymentProduct2 == null && originalResponse != null && originalResponse.getPaymentProduct() != null) {
-            paymentProduct2 = originalResponse.getPaymentProduct().getValue();
+        String paymentProduct = spiPayment.getPaymentProduct();
+        if (paymentProduct == null && originalResponse != null && originalResponse.getPaymentProduct() != null) {
+            paymentProduct = originalResponse.getPaymentProduct().getValue();
         } else {
             throw new IOException("Missing payment product");
         }
-        final String pp = paymentProduct2;
-        paymentResponse.setPaymentProduct(PaymentProductTO.getByValue(paymentProduct2).orElseThrow(() -> new IOException(String.format("Unsupported payment product %s", pp))));
+        String unsupportedPaymentProductMessage = String.format("Unsupported payment product %s", paymentProduct);
+        paymentResponse.setPaymentProduct(PaymentProductTO.getByValue(paymentProduct).orElseThrow(() -> new IOException(unsupportedPaymentProductMessage)));
         return paymentResponse;
     }
 
