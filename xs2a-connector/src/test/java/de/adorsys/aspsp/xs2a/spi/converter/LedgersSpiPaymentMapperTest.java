@@ -1,6 +1,7 @@
 package de.adorsys.aspsp.xs2a.spi.converter;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.*;
+import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.ledgers.middleware.api.domain.payment.BulkPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
@@ -48,6 +49,7 @@ public class LedgersSpiPaymentMapperTest {
     @Autowired
     private LedgersSpiPaymentMapper mapper;
 
+    private JsonReader jsonReader = new JsonReader();
 
     @Test
     public void toSinglePaymentTO() throws IOException {
@@ -131,6 +133,14 @@ public class LedgersSpiPaymentMapperTest {
         SpiBulkPayment response = mapper.mapToSpiBulkPayment(initial);
         assertThat(response).isNotNull();
         assertThat(response).isEqualToComparingFieldByFieldRecursively(expected);
+    }
+
+    @Test
+    public void mapToSpiPeriodicPayment() throws IOException {
+        PeriodicPaymentTO initial = yamlMapper.readYml(PeriodicPaymentTO.class, "PaymentPeriodicTO.yml");
+        SpiPeriodicPayment actual = mapper.mapToSpiPeriodicPayment(initial);
+
+        assertThat(actual).isEqualToComparingFieldByFieldRecursively(getPeriodic());
     }
 
     private SpiSinglePayment getSpiSingle() {

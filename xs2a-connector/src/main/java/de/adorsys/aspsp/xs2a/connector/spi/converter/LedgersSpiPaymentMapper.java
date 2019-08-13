@@ -109,9 +109,10 @@ public abstract class LedgersSpiPaymentMapper {
         spiPayment.setRequestedExecutionTime(toDateTime(payment.getRequestedExecutionDate(), payment.getRequestedExecutionTime()));
         spiPayment.setStartDate(payment.getStartDate());
         spiPayment.setEndDate(payment.getEndDate());
-        spiPayment.setExecutionRule(PisExecutionRule.valueOf(payment.getExecutionRule()));
+        Optional<PisExecutionRule> pisExecutionRule = PisExecutionRule.getByValue(payment.getExecutionRule());
+        pisExecutionRule.ifPresent(spiPayment::setExecutionRule);
         spiPayment.setFrequency(FrequencyCode.valueOf(payment.getFrequency().name()));
-        spiPayment.setDayOfExecution(PisDayOfExecution.valueOf("" + payment.getDayOfExecution()));
+        spiPayment.setDayOfExecution(PisDayOfExecution.fromValue(String.valueOf(payment.getDayOfExecution())));
         return spiPayment;
     } //Direct mapping no need for testing
 
