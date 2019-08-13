@@ -103,7 +103,7 @@ public class GeneralAuthorisationService {
                            .build();
         } catch (FeignException e) {
             return SpiResponse.<SpiAuthorisationStatus>builder()
-                           .error(getFailureMessageFromFeignException(e))
+                           .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.PSU_CREDENTIALS_INVALID, "PSU authorisation request was failed."))
                            .build();
         }
     }
@@ -137,13 +137,5 @@ public class GeneralAuthorisationService {
         return SpiResponse.<SpiAuthorizationCodeResult>builder()
                        .payload(spiAuthorizationCodeResult)
                        .build();
-    }
-
-    private TppMessage getFailureMessageFromFeignException(FeignException e) {
-        logger.error(e.getMessage(), e);
-
-        return e.status() == 500
-                       ? new TppMessage(MessageErrorCode.INTERNAL_SERVER_ERROR, "Request was failed")
-                       : new TppMessage(MessageErrorCode.PSU_CREDENTIALS_INVALID, "PSU authorisation request was failed.");
     }
 }
