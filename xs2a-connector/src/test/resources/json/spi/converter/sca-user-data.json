@@ -1,0 +1,10 @@
+{
+  "id": "111",
+  "scaMethod": "EMAIL",
+  "methodValue": "some@email.com",
+  "user": {
+    "login": "user1",
+    "email": "user1@test.com",
+    "pin": "p1n111"
+  }
+}

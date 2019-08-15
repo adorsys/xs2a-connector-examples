@@ -1,0 +1,8 @@
+{
+  "currencyFrom": "EUR",
+  "rateFrom": "12",
+  "currency": "UAH",
+  "rateTo": "USD",
+  "rateDate": "2019-05-28",
+  "rateContract": "contractIdentification"
+}

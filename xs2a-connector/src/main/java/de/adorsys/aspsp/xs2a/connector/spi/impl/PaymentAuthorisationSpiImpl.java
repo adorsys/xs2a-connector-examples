@@ -16,7 +16,7 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
-import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaLoginToPaymentResponseMapper;
+import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaLoginMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
@@ -62,7 +62,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
     private final GeneralAuthorisationService authorisationService;
     private final TokenStorageService tokenStorageService;
     private final ScaMethodConverter scaMethodConverter;
-    private final ScaLoginToPaymentResponseMapper scaLoginToPaymentResponseMapper;
+    private final ScaLoginMapper scaLoginMapper;
     private final AuthRequestInterceptor authRequestInterceptor;
     private final AspspConsentDataService consentDataService;
     private final PaymentRestClient paymentRestClient;
@@ -73,14 +73,14 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
 
     public PaymentAuthorisationSpiImpl(GeneralAuthorisationService authorisationService,
                                        TokenStorageService tokenStorageService, ScaMethodConverter scaMethodConverter,
-                                       ScaLoginToPaymentResponseMapper scaLoginToPaymentResponseMapper,
+                                       ScaLoginMapper scaLoginMapper,
                                        AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService consentDataService,
                                        PaymentRestClient paymentRestClient, SinglePaymentSpi singlePaymentSpi, BulkPaymentSpi bulkPaymentSpi,
                                        PeriodicPaymentSpi periodicPaymentSpi, CmsPaymentStatusUpdateService cmsPaymentStatusUpdateService) {
         this.authorisationService = authorisationService;
         this.tokenStorageService = tokenStorageService;
         this.scaMethodConverter = scaMethodConverter;
-        this.scaLoginToPaymentResponseMapper = scaLoginToPaymentResponseMapper;
+        this.scaLoginMapper = scaLoginMapper;
         this.authRequestInterceptor = authRequestInterceptor;
         this.consentDataService = consentDataService;
         this.paymentRestClient = paymentRestClient;
@@ -153,7 +153,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
     public SCAPaymentResponseTO toPaymentConsent(SpiPayment spiPayment, SpiAspspConsentDataProvider aspspConsentDataProvider, SCAPaymentResponseTO originalResponse) throws IOException {
         String paymentTypeString = Optional.ofNullable(spiPayment.getPaymentType()).orElseThrow(() -> new IOException("Missing payment type")).name();
         SCALoginResponseTO scaResponseTO = tokenStorageService.fromBytes(aspspConsentDataProvider.loadAspspConsentData(), SCALoginResponseTO.class);
-        SCAPaymentResponseTO paymentResponse = scaLoginToPaymentResponseMapper.toPaymentResponse(scaResponseTO);
+        SCAPaymentResponseTO paymentResponse = scaLoginMapper.toPaymentResponse(scaResponseTO);
         paymentResponse.setObjectType(SCAPaymentResponseTO.class.getSimpleName());
         paymentResponse.setPaymentId(spiPayment.getPaymentId());
         paymentResponse.setPaymentType(PaymentTypeTO.valueOf(paymentTypeString));

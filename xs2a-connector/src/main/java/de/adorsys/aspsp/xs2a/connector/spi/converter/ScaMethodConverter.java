@@ -20,20 +20,18 @@ import java.util.List;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
 
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
 
 @Mapper(componentModel = "spring")
 public interface ScaMethodConverter {
-	
-	@Mappings({
-		@Mapping(source = "scaMethod", target = "authenticationType"),
-		@Mapping(source = "methodValue", target = "name"),
-		@Mapping(source = "id", target = "authenticationMethodId")
-	})
+
+    @Mapping(source = "scaMethod", target = "authenticationType")
+    @Mapping(source = "methodValue", target = "name")
+    @Mapping(source = "id", target = "authenticationMethodId")
     SpiAuthenticationObject toSpiAuthenticationObject(ScaUserDataTO method);
+
     List<SpiAuthenticationObject> toSpiAuthenticationObjectList(List<ScaUserDataTO> methods);
 }
 

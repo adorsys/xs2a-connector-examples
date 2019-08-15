@@ -1,0 +1,5 @@
+{
+  "authenticationMethodId": "111",
+  "authenticationType": "EMAIL",
+  "name": "some@email.com"
+}

@@ -21,19 +21,23 @@ import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-public abstract class ScaMethodUtils {
+class ScaMethodUtils {
 
-    public static List<String> toScaMethods(List<ScaUserDataTO> scaMethods) {
+    private ScaMethodUtils() {
+    }
+
+    static List<String> toScaMethods(List<ScaUserDataTO> scaMethods) {
         return CollectionUtils.isEmpty(scaMethods)
                        ? Collections.emptyList()
                        : scaMethods.stream().map(ScaUserDataTO::getId).collect(Collectors.toList());
     }
 
-    public static String toScaMethod(ScaUserDataTO m) {
-        return m == null
-                       ? null
-                       : m.getId();
+    static String toScaMethod(ScaUserDataTO scaUserDataTO) {
+        return Optional.ofNullable(scaUserDataTO)
+                       .map(ScaUserDataTO::getId)
+                       .orElse(null);
     }
 }
