@@ -1,0 +1,5 @@
+{
+  "transactionStatus": "RCVD",
+  "paymentId": "myPaymentId",
+  "multilevelScaRequired": "false"
+}

@@ -1,6 +1,5 @@
-package de.adorsys.aspsp.xs2a.spi.converter;
+package de.adorsys.aspsp.xs2a.connector.spi.converter;
 
-import de.adorsys.aspsp.xs2a.connector.spi.converter.*;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.ledgers.middleware.api.domain.payment.BulkPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
@@ -25,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -34,122 +32,127 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Currency;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {LedgersSpiPaymentMapperImpl.class, LedgersSpiAccountMapperImpl.class,
         ChallengeDataMapperImpl.class, AddressMapperImpl.class})
 public class LedgersSpiPaymentMapperTest {
-    private YamlMapper yamlMapper = new YamlMapper(ScaMethodConverterTest.class);
-
-    public static final PaymentProductTO PAYMENT_PRODUCT_SEPA = PaymentProductTO.SEPA;
-
-    public static final PaymentProductTO PAYMENT_PRODUCT_CROSS_BORDER = PaymentProductTO.CROSS_BORDER;
 
     @Autowired
-    private LedgersSpiPaymentMapper mapper;
-
+    private LedgersSpiPaymentMapper ledgersSpiPaymentMapper;
     private JsonReader jsonReader = new JsonReader();
 
-    @Test
-    public void toSinglePaymentTO() throws IOException {
-        //Given
-        SpiSinglePayment spiPayment = getSpiSingle();
-        SinglePaymentTO expected = yamlMapper.readYml(SinglePaymentTO.class, "PaymentSingleTO.yml");
+    private static final PaymentProductTO PAYMENT_PRODUCT_SEPA = PaymentProductTO.SEPA;
+    private static final PaymentProductTO PAYMENT_PRODUCT_CROSS_BORDER = PaymentProductTO.CROSS_BORDER;
 
-        //When
-        SinglePaymentTO payment = mapper.toSinglePaymentTO(spiPayment);
-        assertThat(payment).isNotNull();
-        assertThat(payment).isEqualToComparingFieldByFieldRecursively(expected);
+    @Test
+    public void toSinglePaymentTOWithRealData() {
+        SpiSinglePayment inputData = getSpiSingle();
+        SinglePaymentTO actualResult = ledgersSpiPaymentMapper.toSinglePaymentTO(inputData);
+        SinglePaymentTO expectedResult = jsonReader.getObjectFromFile("json/mappers/single-payment-to.json", SinglePaymentTO.class);
+        assertEquals(expectedResult, actualResult);
     }
 
     @Test
-    public void toPeriodicPaymentTO() throws IOException {
-        //Given
-        SpiPeriodicPayment spiPayment = getPeriodic();
-        PeriodicPaymentTO expected = yamlMapper.readYml(PeriodicPaymentTO.class, "PaymentPeriodicTO.yml");
-
-        //When
-        PeriodicPaymentTO payment = mapper.toPeriodicPaymentTO(spiPayment);
-        assertThat(payment).isNotNull();
-        assertThat(payment).isEqualToComparingFieldByFieldRecursively(expected);
+    public void toSinglePaymentTOWithNull() {
+        SinglePaymentTO actualResult = ledgersSpiPaymentMapper.toSinglePaymentTO(null);
+        assertNull(actualResult);
     }
 
     @Test
-    public void toBulkPaymentTO() throws IOException {
-        //Given
-        SpiBulkPayment spiPayment = getBulk();
-        BulkPaymentTO expected = yamlMapper.readYml(BulkPaymentTO.class, "PaymentBulkTO.yml");
-
-        //When
-        BulkPaymentTO payment = mapper.toBulkPaymentTO(spiPayment);
-        assertThat(payment).isNotNull();
-        assertThat(payment).isEqualToComparingFieldByFieldRecursively(expected);
+    public void toPeriodicPaymentTOWithRealData() {
+        SpiPeriodicPayment inputData = getPeriodic();
+        PeriodicPaymentTO actualResult = ledgersSpiPaymentMapper.toPeriodicPaymentTO(inputData);
+        PeriodicPaymentTO expectedResult = jsonReader.getObjectFromFile("json/mappers/periodic-payment-to.json", PeriodicPaymentTO.class);
+        assertEquals(expectedResult, actualResult);
     }
 
     @Test
-    public void toSpiSingleResponse() throws IOException {
-        //Given
-        SinglePaymentTO initial = yamlMapper.readYml(SinglePaymentTO.class, "PaymentSingleTO.yml");
-        SpiSinglePaymentInitiationResponse expected = yamlMapper.readYml(SpiSinglePaymentInitiationResponse.class, "SingleSpiResponse.yml");
-
-        //When
-        SpiSinglePaymentInitiationResponse response = mapper.toSpiSingleResponse(initial);
-        assertThat(response).isNotNull();
-        assertThat(response).isEqualToComparingFieldByFieldRecursively(expected);
+    public void toPeriodicPaymentTOWithNull() {
+        PeriodicPaymentTO actualResult = ledgersSpiPaymentMapper.toPeriodicPaymentTO(null);
+        assertNull(actualResult);
     }
 
     @Test
-    public void toSpiPeriodicResponse() throws IOException {
-        //Given
-        PeriodicPaymentTO initial = yamlMapper.readYml(PeriodicPaymentTO.class, "PaymentPeriodicTO.yml");
-        SpiPeriodicPaymentInitiationResponse expected = yamlMapper.readYml(SpiPeriodicPaymentInitiationResponse.class, "SingleSpiResponse.yml");
-
-        //When
-        SpiPeriodicPaymentInitiationResponse response = mapper.toSpiPeriodicResponse(initial);
-        assertThat(response).isNotNull();
-        assertThat(response).isEqualToComparingFieldByFieldRecursively(expected);
+    public void toBulkPaymentTOWithRealData() {
+        SpiBulkPayment inputData = getBulk();
+        BulkPaymentTO actualResult = ledgersSpiPaymentMapper.toBulkPaymentTO(inputData);
+        BulkPaymentTO expectedResult = jsonReader.getObjectFromFile("json/mappers/bulk-payment-to.json", BulkPaymentTO.class);
+        assertEquals(expectedResult, actualResult);
     }
 
     @Test
-    public void toSpiBulkResponse() throws IOException {
-        //Given
-        BulkPaymentTO initial = yamlMapper.readYml(BulkPaymentTO.class, "PaymentBulkTO.yml");
-        SpiBulkPaymentInitiationResponse expected = getBulkResponse();
-
-        //When
-        SpiBulkPaymentInitiationResponse response = mapper.toSpiBulkResponse(initial);
-        assertThat(response).isNotNull();
-        assertThat(response).isEqualToComparingFieldByFieldRecursively(expected);
+    public void toBulkPaymentTOWithNull() {
+        BulkPaymentTO actualResult = ledgersSpiPaymentMapper.toBulkPaymentTO(null);
+        assertNull(actualResult);
     }
 
     @Test
-    public void mapToSpiBulkPayment() throws IOException {
-        //Given
-        BulkPaymentTO initial = yamlMapper.readYml(BulkPaymentTO.class, "PaymentBulkTO.yml");
-        SpiBulkPayment expected = getBulk();
-
-        //When
-        SpiBulkPayment response = mapper.mapToSpiBulkPayment(initial);
-        assertThat(response).isNotNull();
-        assertThat(response).isEqualToComparingFieldByFieldRecursively(expected);
+    public void toSpiSingleResponseWithRealData() {
+        SinglePaymentTO inputData = jsonReader.getObjectFromFile("json/mappers/single-payment-to.json", SinglePaymentTO.class);
+        SpiSinglePaymentInitiationResponse actualResult = ledgersSpiPaymentMapper.toSpiSingleResponse(inputData);
+        SpiSinglePaymentInitiationResponse expectedResult = jsonReader
+                .getObjectFromFile("json/mappers/spi-payment-initiation-response.json", SpiSinglePaymentInitiationResponse.class);
+        assertEquals(expectedResult, actualResult);
     }
 
     @Test
-    public void mapToSpiPeriodicPayment() throws IOException {
-        PeriodicPaymentTO initial = yamlMapper.readYml(PeriodicPaymentTO.class, "PaymentPeriodicTO.yml");
-        SpiPeriodicPayment actual = mapper.mapToSpiPeriodicPayment(initial);
+    public void toSpiSingleResponseWithNull() {
+        SpiSinglePaymentInitiationResponse actualResult = ledgersSpiPaymentMapper.toSpiSingleResponse((SinglePaymentTO) null);
+        assertNull(actualResult);
+    }
 
-        assertThat(actual).isEqualToComparingFieldByFieldRecursively(getPeriodic());
+    @Test
+    public void toSpiPeriodicResponseWithRealData() {
+        PeriodicPaymentTO inputData = jsonReader.getObjectFromFile("json/mappers/periodic-payment-to.json", PeriodicPaymentTO.class);
+        SpiPeriodicPaymentInitiationResponse actualResult = ledgersSpiPaymentMapper.toSpiPeriodicResponse(inputData);
+        SpiPeriodicPaymentInitiationResponse expectedResult = jsonReader
+                .getObjectFromFile("json/mappers/spi-payment-initiation-response.json", SpiPeriodicPaymentInitiationResponse.class);
+        assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
+    public void toSpiPeriodicResponseWithNull() {
+        SpiPeriodicPaymentInitiationResponse actualResult = ledgersSpiPaymentMapper.toSpiPeriodicResponse((PeriodicPaymentTO) null);
+        assertNull(actualResult);
+    }
+
+    @Test
+    public void toSpiBulkResponseWithRealData() {
+        BulkPaymentTO inputData = jsonReader.getObjectFromFile("json/mappers/bulk-payment-to.json", BulkPaymentTO.class);
+        SpiBulkPaymentInitiationResponse actualResult = ledgersSpiPaymentMapper.toSpiBulkResponse(inputData);
+        SpiBulkPaymentInitiationResponse expectedResult = getBulkResponse();
+        assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
+    public void toSpiBulkResponseWithNull() {
+        SpiBulkPaymentInitiationResponse actualResult = ledgersSpiPaymentMapper.toSpiBulkResponse((BulkPaymentTO) null);
+        assertNull(actualResult);
+    }
+
+    @Test
+    public void mapToSpiBulkPaymentWithRealData() {
+        BulkPaymentTO inputData = jsonReader.getObjectFromFile("json/mappers/bulk-payment-to.json", BulkPaymentTO.class);
+        SpiBulkPayment actualResult = ledgersSpiPaymentMapper.mapToSpiBulkPayment(inputData);
+        SpiBulkPayment expectedResult = getBulk();;
+        assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
+    public void mapToSpiBulkPaymentWithNull() {
+        SpiBulkPayment actualResult = ledgersSpiPaymentMapper.mapToSpiBulkPayment(null);
+        assertNull(actualResult);
     }
 
     private SpiSinglePayment getSpiSingle() {
         SpiSinglePayment spiPayment = new SpiSinglePayment(PAYMENT_PRODUCT_SEPA.getValue());
         spiPayment.setPaymentId("myPaymentId");
         spiPayment.setEndToEndIdentification("123456789");
-        spiPayment.setDebtorAccount(getDebtorAcc());
+        spiPayment.setDebtorAccount(getSpiAccountReference());
         spiPayment.setInstructedAmount(new SpiAmount(Currency.getInstance("EUR"), BigDecimal.valueOf(100)));
-        spiPayment.setCreditorAccount(getDebtorAcc());
+        spiPayment.setCreditorAccount(getSpiAccountReference());
         spiPayment.setCreditorAgent("agent");
         spiPayment.setCreditorName("Rozetka.ua");
         spiPayment.setCreditorAddress(new SpiAddress("SomeStreet", "666", "Kiev", "04210", "Ukraine"));
@@ -164,9 +167,9 @@ public class LedgersSpiPaymentMapperTest {
         SpiPeriodicPayment spiPayment = new SpiPeriodicPayment(PAYMENT_PRODUCT_SEPA.getValue());
         spiPayment.setPaymentId("myPaymentId");
         spiPayment.setEndToEndIdentification("123456789");
-        spiPayment.setDebtorAccount(getDebtorAcc());
+        spiPayment.setDebtorAccount(getSpiAccountReference());
         spiPayment.setInstructedAmount(new SpiAmount(Currency.getInstance("EUR"), BigDecimal.valueOf(100)));
-        spiPayment.setCreditorAccount(getDebtorAcc());
+        spiPayment.setCreditorAccount(getSpiAccountReference());
         spiPayment.setCreditorAgent("agent");
         spiPayment.setCreditorName("Rozetka.ua");
         spiPayment.setCreditorAddress(new SpiAddress("SomeStreet", "666", "Kiev", "04210", "Ukraine"));
@@ -187,19 +190,19 @@ public class LedgersSpiPaymentMapperTest {
         SpiBulkPayment payment = new SpiBulkPayment();
         payment.setPaymentId("myPaymentId");
         payment.setBatchBookingPreferred(false);
-        payment.setDebtorAccount(getDebtorAcc());
+        payment.setDebtorAccount(getSpiAccountReference());
         payment.setRequestedExecutionDate(LocalDate.of(2018, 12, 12));
         payment.setPaymentStatus(TransactionStatus.RCVD);
         SpiSinglePayment one = getSpiSingle();
         one.setPaymentId("myPaymentId1");
         one.setEndToEndIdentification("123456788");
-        one.setCreditorAccount(getCreditorAcc());
+        one.setCreditorAccount(getSpiAccountReference());
         one.setInstructedAmount(new SpiAmount(Currency.getInstance("EUR"), BigDecimal.valueOf(200)));
-        one.setCreditorAccount(getCreditorAcc());
+        one.setCreditorAccount(getSpiAccountReference());
 
         SpiSinglePayment two = getSpiSingle();
         two.setPaymentId("myPaymentId2");
-        two.setCreditorAccount(getCreditorAcc2());
+        two.setCreditorAccount(getSpiAccountReference());
         two.setCreditorName("Sokol.ua");
         two.setPaymentProduct(PAYMENT_PRODUCT_CROSS_BORDER.getValue());
 
@@ -208,16 +211,8 @@ public class LedgersSpiPaymentMapperTest {
         return payment;
     }
 
-    private SpiAccountReference getDebtorAcc() {
-        return new SpiAccountReference("DE91100000000123456789", "DE91100000000123456789", "DE91100000000123456789", "bban", "pan", "maskedPan", "msisdn", Currency.getInstance("EUR"));
-    }
-
-    private SpiAccountReference getCreditorAcc() {
-        return new SpiAccountReference("DE91100000000123456787", "DE91100000000123456787", "DE91100000000123456787", "bban", "pan", "maskedPan", "msisdn", Currency.getInstance("EUR"));
-    }
-
-    private SpiAccountReference getCreditorAcc2() {
-        return new SpiAccountReference("DE91100000000123456788", "DE91100000000123456788", "DE91100000000123456788", "bban", "pan", "maskedPan", "msisdn", Currency.getInstance("EUR"));
+    private SpiAccountReference getSpiAccountReference() {
+        return jsonReader.getObjectFromFile("json/mappers/spi-account-reference.json", SpiAccountReference.class);
     }
 
     private SpiBulkPaymentInitiationResponse getBulkResponse() {

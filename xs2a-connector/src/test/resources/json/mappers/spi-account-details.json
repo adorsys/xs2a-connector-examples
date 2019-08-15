@@ -1,0 +1,30 @@
+{
+  "aspspAccountId": "DE89 3704 0044 0532 0130 00",
+  "resourceId": "33333-999999999",
+  "iban": "DE89 3704 0044 0532 0130 00",
+  "bban": "3704 0044 0532 0130 00",
+  "pan": "0000 0000 0000 0000",
+  "maskedPan": "0000 0000 0000 0000",
+  "msisdn": "00499113606980",
+  "currency": "EUR",
+  "name": "Schmidt",
+  "product": "product",
+  "cashSpiAccountType": "CASH",
+  "spiAccountStatus": "ENABLED",
+  "bic": "DEUTDE8EXXX",
+  "linkedAccounts": "linkedAccounts",
+  "usageType": "PRIV",
+  "details": "details",
+  "balances": [
+    {
+      "spiBalanceType": "INTERIM_AVAILABLE",
+      "spiBalanceAmount": {
+        "currency": "EUR",
+        "amount": "1000"
+      },
+      "lastChangeDateTime": "2018-03-31T15:16:16.372",
+      "referenceDate": "2018-03-31",
+      "lastCommittedTransaction": "lastCommittedTransaction"
+    }
+  ]
+}

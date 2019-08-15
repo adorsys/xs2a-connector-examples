@@ -17,7 +17,7 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.AisConsentMapper;
-import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaLoginToConsentResponseMapper;
+import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaLoginMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
@@ -74,12 +74,12 @@ public class AisConsentSpiImpl implements AisConsentSpi {
     private final AspspConsentDataService consentDataService;
     private final GeneralAuthorisationService authorisationService;
     private final ScaMethodConverter scaMethodConverter;
-    private final ScaLoginToConsentResponseMapper scaLoginToConsentResponseMapper;
+    private final ScaLoginMapper scaLoginMapper;
 
     public AisConsentSpiImpl(ConsentRestClient consentRestClient, TokenStorageService tokenStorageService,
                              AisConsentMapper aisConsentMapper, AuthRequestInterceptor authRequestInterceptor,
                              AspspConsentDataService consentDataService, GeneralAuthorisationService authorisationService,
-                             ScaMethodConverter scaMethodConverter, ScaLoginToConsentResponseMapper scaLoginToConsentResponseMapper) {
+                             ScaMethodConverter scaMethodConverter, ScaLoginMapper scaLoginMapper) {
         this.consentRestClient = consentRestClient;
         this.tokenStorageService = tokenStorageService;
         this.aisConsentMapper = aisConsentMapper;
@@ -87,7 +87,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         this.consentDataService = consentDataService;
         this.authorisationService = authorisationService;
         this.scaMethodConverter = scaMethodConverter;
-        this.scaLoginToConsentResponseMapper = scaLoginToConsentResponseMapper;
+        this.scaLoginMapper = scaLoginMapper;
     }
 
     /*
@@ -322,7 +322,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
 
     private SCAConsentResponseTO mapToScaConsentResponse(SpiAccountConsent businessObject, byte[] aspspConsentData) throws IOException {
         SCALoginResponseTO scaResponseTO = tokenStorageService.fromBytes(aspspConsentData, SCALoginResponseTO.class);
-        SCAConsentResponseTO consentResponse = scaLoginToConsentResponseMapper.toConsentResponse(scaResponseTO);
+        SCAConsentResponseTO consentResponse = scaLoginMapper.toConsentResponse(scaResponseTO);
         consentResponse.setObjectType(SCAConsentResponseTO.class.getSimpleName());
         consentResponse.setConsentId(businessObject.getId());
         return consentResponse;
@@ -333,7 +333,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             SCAResponseTO sca = consentDataService.response(initialAspspConsentData);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
-            AisConsentTO aisConsent = aisConsentMapper.toTo(accountConsent);
+            AisConsentTO aisConsent = aisConsentMapper.mapToAisConsent(accountConsent);
 
             // Bearer token only returned in case of exempted consent.
             ResponseEntity<SCAConsentResponseTO> consentResponse = consentRestClient.startSCA(accountConsent.getId(),

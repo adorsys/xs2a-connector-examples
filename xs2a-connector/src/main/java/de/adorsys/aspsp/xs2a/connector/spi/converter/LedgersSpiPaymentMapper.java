@@ -21,28 +21,24 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPeriodicPaymentInitia
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiationResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
 import org.mapstruct.factory.Mappers;
 
 import java.time.*;
 import java.util.List;
 import java.util.Optional;
 
-@Mapper(componentModel = "spring", uses = {LedgersSpiAccountMapper.class, ChallengeDataMapper.class, AddressMapper.class})
+@Mapper(componentModel = "spring", uses = {LedgersSpiAccountMapper.class, ChallengeDataMapper.class, AddressMapper.class},
+        imports = {LedgersSpiPaymentMapperHelper.class, ScaMethodUtils.class})
 public abstract class LedgersSpiPaymentMapper {
 
     private LedgersSpiAccountMapper accountMapper = Mappers.getMapper(LedgersSpiAccountMapper.class);
 
-    @Mappings({
-            @Mapping(target = "requestedExecutionTime", expression = "java(toTime(payment.getRequestedExecutionTime()))"),
-            @Mapping(target = "paymentProduct", expression = "java(toPaymentProduct(payment.getPaymentProduct()))")
-    })
+    @Mapping(target = "requestedExecutionTime", expression = "java(toTime(payment.getRequestedExecutionTime()))")
+    @Mapping(target = "paymentProduct", expression = "java(toPaymentProduct(payment.getPaymentProduct()))")
     public abstract SinglePaymentTO toSinglePaymentTO(SpiSinglePayment payment);
 
-    @Mappings({
-            @Mapping(target = "executionRule", expression = "java(de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapperHelper.mapPisExecutionRule(payment.getExecutionRule()))"),
-            @Mapping(target = "dayOfExecution", expression = "java(de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapperHelper.mapPisDayOfExecution(payment.getDayOfExecution()))")
-    })
+    @Mapping(target = "executionRule", expression = "java(LedgersSpiPaymentMapperHelper.mapPisExecutionRule(payment.getExecutionRule()))")
+    @Mapping(target = "dayOfExecution", expression = "java(LedgersSpiPaymentMapperHelper.mapPisDayOfExecution(payment.getDayOfExecution()))")
     public abstract PeriodicPaymentTO toPeriodicPaymentTO(SpiPeriodicPayment payment);
 
     public abstract BulkPaymentTO toBulkPaymentTO(SpiBulkPayment payment);
@@ -50,28 +46,22 @@ public abstract class LedgersSpiPaymentMapper {
     @Mapping(source = "paymentStatus", target = "transactionStatus")
     public abstract SpiSinglePaymentInitiationResponse toSpiSingleResponse(SinglePaymentTO payment);
 
-    @Mappings({
-            @Mapping(target = "scaMethods", expression = "java(de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodUtils.toScaMethods(response.getScaMethods()))"),
-            @Mapping(target = "chosenScaMethod", expression = "java(de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodUtils.toScaMethod(response.getChosenScaMethod()))")
-    })
+    @Mapping(target = "scaMethods", expression = "java(ScaMethodUtils.toScaMethods(response.getScaMethods()))")
+    @Mapping(target = "chosenScaMethod", expression = "java(ScaMethodUtils.toScaMethod(response.getChosenScaMethod()))")
     public abstract SpiSinglePaymentInitiationResponse toSpiSingleResponse(SCAPaymentResponseTO response);
 
     @Mapping(source = "paymentStatus", target = "transactionStatus")
     public abstract SpiPeriodicPaymentInitiationResponse toSpiPeriodicResponse(PeriodicPaymentTO payment);
 
-    @Mappings({
-            @Mapping(target = "scaMethods", expression = "java(de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodUtils.toScaMethods(response.getScaMethods()))"),
-            @Mapping(target = "chosenScaMethod", expression = "java(de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodUtils.toScaMethod(response.getChosenScaMethod()))")
-    })
+    @Mapping(target = "scaMethods", expression = "java(ScaMethodUtils.toScaMethods(response.getScaMethods()))")
+    @Mapping(target = "chosenScaMethod", expression = "java(ScaMethodUtils.toScaMethod(response.getChosenScaMethod()))")
     public abstract SpiPeriodicPaymentInitiationResponse toSpiPeriodicResponse(SCAPaymentResponseTO response);
 
     @Mapping(source = "paymentStatus", target = "transactionStatus")
     public abstract SpiBulkPaymentInitiationResponse toSpiBulkResponse(BulkPaymentTO payment);
 
-    @Mappings({
-            @Mapping(target = "scaMethods", expression = "java(de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodUtils.toScaMethods(response.getScaMethods()))"),
-            @Mapping(target = "chosenScaMethod", expression = "java(de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodUtils.toScaMethod(response.getChosenScaMethod()))")
-    })
+    @Mapping(target = "scaMethods", expression = "java(ScaMethodUtils.toScaMethods(response.getScaMethods()))")
+    @Mapping(target = "chosenScaMethod", expression = "java(ScaMethodUtils.toScaMethod(response.getChosenScaMethod()))")
     public abstract SpiBulkPaymentInitiationResponse toSpiBulkResponse(SCAPaymentResponseTO response);
 
     public SpiSinglePayment toSpiSinglePayment(SinglePaymentTO payment) {

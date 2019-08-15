@@ -11,7 +11,7 @@ import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 public abstract class AisConsentMapper {
 	
 	@Mapping(target="tppId", source="tppInfo.authorisationNumber")
-	public abstract AisConsentTO toTo(SpiAccountConsent consent);
+	public abstract AisConsentTO mapToAisConsent(SpiAccountConsent consent);
 
 	protected String mapSpiAccountReferenceToString(SpiAccountReference s)
 	{
