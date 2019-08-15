@@ -83,7 +83,7 @@ public class BulkPaymentSpiImpl implements BulkPaymentSpi {
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
 
             String scaStatusName = response.getScaStatus().name();
-            logger.info("SCA status` is {}", scaStatusName);
+            logger.info("SCA status is {}", scaStatusName);
 
             return SpiResponse.<SpiBulkPaymentInitiationResponse>builder()
                            .payload(spiInitiationResponse)
@@ -140,8 +140,8 @@ public class BulkPaymentSpiImpl implements BulkPaymentSpi {
             SCAPaymentResponseTO sca = consentDataService.response(initialAspspConsentData, SCAPaymentResponseTO.class, true);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
-            logger.info("Initiate bulk payment with type={}", PaymentTypeTO.BULK);
-            logger.debug("Bulk payment body={}", payment);
+            logger.info("Initiate bulk payment with type: {}", PaymentTypeTO.BULK);
+            logger.debug("Bulk payment body: {}", payment);
             BulkPaymentTO request = paymentMapper.toBulkPaymentTO(payment);
             // If the payment product is missing, get it from the sca object.
             if (request.getPaymentProduct() == null) {

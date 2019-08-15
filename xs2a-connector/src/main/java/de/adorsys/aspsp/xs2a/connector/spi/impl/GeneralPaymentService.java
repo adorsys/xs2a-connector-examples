@@ -71,13 +71,13 @@ public class GeneralPaymentService {
             SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
-            logger.info("Get payment status by id with type={}, and id={}", paymentType, paymentId);
+            logger.info("Get payment status by ID with type: {} and ID: {}", paymentType, paymentId);
             TransactionStatusTO response = paymentRestClient.getPaymentStatusById(sca.getPaymentId()).getBody();
             TransactionStatus status = Optional.ofNullable(response)
                                                .map(r -> TransactionStatus.valueOf(r.name()))
-                                               .orElseThrow(() -> FeignException.errorStatus("Request failed, Response was 200, but body was empty!",
+                                               .orElseThrow(() -> FeignException.errorStatus("Request failed, response was 200, but body was empty!",
                                                                                              Response.builder().status(HttpStatus.BAD_REQUEST.value()).build()));
-            logger.info("The status was:{}", status);
+            logger.info("Transaction status: {}", status);
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
                            .payload(new SpiGetPaymentStatusResponse(status, null))
                            .build();
@@ -106,7 +106,7 @@ public class GeneralPaymentService {
                                        .map(ScaStatusTO::name)
                                        .orElse(null);
 
-            logger.info("SCA status is {}", scaStatus);
+            logger.info("SCA status is: {}", scaStatus);
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
                            .payload(spiPaymentExecutionResponse(consentResponse.getTransactionStatus()))
                            .build();
@@ -161,15 +161,15 @@ public class GeneralPaymentService {
             if (ScaStatusTO.EXEMPTED.equals(scaStatus) || ScaStatusTO.FINALISED.equals(scaStatus)) {
                 // Success
 
-                logger.info("SCA status` is {}", scaStatusName);
-                logger.info("Payment scheduled for execution. Transaction status is {}. Als see sca status", response.getTransactionStatus());
+                logger.info("SCA status is: {}", scaStatusName);
+                logger.info("Payment scheduled for execution. Transaction status is: {}. Also see SCA status", response.getTransactionStatus());
 
                 return SpiResponse.<SpiPaymentExecutionResponse>builder()
                                .payload(spiPaymentExecutionResponse(response.getTransactionStatus()))
                                .build();
             }
 
-            String message = String.format("Payment not executed. Transaction status is %s. Als see sca status %s."
+            String message = String.format("Payment not executed. Transaction status is: %s. SCA status: %s."
                     ,response.getTransactionStatus(), scaStatusName);
 
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
@@ -188,8 +188,8 @@ public class GeneralPaymentService {
             SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
-            logger.info("Get payment by id with type={}, and id={}", PaymentTypeTO.SINGLE, paymentId);
-            logger.debug("Single payment body={}", toString);
+            logger.info("Get payment by ID with type: {} and ID: {}", PaymentTypeTO.SINGLE, paymentId);
+            logger.debug("Single payment body: {}", toString);
             // Normally the paymentId contained here must match the payment id
             // String paymentId = sca.getPaymentId(); This could also be used.
             // TODO: store payment type in sca.

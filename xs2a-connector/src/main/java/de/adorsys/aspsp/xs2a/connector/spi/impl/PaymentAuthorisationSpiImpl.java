@@ -198,7 +198,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
             default:
                 // throw unsupported payment type
                 return SpiResponse.<SpiAuthorisationStatus>builder()
-                               .error(new TppMessage(MessageErrorCode.PAYMENT_FAILED, String.format("Unknown payment type %s", paymentType.getValue())))
+                               .error(new TppMessage(MessageErrorCode.PAYMENT_FAILED, String.format("Unknown payment type: %s", paymentType.getValue())))
                                .build();
         }
     }

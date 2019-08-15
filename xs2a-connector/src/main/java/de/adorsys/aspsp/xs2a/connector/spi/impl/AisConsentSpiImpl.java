@@ -104,7 +104,6 @@ public class AisConsentSpiImpl implements AisConsentSpi {
 
         SCAConsentResponseTO aisConsentResponse;
         try {
-
             aisConsentResponse = initiateConsentInternal(accountConsent, initialAspspConsentData);
         } catch (FeignException e) {
             return SpiResponse.<SpiInitiateAisConsentResponse>builder()
@@ -261,7 +260,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             } else {
                 logger.error("Process mismatch. Current SCA Status is {}", sca.getScaStatus());
                 return SpiResponse.<List<SpiAuthenticationObject>>builder()
-                               .error(new TppMessage(MessageErrorCode.SESSIONS_NOT_SUPPORTED, "Process mismatch. Psu doest'n have any sca method"))
+                               .error(new TppMessage(MessageErrorCode.SESSIONS_NOT_SUPPORTED, "Process mismatch. PSU does not have any SCA method"))
                                .build();
             }
         } catch (FeignException e) {

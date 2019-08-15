@@ -85,7 +85,7 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
 
 
             String scaStatusName = response.getScaStatus().name();
-            logger.info("SCA status` is {}", scaStatusName);
+            logger.info("SCA status is: {}", scaStatusName);
 
             return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
                            .payload(spiInitiationResponse)

@@ -1,8 +1,6 @@
 package de.adorsys.aspsp.xs2a.connector.config.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.aspsp.xs2a.util.TestConfiguration;
@@ -41,13 +39,18 @@ public class TokenStorageServiceImplTest {
     }
 
     @Test(expected = IOException.class)
-    public void fromBytes_objectTypeIsNull() throws IOException {
+    public void fromBytes_objectTypesNull() throws IOException {
         tokenStorageService.fromBytes("{}".getBytes());
     }
 
-    @Test
-    public void fromBytes_nullValue() throws IOException {
-        assertNull(tokenStorageService.fromBytes(null));
+    @Test(expected = feign.FeignException.class)
+    public void fromBytes_nullValue_shouldThrowException() throws IOException {
+        tokenStorageService.fromBytes(null);
+    }
+
+    @Test(expected = feign.FeignException.class)
+    public void fromBytes_emptyArray_shouldThrowException() throws IOException {
+        tokenStorageService.fromBytes(new byte[]{});
     }
 
     @Test

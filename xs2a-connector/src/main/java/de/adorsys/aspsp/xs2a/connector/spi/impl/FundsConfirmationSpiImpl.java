@@ -72,10 +72,10 @@ public class FundsConfirmationSpiImpl implements FundsConfirmationSpi {
             SCAResponseTO response = tokenService.response(aspspConsentData);
             authRequestInterceptor.setAccessToken(response.getBearerToken().getAccess_token());
 
-            logger.info("Funds confirmation request e={}", spiFundsConfirmationRequest);
+            logger.info("Funds confirmation request: {}", spiFundsConfirmationRequest);
             FundsConfirmationRequestTO request = accountMapper.toFundsConfirmationTO(contextData.getPsuData(), spiFundsConfirmationRequest);
             Boolean fundsAvailable = restClient.fundsConfirmation(request).getBody();
-            logger.info("And got the response ={}", fundsAvailable);
+            logger.info("Funds confirmation response: {}", fundsAvailable);
 
             SpiFundsConfirmationResponse spiFundsConfirmationResponse = new SpiFundsConfirmationResponse();
             spiFundsConfirmationResponse.setFundsAvailable(Optional.ofNullable(fundsAvailable).orElse(false));

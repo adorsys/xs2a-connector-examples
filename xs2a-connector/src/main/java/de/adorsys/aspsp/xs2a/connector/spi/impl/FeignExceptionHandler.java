@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 
 import java.util.Collections;
 
-class FeignExceptionHandler {
+public class FeignExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(FeignExceptionHandler.class);
 
     static final String REQUEST_WAS_FAILED_MESSAGE = "Request was failed";
@@ -27,7 +27,7 @@ class FeignExceptionHandler {
 
     }
 
-    static FeignException getException(HttpStatus httpStatus, String message) {
+    public static FeignException getException(HttpStatus httpStatus, String message) {
         return FeignException.errorStatus(message, error(httpStatus));
     }
 
