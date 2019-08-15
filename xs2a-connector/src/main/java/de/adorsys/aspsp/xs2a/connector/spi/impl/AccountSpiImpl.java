@@ -88,7 +88,7 @@ public class AccountSpiImpl implements AccountSpi {
         try {
             SCAResponseTO response = applyAuthorisation(aspspConsentData);
 
-            logger.info("Requested Details list for consent with id: {} and withBalance : {}", accountConsent.getId(),
+            logger.info("Requested account list for consent with ID: {} and withBalance: {}", accountConsent.getId(),
                         withBalance);
             List<SpiAccountDetails> accountDetailsList = getSpiAccountDetails(withBalance, accountConsent, aspspConsentData);
 
@@ -118,7 +118,7 @@ public class AccountSpiImpl implements AccountSpi {
         try {
             SCAResponseTO response = applyAuthorisation(aspspConsentData);
 
-            logger.info("Requested details for ACCOUNT-ID: {}, and withBalances: {}",
+            logger.info("Requested details for account, ACCOUNT-ID: {}, withBalance: {}",
                         accountReference.getResourceId(), withBalance);
             SpiAccountDetails accountDetails = Optional
                                                        .ofNullable(accountRestClient.getAccountDetailsById(accountReference.getResourceId()).getBody())
@@ -203,7 +203,7 @@ public class AccountSpiImpl implements AccountSpi {
         try {
             SCAResponseTO response = applyAuthorisation(aspspConsentData);
 
-            logger.info("Requested transaction with TRANSACTION-ID: {}, for ACCOUNT-ID: {}", transactionId,
+            logger.info("Requested transaction with TRANSACTION-ID: {} for ACCOUNT-ID: {}", transactionId,
                         accountReference.getResourceId());
             SpiTransaction transaction = Optional
                                                  .ofNullable(

@@ -1,22 +1,22 @@
 package de.adorsys.aspsp.xs2a.connector.config.auth;
 
-import java.io.IOException;
-import java.util.Base64;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
-
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCALoginResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
 import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.util.Base64;
+import java.util.Optional;
 
 @Service
 public class TokenStorageServiceImpl implements TokenStorageService {
@@ -26,9 +26,7 @@ public class TokenStorageServiceImpl implements TokenStorageService {
 
     @Override
     public SCAResponseTO fromBytes(byte[] tokenBytes) throws IOException {
-        if (tokenBytes == null) {
-            return null;
-        }
+        checkAspspConsentData(tokenBytes);
         return read(tokenBytes);
     }
 
@@ -39,7 +37,19 @@ public class TokenStorageServiceImpl implements TokenStorageService {
 
     @Override
     public <T extends SCAResponseTO> T fromBytes(byte[] tokenBytes, Class<T> klass) throws IOException {
+        checkAspspConsentData(tokenBytes);
         return read(tokenBytes, klass);
+    }
+
+    @Override
+    public String toBase64String(SCAResponseTO response) throws IOException {
+        return Base64.getEncoder().encodeToString(toBytes(response));
+    }
+
+    private void checkAspspConsentData(byte[] tokenBytes) {
+        if (tokenBytes == null || tokenBytes.length == 0) {
+            throw FeignExceptionHandler.getException(HttpStatus.UNAUTHORIZED, "ASPSP consent data is null or empty");
+        }
     }
 
     private SCAResponseTO read(byte[] tokenBytes) throws IOException {
@@ -53,7 +63,7 @@ public class TokenStorageServiceImpl implements TokenStorageService {
         } else if (SCAPaymentResponseTO.class.getSimpleName().equals(type)) {
             return mapper.readValue(jsonParser, SCAPaymentResponseTO.class);
         } else {
-            throw new IOException("Unknown response type " + type);
+            throw new IOException("Unknown response type: " + type);
         }
     }
 
@@ -76,11 +86,6 @@ public class TokenStorageServiceImpl implements TokenStorageService {
         return Optional.ofNullable(jsonNode.get("objectType"))
                        .map(JsonNode::asText)
                        .orElse(null);
-    }
-
-    @Override
-    public String toBase64String(SCAResponseTO response) throws IOException {
-        return Base64.getEncoder().encodeToString(toBytes(response));
     }
 
 }

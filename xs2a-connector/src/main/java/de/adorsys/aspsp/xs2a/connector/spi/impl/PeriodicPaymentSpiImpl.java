@@ -80,7 +80,7 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
 
             String scaStatusName = response.getScaStatus().name();
-            logger.info("SCA status` is {}", scaStatusName);
+            logger.info("SCA status is: {}", scaStatusName);
 
             return SpiResponse.<SpiPeriodicPaymentInitiationResponse>builder()
                            .payload(spiInitiationResponse)

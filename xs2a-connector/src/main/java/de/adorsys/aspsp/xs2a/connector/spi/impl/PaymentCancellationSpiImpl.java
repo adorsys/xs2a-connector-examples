@@ -123,7 +123,7 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
                                .payload(SpiResponse.voidResponse())
                                .build();
             } catch (FeignException f) {
-                logger.error("An error occurred during Payment Cancellation Process: {}, with message: {}", f.status(), f.getLocalizedMessage());
+                logger.error("An error occurred during Payment Cancellation Process: {}, message: {}", f.status(), f.getLocalizedMessage());
                 return SpiResponse.<SpiResponse.VoidResponse>builder()
                                .error(FeignExceptionHandler.getFailureMessage(f, MessageErrorCode.FORMAT_ERROR, PAYMENT_CANCELLATION_EXCEPTION_MESSAGE))
                                .build();

@@ -26,67 +26,59 @@ import java.io.IOException;
 
 @Service
 public class AspspConsentDataService {
-	
-	@Autowired
-	private TokenStorageService tokenStorageService;
 
-	/**
-	 * Default storage, makes sure there is a bearer token in the response object.
-	 */
-	public byte[] store(SCAResponseTO response){
-		return store(response, true);
-	}
+    @Autowired
+    private TokenStorageService tokenStorageService;
 
-	public byte[] store(SCAResponseTO response, boolean checkCredentials){
-		if(checkCredentials && response.getBearerToken()==null) {
-			throw new IllegalStateException("Missing credentials. response must contain a bearer token by default.");
-		}
-		try {
-			return tokenStorageService.toBytes(response);
-		} catch (IOException e) {
-			throw FeignExceptionHandler.getException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-		}
-	}
-	
-	public <T extends SCAResponseTO> T response(byte[] aspspConsentData, Class<T> klass) {
-		return response(aspspConsentData, klass, true);
-	}
+    /**
+     * Default storage, makes sure there is a bearer token in the response object.
+     */
+    public byte[] store(SCAResponseTO response) {
+        return store(response, true);
+    }
 
-	public SCAResponseTO response(byte[] aspspConsentData) {
-		return response(aspspConsentData, true);
-	}
+    public byte[] store(SCAResponseTO response, boolean checkCredentials) {
+        if (checkCredentials && response.getBearerToken() == null) {
+            throw new IllegalStateException("Missing credentials, response must contain a bearer token by default.");
+        }
+        try {
+            return tokenStorageService.toBytes(response);
+        } catch (IOException e) {
+            throw FeignExceptionHandler.getException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
 
-	public SCAResponseTO response(byte[] aspspConsentData, boolean checkCredentials) {
-		try {
-			SCAResponseTO sca = tokenStorageService.fromBytes(aspspConsentData);
-			checkScaPresent(sca);
-			checkBearerTokenPresent(checkCredentials, sca);
-			return sca;
-		} catch (IOException e) {
-			throw FeignExceptionHandler.getException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-		}
-	}
-	
-	public <T extends SCAResponseTO> T response(byte[] aspspConsentData, Class<T> klass, boolean checkCredentials) {
-		try {
-			T sca = tokenStorageService.fromBytes(aspspConsentData, klass);
-			checkScaPresent(sca);
-			checkBearerTokenPresent(checkCredentials, sca);
-			return sca;
-		} catch (IOException e) {
-			throw FeignExceptionHandler.getException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-		}
-	}
+    public <T extends SCAResponseTO> T response(byte[] aspspConsentData, Class<T> klass) {
+        return response(aspspConsentData, klass, true);
+    }
 
-	private <T extends SCAResponseTO> void checkBearerTokenPresent(boolean checkCredentials, T sca) {
-		if(checkCredentials && sca.getBearerToken()==null) {
-			throw FeignExceptionHandler.getException(HttpStatus.UNAUTHORIZED, "Missing credentials. Expecting a bearer token in the consent data object.");
-		}
-	}
+    public SCAResponseTO response(byte[] aspspConsentData) {
+        return response(aspspConsentData, true);
+    }
 
-	private <T extends SCAResponseTO> void checkScaPresent(T sca) {
-		if(sca==null) {
-			throw FeignExceptionHandler.getException(HttpStatus.UNAUTHORIZED, "Missing consent data");
-		}
-	}
+    public SCAResponseTO response(byte[] aspspConsentData, boolean checkCredentials) {
+        try {
+            SCAResponseTO sca = tokenStorageService.fromBytes(aspspConsentData);
+            checkBearerTokenPresent(checkCredentials, sca);
+            return sca;
+        } catch (IOException e) {
+            throw FeignExceptionHandler.getException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    public <T extends SCAResponseTO> T response(byte[] aspspConsentData, Class<T> klass, boolean checkCredentials) {
+        try {
+            T sca = tokenStorageService.fromBytes(aspspConsentData, klass);
+            checkBearerTokenPresent(checkCredentials, sca);
+            return sca;
+        } catch (IOException e) {
+            throw FeignExceptionHandler.getException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    private <T extends SCAResponseTO> void checkBearerTokenPresent(boolean checkCredentials, T sca) {
+        if (checkCredentials && sca.getBearerToken() == null) {
+            throw FeignExceptionHandler.getException(HttpStatus.UNAUTHORIZED, "Missing credentials. Expecting a bearer token in the consent data object.");
+        }
+    }
 }
