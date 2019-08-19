@@ -78,6 +78,7 @@ public class AisConsentSpiImplTest {
 
     private static final TppInfo TPP_INFO = buildTppInfo();
     private final static UUID X_REQUEST_ID = UUID.randomUUID();
+    private final static UUID INTERNAL_REQUEST_ID = UUID.randomUUID();
     private static final String CONSENT_ID = "c966f143-f6a2-41db-9036-8abaeeef3af7";
     private static final byte[] BYTES = "data".getBytes();
 
@@ -186,7 +187,7 @@ public class AisConsentSpiImplTest {
     }
 
     private static SpiContextData buildSpiContextData(SpiPsuData spiPsuData) {
-        return new SpiContextData(spiPsuData, TPP_INFO, X_REQUEST_ID);
+        return new SpiContextData(spiPsuData, TPP_INFO, X_REQUEST_ID, INTERNAL_REQUEST_ID);
     }
 
     private static TppInfo buildTppInfo() {
