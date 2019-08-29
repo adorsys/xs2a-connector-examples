@@ -29,10 +29,7 @@ import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
-import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
-import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
-import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
-import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
+import de.adorsys.psd2.xs2a.spi.domain.authorisation.*;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentCancellationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
@@ -40,6 +37,7 @@ import de.adorsys.psd2.xs2a.spi.service.PaymentCancellationSpi;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
 import feign.FeignException;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -60,6 +58,7 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     private static final Logger logger = LoggerFactory.getLogger(PaymentCancellationSpiImpl.class);
 
     private static final String PAYMENT_CANCELLATION_EXCEPTION_MESSAGE = "Couldn't execute payment cancellation.";
+    private static final String DECOUPLED_PSU_MESSAGE = "Please use your BankApp for transaction Authorisation";
 
     private final PaymentRestClient paymentRestClient;
     private final TokenStorageService tokenStorageService;
@@ -217,6 +216,13 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
                        : SpiResponse.<List<SpiAuthenticationObject>>builder()
                                  .payload(authenticationObjectList)
                                  .build();
+    }
+
+    @Override
+    public @NotNull SpiResponse<SpiAuthorisationDecoupledScaResponse> startScaDecoupled(@NotNull SpiContextData contextData, @NotNull String authorisationId, @Nullable String authenticationMethodId, @NotNull SpiPayment businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        return SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder()
+                       .payload(new SpiAuthorisationDecoupledScaResponse(DECOUPLED_PSU_MESSAGE))
+                       .build();
     }
 
     @Override

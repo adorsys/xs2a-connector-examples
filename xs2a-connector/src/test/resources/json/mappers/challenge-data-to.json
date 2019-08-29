@@ -2,6 +2,6 @@
   "data": "data",
   "imageLink": "imageLink",
   "otpMaxLength": 5,
-  "otpFormat": "CHARACTERS",
+  "otpFormat": "characters",
   "additionalInformation": "additionalInformation"
 }
