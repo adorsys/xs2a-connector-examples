@@ -33,6 +33,7 @@ import de.adorsys.psd2.xs2a.core.profile.PaymentType;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
+import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationDecoupledScaResponse;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
@@ -43,6 +44,7 @@ import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.*;
 import feign.FeignException;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -58,6 +60,7 @@ import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.*;
 
 @Component
 public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
+    private static final String DECOUPLED_PSU_MESSAGE = "Please use your BankApp for transaction Authorisation";
     private static final Logger logger = LoggerFactory.getLogger(PaymentAuthorisationSpiImpl.class);
     private final GeneralAuthorisationService authorisationService;
     private final TokenStorageService tokenStorageService;
@@ -148,6 +151,13 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
         } else {
             return authorisationService.getResponseIfScaSelected(aspspConsentDataProvider, sca);
         }
+    }
+
+    @Override
+    public @NotNull SpiResponse<SpiAuthorisationDecoupledScaResponse> startScaDecoupled(@NotNull SpiContextData contextData, @NotNull String authorisationId, @Nullable String authenticationMethodId, @NotNull SpiPayment businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        return SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder()
+                       .payload(new SpiAuthorisationDecoupledScaResponse(DECOUPLED_PSU_MESSAGE))
+                       .build();
     }
 
     public SCAPaymentResponseTO toPaymentConsent(SpiPayment spiPayment, SpiAspspConsentDataProvider aspspConsentDataProvider, SCAPaymentResponseTO originalResponse) throws IOException {
