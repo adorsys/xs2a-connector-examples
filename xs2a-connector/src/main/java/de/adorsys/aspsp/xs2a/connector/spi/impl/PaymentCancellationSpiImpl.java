@@ -58,7 +58,8 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     private static final Logger logger = LoggerFactory.getLogger(PaymentCancellationSpiImpl.class);
 
     private static final String PAYMENT_CANCELLATION_EXCEPTION_MESSAGE = "Couldn't execute payment cancellation.";
-    private static final String DECOUPLED_PSU_MESSAGE = "Please use your BankApp for transaction Authorisation";
+    private static final String DECOUPLED_PSU_MESSAGE = "Please check your app to continue...";
+    private static final String DECOUPLED_NOT_SUPPORTED_MESSAGE = "Service is not supported";
 
     private final PaymentRestClient paymentRestClient;
     private final TokenStorageService tokenStorageService;
@@ -219,13 +220,6 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     }
 
     @Override
-    public @NotNull SpiResponse<SpiAuthorisationDecoupledScaResponse> startScaDecoupled(@NotNull SpiContextData contextData, @NotNull String authorisationId, @Nullable String authenticationMethodId, @NotNull SpiPayment businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        return SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder()
-                       .payload(new SpiAuthorisationDecoupledScaResponse(DECOUPLED_PSU_MESSAGE))
-                       .build();
-    }
-
-    @Override
     public @NotNull SpiResponse<SpiAuthorizationCodeResult> requestAuthorisationCode(@NotNull SpiContextData contextData,
                                                                                      @NotNull String authenticationMethodId,
                                                                                      @NotNull SpiPayment businessObject,
@@ -251,5 +245,19 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
         } else {
             return authorisationService.getResponseIfScaSelected(aspspConsentDataProvider, response);
         }
+    }
+
+    @Override
+    public @NotNull SpiResponse<SpiAuthorisationDecoupledScaResponse> startScaDecoupled(@NotNull SpiContextData contextData, @NotNull String authorisationId, @Nullable String authenticationMethodId, @NotNull SpiPayment businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        if (authenticationMethodId == null) {
+            return SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder()
+                           .error(new TppMessage(MessageErrorCode.SERVICE_NOT_SUPPORTED, DECOUPLED_NOT_SUPPORTED_MESSAGE))
+                           .build();
+        }
+
+        SpiResponse<SpiAuthorizationCodeResult> response = requestAuthorisationCode(contextData, authenticationMethodId, businessObject, aspspConsentDataProvider);
+        return response.hasError()
+                       ? SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder().error(response.getErrors()).build()
+                       : SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder().payload(new SpiAuthorisationDecoupledScaResponse(DECOUPLED_PSU_MESSAGE)).build();
     }
 }

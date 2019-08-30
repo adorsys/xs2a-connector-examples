@@ -60,8 +60,11 @@ import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.*;
 
 @Component
 public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
-    private static final String DECOUPLED_PSU_MESSAGE = "Please use your BankApp for transaction Authorisation";
     private static final Logger logger = LoggerFactory.getLogger(PaymentAuthorisationSpiImpl.class);
+
+    private static final String DECOUPLED_PSU_MESSAGE = "Please check your app to continue...";
+    private static final String DECOUPLED_NOT_SUPPORTED_MESSAGE = "Service is not supported";
+
     private final GeneralAuthorisationService authorisationService;
     private final TokenStorageService tokenStorageService;
     private final ScaMethodConverter scaMethodConverter;
@@ -155,9 +158,15 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
 
     @Override
     public @NotNull SpiResponse<SpiAuthorisationDecoupledScaResponse> startScaDecoupled(@NotNull SpiContextData contextData, @NotNull String authorisationId, @Nullable String authenticationMethodId, @NotNull SpiPayment businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        return SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder()
-                       .payload(new SpiAuthorisationDecoupledScaResponse(DECOUPLED_PSU_MESSAGE))
-                       .build();
+        if (authenticationMethodId == null) {
+            return SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder()
+                           .error(new TppMessage(MessageErrorCode.SERVICE_NOT_SUPPORTED, DECOUPLED_NOT_SUPPORTED_MESSAGE))
+                           .build();
+        }
+        SpiResponse<SpiAuthorizationCodeResult> response = requestAuthorisationCode(contextData, authenticationMethodId, businessObject, aspspConsentDataProvider);
+        return response.hasError()
+                       ? SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder().error(response.getErrors()).build()
+                       : SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder().payload(new SpiAuthorisationDecoupledScaResponse(DECOUPLED_PSU_MESSAGE)).build();
     }
 
     public SCAPaymentResponseTO toPaymentConsent(SpiPayment spiPayment, SpiAspspConsentDataProvider aspspConsentDataProvider, SCAPaymentResponseTO originalResponse) throws IOException {
