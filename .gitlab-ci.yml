@@ -41,6 +41,7 @@ variables: &variables
   DEV_NAMESPACE: adorsys-psd2-develop
   DEMO_NAMESPACE: adorsys-psd2-demo
   INTEG_NAMESPACE: adorsys-psd2-integ
+  OPENSHIFT_NAMESPACE_SUPPORT_4_X: "adorsys-psd2-support-4-x"
 
 # ------------------------------------------------------------------
 # reusable yaml anchors
@@ -161,6 +162,28 @@ Deploy Openshift (develop):
     <<: *variables
     DOCKER_TAG: develop
     OPENSHIFT_NAMESPACE: "${DEV_NAMESPACE}"
+  <<: *deploy_openshift
+
+#Build Support-4.x images and deploy to support-4.x
+
+Push to DockerHub (support-4.x):
+  stage: "Package"
+  only:
+    - support-4.x
+  variables:
+    DOCKER_TAG: support-4-x
+  <<: *build_dockerhub_image
+
+Deploy to Openshift (support-4.x):
+  stage: "Deployment"
+  cache: {}
+  dependencies: []
+  only:
+    - support-4.x
+  variables:
+    GIT_STRATEGY: none
+    DOCKER_TAG: support-4-x # Dockerhub source tag
+    OPENSHIFT_NAMESPACE: ${OPENSHIFT_NAMESPACE_SUPPORT_4_X} # Openshift target namespace
   <<: *deploy_openshift
 
 ##########
