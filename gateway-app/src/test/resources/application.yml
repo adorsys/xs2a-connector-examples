@@ -42,6 +42,7 @@ spring:
 
 ledgers.url: http://localhost:8088/
 cms.url: http://localhost:38080
+online-banking.url: http://localhost:8090/api/v1/consents/confirm/{userLogin}/{consentId}/{authorizationId}/{tan}
 
 consent.cron.expression: 0 0 1 * * ?
 scheduler.pool.size: 30
