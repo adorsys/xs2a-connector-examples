@@ -47,10 +47,12 @@ import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse.VoidResponse;
 import de.adorsys.psd2.xs2a.spi.service.AisConsentSpi;
 import feign.FeignException;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -63,10 +65,16 @@ import java.util.Optional;
 
 import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.*;
 import static de.adorsys.psd2.xs2a.core.error.MessageErrorCode.*;
+import static java.lang.String.format;
 
 @Component
 public class AisConsentSpiImpl implements AisConsentSpi {
     private static final Logger logger = LoggerFactory.getLogger(AisConsentSpiImpl.class);
+    private static final String USER_LOGIN = "{userLogin}";
+    private static final String CONSENT_ID = "{consentId}";
+    private static final String AUTH_ID = "{authorizationId}";
+    private static final String TAN = "{tan}";
+    private static final String DECOUPLED_USR_MSG = "Please check your app to continue... %s";
 
     private final ConsentRestClient consentRestClient;
     private final TokenStorageService tokenStorageService;
@@ -77,6 +85,9 @@ public class AisConsentSpiImpl implements AisConsentSpi {
     private final ScaMethodConverter scaMethodConverter;
     private final ScaLoginToConsentResponseMapper scaLoginToConsentResponseMapper;
     private final ObjectMapper objectMapper;
+
+    @Value("${online-banking.url}")
+    private String onlineBankingUrl;
 
     public AisConsentSpiImpl(ConsentRestClient consentRestClient, TokenStorageService tokenStorageService,
                              AisConsentMapper aisConsentMapper, AuthRequestInterceptor authRequestInterceptor,
@@ -313,9 +324,24 @@ public class AisConsentSpiImpl implements AisConsentSpi {
     @Override
     public @NotNull SpiResponse<SpiAuthorisationDecoupledScaResponse> startScaDecoupled(@NotNull SpiContextData contextData, @NotNull String authorisationId, @Nullable String authenticationMethodId, @NotNull SpiAccountConsent businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         SpiResponse<SpiAuthorizationCodeResult> response = requestAuthorisationCode(contextData, authenticationMethodId, businessObject, aspspConsentDataProvider);
+
+        List<String> s = Arrays.asList(response.getPayload().getChallengeData().getAdditionalInformation().split(" "));
+        int indexOfTan = s.indexOf("is") + 1;
+        String encryptedConsentId = "";
+        try {
+            encryptedConsentId = (String) FieldUtils.readField(aspspConsentDataProvider, "encryptedConsentId", true);
+        } catch (IllegalAccessException e) {
+            logger.error("could not read encrypted consent id");
+        }
+        String url = onlineBankingUrl.replace(USER_LOGIN, contextData.getPsuData().getPsuId())
+                             .replace(CONSENT_ID, encryptedConsentId)
+                             .replace(AUTH_ID, authorisationId)
+                             .replace(TAN, s.get(indexOfTan));
+
+        String psuMessage = format(DECOUPLED_USR_MSG, url);
         return response.hasError()
                        ? SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder().error(response.getErrors()).build()
-                       : SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder().payload(new SpiAuthorisationDecoupledScaResponse("Please check your app to continue...")).build();
+                       : SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder().payload(new SpiAuthorisationDecoupledScaResponse(psuMessage)).build();
     }
 
     private String getLedgersErrorMessage(FeignException e) {
@@ -385,7 +411,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
 
             // Bearer token only returned in case of exempted consent.
             ResponseEntity<SCAConsentResponseTO> consentResponse = consentRestClient.startSCA(accountConsent.getId(),
-                    aisConsent);
+                                                                                              aisConsent);
             SCAConsentResponseTO response = consentResponse.getBody();
 
             if (response != null && response.getBearerToken() == null) {
