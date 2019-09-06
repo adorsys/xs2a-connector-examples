@@ -1,3 +1,9 @@
 = Release notes v. 4.0
 
 == Table of Contents
+*  Get account list request responds without balances after first call
+
+==  Get account list request responds without balances after first call
+
+From now on, the `GET /v1/accounts` endpoint will use IBAN as account identifier and thus respond with balances
+directly.
