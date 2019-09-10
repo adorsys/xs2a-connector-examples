@@ -1,9 +1,23 @@
 = Release notes v. 5.0
 
 == Table of Contents
-
-* Get account list request responds without balances after first call
+*  Get account list request responds without balances after first call
+* Extend XS2A with Austria requirements to payment products
 
 ==  Get account list request responds without balances after first call
 
 From now on, the `GET /v1/accounts` endpoint will use IBAN as account identifier and thus respond with balances directly.
+
+== Extend XS2A with Austria requirements to payment products
+
+Payment validation was extended for supporting different countries. Technically all rules for payment have been transferred to `application.yml` in the format `validation.payment.<field>.<rule>`.
+Available rules for field:
+
+* `use` - required, optional <default>, skip, none.
+* `maxLength` - max fields length (0 by default)
+
+From now on, new configuration properties for payment validation should be added in `application.properties` and provided bean implementation into spring context (`PaymentValidationConfig`).
+To extend configuration for another country create new profile `spring.profiles=austria` and override proper properties below it.
+To apply new file add `<country>` to active profiles for application.
+
+By default, configuration is for Germany and configuration for Austria was added as well.
