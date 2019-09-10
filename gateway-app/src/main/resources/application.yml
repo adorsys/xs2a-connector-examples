@@ -150,3 +150,5 @@ logging.level.de.adorsys.ledgers.xs2a.api: DEBUG
 logging.level.de.adorsys.ledgers.rest: DEBUG
 logging.level.de.adorsys.psd2.consent: DEBUG
 
+server:
+  use-forward-headers: true
