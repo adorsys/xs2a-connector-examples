@@ -39,10 +39,12 @@ import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.*;
 import feign.FeignException;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -55,6 +57,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.*;
 
@@ -76,13 +79,15 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
     private final BulkPaymentSpi bulkPaymentSpi;
     private final PeriodicPaymentSpi periodicPaymentSpi;
     private final CmsPaymentStatusUpdateService cmsPaymentStatusUpdateService;
+    private final FeignExceptionReader feignExceptionReader;
 
     public PaymentAuthorisationSpiImpl(GeneralAuthorisationService authorisationService,
                                        TokenStorageService tokenStorageService, ScaMethodConverter scaMethodConverter,
                                        ScaLoginMapper scaLoginMapper,
                                        AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService consentDataService,
                                        PaymentRestClient paymentRestClient, SinglePaymentSpi singlePaymentSpi, BulkPaymentSpi bulkPaymentSpi,
-                                       PeriodicPaymentSpi periodicPaymentSpi, CmsPaymentStatusUpdateService cmsPaymentStatusUpdateService) {
+                                       PeriodicPaymentSpi periodicPaymentSpi, CmsPaymentStatusUpdateService cmsPaymentStatusUpdateService,
+                                       FeignExceptionReader feignExceptionReader) {
         this.authorisationService = authorisationService;
         this.tokenStorageService = tokenStorageService;
         this.scaMethodConverter = scaMethodConverter;
@@ -94,6 +99,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
         this.bulkPaymentSpi = bulkPaymentSpi;
         this.periodicPaymentSpi = periodicPaymentSpi;
         this.cmsPaymentStatusUpdateService = cmsPaymentStatusUpdateService;
+        this.feignExceptionReader = feignExceptionReader;
     }
 
     @Override
@@ -143,10 +149,12 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
                 logger.info("SCA was send, operationId is {}", sca.getPaymentId());
                 sca = selectMethodResponse.getBody();
                 return authorisationService.returnScaMethodSelection(aspspConsentDataProvider, sca);
-            } catch (FeignException e) {
+            } catch (FeignException feignException) {
+                String devMessage = feignExceptionReader.getErrorMessage(feignException);
+                logger.error("Request authorisation code failed: payment ID {}, authentication method ID {}, devMessage {}", spiPayment.getPaymentId(), authenticationMethodId, devMessage);
                 return SpiResponse.<SpiAuthorizationCodeResult>builder()
                                // TODO fix response form ledgers https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/185
-                               .error(new TppMessage(MessageErrorCode.SCA_METHOD_UNKNOWN, "Sending SCA via phone not implemented yet"))
+                               .error(new TppMessage(MessageErrorCode.SCA_METHOD_UNKNOWN, StringUtils.defaultIfBlank(devMessage, "Sending SCA via phone not implemented yet")))
                                .build();
             } finally {
                 authRequestInterceptor.setAccessToken(null);
@@ -200,20 +208,25 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
     private SpiResponse<SpiAuthorisationStatus> initiatePaymentOnExemptedSCA(SpiContextData contextData, SpiPayment spiPayment,
                                                                              SpiResponse<SpiAuthorisationStatus> authorisePsu, SpiAspspConsentDataProvider paymentAspspConsentDataProvider) {
 
+        Function<SpiResponse<? extends SpiPaymentInitiationResponse>, SpiResponse<SpiAuthorisationStatus>> buildResponse =
+                spiResponse -> spiResponse.hasError()
+                                       ? SpiResponse.<SpiAuthorisationStatus>builder().error(spiResponse.getErrors()).build()
+                                       : SpiResponse.<SpiAuthorisationStatus>builder().payload(authorisePsu.getPayload()).build();
+
         // Payment initiation can only be called if exemption.
         PaymentType paymentType = spiPayment.getPaymentType();
 
         // Don't know who came to idea to call external API internally, but it causes now to bring this tricky hack in play
         switch (paymentType) {
             case SINGLE:
-                singlePaymentSpi.initiatePayment(contextData, (@NotNull SpiSinglePayment) spiPayment, paymentAspspConsentDataProvider);
-                return SpiResponse.<SpiAuthorisationStatus>builder().payload(authorisePsu.getPayload()).build();
+                return buildResponse.apply(
+                        singlePaymentSpi.initiatePayment(contextData, (@NotNull SpiSinglePayment) spiPayment, paymentAspspConsentDataProvider));
             case BULK:
-                bulkPaymentSpi.initiatePayment(contextData, (@NotNull SpiBulkPayment) spiPayment, paymentAspspConsentDataProvider);
-                return SpiResponse.<SpiAuthorisationStatus>builder().payload(authorisePsu.getPayload()).build();
+                return buildResponse.apply(
+                        bulkPaymentSpi.initiatePayment(contextData, (@NotNull SpiBulkPayment) spiPayment, paymentAspspConsentDataProvider));
             case PERIODIC:
-                periodicPaymentSpi.initiatePayment(contextData, (@NotNull SpiPeriodicPayment) spiPayment, paymentAspspConsentDataProvider);
-                return SpiResponse.<SpiAuthorisationStatus>builder().payload(authorisePsu.getPayload()).build();
+                return buildResponse.apply(
+                        periodicPaymentSpi.initiatePayment(contextData, (@NotNull SpiPeriodicPayment) spiPayment, paymentAspspConsentDataProvider));
             default:
                 // throw unsupported payment type
                 return SpiResponse.<SpiAuthorisationStatus>builder()
