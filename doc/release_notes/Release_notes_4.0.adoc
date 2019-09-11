@@ -1,8 +1,9 @@
 = Release notes v. 4.0
 
 == Table of Contents
-*  Get account list request responds without balances after first call
+* Get account list request responds without balances after first call
 * Extend XS2A with Austria requirements to payment products
+* Error 500 returned in attempt to delete consent in status "received"
 
 ==  Get account list request responds without balances after first call
 
@@ -22,3 +23,8 @@ To extend configuration for another country create new profile `spring.profiles=
 To apply new file add `<country>` to active profiles for application.
 
 By default, configuration is for Germany and configuration for Austria was added as well.
+
+== Error 500 returned in attempt to delete consent in status "received"
+
+From now on, error 500 won't be returned any more when calling `DELETE /v1/consents/{consent-id}` endpoint.
+Instead `204 - No Content` will be returned.

@@ -133,7 +133,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
     @Override
     public SpiResponse<VoidResponse> revokeAisConsent(@NotNull SpiContextData contextData,
                                                       SpiAccountConsent accountConsent, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        SCAConsentResponseTO sca = consentDataService.response(aspspConsentDataProvider.loadAspspConsentData(), SCAConsentResponseTO.class);
+        SCAConsentResponseTO sca = consentDataService.response(aspspConsentDataProvider.loadAspspConsentData(), SCAConsentResponseTO.class, false );
         sca.setScaStatus(FINALISED);
         sca.setStatusDate(LocalDateTime.now());
         sca.setBearerToken(new BearerTokenTO());// remove existing token.
