@@ -56,14 +56,16 @@ public class GeneralAuthorisationService {
     private final ChallengeDataMapper challengeDataMapper;
     private final ScaMethodConverter scaMethodConverter;
     private final AspspConsentDataService consentDataService;
+    private final FeignExceptionReader feignExceptionReader;
 
     public GeneralAuthorisationService(UserMgmtRestClient userMgmtRestClient, AuthRequestInterceptor authRequestInterceptor,
-                                       ChallengeDataMapper challengeDataMapper, ScaMethodConverter scaMethodConverter, AspspConsentDataService consentDataService) {
+                                       ChallengeDataMapper challengeDataMapper, ScaMethodConverter scaMethodConverter, AspspConsentDataService consentDataService, FeignExceptionReader feignExceptionReader) {
         this.userMgmtRestClient = userMgmtRestClient;
         this.authRequestInterceptor = authRequestInterceptor;
         this.challengeDataMapper = challengeDataMapper;
         this.scaMethodConverter = scaMethodConverter;
         this.consentDataService = consentDataService;
+        this.feignExceptionReader = feignExceptionReader;
     }
 
     /**
@@ -101,9 +103,11 @@ public class GeneralAuthorisationService {
             return SpiResponse.<SpiAuthorisationStatus>builder()
                            .payload(status)
                            .build();
-        } catch (FeignException e) {
+        } catch (FeignException feignException) {
+            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            logger.error("Authorise PSU for consent failed: authorisation ID {}, consent ID {}, devMessage {}", authorisationId, consentId, devMessage);
             return SpiResponse.<SpiAuthorisationStatus>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.PSU_CREDENTIALS_INVALID, "PSU authorisation request was failed."))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage, "PSU authorisation request was failed."))
                            .build();
         }
     }

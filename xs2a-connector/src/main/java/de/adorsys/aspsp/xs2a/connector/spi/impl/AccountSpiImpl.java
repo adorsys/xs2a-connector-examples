@@ -25,6 +25,7 @@ import de.adorsys.psd2.xs2a.core.ais.AccountAccessType;
 import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
 import de.adorsys.psd2.xs2a.core.consent.AisConsentRequestType;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
+import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
@@ -57,6 +58,8 @@ import java.util.stream.Collectors;
 public class AccountSpiImpl implements AccountSpi {
 
     private static final String RESPONSE_STATUS_200_WITH_EMPTY_BODY = "Response status was 200, but the body was empty!";
+    private static final String CONSENT_ERROR_MESSAGE = "The consent-ID cannot be matched by the ASPSP relative to the TPP";
+    private static final String RESOURCE_UNKNOWN_403_MESSAGE = "The addressed resource is unknown relative to the TPP.";
     @Value("${test-download-transaction-list}")
     private String transactionList;
 
@@ -69,13 +72,15 @@ public class AccountSpiImpl implements AccountSpi {
     private final LedgersSpiAccountMapper accountMapper;
     private final AuthRequestInterceptor authRequestInterceptor;
     private final AspspConsentDataService tokenService;
+    private final FeignExceptionReader feignExceptionReader;
 
     public AccountSpiImpl(AccountRestClient restClient, LedgersSpiAccountMapper accountMapper,
-                          AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService tokenService) {
+                          AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService tokenService, FeignExceptionReader feignExceptionReader) {
         this.accountRestClient = restClient;
         this.accountMapper = accountMapper;
         this.authRequestInterceptor = authRequestInterceptor;
         this.tokenService = tokenService;
+        this.feignExceptionReader = feignExceptionReader;
     }
 
     @Override
@@ -97,10 +102,11 @@ public class AccountSpiImpl implements AccountSpi {
             return SpiResponse.<List<SpiAccountDetails>>builder()
                            .payload(filterAccountDetailsByWithBalance(withBalance, accountDetailsList, accountConsent.getAccess()))
                            .build();
-        } catch (FeignException e) {
-            logger.error(e.getMessage());
+        } catch (FeignException feignException) {
+            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            logger.error("Request account list failed: consent ID {}, devMessage {}", accountConsent.getId(), devMessage);
             return SpiResponse.<List<SpiAccountDetails>>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.FORMAT_ERROR, "The consent-ID cannot be matched by the ASPSP relative to the TPP"))
+                           .error(buildTppMessage(feignException))
                            .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
@@ -136,10 +142,11 @@ public class AccountSpiImpl implements AccountSpi {
                            .payload(accountDetails)
                            .build();
 
-        } catch (FeignException e) {
-            logger.error(e.getMessage());
+        } catch (FeignException feignException) {
+            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            logger.error("Request account details for account failed: consent ID {}, resource ID {}, devMessage {}", accountConsent.getId(), accountReference.getResourceId(), devMessage);
             return SpiResponse.<SpiAccountDetails>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.FORMAT_ERROR, "The consent-ID cannot be matched by the ASPSP relative to the TPP"))
+                           .error(buildTppMessage(feignException))
                            .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
@@ -178,9 +185,11 @@ public class AccountSpiImpl implements AccountSpi {
             return SpiResponse.<SpiTransactionReport>builder()
                            .payload(transactionReport)
                            .build();
-        } catch (FeignException e) {
+        } catch (FeignException feignException) {
+            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            logger.error("Request transactions for account failed: consent ID {}, resource ID {}, devMessage {}", accountConsent.getId(), accountReference.getResourceId(), devMessage);
             return SpiResponse.<SpiTransactionReport>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.FORMAT_ERROR, "The consent-ID cannot be matched by the ASPSP relative to the TPP"))
+                           .error(buildTppMessage(feignException))
                            .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
@@ -217,9 +226,11 @@ public class AccountSpiImpl implements AccountSpi {
             return SpiResponse.<SpiTransaction>builder()
                            .payload(transaction)
                            .build();
-        } catch (FeignException e) {
+        } catch (FeignException feignException) {
+            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            logger.error("Request transactions for account by transaction id failed: consent ID {}, resource ID {}, transaction ID {}, devMessage {}", accountConsent.getId(), accountReference.getResourceId(), transactionId, devMessage);
             return SpiResponse.<SpiTransaction>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.FORMAT_ERROR, "The consent-ID cannot be matched by the ASPSP relative to the TPP"))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.RESOURCE_UNKNOWN_403, RESOURCE_UNKNOWN_403_MESSAGE))
                            .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
@@ -248,9 +259,11 @@ public class AccountSpiImpl implements AccountSpi {
             return SpiResponse.<List<SpiAccountBalance>>builder()
                            .payload(accountBalances)
                            .build();
-        } catch (FeignException e) {
+        } catch (FeignException feignException) {
+            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            logger.error("Request balances for account failed: consent ID {}, resource ID {}, devMessage {}", accountConsent.getId(), accountReference.getResourceId(), devMessage);
             return SpiResponse.<List<SpiAccountBalance>>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.FORMAT_ERROR, "The consent-ID cannot be matched by the ASPSP relative to the TPP"))
+                           .error(buildTppMessage(feignException))
                            .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
@@ -279,9 +292,11 @@ public class AccountSpiImpl implements AccountSpi {
             return SpiResponse.<SpiTransactionsDownloadResponse>builder()
                            .payload(transactionsDownloadResponse)
                            .build();
-        } catch (FeignException e) {
+        } catch (FeignException feignException) {
+            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            logger.error("Request transactions by download link failed: consent ID {}, download link {}, devMessage {}", spiAccountConsent.getId(), downloadId, devMessage);
             return SpiResponse.<SpiTransactionsDownloadResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.FORMAT_ERROR, "The consent-ID cannot be matched by the ASPSP relative to the TPP"))
+                           .error(buildTppMessage(feignException))
                            .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
@@ -408,5 +423,9 @@ public class AccountSpiImpl implements AccountSpi {
         return CollectionUtils.isNotEmpty(allowedAccountData)
                        && allowedAccountData.stream()
                                   .anyMatch(a -> iban.equals(a.getIban()));
+    }
+
+    private TppMessage buildTppMessage(FeignException exception) {
+        return FeignExceptionHandler.getFailureMessage(exception, MessageErrorCode.FORMAT_ERROR, feignExceptionReader.getErrorMessage(exception), CONSENT_ERROR_MESSAGE);
     }
 }
