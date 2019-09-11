@@ -16,16 +16,12 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.ledgers.middleware.api.domain.payment.BulkPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
-import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
-import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
-import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
@@ -50,22 +46,17 @@ import java.util.Optional;
 public class BulkPaymentSpiImpl implements BulkPaymentSpi {
     private static final Logger logger = LoggerFactory.getLogger(BulkPaymentSpiImpl.class);
 
-    private final PaymentRestClient ledgersRestClient;
     private final LedgersSpiPaymentMapper paymentMapper;
     private final GeneralPaymentService paymentService;
-    private final AuthRequestInterceptor authRequestInterceptor;
     private final AspspConsentDataService consentDataService;
-    private final ObjectMapper objectMapper;
+    private final FeignExceptionReader feignExceptionReader;
 
-    public BulkPaymentSpiImpl(PaymentRestClient ledgersRestClient, LedgersSpiPaymentMapper paymentMapper,
-                              GeneralPaymentService paymentService, AuthRequestInterceptor authRequestInterceptor,
-                              AspspConsentDataService consentDataService, ObjectMapper objectMapper) {
-        this.ledgersRestClient = ledgersRestClient;
+    public BulkPaymentSpiImpl(LedgersSpiPaymentMapper paymentMapper, GeneralPaymentService paymentService,
+                              AspspConsentDataService consentDataService, FeignExceptionReader feignExceptionReader) {
         this.paymentMapper = paymentMapper;
         this.paymentService = paymentService;
-        this.authRequestInterceptor = authRequestInterceptor;
         this.consentDataService = consentDataService;
-        this.objectMapper = objectMapper;
+        this.feignExceptionReader = feignExceptionReader;
     }
 
     @NotNull
@@ -88,9 +79,11 @@ public class BulkPaymentSpiImpl implements BulkPaymentSpi {
             return SpiResponse.<SpiBulkPaymentInitiationResponse>builder()
                            .payload(spiInitiationResponse)
                            .build();
-        } catch (FeignException e) {
+        } catch (FeignException feignException) {
+            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            logger.error("Initiate bulk payment failed: payment ID {}, devMessage {}", payment.getPaymentId(), devMessage);
             return SpiResponse.<SpiBulkPaymentInitiationResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.PAYMENT_FAILED, "The payment initiation request failed during the initial process."))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PAYMENT_FAILED, devMessage, "The payment initiation request failed during the initial process."))
                            .build();
         } catch (IllegalStateException e) {
             return SpiResponse.<SpiBulkPaymentInitiationResponse>builder()
@@ -101,20 +94,7 @@ public class BulkPaymentSpiImpl implements BulkPaymentSpi {
 
     @Override
     public @NotNull SpiResponse<SpiBulkPayment> getPaymentById(@NotNull SpiContextData contextData, @NotNull SpiBulkPayment payment, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        if (!TransactionStatus.ACSP.equals(payment.getPaymentStatus())) {
-            return SpiResponse.<SpiBulkPayment>builder()
-                           .payload(payment)
-                           .build();
-        }
-        return paymentService.getPaymentById(payment.getPaymentId(), payment.toString(), aspspConsentDataProvider.loadAspspConsentData())
-                       .map(p -> objectMapper.convertValue(p, BulkPaymentTO.class))
-                       .map(paymentMapper::mapToSpiBulkPayment)
-                       .map(p -> SpiResponse.<SpiBulkPayment>builder()
-                                         .payload(p)
-                                         .build())
-                       .orElseGet(() -> SpiResponse.<SpiBulkPayment>builder()
-                                                .error(new TppMessage(MessageErrorCode.PAYMENT_FAILED, "Couldn't get payment by ID"))
-                                                .build());
+        return paymentService.getPaymentById(payment, aspspConsentDataProvider, BulkPaymentTO.class, paymentMapper::mapToSpiBulkPayment, PaymentTypeTO.BULK);
     }
 
     @Override
@@ -136,20 +116,10 @@ public class BulkPaymentSpiImpl implements BulkPaymentSpi {
     }
 
     private SCAPaymentResponseTO initiatePaymentInternal(SpiBulkPayment payment, byte[] initialAspspConsentData) {
-        try {
-            SCAPaymentResponseTO sca = consentDataService.response(initialAspspConsentData, SCAPaymentResponseTO.class, true);
-            authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
-
-            logger.info("Initiate bulk payment with type: {}", PaymentTypeTO.BULK);
-            logger.debug("Bulk payment body: {}", payment);
-            BulkPaymentTO request = paymentMapper.toBulkPaymentTO(payment);
-            // If the payment product is missing, get it from the sca object.
-            if (request.getPaymentProduct() == null) {
-                request.setPaymentProduct(sca.getPaymentProduct());
-            }
-            return ledgersRestClient.initiatePayment(PaymentTypeTO.BULK, request).getBody();
-        } finally {
-            authRequestInterceptor.setAccessToken(null);
+        BulkPaymentTO request = paymentMapper.toBulkPaymentTO(payment);
+        if (request.getPaymentProduct() == null) {
+            request.setPaymentProduct(paymentService.getSCAPaymentResponseTO(initialAspspConsentData).getPaymentProduct());
         }
+        return paymentService.initiatePaymentInternal(payment, initialAspspConsentData, PaymentTypeTO.BULK, request);
     }
 }

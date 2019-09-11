@@ -68,12 +68,14 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     private final AspspConsentDataService consentDataService;
     private final GeneralAuthorisationService authorisationService;
     private final PaymentAuthorisationSpiImpl paymentAuthorisation;
+    private final FeignExceptionReader feignExceptionReader;
 
     public PaymentCancellationSpiImpl(PaymentRestClient ledgersRestClient,
                                       TokenStorageService tokenStorageService, ScaMethodConverter scaMethodConverter,
                                       AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService consentDataService,
                                       GeneralAuthorisationService authorisationService,
-                                      PaymentAuthorisationSpiImpl paymentAuthorisation) {
+                                      PaymentAuthorisationSpiImpl paymentAuthorisation,
+                                      FeignExceptionReader feignExceptionReader) {
         this.paymentRestClient = ledgersRestClient;
         this.tokenStorageService = tokenStorageService;
         this.scaMethodConverter = scaMethodConverter;
@@ -81,6 +83,7 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
         this.consentDataService = consentDataService;
         this.authorisationService = authorisationService;
         this.paymentAuthorisation = paymentAuthorisation;
+        this.feignExceptionReader = feignExceptionReader;
     }
 
     @Override
@@ -122,10 +125,11 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
                 return SpiResponse.<SpiResponse.VoidResponse>builder()
                                .payload(SpiResponse.voidResponse())
                                .build();
-            } catch (FeignException f) {
-                logger.error("An error occurred during Payment Cancellation Process: {}, message: {}", f.status(), f.getLocalizedMessage());
+            } catch (FeignException feignException) {
+                String devMessage = feignExceptionReader.getErrorMessage(feignException);
+                logger.error("Cancel payment without sca failed: payment ID {}, devMessage {}", payment.getPaymentId(), devMessage);
                 return SpiResponse.<SpiResponse.VoidResponse>builder()
-                               .error(FeignExceptionHandler.getFailureMessage(f, MessageErrorCode.FORMAT_ERROR, PAYMENT_CANCELLATION_EXCEPTION_MESSAGE))
+                               .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR, devMessage, PAYMENT_CANCELLATION_EXCEPTION_MESSAGE))
                                .build();
             }
         }
@@ -153,9 +157,11 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
                            : SpiResponse.<SpiResponse.VoidResponse>builder()
                                      .error(new TppMessage(MessageErrorCode.UNAUTHORIZED, "Couldn't authorise payment cancellation"))
                                      .build();
-        } catch (Exception e) {
+        } catch (FeignException feignException) {
+            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            logger.error("Verify sca authorisation and cancel payment failed: payment ID {}, devMessage {}", payment.getPaymentId(), devMessage);
             return SpiResponse.<SpiResponse.VoidResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR, "Couldn't execute authorisation payment cancellation"))
+                           .error(new TppMessage(MessageErrorCode.PSU_CREDENTIALS_INVALID, "Couldn't execute authorisation payment cancellation"))
                            .build();
         }
     }
@@ -235,9 +241,11 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
                 logger.info("SCA was send, operationId is {}", response.getPaymentId());
                 response = selectMethodResponse.getBody();
                 return authorisationService.returnScaMethodSelection(aspspConsentDataProvider, response);
-            } catch (FeignException e) {
+            } catch (FeignException feignException) {
+                String devMessage = feignExceptionReader.getErrorMessage(feignException);
+                logger.error("Request authorisation code failed: payment ID {}, authentication method ID {}, devMessage {}", businessObject.getPaymentId(), authenticationMethodId, devMessage);
                 return SpiResponse.<SpiAuthorizationCodeResult>builder()
-                               .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.FORMAT_ERROR, PAYMENT_CANCELLATION_EXCEPTION_MESSAGE))
+                               .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage, PAYMENT_CANCELLATION_EXCEPTION_MESSAGE))
                                .build();
             } finally {
                 authRequestInterceptor.setAccessToken(null);
