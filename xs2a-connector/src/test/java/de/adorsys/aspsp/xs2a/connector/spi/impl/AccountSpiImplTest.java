@@ -77,6 +77,8 @@ public class AccountSpiImplTest {
     private SpiAspspConsentDataProvider aspspConsentDataProvider;
     @Mock
     private SCAResponseTO scaResponseTO;
+    @Mock
+    private FeignExceptionReader feignExceptionReader;
 
     private JsonReader jsonReader = new JsonReader();
     private SpiAccountConsent spiAccountConsent;

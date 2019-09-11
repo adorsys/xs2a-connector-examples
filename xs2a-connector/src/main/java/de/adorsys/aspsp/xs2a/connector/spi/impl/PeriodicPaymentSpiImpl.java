@@ -16,16 +16,12 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
-import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
-import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
-import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
@@ -48,22 +44,17 @@ import java.util.Optional;
 public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(PeriodicPaymentSpiImpl.class);
 
-    private final PaymentRestClient ledgersRestClient;
     private final LedgersSpiPaymentMapper paymentMapper;
     private final GeneralPaymentService paymentService;
-    private final AuthRequestInterceptor authRequestInterceptor;
     private final AspspConsentDataService consentDataService;
-    private final ObjectMapper objectMapper;
+    private final FeignExceptionReader feignExceptionReader;
 
-    public PeriodicPaymentSpiImpl(PaymentRestClient ledgersRestClient, LedgersSpiPaymentMapper paymentMapper,
-                                  GeneralPaymentService paymentService, AuthRequestInterceptor authRequestInterceptor,
-                                  AspspConsentDataService consentDataService, ObjectMapper objectMapper) {
-        this.ledgersRestClient = ledgersRestClient;
+    public PeriodicPaymentSpiImpl(LedgersSpiPaymentMapper paymentMapper, GeneralPaymentService paymentService,
+                                  AspspConsentDataService consentDataService, FeignExceptionReader feignExceptionReader) {
         this.paymentMapper = paymentMapper;
         this.paymentService = paymentService;
-        this.authRequestInterceptor = authRequestInterceptor;
         this.consentDataService = consentDataService;
-        this.objectMapper = objectMapper;
+        this.feignExceptionReader = feignExceptionReader;
     }
 
     @Override
@@ -85,9 +76,11 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
             return SpiResponse.<SpiPeriodicPaymentInitiationResponse>builder()
                            .payload(spiInitiationResponse)
                            .build();
-        } catch (FeignException e) {
+        } catch (FeignException feignException) {
+            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            logger.error("Initiate periodic payment failed: payment ID {}, devMessage {}", payment.getPaymentId(), devMessage);
             return SpiResponse.<SpiPeriodicPaymentInitiationResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.PAYMENT_FAILED, "The payment initiation request failed during the initial process."))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PAYMENT_FAILED, devMessage, "The payment initiation request failed during the initial process."))
                            .build();
         } catch (IllegalStateException e) {
             return SpiResponse.<SpiPeriodicPaymentInitiationResponse>builder()
@@ -98,20 +91,7 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
 
     @Override
     public @NotNull SpiResponse<SpiPeriodicPayment> getPaymentById(@NotNull SpiContextData contextData, @NotNull SpiPeriodicPayment payment, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        if (!TransactionStatus.ACSP.equals(payment.getPaymentStatus())) {
-            return SpiResponse.<SpiPeriodicPayment>builder()
-                           .payload(payment)
-                           .build();
-        }
-        return paymentService.getPaymentById(payment.getPaymentId(), payment.toString(), aspspConsentDataProvider.loadAspspConsentData())
-                       .map(p -> objectMapper.convertValue(p, PeriodicPaymentTO.class))
-                       .map(paymentMapper::mapToSpiPeriodicPayment)
-                       .map(p -> SpiResponse.<SpiPeriodicPayment>builder()
-                                         .payload(p)
-                                         .build())
-                       .orElseGet(() -> SpiResponse.<SpiPeriodicPayment>builder()
-                                                .error(new TppMessage(MessageErrorCode.PAYMENT_FAILED, "Couldn't get payment by ID"))
-                                                .build());
+        return paymentService.getPaymentById(payment, aspspConsentDataProvider, PeriodicPaymentTO.class, paymentMapper::mapToSpiPeriodicPayment, PaymentTypeTO.PERIODIC);
     }
 
     @Override
@@ -130,20 +110,10 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
     }
 
     private SCAPaymentResponseTO initiatePaymentInternal(SpiPeriodicPayment payment, byte[] initialAspspConsentData) {
-        try {
-            SCAPaymentResponseTO sca = consentDataService.response(initialAspspConsentData, SCAPaymentResponseTO.class, true);
-            authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
-
-            logger.info("Initiate periodic payment with type={}", PaymentTypeTO.PERIODIC);
-            logger.debug("Periodic payment body={}", payment);
-            PeriodicPaymentTO request = paymentMapper.toPeriodicPaymentTO(payment);
-            // If the payment product is missing, get it from the sca object.
-            if (request.getPaymentProduct() == null) {
-                request.setPaymentProduct(sca.getPaymentProduct());
-            }
-            return ledgersRestClient.initiatePayment(PaymentTypeTO.PERIODIC, request).getBody();
-        } finally {
-            authRequestInterceptor.setAccessToken(null);
+        PeriodicPaymentTO request = paymentMapper.toPeriodicPaymentTO(payment);
+        if (request.getPaymentProduct() == null) {
+            request.setPaymentProduct(paymentService.getSCAPaymentResponseTO(initialAspspConsentData).getPaymentProduct());
         }
+        return paymentService.initiatePaymentInternal(payment, initialAspspConsentData, PaymentTypeTO.PERIODIC, request);
     }
 }

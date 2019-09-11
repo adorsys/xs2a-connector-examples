@@ -16,16 +16,12 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
-import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
-import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
-import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
@@ -49,22 +45,17 @@ import java.util.Optional;
 public class SinglePaymentSpiImpl implements SinglePaymentSpi {
     private static final Logger logger = LoggerFactory.getLogger(SinglePaymentSpiImpl.class);
 
-    private final PaymentRestClient ledgersRestClient;
     private final LedgersSpiPaymentMapper paymentMapper;
     private final GeneralPaymentService paymentService;
-    private final AuthRequestInterceptor authRequestInterceptor;
     private final AspspConsentDataService consentDataService;
-    private final ObjectMapper objectMapper;
+    private final FeignExceptionReader feignExceptionReader;
 
-    public SinglePaymentSpiImpl(PaymentRestClient ledgersRestClient, LedgersSpiPaymentMapper paymentMapper,
-                                GeneralPaymentService paymentService, AuthRequestInterceptor authRequestInterceptor,
-                                AspspConsentDataService consentDataService, ObjectMapper objectMapper) {
-        this.ledgersRestClient = ledgersRestClient;
+    public SinglePaymentSpiImpl(LedgersSpiPaymentMapper paymentMapper, GeneralPaymentService paymentService,
+                                AspspConsentDataService consentDataService, FeignExceptionReader feignExceptionReader) {
         this.paymentMapper = paymentMapper;
         this.paymentService = paymentService;
-        this.authRequestInterceptor = authRequestInterceptor;
         this.consentDataService = consentDataService;
-        this.objectMapper = objectMapper;
+        this.feignExceptionReader = feignExceptionReader;
     }
 
     /*
@@ -90,10 +81,11 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
             return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
                            .payload(spiInitiationResponse)
                            .build();
-        } catch (FeignException e) {
+        } catch (FeignException feignException) {
+            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            logger.error("Initiate single payment failed: payment ID {}, devMessage {}", payment.getPaymentId(), devMessage);
             return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.PAYMENT_FAILED,
-                                                                          "The payment initiation request failed during the initial process."))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PAYMENT_FAILED, devMessage, "The payment initiation request failed during the initial process."))
                            .build();
         } catch (IllegalStateException e) {
             return SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
@@ -104,20 +96,7 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
 
     @Override
     public @NotNull SpiResponse<SpiSinglePayment> getPaymentById(@NotNull SpiContextData contextData, @NotNull SpiSinglePayment payment, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        if (!TransactionStatus.ACSP.equals(payment.getPaymentStatus())) {
-            return SpiResponse.<SpiSinglePayment>builder()
-                           .payload(payment)
-                           .build();
-        }
-        return paymentService.getPaymentById(payment.getPaymentId(), payment.toString(), aspspConsentDataProvider.loadAspspConsentData())
-                       .map(p -> objectMapper.convertValue(p, SinglePaymentTO.class))
-                       .map(paymentMapper::toSpiSinglePayment)
-                       .map(p -> SpiResponse.<SpiSinglePayment>builder()
-                                         .payload(p)
-                                         .build())
-                       .orElseGet(() -> SpiResponse.<SpiSinglePayment>builder()
-                                                .error(new TppMessage(MessageErrorCode.PAYMENT_FAILED, "Couldn't get payment by ID"))
-                                                .build());
+        return paymentService.getPaymentById(payment, aspspConsentDataProvider, SinglePaymentTO.class, paymentMapper::toSpiSinglePayment, PaymentTypeTO.SINGLE);
     }
 
     @Override
@@ -146,20 +125,10 @@ public class SinglePaymentSpiImpl implements SinglePaymentSpi {
 
 
     private SCAPaymentResponseTO initiatePaymentInternal(SpiSinglePayment payment, byte[] initialAspspConsentData) {
-        try {
-            SCAPaymentResponseTO sca = consentDataService.response(initialAspspConsentData, SCAPaymentResponseTO.class, true);
-            authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
-
-            logger.info("Initiate single payment with type={}", PaymentTypeTO.SINGLE);
-            logger.debug("Single payment body={}", payment);
-            SinglePaymentTO request = paymentMapper.toSinglePaymentTO(payment);
-            // If the payment product is missing, get it from the sca object.
-            if (request.getPaymentProduct() == null) {
-                request.setPaymentProduct(sca.getPaymentProduct());
-            }
-            return ledgersRestClient.initiatePayment(PaymentTypeTO.SINGLE, request).getBody();
-        } finally {
-            authRequestInterceptor.setAccessToken(null);
+        SinglePaymentTO request = paymentMapper.toSinglePaymentTO(payment);
+        if (request.getPaymentProduct() == null) {
+            request.setPaymentProduct(paymentService.getSCAPaymentResponseTO(initialAspspConsentData).getPaymentProduct());
         }
+        return paymentService.initiatePaymentInternal(payment, initialAspspConsentData, PaymentTypeTO.SINGLE, request);
     }
 }

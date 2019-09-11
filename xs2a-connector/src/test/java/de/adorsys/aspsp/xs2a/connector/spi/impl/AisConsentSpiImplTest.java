@@ -75,6 +75,8 @@ public class AisConsentSpiImplTest {
     private SpiAspspConsentDataProvider aspspConsentDataProvider;
     @Mock
     private SCAResponseTO scaResponseTO;
+    @Mock
+    private FeignExceptionReader feignExceptionReader;
 
     private static final TppInfo TPP_INFO = buildTppInfo();
     private final static UUID X_REQUEST_ID = UUID.randomUUID();
@@ -92,7 +94,7 @@ public class AisConsentSpiImplTest {
 
     private static final String RESPONSE_STATUS_200_WITH_EMPTY_BODY = "Response status was 200, but the body was empty!";
     private static final String TRANSACTION_ID = "1234567";
-    private static final String DOWNLOAD_ID= "downloadId";
+    private static final String DOWNLOAD_ID = "downloadId";
 
     private JsonReader jsonReader = new JsonReader();
     private SpiAccountConsent spiAccountConsent;
@@ -169,7 +171,7 @@ public class AisConsentSpiImplTest {
     public void initiateAisConsent_WithException() {
         when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(consentDataService.response(any())).thenThrow(FeignException.errorStatus(RESPONSE_STATUS_200_WITH_EMPTY_BODY,
-                buildErrorResponse()));
+                                                                                      buildErrorResponse()));
 //        when(consentRestClient.startSCA(spiAccountConsent.getId(), aisConsentMapper.mapToAisConsent(spiAccountConsent))).thenReturn(ResponseEntity.ok(sca));
 
         SpiResponse<SpiInitiateAisConsentResponse> actualResponse = spi.initiateAisConsent(SPI_CONTEXT_DATA, spiAccountConsent, aspspConsentDataProvider);
@@ -180,10 +182,10 @@ public class AisConsentSpiImplTest {
 
     private Response buildErrorResponse() {
         return Response.builder()
-                .status(404)
-                .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
-                .headers(Collections.emptyMap())
-                .build();
+                       .status(404)
+                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
+                       .headers(Collections.emptyMap())
+                       .build();
     }
 
     private static SpiContextData buildSpiContextData(SpiPsuData spiPsuData) {
