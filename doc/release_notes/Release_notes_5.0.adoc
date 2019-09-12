@@ -1,9 +1,14 @@
 = Release notes v. 5.0
 
 == Table of Contents
+
 * Get account list request responds without balances after first call
 * Extend XS2A with Austria requirements to payment products
 * Error 500 returned in attempt to delete consent in status "received"
+* Bugfix: Error handling and logging
+* Bugfix: Incorrect TransactionId in read transaction details leads to internal server error
+* Bugfix: Wrong response for provision of an invalid TAN, PSU or password
+* Bugfix: Wrong error for embedded payment with not funded account or invalid debtor
 
 ==  Get account list request responds without balances after first call
 
@@ -27,3 +32,25 @@ By default, configuration is for Germany and configuration for Austria was added
 
 From now on, error 500 won't be returned any more when calling `DELETE /v1/consents/{consent-id}` endpoint.
 Instead `204 - No Content` will be returned.
+
+== Error handling and logging
+
+Error handling was added for exceptions during requests to ASPSP. Also logging was added in catch exception block.
+
+== Incorrect TransactionId in read transaction details leads to internal server error
+
+From now on, if TPP provides incorrect transaction ID in read transaction details `GET /v1/accounts/{account-id}/transactions/{resourceId}` it will receive 403 response code with `RESOURCE_UNKNOWN` message.
+
+== Wrong response for provision of an invalid TAN, PSU or password
+
+From now on, if TPP provides incorrect PSU, TAN or password in update PSU data request it will receive 401 response code with `PSU_CREDENTIALS_INVALID` message.
+This works for:
+
+* consent `PUT /v1/consents/{consentId}/authorisations/{authorisationId}`,
+* payment `PUT /v1/{payment-service}/{payment-product}/{payment-id}/authorisations/{authorisation-id}`,
+* payment cancellation `PUT /v1/{payment-service}/{payment-product}/{payment-id}/cancellation-authorisations/{cancellation-id}`.
+
+== Wrong error for embedded payment with not funded account or invalid debtor
+
+From now on, if TPP tries to send update PSU date request with not funded account it will receive 400 response code with `PAYMENT_FAILED` message.
+if TPP tries to send update PSU date request with invalid debtor it will receive 401 response code with `PSU_CREDENTIALS_INVALID` message.
