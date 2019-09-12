@@ -46,10 +46,12 @@ import de.adorsys.psd2.xs2a.spi.service.AisConsentSpi;
 import feign.FeignException;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -61,10 +63,16 @@ import java.util.List;
 
 import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.*;
 import static de.adorsys.psd2.xs2a.core.error.MessageErrorCode.*;
+import static java.lang.String.format;
 
 @Component
 public class AisConsentSpiImpl implements AisConsentSpi {
     private static final Logger logger = LoggerFactory.getLogger(AisConsentSpiImpl.class);
+    private static final String USER_LOGIN = "{userLogin}";
+    private static final String CONSENT_ID = "{consentId}";
+    private static final String AUTH_ID = "{authorizationId}";
+    private static final String TAN = "{tan}";
+    private static final String DECOUPLED_USR_MSG = "Please check your app to continue... %s";
 
     private static final String SCA_STATUS_LOG = "SCA status is {}";
     private static final String DECOUPLED_NOT_SUPPORTED_MESSAGE = "Service is not supported";
@@ -78,6 +86,9 @@ public class AisConsentSpiImpl implements AisConsentSpi {
     private final ScaMethodConverter scaMethodConverter;
     private final ScaLoginMapper scaLoginMapper;
     private final FeignExceptionReader feignExceptionReader;
+
+    @Value("${online-banking.url}")
+    private String onlineBankingUrl;
 
     public AisConsentSpiImpl(ConsentRestClient consentRestClient, TokenStorageService tokenStorageService,
                              AisConsentMapper aisConsentMapper, AuthRequestInterceptor authRequestInterceptor,
@@ -337,9 +348,11 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         }
 
         SpiResponse<SpiAuthorizationCodeResult> response = requestAuthorisationCode(contextData, authenticationMethodId, businessObject, aspspConsentDataProvider);
+
+        String psuMessage = generatePsuMessage(contextData, authorisationId, aspspConsentDataProvider, response);
         return response.hasError()
                        ? SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder().error(response.getErrors()).build()
-                       : SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder().payload(new SpiAuthorisationDecoupledScaResponse("Please check your app to continue...")).build();
+                       : SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder().payload(new SpiAuthorisationDecoupledScaResponse(psuMessage)).build();
     }
 
     ConsentStatus getConsentStatus(SCAConsentResponseTO consentResponse) {
@@ -350,6 +363,23 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             return ConsentStatus.PARTIALLY_AUTHORISED;
         }
         return ConsentStatus.VALID;
+    }
+
+    private String generatePsuMessage(@NotNull SpiContextData contextData, @NotNull String authorisationId, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, SpiResponse<SpiAuthorizationCodeResult> response) {
+        List<String> challengeDataParts = Arrays.asList(response.getPayload().getChallengeData().getAdditionalInformation().split(" "));
+        int indexOfTan = challengeDataParts.indexOf("is") + 1;
+        String encryptedConsentId = "";
+        try {
+            encryptedConsentId = (String) FieldUtils.readField(aspspConsentDataProvider, "encryptedConsentId", true);
+        } catch (IllegalAccessException e) {
+            logger.error("could not read encrypted consent id");
+        }
+        String url = onlineBankingUrl.replace(USER_LOGIN, contextData.getPsuData().getPsuId())
+                             .replace(CONSENT_ID, encryptedConsentId)
+                             .replace(AUTH_ID, authorisationId)
+                             .replace(TAN, challengeDataParts.get(indexOfTan));
+
+        return format(DECOUPLED_USR_MSG, url);
     }
 
     private <T extends SpiInitiateAisConsentResponse> SpiResponse<T> firstCallInstantiatingConsent(
