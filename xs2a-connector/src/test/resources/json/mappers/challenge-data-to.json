@@ -1,5 +1,7 @@
 {
-  "data": "data",
+  "data": [
+    "data"
+  ],
   "imageLink": "imageLink",
   "otpMaxLength": 5,
   "otpFormat": "characters",
