@@ -22,7 +22,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.adorsys.ledgers</groupId>
 	<artifactId>xs2a-connector-examples</artifactId>
-    <version>.4.1-SNAPSHOT</version>
+    <version>4.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>XS2A Connector Examples</name>
@@ -83,7 +83,7 @@
 		<java.version>1.8</java.version>
 		<pmd.plugin.version>3.10.0</pmd.plugin.version>
 		<!-- xs2a version -->
-		<xs2a.version>4.0</xs2a.version>
+		<xs2a.version>4.1-SNAPSHOT</xs2a.version>
 		<!-- ledgers version -->
 		<ledgers.version>1.5</ledgers.version>
 		<!-- other properties -->
