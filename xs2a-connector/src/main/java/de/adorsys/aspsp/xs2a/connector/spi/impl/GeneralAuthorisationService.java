@@ -33,6 +33,7 @@ import de.adorsys.psd2.xs2a.core.sca.ChallengeData;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
+import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiPsuAuthorisationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import feign.FeignException;
@@ -84,7 +85,7 @@ public class GeneralAuthorisationService {
      * @return : the authorisation status
      */
 
-    public <T extends SCAResponseTO> SpiResponse<SpiAuthorisationStatus> authorisePsuForConsent(@NotNull SpiPsuData spiPsuData, String pin, String consentId, T originalResponse, OpTypeTO opType, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+    public <T extends SCAResponseTO> SpiResponse<SpiPsuAuthorisationResponse> authorisePsuForConsent(@NotNull SpiPsuData spiPsuData, String pin, String consentId, T originalResponse, OpTypeTO opType, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         String authorisationId = originalResponse != null && originalResponse.getAuthorisationId() != null
                                          ? originalResponse.getAuthorisationId()
                                          : Ids.id();
@@ -100,13 +101,13 @@ public class GeneralAuthorisationService {
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(Optional.ofNullable(response)
                                                                                              .map(HttpEntity::getBody)
                                                                                              .orElseGet(SCALoginResponseTO::new)));
-            return SpiResponse.<SpiAuthorisationStatus>builder()
-                           .payload(status)
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                           .payload(new SpiPsuAuthorisationResponse(status, false))
                            .build();
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Authorise PSU for consent failed: authorisation ID {}, consent ID {}, devMessage {}", authorisationId, consentId, devMessage);
-            return SpiResponse.<SpiAuthorisationStatus>builder()
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                            .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage, "PSU authorisation request was failed."))
                            .build();
         }

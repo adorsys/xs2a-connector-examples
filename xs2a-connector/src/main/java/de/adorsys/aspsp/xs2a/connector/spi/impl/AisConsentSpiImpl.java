@@ -210,26 +210,26 @@ public class AisConsentSpiImpl implements AisConsentSpi {
      * object.
      */
     @Override
-    public SpiResponse<SpiAuthorisationStatus> authorisePsu(@NotNull SpiContextData contextData,
-                                                            @NotNull SpiPsuData psuLoginData, String password, SpiAccountConsent aisConsent,
-                                                            @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+    public SpiResponse<SpiPsuAuthorisationResponse> authorisePsu(@NotNull SpiContextData contextData,
+                                                                 @NotNull SpiPsuData psuLoginData, String password, SpiAccountConsent aisConsent,
+                                                                 @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         SCAConsentResponseTO originalResponse;
         try {
             originalResponse = consentDataService.response(aspspConsentDataProvider.loadAspspConsentData(), SCAConsentResponseTO.class, false);
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Read aspspConsentData in authorise PSU failed: consent ID {}, devMessage {}", aisConsent.getId(), devMessage);
-            return SpiResponse.<SpiAuthorisationStatus>builder()
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                            .error(new TppMessage(TOKEN_UNKNOWN, "Missing credentials. Expecting a bearer token in the consent data object."))
                            .build();
         }
 
-        SpiResponse<SpiAuthorisationStatus> authorisePsu = authorisationService.authorisePsuForConsent(
+        SpiResponse<SpiPsuAuthorisationResponse> authorisePsu = authorisationService.authorisePsuForConsent(
                 psuLoginData, password, aisConsent.getId(), originalResponse, OpTypeTO.CONSENT, aspspConsentDataProvider);
 
         if (!authorisePsu.isSuccessful()) {
             String spiErrorMessage = authorisePsu.getErrors().get(0).getMessageText();
-            return SpiResponse.<SpiAuthorisationStatus>builder()
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                            .error(new TppMessage(PSU_CREDENTIALS_INVALID, StringUtils.defaultIfBlank(spiErrorMessage, "authorisation PSU for consent was failed")))
                            .build();
         }
@@ -239,7 +239,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         try {
             scaConsentResponse = mapToScaConsentResponse(aisConsent, aspspConsentDataProvider.loadAspspConsentData());
         } catch (IOException e) {
-            return SpiResponse.<SpiAuthorisationStatus>builder()
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                            .error(new TppMessage(FORMAT_ERROR, "Unknown response type"))
                            .build();
         }
@@ -253,19 +253,19 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             } catch (FeignException feignException) {
                 String devMessage = feignExceptionReader.getErrorMessage(feignException);
                 logger.error("Initiate consent internal in authorise PSU failed: consent ID {}, devMessage {}", aisConsent.getId(), devMessage);
-                return SpiResponse.<SpiAuthorisationStatus>builder()
+                return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                                .error(FeignExceptionHandler.getFailureMessage(feignException, FORMAT_ERROR, "Addressed account is unknown to the ASPSP or not associated to the PSU."))
                                .build();
             }
 
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(aisConsentResponse));
 
-            return SpiResponse.<SpiAuthorisationStatus>builder()
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                            .payload(authorisePsu.getPayload())
                            .build();
         }// DO not change. AuthorizePsu is mutable. //TODO @fpo fix this
 
-        return SpiResponse.<SpiAuthorisationStatus>builder()
+        return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                        .payload(authorisePsu.getPayload())
                        .build();
     }

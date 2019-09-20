@@ -167,16 +167,16 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     }
 
     @Override
-    public SpiResponse<SpiAuthorisationStatus> authorisePsu(@NotNull SpiContextData contextData,
-                                                            @NotNull SpiPsuData psuData,
-                                                            String password,
-                                                            SpiPayment businessObject,
-                                                            @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+    public SpiResponse<SpiPsuAuthorisationResponse> authorisePsu(@NotNull SpiContextData contextData,
+                                                                 @NotNull SpiPsuData psuData,
+                                                                 String password,
+                                                                 SpiPayment businessObject,
+                                                                 @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         byte[] aspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
 
         SCAPaymentResponseTO originalResponse = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class, false);
 
-        SpiResponse<SpiAuthorisationStatus> authorisePsu = authorisationService.authorisePsuForConsent(
+        SpiResponse<SpiPsuAuthorisationResponse> authorisePsu = authorisationService.authorisePsuForConsent(
                 psuData, password, businessObject.getPaymentId(), originalResponse, OpTypeTO.CANCEL_PAYMENT, aspspConsentDataProvider);
 
         if (!authorisePsu.isSuccessful()) {
@@ -187,11 +187,11 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
             SCAPaymentResponseTO scaPaymentResponse = paymentAuthorisation.toPaymentConsent(businessObject, aspspConsentDataProvider, originalResponse);
             aspspConsentDataProvider.updateAspspConsentData(tokenStorageService.toBytes(scaPaymentResponse));
 
-            return SpiResponse.<SpiAuthorisationStatus>builder()
-                           .payload(SpiAuthorisationStatus.SUCCESS)
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                           .payload(new SpiPsuAuthorisationResponse(SpiAuthorisationStatus.SUCCESS, false))
                            .build();
         } catch (IOException e) {
-            return SpiResponse.<SpiAuthorisationStatus>builder()
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                            .error(new TppMessage(MessageErrorCode.UNAUTHORIZED, "Couldn't authorise payment cancellation"))
                            .build();
         }
