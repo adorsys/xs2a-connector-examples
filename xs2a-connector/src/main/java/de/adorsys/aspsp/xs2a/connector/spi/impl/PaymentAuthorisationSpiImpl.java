@@ -34,8 +34,8 @@ import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationDecoupledScaResponse;
-import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
+import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiPsuAuthorisationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
@@ -103,12 +103,12 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
     }
 
     @Override
-    public SpiResponse<SpiAuthorisationStatus> authorisePsu(@NotNull SpiContextData contextData, @NotNull SpiPsuData psuLoginData, String pin, SpiPayment spiPayment, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+    public SpiResponse<SpiPsuAuthorisationResponse> authorisePsu(@NotNull SpiContextData contextData, @NotNull SpiPsuData psuLoginData, String pin, SpiPayment spiPayment, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         byte[] aspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
 
         SCAPaymentResponseTO originalResponse = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class, false);
 
-        SpiResponse<SpiAuthorisationStatus> authorisePsu = authorisationService.authorisePsuForConsent(
+        SpiResponse<SpiPsuAuthorisationResponse> authorisePsu = authorisationService.authorisePsuForConsent(
                 psuLoginData, pin, originalResponse.getPaymentId(), originalResponse, OpTypeTO.PAYMENT, aspspConsentDataProvider);
 
         if (!authorisePsu.isSuccessful()) {
@@ -121,7 +121,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
             aspspConsentDataProvider.updateAspspConsentData(tokenStorageService.toBytes(scaPaymentResponse));
             return initiatePmtOnExemptedIfRequired(contextData, spiPayment, authorisePsu, scaPaymentResponse, aspspConsentDataProvider);
         } catch (IOException e) {
-            return SpiResponse.<SpiAuthorisationStatus>builder()
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                            .error(new TppMessage(MessageErrorCode.TOKEN_UNKNOWN, "Getting PSU token was failed"))
                            .build();
         }
@@ -195,23 +195,23 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
         return paymentResponse;
     }
 
-    private SpiResponse<SpiAuthorisationStatus> initiatePmtOnExemptedIfRequired(@NotNull SpiContextData contextData, SpiPayment spiPayment, SpiResponse<SpiAuthorisationStatus> authorisePsu, SCAPaymentResponseTO scaPaymentResponse, SpiAspspConsentDataProvider paymentAspspConsentDataProvider) {
+    private SpiResponse<SpiPsuAuthorisationResponse> initiatePmtOnExemptedIfRequired(@NotNull SpiContextData contextData, SpiPayment spiPayment, SpiResponse<SpiPsuAuthorisationResponse> authorisePsu, SCAPaymentResponseTO scaPaymentResponse, SpiAspspConsentDataProvider paymentAspspConsentDataProvider) {
         if (EnumSet.of(EXEMPTED, PSUAUTHENTICATED, PSUIDENTIFIED)
                     .contains(scaPaymentResponse.getScaStatus())) {
             return initiatePaymentOnExemptedSCA(contextData, spiPayment, authorisePsu, paymentAspspConsentDataProvider);
         }
-        return SpiResponse.<SpiAuthorisationStatus>builder()
+        return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                        .payload(authorisePsu.getPayload())
                        .build();
     }
 
-    private SpiResponse<SpiAuthorisationStatus> initiatePaymentOnExemptedSCA(SpiContextData contextData, SpiPayment spiPayment,
-                                                                             SpiResponse<SpiAuthorisationStatus> authorisePsu, SpiAspspConsentDataProvider paymentAspspConsentDataProvider) {
+    private SpiResponse<SpiPsuAuthorisationResponse> initiatePaymentOnExemptedSCA(SpiContextData contextData, SpiPayment spiPayment,
+                                                                                  SpiResponse<SpiPsuAuthorisationResponse> authorisePsu, SpiAspspConsentDataProvider paymentAspspConsentDataProvider) {
 
-        Function<SpiResponse<? extends SpiPaymentInitiationResponse>, SpiResponse<SpiAuthorisationStatus>> buildResponse =
+        Function<SpiResponse<? extends SpiPaymentInitiationResponse>, SpiResponse<SpiPsuAuthorisationResponse>> buildResponse =
                 spiResponse -> spiResponse.hasError()
-                                       ? SpiResponse.<SpiAuthorisationStatus>builder().error(spiResponse.getErrors()).build()
-                                       : SpiResponse.<SpiAuthorisationStatus>builder().payload(authorisePsu.getPayload()).build();
+                                       ? SpiResponse.<SpiPsuAuthorisationResponse>builder().error(spiResponse.getErrors()).build()
+                                       : SpiResponse.<SpiPsuAuthorisationResponse>builder().payload(authorisePsu.getPayload()).build();
 
         // Payment initiation can only be called if exemption.
         PaymentType paymentType = spiPayment.getPaymentType();
@@ -229,7 +229,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
                         periodicPaymentSpi.initiatePayment(contextData, (@NotNull SpiPeriodicPayment) spiPayment, paymentAspspConsentDataProvider));
             default:
                 // throw unsupported payment type
-                return SpiResponse.<SpiAuthorisationStatus>builder()
+                return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                                .error(new TppMessage(MessageErrorCode.PAYMENT_FAILED, String.format("Unknown payment type: %s", paymentType.getValue())))
                                .build();
         }
