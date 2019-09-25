@@ -44,7 +44,7 @@ public class AspspConsentDataService {
         try {
             return tokenStorageService.toBytes(response);
         } catch (IOException e) {
-            throw FeignExceptionHandler.getException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+            throw FeignExceptionHandler.getException(HttpStatus.UNAUTHORIZED, e.getMessage());
         }
     }
 
@@ -62,7 +62,7 @@ public class AspspConsentDataService {
             checkBearerTokenPresent(checkCredentials, sca);
             return sca;
         } catch (IOException e) {
-            throw FeignExceptionHandler.getException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+            throw FeignExceptionHandler.getException(HttpStatus.UNAUTHORIZED, e.getMessage());
         }
     }
 
@@ -72,7 +72,7 @@ public class AspspConsentDataService {
             checkBearerTokenPresent(checkCredentials, sca);
             return sca;
         } catch (IOException e) {
-            throw FeignExceptionHandler.getException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+            throw FeignExceptionHandler.getException(HttpStatus.UNAUTHORIZED, e.getMessage());
         }
     }
 

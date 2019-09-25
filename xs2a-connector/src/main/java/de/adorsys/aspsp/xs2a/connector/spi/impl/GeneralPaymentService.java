@@ -92,7 +92,7 @@ public class GeneralPaymentService {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Get payment status by id failed: payment ID {}, devMessage {}", paymentId, devMessage);
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR, StringUtils.defaultIfBlank(devMessage, "Couldn't get payment status by ID")))
+                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR, devMessage))
                            .build();
 
         } finally {
@@ -121,13 +121,13 @@ public class GeneralPaymentService {
                            .build();
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
-            logger.info("Verify sca authorisation and execute payment failed: payment ID {}, devMessage {}", spiScaConfirmation.getPaymentId(), devMessage);
+            logger.info("Verify SCA authorisation and execute payment failed: payment ID {}, devMessage {}", spiScaConfirmation.getPaymentId(), devMessage);
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage, "Couldn't execute payment"))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
                            .build();
         } catch (Exception exception) {
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR, "Couldn't execute payment"))
+                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED))
                            .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
@@ -184,18 +184,15 @@ public class GeneralPaymentService {
                                .build();
             }
 
-            String message = String.format("Payment not executed. Transaction status is: %s. SCA status: %s.",
-                                           response.getTransactionStatus(), scaStatusName);
-
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR, message))
+                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED, response.getTransactionStatus(), scaStatusName))
                            .build();
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
-            logger.error("Execute payment without sca failed: devMessage {}", devMessage);
+            logger.error("Execute payment without SCA failed: devMessage {}", devMessage);
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR, devMessage, "Couldn't execute payment"))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR, devMessage))
                            .build();
         }
     }
@@ -203,7 +200,7 @@ public class GeneralPaymentService {
     <P extends SpiPayment, TO> SpiResponse<P> getPaymentById(P payment, SpiAspspConsentDataProvider aspspConsentDataProvider, Class<TO> clazz, Function<TO, P> mapperToSpiPayment, PaymentTypeTO paymentTypeTO) {
 
         Function<P, SpiResponse<P>> buildSuccessResponse = p -> SpiResponse.<P>builder().payload(p).build();
-        Supplier<SpiResponse<P>> buildFailedResponse = () -> SpiResponse.<P>builder().error(new TppMessage(MessageErrorCode.PAYMENT_FAILED, "Couldn't get payment by ID")).build();
+        Supplier<SpiResponse<P>> buildFailedResponse = () -> SpiResponse.<P>builder().error(new TppMessage(MessageErrorCode.PAYMENT_FAILED_INCORRECT_ID)).build();
         Function<Object, TO> convertToTransferObject = o -> objectMapper.convertValue(o, clazz);
 
         if (!TransactionStatus.ACSP.equals(payment.getPaymentStatus())) {

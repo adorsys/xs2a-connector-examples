@@ -17,27 +17,25 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 public class FeignExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(FeignExceptionHandler.class);
 
-    static final String REQUEST_WAS_FAILED_MESSAGE = "Request was failed";
-
     private FeignExceptionHandler() {
     }
 
-    static TppMessage getFailureMessage(FeignException e, MessageErrorCode errorCode, String errorMessage) {
+    static TppMessage getFailureMessage(FeignException e, MessageErrorCode errorCode) {
         logger.error(e.getMessage(), e);
 
         switch (HttpStatus.valueOf(e.status())) {
             case INTERNAL_SERVER_ERROR:
-                return new TppMessage(MessageErrorCode.INTERNAL_SERVER_ERROR, REQUEST_WAS_FAILED_MESSAGE);
+                return new TppMessage(MessageErrorCode.INTERNAL_SERVER_ERROR);
             case UNAUTHORIZED:
-                return new TppMessage(MessageErrorCode.PSU_CREDENTIALS_INVALID, errorMessage);
+                return new TppMessage(MessageErrorCode.PSU_CREDENTIALS_INVALID);
             default:
-                return new TppMessage(errorCode, errorMessage);
+                return new TppMessage(errorCode);
         }
     }
 
-    static TppMessage getFailureMessage(FeignException e, MessageErrorCode errorCode, String errorMessageAspsp, String errorMessage) {
+    static TppMessage getFailureMessage(FeignException e, MessageErrorCode errorCode, String errorMessageAspsp) {
         return shouldUseNormalErrorMessage(e, errorCode, errorMessageAspsp)
-                       ? getFailureMessage(e, errorCode, errorMessage)
+                       ? getFailureMessage(e, errorCode)
                        : getFailureMessage(e, errorCode, errorMessageAspsp);
     }
 

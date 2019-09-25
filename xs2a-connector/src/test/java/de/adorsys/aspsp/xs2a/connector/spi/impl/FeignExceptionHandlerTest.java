@@ -13,19 +13,19 @@ public class FeignExceptionHandlerTest {
     @Test
     public void getFailureMessage_internalServerError() {
         FeignException feignException = FeignException.errorStatus("message1", FeignExceptionHandler.error(HttpStatus.INTERNAL_SERVER_ERROR));
-        TppMessage tppMessage = FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR, "message2");
+        TppMessage tppMessage = FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR);
 
         assertEquals(MessageErrorCode.INTERNAL_SERVER_ERROR, tppMessage.getErrorCode());
-        assertEquals(FeignExceptionHandler.REQUEST_WAS_FAILED_MESSAGE, tppMessage.getMessageText());
+        assertEquals("", tppMessage.getMessageText());
     }
 
     @Test
     public void getFailureMessage_otherErrors() {
         FeignException feignException = FeignException.errorStatus("message1", FeignExceptionHandler.error(HttpStatus.BAD_REQUEST));
-        TppMessage tppMessage = FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR, "message2");
+        TppMessage tppMessage = FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR);
 
         assertEquals(MessageErrorCode.FORMAT_ERROR, tppMessage.getErrorCode());
-        assertEquals("message2", tppMessage.getMessageText());
+        assertEquals("", tppMessage.getMessageText());
     }
 
     @Test
@@ -45,47 +45,40 @@ public class FeignExceptionHandlerTest {
 
     @Test
     public void getFailureMessage_MessageFromConnector() {
-        String errorMessageAspsp = "aspsp";
-        String errorMessageConnector = "connector";
         MessageErrorCode messageErrorCode = MessageErrorCode.PAYMENT_FAILED;
         FeignException feignException = FeignException.errorStatus("message1", FeignExceptionHandler.error(HttpStatus.BAD_REQUEST));
-        TppMessage tppMessage = FeignExceptionHandler.getFailureMessage(feignException, messageErrorCode, errorMessageAspsp, errorMessageConnector);
+        TppMessage tppMessage = FeignExceptionHandler.getFailureMessage(feignException, messageErrorCode);
 
         assertEquals(messageErrorCode, tppMessage.getErrorCode());
-        assertEquals(errorMessageConnector, tppMessage.getMessageText());
+        assertEquals("", tppMessage.getMessageText());
     }
 
     @Test
     public void getFailureMessage_AspspMessageNull_MessageFromConnector() {
-        String errorMessageAspsp = null;
-        String errorMessageConnector = "connector";
         MessageErrorCode messageErrorCode = MessageErrorCode.PAYMENT_FAILED;
         FeignException feignException = FeignException.errorStatus("message1", FeignExceptionHandler.error(HttpStatus.NOT_FOUND));
-        TppMessage tppMessage = FeignExceptionHandler.getFailureMessage(feignException, messageErrorCode, errorMessageAspsp, errorMessageConnector);
+        TppMessage tppMessage = FeignExceptionHandler.getFailureMessage(feignException, messageErrorCode);
 
         assertEquals(messageErrorCode, tppMessage.getErrorCode());
-        assertEquals(errorMessageConnector, tppMessage.getMessageText());
+        assertEquals("", tppMessage.getMessageText());
     }
 
     @Test
     public void getFailureMessage_MessageFromAspsp() {
-        String errorMessageAspsp = "aspsp";
-        String errorMessageConnector = "connector";
         MessageErrorCode messageErrorCode = MessageErrorCode.PAYMENT_FAILED;
         FeignException feignException = FeignException.errorStatus("message1", FeignExceptionHandler.error(HttpStatus.NOT_FOUND));
-        TppMessage tppMessage = FeignExceptionHandler.getFailureMessage(feignException, messageErrorCode, errorMessageAspsp, errorMessageConnector);
+        TppMessage tppMessage = FeignExceptionHandler.getFailureMessage(feignException, messageErrorCode);
 
         assertEquals(messageErrorCode, tppMessage.getErrorCode());
-        assertEquals(errorMessageAspsp, tppMessage.getMessageText());
+        assertEquals("", tppMessage.getMessageText());
     }
 
     @Test
     public void getFailureMessage_unauthorized() {
-        String errorMessage = "message2";
         FeignException feignException = FeignException.errorStatus("message1", FeignExceptionHandler.error(HttpStatus.UNAUTHORIZED));
-        TppMessage tppMessage = FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR, errorMessage);
+        TppMessage tppMessage = FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR);
 
         assertEquals(MessageErrorCode.PSU_CREDENTIALS_INVALID, tppMessage.getErrorCode());
-        assertEquals(errorMessage, tppMessage.getMessageText());
+        assertEquals("", tppMessage.getMessageText());
     }
 }

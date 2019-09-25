@@ -80,11 +80,11 @@ public class PeriodicPaymentSpiImpl implements PeriodicPaymentSpi {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Initiate periodic payment failed: payment ID {}, devMessage {}", payment.getPaymentId(), devMessage);
             return SpiResponse.<SpiPeriodicPaymentInitiationResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PAYMENT_FAILED, devMessage, "The payment initiation request failed during the initial process."))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PAYMENT_FAILED, devMessage))
                            .build();
         } catch (IllegalStateException e) {
             return SpiResponse.<SpiPeriodicPaymentInitiationResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.PAYMENT_FAILED, "The payment initiation request failed during the initial process."))
+                           .error(new TppMessage(MessageErrorCode.PAYMENT_FAILED))
                            .build();
         }
     }
