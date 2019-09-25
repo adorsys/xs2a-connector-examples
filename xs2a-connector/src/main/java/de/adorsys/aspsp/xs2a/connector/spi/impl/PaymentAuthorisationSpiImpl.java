@@ -44,7 +44,6 @@ import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.*;
 import feign.FeignException;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -66,7 +65,6 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
     private static final Logger logger = LoggerFactory.getLogger(PaymentAuthorisationSpiImpl.class);
 
     private static final String DECOUPLED_PSU_MESSAGE = "Please check your app to continue...";
-    private static final String DECOUPLED_NOT_SUPPORTED_MESSAGE = "Service is not supported";
 
     private final GeneralAuthorisationService authorisationService;
     private final TokenStorageService tokenStorageService;
@@ -122,7 +120,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
             return initiatePmtOnExemptedIfRequired(contextData, spiPayment, authorisePsu, scaPaymentResponse, aspspConsentDataProvider);
         } catch (IOException e) {
             return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.TOKEN_UNKNOWN, "Getting PSU token was failed"))
+                           .error(new TppMessage(MessageErrorCode.TOKEN_UNKNOWN))
                            .build();
         }
     }
@@ -153,8 +151,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
                 String devMessage = feignExceptionReader.getErrorMessage(feignException);
                 logger.error("Request authorisation code failed: payment ID {}, authentication method ID {}, devMessage {}", spiPayment.getPaymentId(), authenticationMethodId, devMessage);
                 return SpiResponse.<SpiAuthorizationCodeResult>builder()
-                               // TODO fix response form ledgers https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/185
-                               .error(new TppMessage(MessageErrorCode.SCA_METHOD_UNKNOWN, StringUtils.defaultIfBlank(devMessage, "Sending SCA via phone not implemented yet")))
+                               .error(new TppMessage(MessageErrorCode.SCA_METHOD_UNKNOWN, devMessage))
                                .build();
             } finally {
                 authRequestInterceptor.setAccessToken(null);
@@ -168,7 +165,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
     public @NotNull SpiResponse<SpiAuthorisationDecoupledScaResponse> startScaDecoupled(@NotNull SpiContextData contextData, @NotNull String authorisationId, @Nullable String authenticationMethodId, @NotNull SpiPayment businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         if (authenticationMethodId == null) {
             return SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.SERVICE_NOT_SUPPORTED, DECOUPLED_NOT_SUPPORTED_MESSAGE))
+                           .error(new TppMessage(MessageErrorCode.SERVICE_NOT_SUPPORTED))
                            .build();
         }
         SpiResponse<SpiAuthorizationCodeResult> response = requestAuthorisationCode(contextData, authenticationMethodId, businessObject, aspspConsentDataProvider);
@@ -230,7 +227,7 @@ public class PaymentAuthorisationSpiImpl implements PaymentAuthorisationSpi {
             default:
                 // throw unsupported payment type
                 return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                               .error(new TppMessage(MessageErrorCode.PAYMENT_FAILED, String.format("Unknown payment type: %s", paymentType.getValue())))
+                               .error(new TppMessage(MessageErrorCode.PAYMENT_FAILED_TYPE_UNKNOWN, (Object) paymentType.getValue()))
                                .build();
         }
     }

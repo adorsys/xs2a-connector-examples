@@ -2,6 +2,7 @@
 
 == Table of Contents
 * SCA exemption is supported
+* Refactor: Aggregate all messages sent to TPP to message bundle
 
 == SCA exemption is supported
 
@@ -11,3 +12,9 @@ From now on, SCA exemption is possible for bulk and single payment initiation. T
 field, which is taken into account by XS2A for performing SCA exemption. If the psu authorisation spi response for
 bulk or single will be successful and `scaExempted` is `true` - SCA will not be performed, 'PaymentSpi#executePaymentWithoutSca'
 will be invoked and authorisation status will be set to `EXEMPTED`. SCA exemption is supported for multilevel SCA too.
+
+== Refactor: Aggregate all messages sent to TPP to message bundle
+
+From now on all text messages for TPP are aggregated in `error_message.properties` file. These messages are executed by
+`Psd2ErrorMapper`. Also from now on class `TppMessageInformation` has new array field `textParameters` for keeping
+values, which should be inserted into message text placeholders for TPP from `error_message.properties`.

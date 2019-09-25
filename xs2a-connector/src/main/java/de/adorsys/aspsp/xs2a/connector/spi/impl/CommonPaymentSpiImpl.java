@@ -35,14 +35,14 @@ public class CommonPaymentSpiImpl implements CommonPaymentSpi {
 	public @NotNull SpiResponse<SpiPaymentExecutionResponse> executePaymentWithoutSca(@NotNull SpiContextData contextData,
 																					  @NotNull SpiPaymentInfo payment,
 																					  @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-		return SpiResponse.<SpiPaymentExecutionResponse>builder().error(new TppMessage(MessageErrorCode.SERVICE_NOT_SUPPORTED, "Service is not supported")).build();
+		return SpiResponse.<SpiPaymentExecutionResponse>builder().error(new TppMessage(MessageErrorCode.SERVICE_NOT_SUPPORTED)).build();
 	}
 
 	@Override
 	public @NotNull SpiResponse<SpiPaymentExecutionResponse> verifyScaAuthorisationAndExecutePayment(
 			@NotNull SpiContextData contextData, @NotNull SpiScaConfirmation spiScaConfirmation,
 			@NotNull SpiPaymentInfo payment, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-		return SpiResponse.<SpiPaymentExecutionResponse>builder().error(new TppMessage(MessageErrorCode.SERVICE_NOT_SUPPORTED, "Service is not supported")).build();
+		return SpiResponse.<SpiPaymentExecutionResponse>builder().error(new TppMessage(MessageErrorCode.SERVICE_NOT_SUPPORTED)).build();
 	}
 
 }
