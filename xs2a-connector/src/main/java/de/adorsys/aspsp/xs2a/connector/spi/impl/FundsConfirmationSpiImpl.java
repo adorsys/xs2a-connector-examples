@@ -89,7 +89,7 @@ public class FundsConfirmationSpiImpl implements FundsConfirmationSpi {
                            .build();
         } catch (FeignException e) {
             return SpiResponse.<SpiFundsConfirmationResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.PAYMENT_FAILED, "The funds confirmation request failed."))
+                           .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.FUNDS_CONFIRMATION_FAILED))
                            .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);

@@ -83,11 +83,11 @@ public class BulkPaymentSpiImpl implements BulkPaymentSpi {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Initiate bulk payment failed: payment ID {}, devMessage {}", payment.getPaymentId(), devMessage);
             return SpiResponse.<SpiBulkPaymentInitiationResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PAYMENT_FAILED, devMessage, "The payment initiation request failed during the initial process."))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PAYMENT_FAILED, devMessage))
                            .build();
         } catch (IllegalStateException e) {
             return SpiResponse.<SpiBulkPaymentInitiationResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.PAYMENT_FAILED, "The payment initiation request failed during the initial process."))
+                           .error(new TppMessage(MessageErrorCode.PAYMENT_FAILED))
                            .build();
         }
     }

@@ -57,9 +57,7 @@ import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.PSUIDENTI
 public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     private static final Logger logger = LoggerFactory.getLogger(PaymentCancellationSpiImpl.class);
 
-    private static final String PAYMENT_CANCELLATION_EXCEPTION_MESSAGE = "Couldn't execute payment cancellation.";
     private static final String DECOUPLED_PSU_MESSAGE = "Please check your app to continue...";
-    private static final String DECOUPLED_NOT_SUPPORTED_MESSAGE = "Service is not supported";
 
     private final PaymentRestClient paymentRestClient;
     private final TokenStorageService tokenStorageService;
@@ -129,12 +127,12 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
                 String devMessage = feignExceptionReader.getErrorMessage(feignException);
                 logger.error("Cancel payment without sca failed: payment ID {}, devMessage {}", payment.getPaymentId(), devMessage);
                 return SpiResponse.<SpiResponse.VoidResponse>builder()
-                               .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR, devMessage, PAYMENT_CANCELLATION_EXCEPTION_MESSAGE))
+                               .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR_CANCELLATION, devMessage))
                                .build();
             }
         }
         return SpiResponse.<SpiResponse.VoidResponse>builder()
-                       .error(new TppMessage(MessageErrorCode.CANCELLATION_INVALID, "Couldn't execute payment cancellation"))
+                       .error(new TppMessage(MessageErrorCode.CANCELLATION_INVALID))
                        .build();
     }
 
@@ -155,13 +153,13 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
                                      .payload(SpiResponse.voidResponse())
                                      .build()
                            : SpiResponse.<SpiResponse.VoidResponse>builder()
-                                     .error(new TppMessage(MessageErrorCode.UNAUTHORIZED, "Couldn't authorise payment cancellation"))
+                                     .error(new TppMessage(MessageErrorCode.UNAUTHORIZED_CANCELLATION))
                                      .build();
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
-            logger.error("Verify sca authorisation and cancel payment failed: payment ID {}, devMessage {}", payment.getPaymentId(), devMessage);
+            logger.error("Verify SCA authorisation and cancel payment failed: payment ID {}, devMessage {}", payment.getPaymentId(), devMessage);
             return SpiResponse.<SpiResponse.VoidResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.PSU_CREDENTIALS_INVALID, "Couldn't execute authorisation payment cancellation"))
+                           .error(new TppMessage(MessageErrorCode.PSU_CREDENTIALS_INVALID))
                            .build();
         }
     }
@@ -192,7 +190,7 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
                            .build();
         } catch (IOException e) {
             return SpiResponse.<SpiAuthorisationStatus>builder()
-                           .error(new TppMessage(MessageErrorCode.UNAUTHORIZED, "Couldn't authorise payment cancellation"))
+                           .error(new TppMessage(MessageErrorCode.UNAUTHORIZED_CANCELLATION))
                            .build();
         }
     }
@@ -245,7 +243,7 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
                 String devMessage = feignExceptionReader.getErrorMessage(feignException);
                 logger.error("Request authorisation code failed: payment ID {}, authentication method ID {}, devMessage {}", businessObject.getPaymentId(), authenticationMethodId, devMessage);
                 return SpiResponse.<SpiAuthorizationCodeResult>builder()
-                               .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage, PAYMENT_CANCELLATION_EXCEPTION_MESSAGE))
+                               .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID_FOR_CANCELLATION, devMessage))
                                .build();
             } finally {
                 authRequestInterceptor.setAccessToken(null);
@@ -259,7 +257,7 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     public @NotNull SpiResponse<SpiAuthorisationDecoupledScaResponse> startScaDecoupled(@NotNull SpiContextData contextData, @NotNull String authorisationId, @Nullable String authenticationMethodId, @NotNull SpiPayment businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         if (authenticationMethodId == null) {
             return SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.SERVICE_NOT_SUPPORTED, DECOUPLED_NOT_SUPPORTED_MESSAGE))
+                           .error(new TppMessage(MessageErrorCode.SERVICE_NOT_SUPPORTED))
                            .build();
         }
 
