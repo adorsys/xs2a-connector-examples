@@ -108,7 +108,7 @@ public class GeneralAuthorisationService {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Authorise PSU for consent failed: authorisation ID {}, consent ID {}, devMessage {}", authorisationId, consentId, devMessage);
             return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage, "PSU authorisation request was failed."))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
                            .build();
         }
     }
@@ -126,9 +126,9 @@ public class GeneralAuthorisationService {
         if (SCAMETHODSELECTED.equals(sca.getScaStatus())) {
             return returnScaMethodSelection(aspspConsentDataProvider, sca);
         } else {
+            Object[] messageTextArgs = {SCAMETHODSELECTED.toString(), PSUIDENTIFIED.toString(), sca.getScaStatus().toString()};
             return SpiResponse.<SpiAuthorizationCodeResult>builder()
-                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR,
-                                                 String.format("Wrong state. Expecting SCA status to be %s if auth was sent or %s if auth code wasn't sent yet. But was %s.", SCAMETHODSELECTED.name(), PSUIDENTIFIED.name(), sca.getScaStatus().name())))
+                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR_SCA_STATUS, messageTextArgs))
                            .build();
         }
     }

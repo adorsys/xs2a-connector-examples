@@ -45,7 +45,6 @@ import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse.VoidResponse;
 import de.adorsys.psd2.xs2a.spi.service.AisConsentSpi;
 import feign.FeignException;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -75,7 +74,6 @@ public class AisConsentSpiImpl implements AisConsentSpi {
     private static final String DECOUPLED_USR_MSG = "Please check your app to continue... %s";
 
     private static final String SCA_STATUS_LOG = "SCA status is {}";
-    private static final String DECOUPLED_NOT_SUPPORTED_MESSAGE = "Service is not supported";
 
     private final ConsentRestClient consentRestClient;
     private final TokenStorageService tokenStorageService;
@@ -124,7 +122,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Initiate AIS consent failed: consent ID {}, devMessage {}", accountConsent.getId(), devMessage);
             return SpiResponse.<SpiInitiateAisConsentResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, FORMAT_ERROR, "Addressed account is unknown to the ASPSP or not associated to the PSU."))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, FORMAT_ERROR_UNKNOWN_ACCOUNT))
                            .build();
         }
 
@@ -198,7 +196,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Verify sca authorisation failed: consent ID {}, devMessage {}", accountConsent.getId(), devMessage);
             return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, PSU_CREDENTIALS_INVALID, devMessage, "authorisation PSU for consent was failed"))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, PSU_CREDENTIALS_INVALID, devMessage))
                            .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
@@ -220,7 +218,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Read aspspConsentData in authorise PSU failed: consent ID {}, devMessage {}", aisConsent.getId(), devMessage);
             return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(new TppMessage(TOKEN_UNKNOWN, "Missing credentials. Expecting a bearer token in the consent data object."))
+                           .error(new TppMessage(BEARER_TOKEN_EMPTY))
                            .build();
         }
 
@@ -228,9 +226,8 @@ public class AisConsentSpiImpl implements AisConsentSpi {
                 psuLoginData, password, aisConsent.getId(), originalResponse, OpTypeTO.CONSENT, aspspConsentDataProvider);
 
         if (!authorisePsu.isSuccessful()) {
-            String spiErrorMessage = authorisePsu.getErrors().get(0).getMessageText();
             return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(new TppMessage(PSU_CREDENTIALS_INVALID, StringUtils.defaultIfBlank(spiErrorMessage, "authorisation PSU for consent was failed")))
+                           .error(new TppMessage(PSU_CREDENTIALS_INVALID))
                            .build();
         }
 
@@ -240,7 +237,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             scaConsentResponse = mapToScaConsentResponse(aisConsent, aspspConsentDataProvider.loadAspspConsentData());
         } catch (IOException e) {
             return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(new TppMessage(FORMAT_ERROR, "Unknown response type"))
+                           .error(new TppMessage(FORMAT_ERROR_RESPONSE_TYPE))
                            .build();
         }
 
@@ -254,7 +251,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
                 String devMessage = feignExceptionReader.getErrorMessage(feignException);
                 logger.error("Initiate consent internal in authorise PSU failed: consent ID {}, devMessage {}", aisConsent.getId(), devMessage);
                 return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                               .error(FeignExceptionHandler.getFailureMessage(feignException, FORMAT_ERROR, "Addressed account is unknown to the ASPSP or not associated to the PSU."))
+                               .error(FeignExceptionHandler.getFailureMessage(feignException, FORMAT_ERROR_UNKNOWN_ACCOUNT))
                                .build();
             }
 
@@ -296,14 +293,14 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             } else {
                 logger.error("Process mismatch. Current SCA Status is {}", sca.getScaStatus());
                 return SpiResponse.<List<SpiAuthenticationObject>>builder()
-                               .error(new TppMessage(SCA_METHOD_UNKNOWN, "Process mismatch. PSU does not have any SCA method"))
+                               .error(new TppMessage(SCA_METHOD_UNKNOWN_PROCESS_MISMATCH))
                                .build();
             }
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Read available sca methods failed: consent ID {}, devMessage {}", businessObject.getId(), devMessage);
             return SpiResponse.<List<SpiAuthenticationObject>>builder()
-                           .error(new TppMessage(FORMAT_ERROR, "Getting SCA methods failed"))
+                           .error(new TppMessage(FORMAT_ERROR_SCA_METHODS))
                            .build();
         }
     }
@@ -326,9 +323,8 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             } catch (FeignException feignException) {
                 String devMessage = feignExceptionReader.getErrorMessage(feignException);
                 logger.error("Request authorisation code failed: consent ID {}, devMessage {}", businessObject.getId(), devMessage);
-                TppMessage errorMessage = new TppMessage(getMessageErrorCodeByStatus(feignException.status()), StringUtils.defaultIfBlank(devMessage, "No message from Bank available."));
+                TppMessage errorMessage = new TppMessage(getMessageErrorCodeByStatus(feignException.status()));
                 return SpiResponse.<SpiAuthorizationCodeResult>builder()
-                               // TODO fix response form ledgers https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/185
                                .error(errorMessage)
                                .build();
             } finally {
@@ -343,7 +339,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
     public @NotNull SpiResponse<SpiAuthorisationDecoupledScaResponse> startScaDecoupled(@NotNull SpiContextData contextData, @NotNull String authorisationId, @Nullable String authenticationMethodId, @NotNull SpiAccountConsent businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         if (authenticationMethodId == null) {
             return SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder()
-                           .error(new TppMessage(SERVICE_NOT_SUPPORTED, DECOUPLED_NOT_SUPPORTED_MESSAGE))
+                           .error(new TppMessage(SERVICE_NOT_SUPPORTED))
                            .build();
         }
 
