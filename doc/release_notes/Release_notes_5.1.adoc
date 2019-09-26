@@ -3,6 +3,7 @@
 == Table of Contents
 * SCA exemption is supported
 * Refactor: Aggregate all messages sent to TPP to message bundle
+* Bugfix: Incorrect response for Get Payment Information request
 
 == SCA exemption is supported
 
@@ -18,3 +19,8 @@ will be invoked and authorisation status will be set to `EXEMPTED`. SCA exemptio
 From now on all text messages for TPP are aggregated in `error_message.properties` file. These messages are executed by
 `Psd2ErrorMapper`. Also from now on class `TppMessageInformation` has new array field `textParameters` for keeping
 values, which should be inserted into message text placeholders for TPP from `error_message.properties`.
+
+== Bugfix: Incorrect response for Get Payment Information request
+
+From now on, Get Payment Information request `GET /v1/{payment-service}/{payment-product}/{paymentId}`
+returns correct response with payment in body.
