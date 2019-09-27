@@ -186,7 +186,7 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
             aspspConsentDataProvider.updateAspspConsentData(tokenStorageService.toBytes(scaPaymentResponse));
 
             return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .payload(new SpiPsuAuthorisationResponse(SpiAuthorisationStatus.SUCCESS, false))
+                           .payload(new SpiPsuAuthorisationResponse(false, SpiAuthorisationStatus.SUCCESS))
                            .build();
         } catch (IOException e) {
             return SpiResponse.<SpiPsuAuthorisationResponse>builder()
@@ -196,15 +196,15 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
     }
 
     @Override
-    public SpiResponse<List<SpiAuthenticationObject>> requestAvailableScaMethods(@NotNull SpiContextData contextData,
-                                                                                 SpiPayment businessObject,
-                                                                                 @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+    public SpiResponse<SpiAvailableScaMethodsResponse> requestAvailableScaMethods(@NotNull SpiContextData contextData,
+                                                                                  SpiPayment businessObject,
+                                                                                  @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         byte[] aspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
 
         SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class);
         if (businessObject.getPaymentStatus() == TransactionStatus.RCVD || sca.getScaStatus() == ScaStatusTO.EXEMPTED) {
-            return SpiResponse.<List<SpiAuthenticationObject>>builder()
-                           .payload(Collections.emptyList())
+            return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
+                           .payload(new SpiAvailableScaMethodsResponse(Collections.emptyList()))
                            .build();
         }
         authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
@@ -215,11 +215,11 @@ public class PaymentCancellationSpiImpl implements PaymentCancellationSpi {
                                                                          .map(scaMethodConverter::toSpiAuthenticationObjectList)
                                                                          .orElseGet(Collections::emptyList);
         return authenticationObjectList.isEmpty()
-                       ? SpiResponse.<List<SpiAuthenticationObject>>builder()
+                       ? SpiResponse.<SpiAvailableScaMethodsResponse>builder()
                                  .error(new TppMessage(MessageErrorCode.UNAUTHORIZED, "Getting SCA methods failed"))
                                  .build()
-                       : SpiResponse.<List<SpiAuthenticationObject>>builder()
-                                 .payload(authenticationObjectList)
+                       : SpiResponse.<SpiAvailableScaMethodsResponse>builder()
+                                 .payload(new SpiAvailableScaMethodsResponse(authenticationObjectList))
                                  .build();
     }
 
