@@ -273,8 +273,8 @@ public class AisConsentSpiImpl implements AisConsentSpi {
      * response.
      */
     @Override
-    public SpiResponse<List<SpiAuthenticationObject>> requestAvailableScaMethods(@NotNull SpiContextData contextData,
-                                                                                 SpiAccountConsent businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+    public SpiResponse<SpiAvailableScaMethodsResponse> requestAvailableScaMethods(@NotNull SpiContextData contextData,
+                                                                                  SpiAccountConsent businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         try {
             SCAConsentResponseTO sca = consentDataService.response(aspspConsentDataProvider.loadAspspConsentData(), SCAConsentResponseTO.class);
             if (sca.getScaMethods() != null) {
@@ -287,19 +287,19 @@ public class AisConsentSpiImpl implements AisConsentSpi {
                 List<ScaUserDataTO> scaMethods = sca.getScaMethods();
                 List<SpiAuthenticationObject> authenticationObjects = scaMethodConverter.toSpiAuthenticationObjectList(scaMethods);
                 aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(sca));
-                return SpiResponse.<List<SpiAuthenticationObject>>builder()
-                               .payload(authenticationObjects)
+                return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
+                               .payload(new SpiAvailableScaMethodsResponse(authenticationObjects))
                                .build();
             } else {
                 logger.error("Process mismatch. Current SCA Status is {}", sca.getScaStatus());
-                return SpiResponse.<List<SpiAuthenticationObject>>builder()
+                return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
                                .error(new TppMessage(SCA_METHOD_UNKNOWN_PROCESS_MISMATCH))
                                .build();
             }
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Read available sca methods failed: consent ID {}, devMessage {}", businessObject.getId(), devMessage);
-            return SpiResponse.<List<SpiAuthenticationObject>>builder()
+            return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
                            .error(new TppMessage(FORMAT_ERROR_SCA_METHODS))
                            .build();
         }
