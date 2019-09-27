@@ -16,7 +16,7 @@ import java.util.Optional;
 public class FeignExceptionReader {
     private final ObjectMapper objectMapper;
 
-    String getErrorMessage(FeignException feignException) {
+    public String getErrorMessage(FeignException feignException) {
         return Optional.ofNullable(feignException.content())
                        .map(this::readTree)
                        .map(this::getDevMessage)

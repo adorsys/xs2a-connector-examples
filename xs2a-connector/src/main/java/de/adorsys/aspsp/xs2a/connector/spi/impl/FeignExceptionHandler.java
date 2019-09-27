@@ -20,7 +20,7 @@ public class FeignExceptionHandler {
     private FeignExceptionHandler() {
     }
 
-    static TppMessage getFailureMessage(FeignException e, MessageErrorCode errorCode) {
+    public static TppMessage getFailureMessage(FeignException e, MessageErrorCode errorCode) {
         logger.error(e.getMessage(), e);
 
         switch (HttpStatus.valueOf(e.status())) {
@@ -33,10 +33,10 @@ public class FeignExceptionHandler {
         }
     }
 
-    static TppMessage getFailureMessage(FeignException e, MessageErrorCode errorCode, String errorMessageAspsp) {
+    public static TppMessage getFailureMessage(FeignException e, MessageErrorCode errorCode, String errorMessageAspsp) {
         return shouldUseNormalErrorMessage(e, errorCode, errorMessageAspsp)
                        ? getFailureMessage(e, errorCode)
-                       : getFailureMessage(e, errorCode, errorMessageAspsp);
+                       : new TppMessage(errorCode, errorMessageAspsp);
     }
 
     private static boolean shouldUseNormalErrorMessage(FeignException e, MessageErrorCode errorCode, String errorMessageAspsp) {
