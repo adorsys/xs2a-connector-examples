@@ -4,6 +4,7 @@
 * SCA exemption is supported
 * Refactor: Aggregate all messages sent to TPP to message bundle
 * Bugfix: Incorrect response for Get Payment Information request
+* Refactor: Initiate payment and authorisation related methods
 
 == SCA exemption is supported
 
@@ -24,3 +25,7 @@ values, which should be inserted into message text placeholders for TPP from `er
 
 From now on, Get Payment Information request `GET /v1/{payment-service}/{payment-product}/{paymentId}`
 returns correct response with payment in body.
+
+== Refactor: Initiate payment and authorisation related methods
+
+Refactoring SPI implementation for initiate payment and authorisation related methods (remove duplicated code).
