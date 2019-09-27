@@ -3,9 +3,14 @@
 == Table of Contents
 
 * Refactor: Aggregate all messages sent to TPP to message bundle
+* Refactor: Initiate payment and authorisation related methods
 
 == Refactor: Aggregate all messages sent to TPP to message bundle
 
 From now on all text messages for TPP are aggregated in `error_message.properties` file. These messages are executed by
 `Psd2ErrorMapper`. Also from now on class `TppMessageInformation` has new array field `textParameters` for keeping
 values, which should be inserted into message text placeholders for TPP from `error_message.properties`.
+
+== Refactor: Initiate payment and authorisation related methods
+
+Refactoring SPI implementation for initiate payment and authorisation related methods (remove duplicated code).
