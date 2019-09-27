@@ -40,7 +40,7 @@ import java.util.Optional;
 
 @Component
 public class FundsConfirmationSpiImpl implements FundsConfirmationSpi {
-    private static final Logger logger = LoggerFactory.getLogger(SinglePaymentSpiImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(FundsConfirmationSpiImpl.class);
 
     private final AccountRestClient restClient;
     private final LedgersSpiAccountMapper accountMapper;
