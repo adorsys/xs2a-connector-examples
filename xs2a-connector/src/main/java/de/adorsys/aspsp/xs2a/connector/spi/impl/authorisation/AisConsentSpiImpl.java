@@ -14,32 +14,30 @@
  * limitations under the License.
  */
 
-package de.adorsys.aspsp.xs2a.connector.spi.impl;
+package de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.AisConsentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaLoginMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
-import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCALoginResponseTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
+import de.adorsys.ledgers.middleware.api.domain.sca.*;
 import de.adorsys.ledgers.middleware.api.domain.um.AisConsentTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
-import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
 import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.ConsentRestClient;
-import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.core.consent.ConsentStatus;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountConsent;
-import de.adorsys.psd2.xs2a.spi.domain.authorisation.*;
+import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
+import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiInitiateAisConsentResponse;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiVerifyScaAuthorisationResponse;
-import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse.VoidResponse;
 import de.adorsys.psd2.xs2a.spi.service.AisConsentSpi;
@@ -47,7 +45,6 @@ import feign.FeignException;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -57,15 +54,12 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.List;
 
-import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.*;
-import static de.adorsys.psd2.xs2a.core.error.MessageErrorCode.*;
 import static java.lang.String.format;
 
 @Component
-public class AisConsentSpiImpl implements AisConsentSpi {
+public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsent, SCAConsentResponseTO> implements AisConsentSpi {
     private static final Logger logger = LoggerFactory.getLogger(AisConsentSpiImpl.class);
     private static final String USER_LOGIN = "{userLogin}";
     private static final String CONSENT_ID = "{consentId}";
@@ -80,8 +74,6 @@ public class AisConsentSpiImpl implements AisConsentSpi {
     private final AisConsentMapper aisConsentMapper;
     private final AuthRequestInterceptor authRequestInterceptor;
     private final AspspConsentDataService consentDataService;
-    private final GeneralAuthorisationService authorisationService;
-    private final ScaMethodConverter scaMethodConverter;
     private final ScaLoginMapper scaLoginMapper;
     private final FeignExceptionReader feignExceptionReader;
 
@@ -92,13 +84,12 @@ public class AisConsentSpiImpl implements AisConsentSpi {
                              AisConsentMapper aisConsentMapper, AuthRequestInterceptor authRequestInterceptor,
                              AspspConsentDataService consentDataService, GeneralAuthorisationService authorisationService,
                              ScaMethodConverter scaMethodConverter, ScaLoginMapper scaLoginMapper, FeignExceptionReader feignExceptionReader) {
+        super(authRequestInterceptor, consentDataService, authorisationService, scaMethodConverter, feignExceptionReader);
         this.consentRestClient = consentRestClient;
         this.tokenStorageService = tokenStorageService;
         this.aisConsentMapper = aisConsentMapper;
         this.authRequestInterceptor = authRequestInterceptor;
         this.consentDataService = consentDataService;
-        this.authorisationService = authorisationService;
-        this.scaMethodConverter = scaMethodConverter;
         this.scaLoginMapper = scaLoginMapper;
         this.feignExceptionReader = feignExceptionReader;
     }
@@ -122,7 +113,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Initiate AIS consent failed: consent ID {}, devMessage {}", accountConsent.getId(), devMessage);
             return SpiResponse.<SpiInitiateAisConsentResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, FORMAT_ERROR_UNKNOWN_ACCOUNT))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR_UNKNOWN_ACCOUNT))
                            .build();
         }
 
@@ -145,7 +136,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
                                                       SpiAccountConsent accountConsent, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         try {
             SCAConsentResponseTO sca = consentDataService.response(aspspConsentDataProvider.loadAspspConsentData(), SCAConsentResponseTO.class, false);
-            sca.setScaStatus(FINALISED);
+            sca.setScaStatus(ScaStatusTO.FINALISED);
             sca.setStatusDate(LocalDateTime.now());
             sca.setBearerToken(new BearerTokenTO());// remove existing token.
 
@@ -157,11 +148,11 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Revoke AIS consent failed: consent ID {}, devMessage {}", accountConsent.getId(), devMessage);
             return SpiResponse.<VoidResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, PSU_CREDENTIALS_INVALID, feignException.getMessage()))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, feignException.getMessage()))
                            .build();
         }
 
-        return SpiResponse.<SpiResponse.VoidResponse>builder()
+        return SpiResponse.<VoidResponse>builder()
                        .payload(SpiResponse.voidResponse())
                        .build();
     }
@@ -196,172 +187,27 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Verify sca authorisation failed: consent ID {}, devMessage {}", accountConsent.getId(), devMessage);
             return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, PSU_CREDENTIALS_INVALID, devMessage))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
                            .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
     }
 
-    /*
-     * Login the user. On successful login, store the token in the resulting status
-     * object.
-     */
-    @Override
-    public SpiResponse<SpiPsuAuthorisationResponse> authorisePsu(@NotNull SpiContextData contextData,
-                                                                 @NotNull SpiPsuData psuLoginData, String password, SpiAccountConsent aisConsent,
-                                                                 @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        SCAConsentResponseTO originalResponse;
-        try {
-            originalResponse = consentDataService.response(aspspConsentDataProvider.loadAspspConsentData(), SCAConsentResponseTO.class, false);
-        } catch (FeignException feignException) {
-            String devMessage = feignExceptionReader.getErrorMessage(feignException);
-            logger.error("Read aspspConsentData in authorise PSU failed: consent ID {}, devMessage {}", aisConsent.getId(), devMessage);
-            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(new TppMessage(BEARER_TOKEN_EMPTY))
-                           .build();
-        }
-
-        SpiResponse<SpiPsuAuthorisationResponse> authorisePsu = authorisationService.authorisePsuForConsent(
-                psuLoginData, password, aisConsent.getId(), originalResponse, OpTypeTO.CONSENT, aspspConsentDataProvider);
-
-        if (!authorisePsu.isSuccessful()) {
-            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(new TppMessage(PSU_CREDENTIALS_INVALID))
-                           .build();
-        }
-
-        SCAConsentResponseTO scaConsentResponse;
-
-        try {
-            scaConsentResponse = mapToScaConsentResponse(aisConsent, aspspConsentDataProvider.loadAspspConsentData());
-        } catch (IOException e) {
-            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(new TppMessage(FORMAT_ERROR_RESPONSE_TYPE))
-                           .build();
-        }
-
-        if (EnumSet.of(EXEMPTED, PSUAUTHENTICATED, PSUIDENTIFIED).contains(scaConsentResponse.getScaStatus())) {
-
-            SCAConsentResponseTO aisConsentResponse;
-
-            try {
-                aisConsentResponse = initiateConsentInternal(aisConsent, aspspConsentDataProvider.loadAspspConsentData());
-            } catch (FeignException feignException) {
-                String devMessage = feignExceptionReader.getErrorMessage(feignException);
-                logger.error("Initiate consent internal in authorise PSU failed: consent ID {}, devMessage {}", aisConsent.getId(), devMessage);
-                return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                               .error(FeignExceptionHandler.getFailureMessage(feignException, FORMAT_ERROR_UNKNOWN_ACCOUNT))
-                               .build();
-            }
-
-            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(aisConsentResponse));
-
-            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .payload(authorisePsu.getPayload())
-                           .build();
-        }// DO not change. AuthorizePsu is mutable. //TODO @fpo fix this
-
-        return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                       .payload(authorisePsu.getPayload())
-                       .build();
-    }
-
-    /**
-     * This call must follow an init consent request, therefore we are expecting the
-     * {@link AspspConsentData} object to contain a {@link SCAConsentResponseTO}
-     * response.
-     */
-    @Override
-    public SpiResponse<SpiAvailableScaMethodsResponse> requestAvailableScaMethods(@NotNull SpiContextData contextData,
-                                                                                  SpiAccountConsent businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        try {
-            SCAConsentResponseTO sca = consentDataService.response(aspspConsentDataProvider.loadAspspConsentData(), SCAConsentResponseTO.class);
-            if (sca.getScaMethods() != null) {
-
-                // Validate the access token
-                BearerTokenTO bearerTokenTO = authorisationService.validateToken(sca.getBearerToken().getAccess_token());
-                sca.setBearerToken(bearerTokenTO);
-
-                // Return contained sca methods.
-                List<ScaUserDataTO> scaMethods = sca.getScaMethods();
-                List<SpiAuthenticationObject> authenticationObjects = scaMethodConverter.toSpiAuthenticationObjectList(scaMethods);
-                aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(sca));
-                return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
-                               .payload(new SpiAvailableScaMethodsResponse(authenticationObjects))
-                               .build();
-            } else {
-                logger.error("Process mismatch. Current SCA Status is {}", sca.getScaStatus());
-                return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
-                               .error(new TppMessage(SCA_METHOD_UNKNOWN_PROCESS_MISMATCH))
-                               .build();
-            }
-        } catch (FeignException feignException) {
-            String devMessage = feignExceptionReader.getErrorMessage(feignException);
-            logger.error("Read available sca methods failed: consent ID {}, devMessage {}", businessObject.getId(), devMessage);
-            return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
-                           .error(new TppMessage(FORMAT_ERROR_SCA_METHODS))
-                           .build();
-        }
-    }
-
-    @Override
-    public @NotNull SpiResponse<SpiAuthorizationCodeResult> requestAuthorisationCode(@NotNull SpiContextData contextData, @NotNull String authenticationMethodId, @NotNull SpiAccountConsent businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        SCAConsentResponseTO sca = consentDataService.response(aspspConsentDataProvider.loadAspspConsentData(), SCAConsentResponseTO.class);
-        if (EnumSet.of(PSUIDENTIFIED, PSUAUTHENTICATED).contains(sca.getScaStatus())) {
-            try {
-                authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
-                logger.info("Request to generate SCA {}", sca.getConsentId());
-                ResponseEntity<SCAConsentResponseTO> selectMethodResponse = consentRestClient.selectMethod(sca.getConsentId(), sca.getAuthorisationId(), authenticationMethodId);
-                logger.info("SCA was send, operationId is {}", sca.getConsentId());
-                SCAConsentResponseTO authCodeResponse = selectMethodResponse.getBody();
-                if (authCodeResponse != null && authCodeResponse.getBearerToken() == null) {
-                    // TODO: hack. Core banking is supposed to always return a token. @fpo
-                    authCodeResponse.setBearerToken(sca.getBearerToken());
-                }
-                return authorisationService.returnScaMethodSelection(aspspConsentDataProvider, authCodeResponse);
-            } catch (FeignException feignException) {
-                String devMessage = feignExceptionReader.getErrorMessage(feignException);
-                logger.error("Request authorisation code failed: consent ID {}, devMessage {}", businessObject.getId(), devMessage);
-                TppMessage errorMessage = new TppMessage(getMessageErrorCodeByStatus(feignException.status()));
-                return SpiResponse.<SpiAuthorizationCodeResult>builder()
-                               .error(errorMessage)
-                               .build();
-            } finally {
-                authRequestInterceptor.setAccessToken(null);
-            }
-        } else {
-            return authorisationService.getResponseIfScaSelected(aspspConsentDataProvider, sca);
-        }
-    }
-
-    @Override
-    public @NotNull SpiResponse<SpiAuthorisationDecoupledScaResponse> startScaDecoupled(@NotNull SpiContextData contextData, @NotNull String authorisationId, @Nullable String authenticationMethodId, @NotNull SpiAccountConsent businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        if (authenticationMethodId == null) {
-            return SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder()
-                           .error(new TppMessage(SERVICE_NOT_SUPPORTED))
-                           .build();
-        }
-
-        SpiResponse<SpiAuthorizationCodeResult> response = requestAuthorisationCode(contextData, authenticationMethodId, businessObject, aspspConsentDataProvider);
-
-        String psuMessage = generatePsuMessage(contextData, authorisationId, aspspConsentDataProvider, response);
-        return response.hasError()
-                       ? SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder().error(response.getErrors()).build()
-                       : SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder().payload(new SpiAuthorisationDecoupledScaResponse(psuMessage)).build();
-    }
-
     ConsentStatus getConsentStatus(SCAConsentResponseTO consentResponse) {
         if (consentResponse != null
                     && consentResponse.isMultilevelScaRequired()
                     && consentResponse.isPartiallyAuthorised()
-                    && FINALISED.equals(consentResponse.getScaStatus())) {
+                    && ScaStatusTO.FINALISED.equals(consentResponse.getScaStatus())) {
             return ConsentStatus.PARTIALLY_AUTHORISED;
         }
         return ConsentStatus.VALID;
     }
 
-    private String generatePsuMessage(@NotNull SpiContextData contextData, @NotNull String authorisationId, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, SpiResponse<SpiAuthorizationCodeResult> response) {
+    @Override
+    protected String generatePsuMessage(@NotNull SpiContextData contextData, @NotNull String authorisationId,
+                                        @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider,
+                                        SpiResponse<SpiAuthorizationCodeResult> response) {
         List<String> challengeDataParts = Arrays.asList(response.getPayload().getChallengeData().getAdditionalInformation().split(" "));
         int indexOfTan = challengeDataParts.indexOf("is") + 1;
         String encryptedConsentId = "";
@@ -382,7 +228,7 @@ public class AisConsentSpiImpl implements AisConsentSpi {
             @NotNull SpiAccountConsent accountConsent,
             @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, T responsePayload) {
         SCAConsentResponseTO response = new SCAConsentResponseTO();
-        response.setScaStatus(STARTED);
+        response.setScaStatus(ScaStatusTO.STARTED);
         responsePayload.setAccountAccess(accountConsent.getAccess());
         aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response, false));
         return SpiResponse.<T>builder()
@@ -390,7 +236,40 @@ public class AisConsentSpiImpl implements AisConsentSpi {
                        .build();
     }
 
-    private SCAConsentResponseTO mapToScaConsentResponse(SpiAccountConsent businessObject, byte[] aspspConsentData) throws IOException {
+    @Override
+    protected OpTypeTO getOtpType() {
+        return OpTypeTO.CONSENT;
+    }
+
+    @Override
+    protected TppMessage getAuthorisePsuFailureMessage(SpiAccountConsent businessObject) {
+        logger.error("Initiate consent failed: consent ID {}", businessObject.getId());
+        return new TppMessage(MessageErrorCode.FORMAT_ERROR_UNKNOWN_ACCOUNT);
+    }
+
+    @Override
+    protected ResponseEntity<SCAConsentResponseTO> getSelectMethodResponse(@NotNull String authenticationMethodId, SCAConsentResponseTO sca) {
+        return consentRestClient.selectMethod(sca.getConsentId(), sca.getAuthorisationId(), authenticationMethodId);
+    }
+
+    @Override
+    protected SCAConsentResponseTO getSCAConsentResponse(@NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, boolean checkCredentials) {
+        byte[] aspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
+        return consentDataService.response(aspspConsentData, SCAConsentResponseTO.class, checkCredentials);
+    }
+
+    @Override
+    protected String getBusinessObjectId(SpiAccountConsent businessObject) {
+        return businessObject.getId();
+    }
+
+    @Override
+    protected SCAResponseTO initiateBusinessObject(SpiAccountConsent businessObject, byte[] aspspConsentData) {
+        return initiateConsentInternal(businessObject, aspspConsentData);
+    }
+
+    @Override
+    protected SCAConsentResponseTO mapToScaResponse(SpiAccountConsent businessObject, byte[] aspspConsentData, SCAConsentResponseTO originalResponse) throws IOException {
         SCALoginResponseTO scaResponseTO = tokenStorageService.fromBytes(aspspConsentData, SCALoginResponseTO.class);
         SCAConsentResponseTO consentResponse = scaLoginMapper.toConsentResponse(scaResponseTO);
         consentResponse.setObjectType(SCAConsentResponseTO.class.getSimpleName());
@@ -417,19 +296,5 @@ public class AisConsentSpiImpl implements AisConsentSpi {
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
-    }
-
-    private MessageErrorCode getMessageErrorCodeByStatus(int status) {
-        MessageErrorCode errorCode = INTERNAL_SERVER_ERROR;
-        if (status == 501) {
-            errorCode = SCA_METHOD_UNKNOWN;
-        }
-        if (Arrays.asList(400, 401, 403).contains(status)) {
-            errorCode = FORMAT_ERROR;
-        }
-        if (status == 404) {
-            errorCode = PSU_CREDENTIALS_INVALID;
-        }
-        return errorCode;
     }
 }

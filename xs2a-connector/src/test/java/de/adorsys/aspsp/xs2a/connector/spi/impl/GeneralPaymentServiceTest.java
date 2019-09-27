@@ -2,6 +2,7 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
@@ -28,13 +29,20 @@ import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class GeneralPaymentServiceTest {
-    @InjectMocks private GeneralPaymentService generalPaymentService;
-    @Mock private SpiAspspConsentDataProvider spiAspspConsentDataProvider;
-    @Mock private AuthRequestInterceptor authRequestInterceptor;
-    @Mock private AspspConsentDataService consentDataService;
-    @Mock private PaymentRestClient paymentRestClient;
-    @Mock private ObjectMapper objectMapper;
-    @Mock private LedgersSpiPaymentMapper paymentMapper;
+    @InjectMocks
+    private GeneralPaymentService generalPaymentService;
+    @Mock
+    private SpiAspspConsentDataProvider spiAspspConsentDataProvider;
+    @Mock
+    private AuthRequestInterceptor authRequestInterceptor;
+    @Mock
+    private AspspConsentDataService consentDataService;
+    @Mock
+    private PaymentRestClient paymentRestClient;
+    @Mock
+    private ObjectMapper objectMapper;
+    @Mock
+    private LedgersSpiPaymentMapper paymentMapper;
 
     @Test
     public void getPaymentByIdTransactionStatusRCVD() {

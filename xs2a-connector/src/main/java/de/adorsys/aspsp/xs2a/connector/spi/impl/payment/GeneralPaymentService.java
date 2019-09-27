@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package de.adorsys.aspsp.xs2a.connector.spi.impl;
+package de.adorsys.aspsp.xs2a.connector.spi.impl.payment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
@@ -142,7 +145,7 @@ public class GeneralPaymentService {
      * @param aspspConsentDataProvider the credential data container access
      * @param responsePayload          the instantiated payload object
      */
-    <T extends SpiPaymentInitiationResponse> SpiResponse<T> firstCallInstantiatingPayment(
+    public <T extends SpiPaymentInitiationResponse> SpiResponse<T> firstCallInstantiatingPayment(
             @NotNull PaymentTypeTO paymentType, @NotNull SpiPayment payment,
             @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, T responsePayload
     ) {
@@ -165,7 +168,7 @@ public class GeneralPaymentService {
                        .build();
     }
 
-    @NotNull SpiResponse<SpiPaymentExecutionResponse> executePaymentWithoutSca(@NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+    public @NotNull SpiResponse<SpiPaymentExecutionResponse> executePaymentWithoutSca(@NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         try {
             // First check if there is any payment response ongoing.
             SCAPaymentResponseTO response = consentDataService.response(aspspConsentDataProvider.loadAspspConsentData(), SCAPaymentResponseTO.class);
@@ -197,7 +200,7 @@ public class GeneralPaymentService {
         }
     }
 
-    <P extends SpiPayment, TO> SpiResponse<P> getPaymentById(P payment, SpiAspspConsentDataProvider aspspConsentDataProvider, Class<TO> clazz, Function<TO, P> mapperToSpiPayment, PaymentTypeTO paymentTypeTO) {
+    public <P extends SpiPayment, TO> SpiResponse<P> getPaymentById(P payment, SpiAspspConsentDataProvider aspspConsentDataProvider, Class<TO> clazz, Function<TO, P> mapperToSpiPayment, PaymentTypeTO paymentTypeTO) {
 
         Function<P, SpiResponse<P>> buildSuccessResponse = p -> SpiResponse.<P>builder().payload(p).build();
 
@@ -236,7 +239,7 @@ public class GeneralPaymentService {
         }
     }
 
-    <P> SCAPaymentResponseTO initiatePaymentInternal(P payment, byte[] initialAspspConsentData, PaymentTypeTO paymentTypeTO, Object request) {
+    public <P> SCAPaymentResponseTO initiatePaymentInternal(P payment, byte[] initialAspspConsentData, PaymentTypeTO paymentTypeTO, Object request) {
         try {
             SCAPaymentResponseTO sca = getSCAPaymentResponseTO(initialAspspConsentData);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
@@ -247,7 +250,7 @@ public class GeneralPaymentService {
         }
     }
 
-    SCAPaymentResponseTO getSCAPaymentResponseTO(byte[] initialAspspConsentData) {
+    public SCAPaymentResponseTO getSCAPaymentResponseTO(byte[] initialAspspConsentData) {
         return consentDataService.response(initialAspspConsentData, SCAPaymentResponseTO.class);
     }
 
