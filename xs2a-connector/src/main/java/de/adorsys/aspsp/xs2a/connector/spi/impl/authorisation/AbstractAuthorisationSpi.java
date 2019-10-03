@@ -6,6 +6,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
@@ -107,10 +108,7 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
                                .payload(new SpiAvailableScaMethodsResponse(authenticationObjects))
                                .build();
             } else {
-                log.error("Process mismatch. Current SCA Status is {}", sca.getScaStatus());
-                return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
-                               .error(new TppMessage(SCA_METHOD_UNKNOWN_PROCESS_MISMATCH))
-                               .build();
+                return getForZeroScaMethods(sca.getScaStatus());
             }
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
@@ -119,6 +117,13 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
                            .error(new TppMessage(FORMAT_ERROR_SCA_METHODS))
                            .build();
         }
+    }
+
+    SpiResponse<SpiAvailableScaMethodsResponse> getForZeroScaMethods(ScaStatusTO status) {
+        log.error("Process mismatch. Current SCA Status is {}", status);
+        return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
+                       .error(new TppMessage(SCA_METHOD_UNKNOWN_PROCESS_MISMATCH))
+                       .build();
     }
 
     protected Optional<List<ScaUserDataTO>> getScaMethods(R sca) {
