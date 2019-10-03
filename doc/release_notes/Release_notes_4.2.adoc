@@ -1,3 +1,10 @@
 = Release notes v. 4.2
 
 == Table of Contents
+
+* Bugfix: wrong scaStatus after consent authorisation with zero sca methods for Embedded approach
+
+== Bugfix: wrong scaStatus after consent authorisation with zero sca methods for Embedded approach
+
+From now on when you read SCA status of the consent authorisation with zero SCA methods,
+you'll receive response `{"scaStatus": "failed"}`.

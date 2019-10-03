@@ -502,8 +502,8 @@ public class AisConsentSpiImplTest {
         SpiResponse<List<SpiAuthenticationObject>> actual = spi.requestAvailableScaMethods(SPI_CONTEXT_DATA,
                                                                                            spiAccountConsent, spiAspspConsentDataProvider);
 
-        assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.SCA_METHOD_UNKNOWN_PROCESS_MISMATCH, actual.getErrors().get(0).getErrorCode());
+        assertFalse(actual.hasError());
+        assertEquals(Collections.emptyList(), actual.getPayload());
 
         verify(spiAspspConsentDataProvider).loadAspspConsentData();
         verify(consentDataService).response(CONSENT_DATA_BYTES, SCAConsentResponseTO.class, true);
