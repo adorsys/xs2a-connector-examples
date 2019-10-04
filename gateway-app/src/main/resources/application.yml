@@ -67,44 +67,6 @@ xs2a:
       # How long, in seconds, the response from a pre-flight request can be cached by clients
       max-age: 3600
 
-validation:
-  payment:
-    endToEndIdentification:
-      maxLength: 35
-    ultimateDebtor:
-      maxLength: 70
-    ultimateCreditor:
-      maxLength: 70
-    streetName:
-      maxLength: 100
-    buildingNumber:
-      maxLength: 20
-    townName:
-      maxLength: 100
-    postCode:
-      maxLength: 5
-    pan:
-      maxLength: 35
-    maskedPan:
-      maxLength: 35
-    msisdn:
-      maxLength: 35
-    executionRule:
-      use: required
-      maxLength: 140
-    reference:
-      use: required
-      maxLength: 35
-    referenceType:
-      maxLength: 35
-    referenceIssuer:
-      maxLength: 35
-    creditorName:
-      use: required
-      maxLength: 70
-    creditorId:
-      use: none
-
 #---
 #spring:
 #  profiles: default
@@ -114,17 +76,6 @@ validation:
 #    serialization:
 #      write_dates_as_timestamps: false
 #      wrap-root-value: true
-
----
-spring:
-  profiles: austria
-
-validation:
-  payment:
-    creditorId:
-      use: optional
-      maxLength: 35
-
 
 ---
 spring:

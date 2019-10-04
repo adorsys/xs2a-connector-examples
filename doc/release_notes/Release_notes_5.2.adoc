@@ -2,8 +2,15 @@
 
 == Table of Contents
 * Bugfix: wrong scaStatus after consent authorisation with zero sca methods for Embedded approach
+* Support country specific extensions for payments in the ASPSP profile
 
 == Bugfix: wrong scaStatus after consent authorisation with zero sca methods for Embedded approach
 
 From now on when you read SCA status of the consent authorisation with zero SCA methods,
 you'll receive response `{"scaStatus": "failed"}`.
+
+== Support country specific extensions for payments in the ASPSP profile
+
+From now on, ASPSP is able to configure payment for different countries `countryValidationSupported` property in PIS block.
+The configuration parameter takes country as ISO 3166-1 alpha-2 code (DE, AT, UA, etc). Germany (DE) is supported by default and Austria (AT) is available to choose from.
+Previous validation payment configuration in `application.yml` file has been removed.
