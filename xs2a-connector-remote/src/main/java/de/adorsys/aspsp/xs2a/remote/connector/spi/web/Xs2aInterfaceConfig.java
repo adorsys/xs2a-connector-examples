@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Import;
 
 @Configuration
 @ComponentScan(basePackages = {"de.adorsys.psd2.xs2a.component",
-        "de.adorsys.aspsp.xs2a.remote.connector.config.validation",
         "de.adorsys.psd2.xs2a.config.factory",
         "de.adorsys.psd2.xs2a.domain",
         "de.adorsys.psd2.xs2a.service",
