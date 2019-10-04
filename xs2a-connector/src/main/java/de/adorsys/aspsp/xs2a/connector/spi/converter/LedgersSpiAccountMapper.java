@@ -37,7 +37,9 @@ public abstract class LedgersSpiAccountMapper {
                                d.getLinkedAccounts(),
                                SpiUsageType.valueOf(d.getUsageType().name()),
                                d.getDetails(),
-                               toSpiAccountBalancesList(d.getBalances())))
+                               toSpiAccountBalancesList(d.getBalances()),
+                               null,
+                               null))
                        .orElse(null);
     } //Full manual mapping here, no extra tests necessary
 
