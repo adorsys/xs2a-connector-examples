@@ -1,0 +1,9 @@
+= Release notes v. 5.1.2
+
+== Table of Contents
+
+* Add support of balance types
+
+== Add support of balance types
+
+From now on, balance types other than `interimAvailable` are supported.
