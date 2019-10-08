@@ -4,6 +4,7 @@
 * Bugfix: wrong scaStatus after consent authorisation with zero sca methods for Embedded approach
 * Support country specific extensions for payments in the ASPSP profile
 * Support Additional Account Information in AIS
+* Use own ObjectMapper instance instead of one provided by XS2A
 
 == Bugfix: wrong scaStatus after consent authorisation with zero sca methods for Embedded approach
 
@@ -23,3 +24,7 @@ There is new `SpiAdditionalInformationAccess` field In `SpiAccountConsent` objec
 to retrieve additional information (`ownerName` and `ownerAddress`) about PSU by it's account reference.
 This information ASPSP can provide through `ownerName` and `ownerAddress` fields in `SpiAccountDetails` object,
 during invoking `requestAccountList` or `requestAccountDetailForAccount` methods in AccountSpi.
+
+== Use own ObjectMapper instance instead of one provided by XS2A
+
+Dependency on `ObjectMapper` instance used by XS2A has been removed and replaced with own `ObjectMapper` configuration.
