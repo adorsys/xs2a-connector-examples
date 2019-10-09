@@ -1,10 +1,8 @@
 package de.adorsys.ledgers.rest.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import feign.codec.Encoder;
 import org.springframework.beans.factory.ObjectFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.cloud.openfeign.FeignFormatterRegistrar;
 import org.springframework.cloud.openfeign.support.SpringEncoder;
@@ -24,10 +22,7 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 public class FeignConfig {
 
     @Bean
-    public Encoder feignEncoder(@Qualifier(value = "objectMapper") ObjectMapper originalObjectMapper) {
-        ObjectMapper objectMapper = originalObjectMapper.copy();
-        objectMapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
-        @SuppressWarnings("rawtypes")
+    public Encoder feignEncoder(ObjectMapper objectMapper) {
         HttpMessageConverter jacksonConverter = new MappingJackson2HttpMessageConverter(objectMapper);
         ObjectFactory<HttpMessageConverters> objectFactory = () -> new HttpMessageConverters(jacksonConverter);
         return new SpringEncoder(objectFactory);
@@ -41,5 +36,4 @@ public class FeignConfig {
             registrar.registerFormatters(formatterRegistry);
         };
     }
-
 }
