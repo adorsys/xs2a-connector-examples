@@ -1,0 +1,11 @@
+= Release notes v. 5.1.1
+
+== Table of Contents
+
+* Add support for OAuth Redirect
+
+== Add support for OAuth Redirect
+
+From now on, connector supports OAUTH flow for Redirect approach.
+In case of OAUTH custom header for indicating oauth mode(`X-OAUTH-PREFERRED` by default) should be passed with value `true`, along with valid bearer token in `Authorization` header.
+Name of the custom header can be configured via `oauth.header-name` property.
