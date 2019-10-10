@@ -2,6 +2,7 @@ package de.adorsys.aspsp.xs2a.remote.connector.oauth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
+import de.adorsys.psd2.mapper.Xs2aObjectMapper;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.exception.MessageCategory;
 import de.adorsys.psd2.xs2a.web.error.TppErrorMessageBuilder;
@@ -47,7 +48,7 @@ public class TokenAuthenticationFilterTest {
 
     @Before
     public void setUp() {
-        tokenAuthenticationFilter = new TokenAuthenticationFilter(OAUTH_MODE_HEADER_NAME, new ObjectMapper(), tppErrorMessageBuilder, tokenValidationService);
+        tokenAuthenticationFilter = new TokenAuthenticationFilter(OAUTH_MODE_HEADER_NAME, new Xs2aObjectMapper(), tppErrorMessageBuilder, tokenValidationService);
     }
 
     @Test
