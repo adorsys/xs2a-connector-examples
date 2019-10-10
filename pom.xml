@@ -22,7 +22,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.adorsys.ledgers</groupId>
 	<artifactId>xs2a-connector-examples</artifactId>
-    <version>5.1.1-SNAPSHOT</version>
+    <version>5.1.1</version>
 	<packaging>pom</packaging>
 
 	<name>XS2A Connector Examples</name>
