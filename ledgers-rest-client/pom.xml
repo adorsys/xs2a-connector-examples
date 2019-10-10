@@ -19,6 +19,12 @@
 			<groupId>de.adorsys.ledgers</groupId>
 			<artifactId>ledgers-middleware-rest-api</artifactId>
 			<version>${ledgers.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-data-jpa</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- spring dependencies -->
