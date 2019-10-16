@@ -104,7 +104,7 @@
 		<commons-io.version>2.6</commons-io.version>
 
 		<jackson.version>2.9.9</jackson.version>
-		<jackson-databind.version>2.9.9.3</jackson-databind.version>
+		<jackson-databind.version>2.9.10</jackson-databind.version>
 
 		<!--Sonar -->
 		<maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
