@@ -7,6 +7,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
+import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.middleware.api.domain.sca.*;
 import de.adorsys.ledgers.middleware.api.domain.um.AccessTokenTO;
 import de.adorsys.ledgers.middleware.api.domain.um.AisConsentTO;
@@ -19,7 +20,6 @@ import de.adorsys.psd2.xs2a.core.consent.ConsentStatus;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.sca.ChallengeData;
-import de.adorsys.psd2.xs2a.core.tpp.TppInfo;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountConsent;
@@ -43,7 +43,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.UUID;
 
 import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.*;
 import static org.junit.Assert.*;
@@ -56,13 +55,10 @@ public class AisConsentSpiImplTest {
     private static final String AUTHORISATION_ID = "authorisation id";
     private static final String AUTHENTICATION_METHOD_ID = "authentication method id";
 
-    private static final UUID X_REQUEST_ID = UUID.randomUUID();
-    private static final UUID INTERNAL_REQUEST_ID = UUID.randomUUID();
     private static final String CONSENT_ID = "c966f143-f6a2-41db-9036-8abaeeef3af7";
     private static final byte[] CONSENT_DATA_BYTES = "consent_data".getBytes();
 
-    private static final SpiPsuData SPI_PSU_DATA = new SpiPsuData("psu", null, null, null, null);
-    private static final SpiContextData SPI_CONTEXT_DATA = new SpiContextData(SPI_PSU_DATA, new TppInfo(), X_REQUEST_ID, INTERNAL_REQUEST_ID);
+    private static final SpiContextData SPI_CONTEXT_DATA = TestSpiDataProvider.getSpiContextData();
     private static final AspspConsentData ASPSP_CONSENT_DATA = new AspspConsentData(CONSENT_DATA_BYTES, CONSENT_ID);
     private static final String RESPONSE_STATUS_200_WITH_EMPTY_BODY = "Response status was 200, but the body was empty!";
     private static final String ONLINE_BANKING_URL_FIELD_NAME = "onlineBankingUrl";
@@ -383,8 +379,6 @@ public class AisConsentSpiImplTest {
         when(consentDataService.response(CONSENT_DATA_BYTES, SCAConsentResponseTO.class))
                 .thenReturn(initialConsentResponseTO);
 
-        ArgumentCaptor<SCAConsentResponseTO> consentResponseCaptor = ArgumentCaptor.forClass(SCAConsentResponseTO.class);
-
         SpiScaConfirmation spiScaConfirmation = new SpiScaConfirmation();
         spiScaConfirmation.setTanNumber("tan");
 
@@ -417,8 +411,6 @@ public class AisConsentSpiImplTest {
 
         when(consentDataService.response(CONSENT_DATA_BYTES, SCAConsentResponseTO.class))
                 .thenReturn(initialConsentResponseTO);
-
-        ArgumentCaptor<SCAConsentResponseTO> consentResponseCaptor = ArgumentCaptor.forClass(SCAConsentResponseTO.class);
 
         SpiScaConfirmation spiScaConfirmation = new SpiScaConfirmation();
         spiScaConfirmation.setTanNumber("tan");

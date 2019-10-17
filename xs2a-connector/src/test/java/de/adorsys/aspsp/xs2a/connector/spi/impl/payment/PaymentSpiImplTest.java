@@ -1,9 +1,8 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment;
 
-import de.adorsys.psd2.xs2a.core.tpp.TppInfo;
+import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
-import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
@@ -21,8 +20,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.util.UUID;
-
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -30,7 +27,7 @@ public class PaymentSpiImplTest {
 
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
     private static final SpiPsuData PSU_ID_DATA = new SpiPsuData("1", "2", "3", "4", "5");
-    private static final SpiContextData SPI_CONTEXT_DATA = new SpiContextData(PSU_ID_DATA, new TppInfo(), UUID.randomUUID(), UUID.randomUUID());
+    private static final SpiContextData SPI_CONTEXT_DATA = TestSpiDataProvider.getSpiContextData();
 
     @InjectMocks
     private PaymentSpiImpl paymentSpi;
@@ -73,10 +70,5 @@ public class PaymentSpiImplTest {
         paymentSpi.initiatePayment(SPI_CONTEXT_DATA, spiPayment, spiAspspConsentDataProvider);
 
         verify(bulkPaymentSpi, times(1)).initiatePayment(SPI_CONTEXT_DATA, spiPayment, spiAspspConsentDataProvider);
-    }
-
-    private SpiResponse<SpiAuthorizationCodeResult> buildSuccessSpiResponse() {
-        return SpiResponse.<SpiAuthorizationCodeResult>builder()
-                       .build();
     }
 }
