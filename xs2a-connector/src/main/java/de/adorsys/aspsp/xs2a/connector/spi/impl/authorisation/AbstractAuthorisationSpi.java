@@ -2,6 +2,7 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
@@ -114,7 +115,7 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             log.error("Read available sca methods failed: consent ID {}, devMessage {}", getBusinessObjectId(businessObject), devMessage);
             return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
-                           .error(new TppMessage(FORMAT_ERROR_SCA_METHODS))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, FORMAT_ERROR_SCA_METHODS))
                            .build();
         }
     }
@@ -214,8 +215,15 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
                                                                                  SpiResponse<SpiPsuAuthorisationResponse> authorisePsu,
                                                                                  R scaBusinessObjectResponse) {
         if (EnumSet.of(EXEMPTED, PSUAUTHENTICATED, PSUIDENTIFIED).contains(scaBusinessObjectResponse.getScaStatus())) {
+            SCAResponseTO aisConsentResponse;
+            try {
+                aisConsentResponse = initiateBusinessObject(businessObject, aspspConsentDataProvider.loadAspspConsentData());
+            } catch (FeignException feignException) {
+                return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                               .error(FeignExceptionHandler.getFailureMessage(feignException, PSU_CREDENTIALS_INVALID))
+                               .build();
+            }
 
-            SCAResponseTO aisConsentResponse = initiateBusinessObject(businessObject, aspspConsentDataProvider.loadAspspConsentData());
             if (aisConsentResponse == null) {
                 return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                                .error(getAuthorisePsuFailureMessage(businessObject))
