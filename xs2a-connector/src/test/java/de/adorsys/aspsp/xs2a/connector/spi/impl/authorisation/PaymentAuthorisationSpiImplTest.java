@@ -135,6 +135,44 @@ public class PaymentAuthorisationSpiImplTest {
     }
 
     @Test
+    public void authorisePsu_FeignException() throws IOException {
+        businessObject.setPaymentProduct(null);
+        when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
+        SCAPaymentResponseTO scaPaymentResponseTO = getScaPaymentResponseTO(ScaStatusTO.PSUIDENTIFIED);
+        scaPaymentResponseTO.setScaMethods(Collections.emptyList());
+        when(consentDataService.response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false)).thenReturn(scaPaymentResponseTO);
+
+        when(authorisationService.authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, scaPaymentResponseTO, OpTypeTO.PAYMENT, spiAspspConsentDataProvider))
+                .thenReturn(SpiResponse.<SpiAuthorisationStatus>builder()
+                                    .payload(SpiAuthorisationStatus.SUCCESS)
+                                    .build());
+        SCALoginResponseTO scaLoginResponseTO = new SCALoginResponseTO();
+        scaLoginResponseTO.setScaStatus(ScaStatusTO.PSUIDENTIFIED);
+        when(tokenStorageService.fromBytes(CONSENT_DATA_BYTES, SCALoginResponseTO.class))
+                .thenReturn(scaLoginResponseTO);
+
+        when(paymentInternalGeneral.initiatePaymentInternal(businessObject, CONSENT_DATA_BYTES)).thenThrow(buildFeignException());
+
+        SpiResponse<SpiAuthorisationStatus> actual = authorisationSpi.authorisePsu(SPI_CONTEXT_DATA, PSU_ID_DATA, SECRET,
+                                                                                   businessObject, spiAspspConsentDataProvider);
+
+        assertTrue(actual.hasError());
+        assertEquals(MessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
+
+        verify(spiAspspConsentDataProvider, times(3)).loadAspspConsentData();
+        verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false);
+        verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, scaPaymentResponseTO, OpTypeTO.PAYMENT, spiAspspConsentDataProvider);
+        verify(tokenStorageService, times(1)).fromBytes(CONSENT_DATA_BYTES, SCALoginResponseTO.class);
+        verify(paymentInternalGeneral, times(1)).initiatePaymentInternal(businessObject, CONSENT_DATA_BYTES);
+        verify(consentDataService, never()).store(any());
+        verify(spiAspspConsentDataProvider, times(1)).updateAspspConsentData(any());
+    }
+
+    private FeignException buildFeignException() {
+        return FeignExceptionHandler.getException(HttpStatus.UNAUTHORIZED, "message");
+    }
+
+    @Test
     public void authorisePsu_onSuccessfulAuthorisation_paymentInternalError() throws IOException {
         businessObject.setPaymentProduct(null);
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
@@ -150,7 +188,6 @@ public class PaymentAuthorisationSpiImplTest {
         scaLoginResponseTO.setScaStatus(ScaStatusTO.PSUIDENTIFIED);
         when(tokenStorageService.fromBytes(CONSENT_DATA_BYTES, SCALoginResponseTO.class))
                 .thenReturn(scaLoginResponseTO);
-        doNothing().when(cmsPaymentStatusUpdateService).updatePaymentStatus(PAYMENT_ID, spiAspspConsentDataProvider);
 
         when(paymentInternalGeneral.initiatePaymentInternal(businessObject, CONSENT_DATA_BYTES)).thenReturn(null);
 
@@ -164,7 +201,6 @@ public class PaymentAuthorisationSpiImplTest {
         verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false);
         verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, scaPaymentResponseTO, OpTypeTO.PAYMENT, spiAspspConsentDataProvider);
         verify(tokenStorageService, times(1)).fromBytes(CONSENT_DATA_BYTES, SCALoginResponseTO.class);
-        verify(cmsPaymentStatusUpdateService, times(1)).updatePaymentStatus(PAYMENT_ID, spiAspspConsentDataProvider);
         verify(paymentInternalGeneral, times(1)).initiatePaymentInternal(businessObject, CONSENT_DATA_BYTES);
         verify(consentDataService, never()).store(any());
         verify(spiAspspConsentDataProvider, times(1)).updateAspspConsentData(any());
