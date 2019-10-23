@@ -91,15 +91,17 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
     @Override
     protected SpiResponse<SpiAuthorisationStatus> onSuccessfulAuthorisation(SpiPayment businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, SpiResponse<SpiAuthorisationStatus> authorisePsu, SCAPaymentResponseTO scaBusinessObjectResponse) {
         try {
-            cmsPaymentStatusUpdateService.updatePaymentStatus(businessObject.getPaymentId(), aspspConsentDataProvider);
             aspspConsentDataProvider.updateAspspConsentData(tokenStorageService.toBytes(scaBusinessObjectResponse));
         } catch (IOException e) {
             return SpiResponse.<SpiAuthorisationStatus>builder()
                            .error(new TppMessage(MessageErrorCode.TOKEN_UNKNOWN))
                            .build();
         }
-
-        return super.onSuccessfulAuthorisation(businessObject, aspspConsentDataProvider, authorisePsu, scaBusinessObjectResponse);
+        SpiResponse<SpiAuthorisationStatus> response =  super.onSuccessfulAuthorisation(businessObject, aspspConsentDataProvider, authorisePsu, scaBusinessObjectResponse);
+        if (!response.hasError()) {
+            cmsPaymentStatusUpdateService.updatePaymentStatus(businessObject.getPaymentId(), aspspConsentDataProvider);
+        }
+        return response;
     }
 
     @Override
