@@ -1,0 +1,11 @@
+= Release notes v. 5.3.1
+
+== Table of Contents
+
+* Support integrated and pre-step OAuth based on custom header
+
+== Support integrated and pre-step OAuth based on custom header
+
+From now on, connector is capable of switching between Redirect, integrated OAuth and pre-step OAuth approaches based on custom OAuth header(`X-OAUTH-PREFERRED`).
+Supported values are `pre-step` and `integrated`.
+In order for OAuth modes to work correctly, `OAUTH` SCA approach has to be marked as supported in ASPSP profile.
