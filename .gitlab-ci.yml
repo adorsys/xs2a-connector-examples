@@ -215,7 +215,8 @@ Deploy Openshift (Release):
 Push to DockerHub (Nightly):
   stage: "Package"
   only:
-    - schedules
+    variables:
+      - $NIGHTLY == "true"
   variables:
     DOCKER_TAG: nightly
   <<: *build_dockerhub_image
@@ -223,7 +224,8 @@ Push to DockerHub (Nightly):
 Deploy Openshift (Nightly):
   stage: "Deployment"
   only:
-    - schedules
+    variables:
+      - $NIGHTLY == "true"
   variables:
     <<: *variables
     DOCKER_TAG: nightly
