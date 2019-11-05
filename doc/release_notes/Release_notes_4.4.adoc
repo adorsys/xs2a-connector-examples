@@ -1,3 +1,10 @@
 = Release notes v. 4.4
 
 == Table of Contents
+
+* Incorrect scaStatus for failed authorisation PIS/AIS/Payments-Cancellation
+
+== Incorrect scaStatus for failed authorisation PIS/AIS/Payments-Cancellation
+
+From now on, update psu data and initiate endpoints for PIS,AIS and Payment-Cancellation return correct scaStatus in
+case of failed authorisations.

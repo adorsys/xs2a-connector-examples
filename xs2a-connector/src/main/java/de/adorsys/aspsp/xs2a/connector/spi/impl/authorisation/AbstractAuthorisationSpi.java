@@ -65,7 +65,7 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
 
         if (!authorisePsu.isSuccessful()) {
             return SpiResponse.<SpiAuthorisationStatus>builder()
-                           .error(new TppMessage(PSU_CREDENTIALS_INVALID))
+                           .payload(SpiAuthorisationStatus.FAILURE)
                            .build();
         }
 

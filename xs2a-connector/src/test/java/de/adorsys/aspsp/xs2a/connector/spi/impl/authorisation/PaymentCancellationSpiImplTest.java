@@ -59,6 +59,7 @@ public class PaymentCancellationSpiImplTest {
     private static final String PAYMENT_ID = "c966f143-f6a2-41db-9036-8abaeeef3af7";
     private static final String SECRET = "12345";
     private static final String TAN_NUMBER = "32453454";
+    private static final SpiAuthorisationStatus SPI_AUTHORISATION_STATUS_FAILURE = SpiAuthorisationStatus.FAILURE;
 
     @InjectMocks
     private PaymentCancellationSpiImpl authorisationSpi;
@@ -347,7 +348,7 @@ public class PaymentCancellationSpiImplTest {
     }
 
     @Test
-    public void authorisePsu_failure() {
+    public void authorisePsu_failureStatus() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAPaymentResponseTO scaPaymentResponseTO = getScaPaymentResponseTO(ScaStatusTO.PSUIDENTIFIED);
         scaPaymentResponseTO.setScaMethods(Collections.emptyList());
@@ -360,8 +361,8 @@ public class PaymentCancellationSpiImplTest {
         SpiResponse<SpiAuthorisationStatus> actual = authorisationSpi.authorisePsu(SPI_CONTEXT_DATA, PSU_ID_DATA, SECRET,
                                                                                    businessObject, spiAspspConsentDataProvider);
 
-        assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
+        assertFalse(actual.hasError());
+        assertEquals(actual.getPayload(), SPI_AUTHORISATION_STATUS_FAILURE);
 
         verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
         verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false);
