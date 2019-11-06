@@ -49,6 +49,7 @@ public class PeriodicPaymentSpiImpl extends AbstractPaymentSpi<SpiPeriodicPaymen
 
     @Override
     public @NotNull SpiResponse<SpiPeriodicPayment> getPaymentById(@NotNull SpiContextData contextData,
+                                                                   @NotNull String acceptMediaType,
                                                                    @NotNull SpiPeriodicPayment payment,
                                                                    @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         return paymentService.getPaymentById(payment, aspspConsentDataProvider, PeriodicPaymentTO.class,

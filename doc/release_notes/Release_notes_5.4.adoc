@@ -3,8 +3,13 @@
 == Table of Contents
 
 * Incorrect scaStatus for failed authorisation PIS/AIS/Payments-Cancellation
+* Support Get Transaction Status Response with raw format
 
 == Incorrect scaStatus for failed authorisation PIS/AIS/Payments-Cancellation
 
 From now on, update psu data and initiate endpoints for PIS,AIS and Payment-Cancellation return correct scaStatus in
 case of failed authorisations.
+
+== Support Get Transaction Status Response with raw format
+
+From now on, on receiving Get Transaction Status request(`GET /v1/{payment-service}/{paymentId}/status`) with `Accept` header set to `application/xml`, connector will return mocked xml status in the response.

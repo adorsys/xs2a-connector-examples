@@ -71,10 +71,13 @@ public abstract class AbstractPaymentSpi<P extends SpiPayment, R extends SpiPaym
     }
 
     public @NotNull SpiResponse<SpiGetPaymentStatusResponse> getPaymentStatusById(@NotNull SpiContextData contextData,
+                                                                                  @NotNull String acceptMediaType,
                                                                                   @NotNull P payment,
                                                                                   @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         return paymentService.getPaymentStatusById(PaymentTypeTO.valueOf(payment.getPaymentType().name()),
-                                                   payment.getPaymentId(), payment.getPaymentStatus(),
+                                                   acceptMediaType,
+                                                   payment.getPaymentId(),
+                                                   payment.getPaymentStatus(),
                                                    aspspConsentDataProvider.loadAspspConsentData());
     }
 

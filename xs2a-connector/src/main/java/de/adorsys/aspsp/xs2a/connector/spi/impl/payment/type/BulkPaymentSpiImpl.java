@@ -49,6 +49,7 @@ public class BulkPaymentSpiImpl extends AbstractPaymentSpi<SpiBulkPayment, SpiBu
 
     @Override
     public @NotNull SpiResponse<SpiBulkPayment> getPaymentById(@NotNull SpiContextData contextData,
+                                                               @NotNull String acceptMediaType,
                                                                @NotNull SpiBulkPayment payment,
                                                                @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         return paymentService.getPaymentById(payment, aspspConsentDataProvider, BulkPaymentTO.class,

@@ -45,6 +45,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -54,27 +56,46 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 @Component
+@PropertySource("classpath:mock-data.properties")
 public class GeneralPaymentService {
     private static final Logger logger = LoggerFactory.getLogger(GeneralPaymentService.class);
+    private static final String XML_MEDIA_TYPE = "application/xml";
+
     private final PaymentRestClient paymentRestClient;
     private final AuthRequestInterceptor authRequestInterceptor;
     private final AspspConsentDataService consentDataService;
     private final FeignExceptionReader feignExceptionReader;
     private final ObjectMapper objectMapper;
+    private final String transactionStatusXmlBody;
 
     public GeneralPaymentService(PaymentRestClient ledgersRestClient,
-                                 AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService consentDataService, FeignExceptionReader feignExceptionReader, ObjectMapper objectMapper) {
+                                 AuthRequestInterceptor authRequestInterceptor,
+                                 AspspConsentDataService consentDataService,
+                                 FeignExceptionReader feignExceptionReader,
+                                 ObjectMapper objectMapper,
+                                 @Value("${test-transaction-status-xml-body}") String transactionStatusXmlBody) {
         this.paymentRestClient = ledgersRestClient;
         this.authRequestInterceptor = authRequestInterceptor;
         this.consentDataService = consentDataService;
         this.feignExceptionReader = feignExceptionReader;
         this.objectMapper = objectMapper;
+        this.transactionStatusXmlBody = transactionStatusXmlBody;
     }
 
-    public SpiResponse<SpiGetPaymentStatusResponse> getPaymentStatusById(@NotNull PaymentTypeTO paymentType, @NotNull String paymentId, @NotNull TransactionStatus spiTransactionStatus, @NotNull byte[] aspspConsentData) {
+    public SpiResponse<SpiGetPaymentStatusResponse> getPaymentStatusById(@NotNull PaymentTypeTO paymentType,
+                                                                         @NotNull String acceptMediaType,
+                                                                         @NotNull String paymentId,
+                                                                         @NotNull TransactionStatus spiTransactionStatus,
+                                                                         @NotNull byte[] aspspConsentData) {
+        if (acceptMediaType.equals(XML_MEDIA_TYPE)) {
+            return SpiResponse.<SpiGetPaymentStatusResponse>builder()
+                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_XML, transactionStatusXmlBody.getBytes()))
+                           .build();
+        }
+
         if (!TransactionStatus.ACSP.equals(spiTransactionStatus)) {
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, null))
+                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null))
                            .build();
         }
         try {
@@ -89,7 +110,7 @@ public class GeneralPaymentService {
                                                                                              Response.builder().status(HttpStatus.BAD_REQUEST.value()).build()));
             logger.info("Transaction status: {}", status);
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                           .payload(new SpiGetPaymentStatusResponse(status, null))
+                           .payload(new SpiGetPaymentStatusResponse(status, null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null))
                            .build();
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);

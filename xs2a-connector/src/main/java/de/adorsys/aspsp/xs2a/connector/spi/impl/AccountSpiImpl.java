@@ -54,7 +54,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
-@PropertySource("classpath:transaction.properties")
+@PropertySource("classpath:mock-data.properties")
 public class AccountSpiImpl implements AccountSpi {
 
     private static final String RESPONSE_STATUS_200_WITH_EMPTY_BODY = "Response status was 200, but the body was empty!";
