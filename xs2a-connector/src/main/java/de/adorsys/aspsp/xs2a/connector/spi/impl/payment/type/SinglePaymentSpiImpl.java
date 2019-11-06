@@ -48,6 +48,7 @@ public class SinglePaymentSpiImpl extends AbstractPaymentSpi<SpiSinglePayment, S
 
     @Override
     public @NotNull SpiResponse<SpiSinglePayment> getPaymentById(@NotNull SpiContextData contextData,
+                                                                 @NotNull String acceptMediaType,
                                                                  @NotNull SpiSinglePayment payment,
                                                                  @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         return paymentService.getPaymentById(payment, aspspConsentDataProvider, SinglePaymentTO.class,
