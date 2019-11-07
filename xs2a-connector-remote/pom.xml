@@ -122,7 +122,14 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Sprinfox and swagger UI -->
+        <dependency>
+            <groupId>de.adorsys.psd2</groupId>
+            <artifactId>json-reader</artifactId>
+            <version>${xs2a.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Sprinfox and swagger UI -->
 		<dependency>
 			<groupId>io.swagger</groupId>
 			<artifactId>swagger-annotations</artifactId>

@@ -1,0 +1,9 @@
+= Release notes v. 5.3.2
+
+== Table of Contents
+
+* Bugfix: Prevent OAuth type resolution from being influenced by previous requests
+
+== Bugfix: Prevent OAuth type resolution from being influenced by previous requests
+
+From now on, OAuth type will be resolved correctly according to the OAuth header value and won't be influenced by previous requests.
