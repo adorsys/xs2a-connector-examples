@@ -3,8 +3,14 @@
 == Table of Contents
 
 * Incorrect scaStatus for failed authorisation PIS/AIS/Payments-Cancellation
+* Bugfix: Incorrect response for Get Payment Information request
 
 == Incorrect scaStatus for failed authorisation PIS/AIS/Payments-Cancellation
 
 From now on, update psu data and initiate endpoints for PIS,AIS and Payment-Cancellation return correct scaStatus in
 case of failed authorisations.
+
+== Bugfix: Incorrect response for Get Payment Information request
+
+From now on, Get Payment Information request `GET /v1/{payment-service}/{payment-product}/{paymentId}`
+returns correct response with payment in body.

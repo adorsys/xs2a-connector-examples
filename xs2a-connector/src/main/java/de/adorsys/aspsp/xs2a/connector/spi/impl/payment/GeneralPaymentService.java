@@ -203,12 +203,13 @@ public class GeneralPaymentService {
     public <P extends SpiPayment, TO> SpiResponse<P> getPaymentById(P payment, SpiAspspConsentDataProvider aspspConsentDataProvider, Class<TO> clazz, Function<TO, P> mapperToSpiPayment, PaymentTypeTO paymentTypeTO) {
 
         Function<P, SpiResponse<P>> buildSuccessResponse = p -> SpiResponse.<P>builder().payload(p).build();
-        Supplier<SpiResponse<P>> buildFailedResponse = () -> SpiResponse.<P>builder().error(new TppMessage(MessageErrorCode.PAYMENT_FAILED_INCORRECT_ID)).build();
-        Function<Object, TO> convertToTransferObject = o -> objectMapper.convertValue(o, clazz);
 
         if (!TransactionStatus.ACSP.equals(payment.getPaymentStatus())) {
-            buildSuccessResponse.apply(payment);
+            return buildSuccessResponse.apply(payment);
         }
+
+        Supplier<SpiResponse<P>> buildFailedResponse = () -> SpiResponse.<P>builder().error(new TppMessage(MessageErrorCode.PAYMENT_FAILED_INCORRECT_ID)).build();
+        Function<Object, TO> convertToTransferObject = o -> objectMapper.convertValue(o, clazz);
 
         return getPaymentFromLedgers(payment.getPaymentId(), payment.toString(), aspspConsentDataProvider.loadAspspConsentData(), paymentTypeTO)
                        .map(convertToTransferObject)
