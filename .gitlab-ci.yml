@@ -231,24 +231,3 @@ Deploy Openshift (Release):
     OPENSHIFT_NAMESPACE: "${DEMO_NAMESPACE}"
   <<: *deploy_openshift
 
-###########
-# nightly #
-###########
-
-Push to DockerHub (Nightly):
-  stage: "Package"
-  only:
-    - schedules
-  variables:
-    DOCKER_TAG: nightly
-  <<: *build_dockerhub_image
-
-Deploy Openshift (Nightly):
-  stage: "Deployment"
-  only:
-    - schedules
-  variables:
-    <<: *variables
-    DOCKER_TAG: nightly
-    OPENSHIFT_NAMESPACE: "${INTEG_NAMESPACE}"
-  <<: *deploy_openshift
