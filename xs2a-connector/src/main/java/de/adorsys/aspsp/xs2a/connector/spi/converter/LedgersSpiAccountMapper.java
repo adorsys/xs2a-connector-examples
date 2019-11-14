@@ -67,7 +67,8 @@ public abstract class LedgersSpiAccountMapper {
                                t.getRemittanceInformationStructured(),
                                t.getPurposeCode(),
                                t.getBankTransactionCode(),
-                               t.getProprietaryBankTransactionCode()))
+                               t.getProprietaryBankTransactionCode(),
+                               null)) // TODO Map proper field https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1100
                        .orElse(null);
     }  //Full manual mapping here, no extra tests necessary
 

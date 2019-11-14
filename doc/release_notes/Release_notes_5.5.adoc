@@ -1,3 +1,17 @@
 = Release notes v. 5.5
 
 == Table of Contents
+
+* Add supporting standing order report
+
+== Add supporting standing order report
+
+From now on, it's possible to return standing order report on Get Transaction List request(`GET /v1/accounts/{{account_id}}/transactions`) in JSON format.
+Connector will return mocked data in the response for this request.
+
+This endpoint is offering a list of all standing orders related to a dedicated payment account in case of `bookingStatus` parameter equals `information`.
+The support the `information` feature is optional for the ASPSP. Error code will be responded if it is not supported.
+The query parameters `dateFrom`, `dateTo`, `withBalance`, `deltaList` and `entryReferenceFrom` will be ignored and have no effect on the
+result.
+
+Only `application/JSON` for response content type is supported.
