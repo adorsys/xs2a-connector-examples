@@ -114,7 +114,7 @@ public class AccountSpiImplTest {
 
     @Test
     public void requestTransactionsForAccount_success() {
-        SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, MediaType.APPLICATION_XML_VALUE, true, DATE_FROM, DATE_TO, BookingStatus.BOOKED,
+        SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, buildSpiTransactionReportParameters(MediaType.APPLICATION_XML_VALUE),
                                                                                                     accountReference, spiAccountConsent, aspspConsentDataProvider);
 
         verify(accountRestClient, times(1)).getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO);
@@ -128,7 +128,7 @@ public class AccountSpiImplTest {
 
     @Test
     public void requestTransactionsForAccount_useDefaultAcceptTypeWhenNull_success() {
-        SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, null, true, DATE_FROM, DATE_TO, BookingStatus.BOOKED,
+        SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, buildSpiTransactionReportParameters(null),
                                                                                                     accountReference, spiAccountConsent, aspspConsentDataProvider);
 
         verify(accountRestClient, times(1)).getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO);
@@ -142,7 +142,7 @@ public class AccountSpiImplTest {
 
     @Test
     public void requestTransactionsForAccount_useDefaultAcceptTypeWhenWildcard_success() {
-        SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, "*/*", true, DATE_FROM, DATE_TO, BookingStatus.BOOKED,
+        SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, buildSpiTransactionReportParameters("*/*"),
                                                                                                     accountReference, spiAccountConsent, aspspConsentDataProvider);
 
         verify(accountRestClient, times(1)).getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO);
@@ -158,7 +158,7 @@ public class AccountSpiImplTest {
     public void requestTransactionsForAccount_withException() {
         when(tokenService.store(scaResponseTO)).thenThrow(getFeignException());
 
-        SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, MediaType.APPLICATION_XML_VALUE, true, DATE_FROM, DATE_TO, BookingStatus.BOOKED,
+        SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, buildSpiTransactionReportParameters(MediaType.APPLICATION_XML_VALUE),
                                                                                                     accountReference, spiAccountConsent, aspspConsentDataProvider);
 
         assertFalse(actualResponse.getErrors().isEmpty());
@@ -352,5 +352,9 @@ public class AccountSpiImplTest {
         verify(tokenService, times(1)).response(BYTES);
         verify(authRequestInterceptor, times(1)).setAccessToken(scaResponseTO.getBearerToken().getAccess_token());
         verify(authRequestInterceptor, times(1)).setAccessToken(null);
+    }
+
+    private SpiTransactionReportParameters buildSpiTransactionReportParameters(String mediaType) {
+        return new SpiTransactionReportParameters(mediaType, true, DATE_FROM, DATE_TO, BookingStatus.BOOKED, null, null);
     }
 }
