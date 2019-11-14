@@ -15,6 +15,7 @@ import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
+import de.adorsys.psd2.xs2a.core.pis.FrequencyCode;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
@@ -63,6 +64,7 @@ public class PeriodicPaymentSpiImplTest {
         payment = new SpiPeriodicPayment(PAYMENT_PRODUCT);
         payment.setPaymentId(PAYMENT_ID);
         payment.setPaymentStatus(TransactionStatus.RCVD);
+        payment.setFrequency(FrequencyCode.MONTHLY);
 
         paymentService = mock(GeneralPaymentService.class);
         consentDataService = mock(AspspConsentDataService.class);

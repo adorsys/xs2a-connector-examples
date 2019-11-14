@@ -26,6 +26,9 @@ import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
 import de.adorsys.psd2.xs2a.core.consent.AisConsentRequestType;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
+import de.adorsys.psd2.xs2a.core.pis.FrequencyCode;
+import de.adorsys.psd2.xs2a.core.pis.PisDayOfExecution;
+import de.adorsys.psd2.xs2a.core.pis.PisExecutionRule;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
@@ -47,10 +50,8 @@ import org.springframework.stereotype.Component;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.time.Month;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -161,6 +162,16 @@ public class AccountSpiImpl implements AccountSpi {
                                                                            @NotNull SpiAccountReference accountReference,
                                                                            @NotNull SpiAccountConsent accountConsent,
                                                                            @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        // TODO Remove it https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1100
+        if (BookingStatus.INFORMATION == bookingStatus) {
+            logger.info("Retrieving mock standing order report for account: {}", accountReference.getResourceId());
+            SpiTransactionReport transactionReport = new SpiTransactionReport(null, createStandingOrderReportMock(), null,
+                                                                              processAcceptMediaType(acceptMediaType), null);
+            return SpiResponse.<SpiTransactionReport>builder()
+                           .payload(transactionReport)
+                           .build();
+        }
+
         byte[] aspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
 
         try {
@@ -426,4 +437,21 @@ public class AccountSpiImpl implements AccountSpi {
     private TppMessage buildTppMessage(FeignException exception) {
         return FeignExceptionHandler.getFailureMessage(exception, MessageErrorCode.CONSENT_UNKNOWN_400, feignExceptionReader.getErrorMessage(exception));
     }
+
+    private List<SpiTransaction> createStandingOrderReportMock() {
+        SpiStandingOrderDetails standingOrderDetails = new SpiStandingOrderDetails(LocalDate.of(2021, Month.JANUARY, 4),
+                                                                                   LocalDate.of(2021, Month.MARCH, 12),
+                                                                                   PisExecutionRule.PRECEDING, null,
+                                                                                   FrequencyCode.MONTHLYVARIABLE, null, null, PisDayOfExecution._24, null);
+        SpiAccountReference spiAccountReference = new SpiAccountReference("11111-11118", "10023-999999999", "DE52500105173911841934",
+                                                                          "52500105173911841934", "AEYPM5403H", "PM5403H****", null, Currency.getInstance("EUR"));
+        SpiAdditionalInformationStructured additionalInformationStructured = new SpiAdditionalInformationStructured(standingOrderDetails);
+        return Collections.singletonList(new SpiTransaction(null, null, null, null, null,
+                                                            null, null, null, null, null,
+                                                            "John Miles", spiAccountReference, null, null,
+                                                            null, null, null,
+                                                            "", null, "PMNT-ICDT-STDO",
+                                                            null, additionalInformationStructured));
+    }
+
 }

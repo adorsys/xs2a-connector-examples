@@ -39,6 +39,8 @@ public abstract class LedgersSpiPaymentMapper {
 
     @Mapping(target = "executionRule", expression = "java(LedgersSpiPaymentMapperHelper.mapPisExecutionRule(payment.getExecutionRule()))")
     @Mapping(target = "dayOfExecution", expression = "java(LedgersSpiPaymentMapperHelper.mapPisDayOfExecution(payment.getDayOfExecution()))")
+    @Mapping(target = "frequency", expression = "java(LedgersSpiPaymentMapperHelper.mapFrequencyCode(payment.getFrequency()))")     // TODO Remove it https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1100
+
     public abstract PeriodicPaymentTO toPeriodicPaymentTO(SpiPeriodicPayment payment);
 
     public abstract BulkPaymentTO toBulkPaymentTO(SpiBulkPayment payment);
