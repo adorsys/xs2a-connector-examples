@@ -51,7 +51,7 @@ variables: &variables
 .build_dockerhub_image: &build_dockerhub_image
   script:
     - docker login -u $DOCKER_HUB_LOGIN -p $DOCKER_HUB_PASS
-    - docker build -t "adorsys/xs2a-connector-examples:$DOCKER_TAG" .
+    - docker build -t "adorsys/xs2a-connector-examples:$DOCKER_TAG" gateway-app
     - docker push "adorsys/xs2a-connector-examples:$DOCKER_TAG"
     - docker logout
 
@@ -129,7 +129,7 @@ Unit Tests:
 Test Docker Image:
   stage: "Test"
   script:
-    - docker build -t "adorsys/xs2a-connector-examples:test" .
+    - docker build -t "adorsys/xs2a-connector-examples:test" gateway-app
 
 ###########
 # develop #

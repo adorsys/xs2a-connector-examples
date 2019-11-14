@@ -35,6 +35,14 @@ spring:
     serialization:
       write_dates_as_timestamps: false
       wrap-root-value: true
+  datasource:
+    url: jdbc:postgresql://localhost/consent
+    username: cms
+    password: cms
+  jpa:
+    properties:
+      hibernate:
+        default_schema: consent
 
 ledgers.url: http://localhost:8088
 cms.url: http://localhost:38080
@@ -105,6 +113,43 @@ validation:
     creditorId:
       use: none
 
+stoplist:
+  cron:
+    # the top of every hour of every day
+    expression: 0 0 * * * *
+
+not-confirmed-consent-expiration:
+  cron:
+    # the top of every hour of every day
+    expression: 0 0 * * * *
+
+not-confirmed-payment-expiration:
+  cron:
+    # the top of every hour of every day
+    expression: 0 0 * * * *
+
+used-non-recurring-consent-expiration:
+  cron:
+    # the top of every hour of every day
+    expression: 0 0 * * * *
+
+consent:
+  cron:
+    expression: 0 0 1 * * ?
+
+scheduler:
+  pool:
+    size: 30
+
+#---
+#spring:
+#  profiles: default
+#  application.name: ledgers-xs2a-gateway
+#  # These datasource information are provided for the consent db
+#  jackson:
+#    serialization:
+#      write_dates_as_timestamps: false
+#      wrap-root-value: true
 
 ---
 spring:

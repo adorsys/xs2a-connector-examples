@@ -56,7 +56,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<version>${spring-boot-dependencies.version}</version>
 				<configuration>
-					<mainClass>de.adorsys.ledgers.gatway.LedgersXs2aGatewayApplication</mainClass>
+					<mainClass>de.adorsys.ledgers.gateway.LedgersXs2aGatewayApplication</mainClass>
 				</configuration>
 				<executions>
 					<execution>

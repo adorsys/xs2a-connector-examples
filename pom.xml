@@ -33,6 +33,8 @@
 		<module>xs2a-connector</module>
 		<module>gateway-app</module>
 		<module>xs2a-connector-remote</module>
+		<module>gateway-app-embedded</module>
+		<module>xs2a-connector-embedded</module>
 	</modules>
 
 	<url>https://github.com/adorsys/xs2a-connector-examples</url>
