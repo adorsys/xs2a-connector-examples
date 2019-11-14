@@ -66,19 +66,8 @@
 
 		<!-- other dependencies -->
 		<dependency>
-			<groupId>pro.javatar.commons</groupId>
-			<artifactId>javatar-commons</artifactId>
-		</dependency>
-
-		<dependency>
 			<groupId>org.mapstruct</groupId>
 			<artifactId>mapstruct</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>${google.guava.version}</version>
 		</dependency>
 
 		<dependency>
@@ -90,12 +79,6 @@
 
 		<!-- test dependencies -->
 		<dependency>
-			<groupId>org.assertj</groupId>
-			<artifactId>assertj-core</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-test</artifactId>
 			<scope>test</scope>
@@ -106,129 +89,8 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-			<scope>test</scope>
-		</dependency>
 
-		<!-- Sprinfox and swagger UI -->
-		<dependency>
-			<groupId>io.swagger</groupId>
-			<artifactId>swagger-annotations</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger2</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger-ui</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-bean-validators</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<!-- XS2A Adapter -->
-		<dependency>
-			<groupId>de.adorsys.multibanking</groupId>
-			<artifactId>xs2a-adapter</artifactId>
-			<version>1.2.5</version>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<version>3.1.1</version>
-				<executions>
-					<execution>
-						<id>copy</id>
-						<phase>package</phase>
-						<goals>
-							<goal>copy</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<artifactItems>
-						<artifactItem>
-							<groupId>de.adorsys.psd2</groupId>
-							<artifactId>aspsp-profile-server</artifactId>
-							<version>${xs2a.version}</version>
-							<type>jar</type>
-							<overWrite>false</overWrite>
-							<outputDirectory>${project.build.directory}/aspsp-profile</outputDirectory>
-							<destFileName>aspsp-profile.jar</destFileName>
-						</artifactItem>
-					</artifactItems>
-					<overWriteReleases>false</overWriteReleases>
-					<overWriteSnapshots>true</overWriteSnapshots>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>com.bazaarvoice.maven.plugins</groupId>
-				<artifactId>process-exec-maven-plugin</artifactId>
-				<version>0.7</version>
-				<configuration>
-					<skip>${skipITs}</skip>
-				</configuration>
-				<executions>
-					<!-- ASPSP PROFILE -->
-					<execution>
-						<id>aspsp-profile-server</id>
-						<phase>pre-integration-test</phase>
-						<goals>
-							<goal>start</goal>
-						</goals>
-						<configuration>
-							<name>ASPSP PROFILE</name>
-							<workingDir>${project.build.directory}/aspsp-profile</workingDir>
-							<waitForInterrupt>false</waitForInterrupt>
-							<healthcheckUrl>http://localhost:48080/api/v1/health</healthcheckUrl>
-							<!-- java -jar target/aspsp-profile/aspsp-profile.jar - -bank_profile.path=src/test/resources/bank_profile_ledgers.yml-->
-							<arguments>
-								<argument>java</argument>
-								<argument>-jar</argument>
-								<argument>${project.build.directory}/aspsp-profile/aspsp-profile.jar</argument>
-								<argument>--bank_profile.path=${project.build.directory}/test-classes/bank_profile_ledgers.yml</argument>
-								<argument>--log4j.logger.org.springframework=WARN</argument>
-								<argument>--logging.level.root=WARN</argument>
-								<argument>--logging.level.org.springframework.boot=WARN</argument>
-							</arguments>
-						</configuration>
-					</execution>
-					<!--STOP ALL -->
-					<execution>
-						<id>stop-all</id>
-						<phase>post-integration-test</phase>
-						<goals>
-							<goal>stop-all</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
 </project>
 
