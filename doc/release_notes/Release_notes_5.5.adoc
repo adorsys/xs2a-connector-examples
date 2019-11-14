@@ -3,6 +3,7 @@
 == Table of Contents
 
 * Add supporting standing order report
+* Added application starter with embedded CMS and ASPSP Profile
 
 == Add supporting standing order report
 
@@ -15,3 +16,8 @@ The query parameters `dateFrom`, `dateTo`, `withBalance`, `deltaList` and `entry
 result.
 
 Only `application/JSON` for response content type is supported.
+
+== Added application starter with embedded CMS and ASPSP Profile
+
+New module `gateway-app-embedded` has been added for launching connector with embedded CMS and ASPSP Profile.
+All existing CMS and ASPSP Profile endpoints are exposed within the same application.

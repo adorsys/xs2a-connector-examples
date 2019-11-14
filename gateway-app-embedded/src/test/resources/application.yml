@@ -19,10 +19,6 @@ server:
   use-forward-headers: true
   port: 8089
 
-# Swagger configuration location.
-# Empty string, mean the default setting from xs2a-impl will be used.
-xs2a.swagger.psd2.api.location: #/psd2-api-1.2-Update-2018-08-18-non-oauth.yaml
-
 #TanEncryption
 application:
   security:
@@ -31,14 +27,58 @@ application:
 
 spring:
   application.name: ledgers-xs2a-gateway
+  datasource:
+    url: ${db.url}
+    username: ${db.user}
+    password: ${db.password}
+  jpa:
+    show-sql: false
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibrenate.globally_quoted_identifiers: true
+      hibernate.jdbc.lob.non_contextual_creation: true
+      hibernate.naming-strategy: org.hibernate.cfg.ImprovedNamingStrategy
+      hibernate.default_schema: consent
+      hibernate.show_sql: false
   jackson:
     serialization:
       write_dates_as_timestamps: false
       wrap-root-value: true
 
-ledgers.url: http://localhost:8088
+ledgers.url: http://localhost:8088/
 cms.url: http://localhost:38080
 online-banking.url: http://localhost:8090/api/v1/consents/confirm/{userLogin}/{consentId}/{authorizationId}/{tan}
+
+stoplist:
+  cron:
+    # the top of every hour of every day
+    expression: 0 0 * * * *
+
+not-confirmed-consent-expiration:
+  cron:
+    # the top of every hour of every day
+    expression: 0 0 * * * *
+
+not-confirmed-payment-expiration:
+  cron:
+    # the top of every hour of every day
+    expression: 0 0 * * * *
+
+used-non-recurring-consent-expiration:
+  cron:
+    # the top of every hour of every day
+    expression: 0 0 * * * *
+
+consent:
+  cron:
+    expression: 0 0 1 * * ?
+
+scheduler:
+  pool:
+    size: 30
+server_key: test123
 
 # ----------------------------------------------
 # number of characters in a json string
@@ -51,6 +91,10 @@ license.url: https://github.com/adorsys/xs2a/blob/master/LICENSE.md
 springfox.documentation.swagger.v2.path: /swagger.json
 
 skip.ssl.certificate.verification: true
+
+# Swagger configuration location.
+# Empty string, mean the default setting from xs2a-impl will be used.
+xs2a.swagger.psd2.api.location:
 
 # ENDPOINTS CORS CONFIGURATION
 # Whether credentials are supported. When not set, credentials are not supported.
@@ -67,7 +111,36 @@ xs2a:
       # How long, in seconds, the response from a pre-flight request can be cached by clients
       max-age: 3600
 
+---
+spring:
+  profiles: h2
+  h2:
+    console:
+      enabled: true
+      path: /h2
+    datasource.data: classpath:data-h2.sql
 
+db:
+  url: jdbc:h2:mem:psdsandboxdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+  user: sa
+  password: sa
+
+---
+spring:
+  profiles: postgres
+  jpa:
+    properties:
+      hibernate.default_schema: consent
+      hibernate.show_sql: false
+    show-sql: false
+
+db:
+  host: localhost
+  user: ledgers
+  password: ledgers
+  database: ledgers
+  port: 5432
+  url: jdbc:postgresql://${db.host}:${db.port}/${db.database}
 ---
 spring:
   profiles: dev
@@ -93,3 +166,5 @@ logging.level.org.adorsys.ledgers.consent: DEBUG
 logging.level.de.adorsys.ledgers.xs2a.api: DEBUG
 logging.level.de.adorsys.ledgers.rest: DEBUG
 logging.level.de.adorsys.psd2.consent: DEBUG
+
+
