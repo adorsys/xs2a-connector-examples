@@ -25,7 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @FeignClient(value = "cmsPsuPis", url = "${cms.url}", path = "/psu-api/v1/payment", primary = false, configuration = FeignConfig.class)
-public interface CmsPsuPisClient {
+public interface CmsPsuPisRestClient {
     @PutMapping(path = "/authorisation/{authorisation-id}/psu-data")
     ResponseEntity<CreatePisCommonPaymentResponse> updatePsuInPayment(
             @PathVariable("authorisation-id") String authorisationId,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2018 adorsys GmbH & Co KG
+ * Copyright 2018-2019 adorsys GmbH & Co KG
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package de.adorsys.ledgers.gatway;
+package de.adorsys.ledgers.gateway;
 
-import de.adorsys.aspsp.xs2a.remote.connector.EnableLedgersXS2AConnectorRemote;
-import de.adorsys.ledgers.rest.client.CmsPsuPisClient;
+import de.adorsys.aspsp.xs2a.embedded.connector.EnableLedgersXS2AConnectorEmbedded;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.psd2.xs2a.config.EnableXs2aInterface;
 import de.adorsys.psd2.xs2a.web.config.EnableXs2aSwagger;
@@ -26,14 +25,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
-@EnableFeignClients(basePackageClasses = {PaymentRestClient.class, CmsPsuPisClient.class})
+@EnableFeignClients(basePackageClasses = PaymentRestClient.class)
 @SpringBootApplication(exclude = {HypermediaAutoConfiguration.class})
-@EnableLedgersXS2AConnectorRemote
+@EnableLedgersXS2AConnectorEmbedded
 @EnableXs2aInterface
 @EnableXs2aSwagger
-public class LedgersXs2aGatewayApplication {
+public class LedgersXs2aGatewayApplicationEmbedded {
 
     public static void main(String[] args) {
-        SpringApplication.run(LedgersXs2aGatewayApplication.class, args);
+        SpringApplication.run(LedgersXs2aGatewayApplicationEmbedded.class, args);
     }
 }
