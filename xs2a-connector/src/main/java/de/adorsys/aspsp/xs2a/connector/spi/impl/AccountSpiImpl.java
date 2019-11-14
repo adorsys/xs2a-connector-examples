@@ -154,31 +154,39 @@ public class AccountSpiImpl implements AccountSpi {
 
     @Override
     public SpiResponse<SpiTransactionReport> requestTransactionsForAccount(@NotNull SpiContextData contextData,
-                                                                           String acceptMediaType,
-                                                                           boolean withBalance,
-                                                                           @NotNull LocalDate dateFrom,
-                                                                           @NotNull LocalDate dateTo,
-                                                                           @NotNull BookingStatus bookingStatus,
+                                                                           @NotNull SpiTransactionReportParameters spiTransactionReportParameters,
                                                                            @NotNull SpiAccountReference accountReference,
                                                                            @NotNull SpiAccountConsent accountConsent,
                                                                            @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         // TODO Remove it https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1100
-        if (BookingStatus.INFORMATION == bookingStatus) {
+        if (BookingStatus.INFORMATION == spiTransactionReportParameters.getBookingStatus()) {
             logger.info("Retrieving mock standing order report for account: {}", accountReference.getResourceId());
             SpiTransactionReport transactionReport = new SpiTransactionReport(null, createStandingOrderReportMock(), null,
-                                                                              processAcceptMediaType(acceptMediaType), null);
+                                                                              processAcceptMediaType(spiTransactionReportParameters.getAcceptMediaType()), null);
             return SpiResponse.<SpiTransactionReport>builder()
                            .payload(transactionReport)
                            .build();
         }
 
+
         byte[] aspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
+        // TODO https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1106
+        // For dates there are alternative test values in case of receiving NULLs, ledgers must receive dates for retrieving transactions request
+        // Will be deleted when Ledgers provides supporting getting transactions list without dates.
+        LocalDate dateFrom = Optional.ofNullable(spiTransactionReportParameters.getDateFrom())
+                                     .orElse(LocalDate.now().minusMonths(6));
+        LocalDate dateTo = Optional.ofNullable(spiTransactionReportParameters.getDateTo())
+                                   .orElse(LocalDate.now());
+        boolean withBalance = spiTransactionReportParameters.isWithBalance();
+        String acceptMediaType = spiTransactionReportParameters.getAcceptMediaType();
+        String entryReferenceFrom = spiTransactionReportParameters.getEntryReferenceFrom();
+        Boolean deltaList = spiTransactionReportParameters.getDeltaList();
 
         try {
             SCAResponseTO response = applyAuthorisation(aspspConsentData);
 
-            logger.info("Requested transactions for account: {}, dates from: {}, to: {}, withBalance: {}",
-                        accountReference.getResourceId(), dateFrom, dateTo, withBalance);
+            logger.info("Requested transactions for account: {}, dates from: {}, to: {}, withBalance: {}, entryReferenceFrom: {}, deltaList: {}",
+                        accountReference.getResourceId(), dateFrom, dateTo, withBalance, entryReferenceFrom, deltaList);
             List<SpiTransaction> transactions = Optional.ofNullable(
                     accountRestClient.getTransactionByDates(accountReference.getResourceId(), dateFrom, dateTo).getBody())
                                                         .map(accountMapper::toSpiTransactions).orElseGet(ArrayList::new);
