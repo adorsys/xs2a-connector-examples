@@ -13,6 +13,7 @@
 
 	<properties>
 		<ruleset.basedir>..</ruleset.basedir>
+		<ci.build.number>&#8203;</ci.build.number>
 	</properties>
 
 	<dependencies>
@@ -60,9 +61,21 @@
 				</configuration>
 				<executions>
 					<execution>
+						<id>repackage</id>
 						<goals>
 							<goal>repackage</goal>
 						</goals>
+					</execution>
+					<execution>
+						<id>build-info</id>
+						<goals>
+							<goal>build-info</goal>
+						</goals>
+						<configuration>
+							<additionalProperties>
+								<build.number>${ci.build.number}</build.number>
+							</additionalProperties>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>
