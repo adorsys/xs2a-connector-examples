@@ -106,8 +106,7 @@
 		<springfox-bean-validators.version>2.9.2</springfox-bean-validators.version>
 		<commons-io.version>2.6</commons-io.version>
 
-		<jackson.version>2.9.9</jackson.version>
-		<jackson-databind.version>2.9.10</jackson-databind.version>
+		<jackson.version>2.10.1</jackson.version>
 
 		<!--Sonar -->
 		<maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
@@ -206,7 +205,7 @@
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-databind</artifactId>
-				<version>${jackson-databind.version}</version>
+				<version>${jackson.version}</version>
 			</dependency>
 
 			<dependency>
