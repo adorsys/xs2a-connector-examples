@@ -72,7 +72,7 @@ Compile:
   script:
     - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
     - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
-    - mvn -DskipTests clean install
+    - mvn -DskipTests -Dci.build.number=Build\:${CI_PIPELINE_ID} clean install
   artifacts:
     paths:
       - "gateway-app/target/gateway-app*jar"
