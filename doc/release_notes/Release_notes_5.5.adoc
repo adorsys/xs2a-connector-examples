@@ -5,6 +5,7 @@
 * Add supporting standing order report
 * Added application starter with embedded CMS and ASPSP Profile
 * Provided implementation of delta access for transaction list request
+* Fixed multilevel sca for payments and consents
 
 == Add supporting standing order report
 
@@ -29,3 +30,7 @@ Delta access parameters (`entryReferenceFrom` and `deltaList`) are provided to S
 Also `acceptMediaType`, `withBalance`, `dateFrom`, `dateTo`, `bookingStatus` parameters were moved from method parameters to `SpiTransactionReportParameters` object.
 Parameters `dateFrom` and `dateTo` are not mandatory from this moment.
 If any of period parameters is NULL in incoming request from XS2A it'll be initialised with test date before getting transactions list from Ledgers.
+
+== Fixed multilevel sca for payments and consents
+
+From now on, multilevel SCA for payments and consents is working correctly.

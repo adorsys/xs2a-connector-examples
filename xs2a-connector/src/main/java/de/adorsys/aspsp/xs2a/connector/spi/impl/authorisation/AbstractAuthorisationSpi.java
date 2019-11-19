@@ -10,6 +10,7 @@ import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
+import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
@@ -42,6 +43,7 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
     private final GeneralAuthorisationService authorisationService;
     private final ScaMethodConverter scaMethodConverter;
     private final FeignExceptionReader feignExceptionReader;
+    private final TokenStorageService tokenStorageService;
 
     public SpiResponse<SpiPsuAuthorisationResponse> authorisePsu(@NotNull SpiContextData contextData,
                                                                  @NotNull SpiPsuData psuLoginData, String password, T businessObject,
@@ -58,7 +60,8 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
         }
 
         SpiResponse<SpiPsuAuthorisationResponse> authorisePsu = authorisationService.authorisePsuForConsent(
-                psuLoginData, password, getBusinessObjectId(businessObject), originalResponse, getOtpType(), aspspConsentDataProvider);
+                psuLoginData, password, getBusinessObjectId(businessObject),
+                getOtpType(), aspspConsentDataProvider);
 
         if (!authorisePsu.isSuccessful()) {
             return SpiResponse.<SpiPsuAuthorisationResponse>builder()
@@ -210,11 +213,22 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
         return false;
     }
 
+    protected abstract boolean isFirstInitiationOfMultilevelSca(T businessObject);
+
     protected SpiResponse<SpiPsuAuthorisationResponse> onSuccessfulAuthorisation(T businessObject,
                                                                                  @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider,
                                                                                  SpiResponse<SpiPsuAuthorisationResponse> authorisePsu,
                                                                                  R scaBusinessObjectResponse) {
-        if (EnumSet.of(EXEMPTED, PSUAUTHENTICATED, PSUIDENTIFIED).contains(scaBusinessObjectResponse.getScaStatus())) {
+        try {
+            aspspConsentDataProvider.updateAspspConsentData(tokenStorageService.toBytes(scaBusinessObjectResponse));
+        } catch (IOException e) {
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                           .error(new TppMessage(TOKEN_UNKNOWN))
+                           .build();
+        }
+
+        if (EnumSet.of(EXEMPTED, PSUAUTHENTICATED, PSUIDENTIFIED).contains(scaBusinessObjectResponse.getScaStatus())
+                    && isFirstInitiationOfMultilevelSca(businessObject)) {
             SCAResponseTO aisConsentResponse;
             try {
                 aisConsentResponse = initiateBusinessObject(businessObject, aspspConsentDataProvider.loadAspspConsentData());
