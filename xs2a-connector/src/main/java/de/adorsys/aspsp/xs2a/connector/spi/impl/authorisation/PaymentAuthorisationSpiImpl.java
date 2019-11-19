@@ -68,7 +68,7 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
                                        AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService consentDataService,
                                        PaymentRestClient paymentRestClient, CmsPaymentStatusUpdateService cmsPaymentStatusUpdateService,
                                        FeignExceptionReader feignExceptionReader, PaymentInternalGeneral paymentInternalGeneral) {
-        super(authRequestInterceptor, consentDataService, authorisationService, scaMethodConverter, feignExceptionReader);
+        super(authRequestInterceptor, consentDataService, authorisationService, scaMethodConverter, feignExceptionReader, tokenStorageService);
         this.tokenStorageService = tokenStorageService;
         this.scaLoginMapper = scaLoginMapper;
         this.consentDataService = consentDataService;
@@ -90,15 +90,8 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
 
     @Override
     protected SpiResponse<SpiPsuAuthorisationResponse> onSuccessfulAuthorisation(SpiPayment businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, SpiResponse<SpiPsuAuthorisationResponse> authorisePsu, SCAPaymentResponseTO scaBusinessObjectResponse) {
-        try {
-            aspspConsentDataProvider.updateAspspConsentData(tokenStorageService.toBytes(scaBusinessObjectResponse));
-        } catch (IOException e) {
-            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.TOKEN_UNKNOWN))
-                           .build();
-        }
         SpiResponse<SpiPsuAuthorisationResponse> response = super.onSuccessfulAuthorisation(businessObject, aspspConsentDataProvider, authorisePsu, scaBusinessObjectResponse);
-        if (!response.hasError()) {
+        if (!response.hasError() && businessObject.getPsuDataList().size() == 1) {
             cmsPaymentStatusUpdateService.updatePaymentStatus(businessObject.getPaymentId(), aspspConsentDataProvider);
         }
         return response;
@@ -142,6 +135,11 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
         String unsupportedPaymentProductMessage = String.format("Unsupported payment product %s", paymentProduct);
         paymentResponse.setPaymentProduct(PaymentProductTO.getByValue(paymentProduct).orElseThrow(() -> new IOException(unsupportedPaymentProductMessage)));
         return paymentResponse;
+    }
+
+    @Override
+    protected boolean isFirstInitiationOfMultilevelSca(SpiPayment businessObject) {
+        return businessObject.getPsuDataList().size() <= 1;
     }
 
     @Override

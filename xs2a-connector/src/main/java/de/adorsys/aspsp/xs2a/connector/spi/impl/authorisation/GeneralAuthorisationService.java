@@ -88,10 +88,8 @@ public class GeneralAuthorisationService {
      * @return : the authorisation status
      */
 
-    public <T extends SCAResponseTO> SpiResponse<SpiPsuAuthorisationResponse> authorisePsuForConsent(@NotNull SpiPsuData spiPsuData, String pin, String consentId, T originalResponse, OpTypeTO opType, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        String authorisationId = originalResponse != null && originalResponse.getAuthorisationId() != null
-                                         ? originalResponse.getAuthorisationId()
-                                         : Ids.id();
+    public <T extends SCAResponseTO> SpiResponse<SpiPsuAuthorisationResponse> authorisePsuForConsent(@NotNull SpiPsuData spiPsuData, String pin, String consentId, OpTypeTO opType, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        String authorisationId = Ids.id();
         try {
             String login = spiPsuData.getPsuId();
             logger.info("Authorise user with login: {}", login);

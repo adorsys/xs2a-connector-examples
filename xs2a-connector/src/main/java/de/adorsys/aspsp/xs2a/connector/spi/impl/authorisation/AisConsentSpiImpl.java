@@ -86,7 +86,7 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
                              AisConsentMapper aisConsentMapper, AuthRequestInterceptor authRequestInterceptor,
                              AspspConsentDataService consentDataService, GeneralAuthorisationService authorisationService,
                              ScaMethodConverter scaMethodConverter, ScaLoginMapper scaLoginMapper, FeignExceptionReader feignExceptionReader) {
-        super(authRequestInterceptor, consentDataService, authorisationService, scaMethodConverter, feignExceptionReader);
+        super(authRequestInterceptor, consentDataService, authorisationService, scaMethodConverter, feignExceptionReader, tokenStorageService);
         this.consentRestClient = consentRestClient;
         this.tokenStorageService = tokenStorageService;
         this.aisConsentMapper = aisConsentMapper;
@@ -197,8 +197,8 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
     }
 
     ConsentStatus getConsentStatus(SCAConsentResponseTO consentResponse) {
+        //TODO: https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1102 Refactoring connector-examples by using multilevelScaRequired
         if (consentResponse != null
-                    && consentResponse.isMultilevelScaRequired()
                     && consentResponse.isPartiallyAuthorised()
                     && ScaStatusTO.FINALISED.equals(consentResponse.getScaStatus())) {
             return ConsentStatus.PARTIALLY_AUTHORISED;
@@ -224,6 +224,11 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
                              .replace(TAN, challengeDataParts.get(indexOfTan));
 
         return format(DECOUPLED_USR_MSG, url);
+    }
+
+    @Override
+    protected boolean isFirstInitiationOfMultilevelSca(SpiAccountConsent businessObject) {
+        return businessObject.getPsuData().size() <= 1;
     }
 
     private <T extends SpiInitiateAisConsentResponse> SpiResponse<T> firstCallInstantiatingConsent(
