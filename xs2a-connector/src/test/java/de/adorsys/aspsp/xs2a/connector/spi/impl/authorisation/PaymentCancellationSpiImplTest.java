@@ -261,7 +261,7 @@ public class PaymentCancellationSpiImplTest {
         scaPaymentResponseTO.setScaMethods(Collections.emptyList());
         when(consentDataService.response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false)).thenReturn(scaPaymentResponseTO);
 
-        when(authorisationService.authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, scaPaymentResponseTO, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider))
+        when(authorisationService.authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider))
                 .thenReturn(SpiResponse.<SpiAuthorisationStatus>builder()
                                     .payload(SpiAuthorisationStatus.SUCCESS)
                                     .build());
@@ -282,7 +282,7 @@ public class PaymentCancellationSpiImplTest {
 
         verify(spiAspspConsentDataProvider, times(2)).loadAspspConsentData();
         verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false);
-        verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, scaPaymentResponseTO, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider);
+        verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider);
         verify(tokenStorageService, times(1)).fromBytes(CONSENT_DATA_BYTES, SCALoginResponseTO.class);
         verify(tokenStorageService, times(1)).toBytes(any(SCAPaymentResponseTO.class));
         verify(spiAspspConsentDataProvider, times(1)).updateAspspConsentData(responseBytes);
@@ -296,7 +296,7 @@ public class PaymentCancellationSpiImplTest {
         scaPaymentResponseTO.setScaMethods(Collections.emptyList());
         when(consentDataService.response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false)).thenReturn(scaPaymentResponseTO);
 
-        when(authorisationService.authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, scaPaymentResponseTO, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider))
+        when(authorisationService.authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider))
                 .thenReturn(SpiResponse.<SpiAuthorisationStatus>builder()
                                     .payload(SpiAuthorisationStatus.SUCCESS)
                                     .build());
@@ -315,7 +315,7 @@ public class PaymentCancellationSpiImplTest {
 
         verify(spiAspspConsentDataProvider, times(2)).loadAspspConsentData();
         verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false);
-        verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, scaPaymentResponseTO, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider);
+        verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider);
         verify(tokenStorageService, times(1)).fromBytes(CONSENT_DATA_BYTES, SCALoginResponseTO.class);
         verify(consentDataService, never()).store(any());
         verify(spiAspspConsentDataProvider, never()).updateAspspConsentData(any());
@@ -328,7 +328,7 @@ public class PaymentCancellationSpiImplTest {
         scaPaymentResponseTO.setScaMethods(Collections.emptyList());
         when(consentDataService.response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false)).thenReturn(scaPaymentResponseTO);
 
-        when(authorisationService.authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, scaPaymentResponseTO, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider))
+        when(authorisationService.authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider))
                 .thenReturn(SpiResponse.<SpiAuthorisationStatus>builder()
                                     .payload(SpiAuthorisationStatus.SUCCESS)
                                     .build());
@@ -343,7 +343,7 @@ public class PaymentCancellationSpiImplTest {
 
         verify(spiAspspConsentDataProvider, times(2)).loadAspspConsentData();
         verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false);
-        verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, scaPaymentResponseTO, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider);
+        verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider);
         verify(tokenStorageService, times(1)).fromBytes(CONSENT_DATA_BYTES, SCALoginResponseTO.class);
     }
 
@@ -354,7 +354,7 @@ public class PaymentCancellationSpiImplTest {
         scaPaymentResponseTO.setScaMethods(Collections.emptyList());
         when(consentDataService.response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false)).thenReturn(scaPaymentResponseTO);
 
-        when(authorisationService.authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, scaPaymentResponseTO, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider))
+        when(authorisationService.authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider))
                 .thenReturn(SpiResponse.<SpiAuthorisationStatus>builder()
                                     .build());
 
@@ -366,7 +366,7 @@ public class PaymentCancellationSpiImplTest {
 
         verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
         verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false);
-        verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, scaPaymentResponseTO, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider);
+        verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider);
     }
 
     @Test
