@@ -6,6 +6,7 @@
 * Added application starter with embedded CMS and ASPSP Profile
 * Provided implementation of delta access for transaction list request
 * Fixed multilevel sca for payments and consents
+* Provided implementation of CommonPaymentSpi interface
 
 == Add supporting standing order report
 
@@ -34,3 +35,10 @@ If any of period parameters is NULL in incoming request from XS2A it'll be initi
 == Fixed multilevel sca for payments and consents
 
 From now on, multilevel SCA for payments and consents is working correctly.
+
+== Provided implementation of CommonPaymentSpi interface
+
+From now on, it's possible to execute initiate payment (`POST /v1/{payment-service}/{payment-product}`), get transaction status (`GET /v1/{payment-service}/{payment-product}/{paymentId}/status`) and get payment (`GET /v1/{payment-service}/{payment-product}/{paymentId}`) requests for non-JSON payments.
+
+As currently there is no support of pain.001-payments in Ledgers, only mock values will be returned on accessing these endpoints.
+Authorisation of such payments isn't possible either.
