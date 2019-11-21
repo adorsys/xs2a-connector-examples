@@ -7,6 +7,7 @@
 * Provided implementation of delta access for transaction list request
 * Fixed multilevel sca for payments and consents
 * Provided implementation of CommonPaymentSpi interface
+* Fixed format of error response on invalid OAuth token
 
 == Add supporting standing order report
 
@@ -42,3 +43,8 @@ From now on, it's possible to execute initiate payment (`POST /v1/{payment-servi
 
 As currently there is no support of pain.001-payments in Ledgers, only mock values will be returned on accessing these endpoints.
 Authorisation of such payments isn't possible either.
+
+== Fixed format of error response on invalid OAuth token
+
+From now on, the format of an error response returned on invalid OAuth token is correct. This is done by wrapping
+the response into a `tppMessages` array.
