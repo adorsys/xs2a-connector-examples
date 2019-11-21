@@ -21,29 +21,35 @@ import de.adorsys.psd2.aspsp.profile.domain.AspspSettings;
 import de.adorsys.psd2.aspsp.profile.service.AspspProfileService;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.profile.ScaApproach;
+import de.adorsys.psd2.xs2a.domain.TppMessageInformation;
 import de.adorsys.psd2.xs2a.exception.MessageCategory;
+import de.adorsys.psd2.xs2a.exception.MessageError;
+import de.adorsys.psd2.xs2a.service.mapper.psd2.ErrorMapperContainer;
+import de.adorsys.psd2.xs2a.service.mapper.psd2.ErrorType;
 import de.adorsys.psd2.xs2a.web.error.TppErrorMessageBuilder;
+import de.adorsys.psd2.xs2a.web.error.TppErrorMessageWriter;
 import de.adorsys.psd2.xs2a.web.filter.TppErrorMessage;
 import de.adorsys.xs2a.reader.JsonReader;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Collections;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -82,13 +88,16 @@ public class TokenAuthenticationFilterTest {
     private OauthDataHolder oauthDataHolder;
     @Mock
     private AspspProfileService aspspProfileService;
+    @Mock
+    private TppErrorMessageWriter tppErrorMessageWriter;
 
     private TokenAuthenticationFilter tokenAuthenticationFilter;
 
     @Before
     public void setUp() {
-        tokenAuthenticationFilter = new TokenAuthenticationFilter(OAUTH_MODE_HEADER_NAME, tppErrorMessageBuilder, tokenValidationService, aspspProfileService, oauthDataHolder);
-
+        tokenAuthenticationFilter = new TokenAuthenticationFilter(OAUTH_MODE_HEADER_NAME, tppErrorMessageBuilder,
+                                                                  tokenValidationService, aspspProfileService, oauthDataHolder,
+                                                                  tppErrorMessageWriter);
         when(aspspProfileService.getScaApproaches())
                 .thenReturn(Arrays.asList(ScaApproach.REDIRECT, ScaApproach.OAUTH));
         when(aspspProfileService.getAspspSettings())
@@ -258,21 +267,21 @@ public class TokenAuthenticationFilterTest {
         when(aspspProfileService.getScaApproaches())
                 .thenReturn(Collections.singletonList(ScaApproach.REDIRECT));
 
-        PrintWriter mockWriter = Mockito.mock(PrintWriter.class);
-        when(httpServletResponse.getWriter())
-                .thenReturn(mockWriter);
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.FORMAT_ERROR, "some message");
         when(tppErrorMessageBuilder.buildTppErrorMessage(MessageCategory.ERROR, MessageErrorCode.FORMAT_ERROR))
                 .thenReturn(tppErrorMessage);
+
+        ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
 
         // When
         tokenAuthenticationFilter.doFilter(httpServletRequest, httpServletResponse, filterChain);
 
         // Then
-        verify(httpServletResponse).setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        verify(httpServletResponse).setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        verify(mockWriter).print(tppErrorMessage.toString());
         verify(filterChain, never()).doFilter(any(), any());
+        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
+        assertTrue(integerArgumentCaptor.getValue() == HttpServletResponse.SC_BAD_REQUEST);
+        assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
     @Test
@@ -282,21 +291,21 @@ public class TokenAuthenticationFilterTest {
                 .thenReturn(OAUTH_MODE_INVALID_VALUE);
         when(httpServletRequest.getServletPath()).thenReturn(ACCOUNTS_PATH);
 
-        PrintWriter mockWriter = Mockito.mock(PrintWriter.class);
-        when(httpServletResponse.getWriter()).thenReturn(mockWriter);
-
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.FORMAT_ERROR, "some message");
         when(tppErrorMessageBuilder.buildTppErrorMessage(MessageCategory.ERROR, MessageErrorCode.FORMAT_ERROR))
                 .thenReturn(tppErrorMessage);
+
+        ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
 
         // When
         tokenAuthenticationFilter.doFilter(httpServletRequest, httpServletResponse, filterChain);
 
         // Then
-        verify(httpServletResponse).setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        verify(httpServletResponse).setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        verify(mockWriter).print(tppErrorMessage.toString());
         verify(filterChain, never()).doFilter(any(), any());
+        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
+        assertTrue(integerArgumentCaptor.getValue() == HttpServletResponse.SC_BAD_REQUEST);
+        assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
     @Test
@@ -305,21 +314,21 @@ public class TokenAuthenticationFilterTest {
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME)).thenReturn(OAUTH_MODE_INTEGRATED);
         when(httpServletRequest.getServletPath()).thenReturn(ACCOUNTS_PATH);
 
-        PrintWriter mockWriter = Mockito.mock(PrintWriter.class);
-        when(httpServletResponse.getWriter()).thenReturn(mockWriter);
-
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID, ERROR_MESSAGE_TEXT);
         when(tppErrorMessageBuilder.buildTppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID))
                 .thenReturn(tppErrorMessage);
+
+        ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
 
         // When
         tokenAuthenticationFilter.doFilter(httpServletRequest, httpServletResponse, filterChain);
 
         // Then
-        verify(httpServletResponse).setStatus(HttpServletResponse.SC_FORBIDDEN);
-        verify(httpServletResponse).setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        verify(mockWriter).print(tppErrorMessage.toString());
         verify(filterChain, never()).doFilter(any(), any());
+        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
+        assertTrue(integerArgumentCaptor.getValue() == HttpServletResponse.SC_FORBIDDEN);
+        assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
     @Test
@@ -330,21 +339,20 @@ public class TokenAuthenticationFilterTest {
                 .thenReturn("");
         when(httpServletRequest.getServletPath()).thenReturn(ACCOUNTS_PATH);
 
-        PrintWriter mockWriter = Mockito.mock(PrintWriter.class);
-        when(httpServletResponse.getWriter()).thenReturn(mockWriter);
-
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID, "some message");
         when(tppErrorMessageBuilder.buildTppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID))
                 .thenReturn(tppErrorMessage);
-
         // When
         tokenAuthenticationFilter.doFilter(httpServletRequest, httpServletResponse, filterChain);
 
+        ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
+
         // Then
-        verify(httpServletResponse).setStatus(HttpServletResponse.SC_FORBIDDEN);
-        verify(httpServletResponse).setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        verify(mockWriter).print(tppErrorMessage.toString());
         verify(filterChain, never()).doFilter(any(), any());
+        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
+        assertTrue(integerArgumentCaptor.getValue() == HttpServletResponse.SC_FORBIDDEN);
+        assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
     @Test
@@ -355,20 +363,21 @@ public class TokenAuthenticationFilterTest {
                 .thenReturn(BEARER_TOKEN_VALUE);
         when(httpServletRequest.getServletPath()).thenReturn(ACCOUNTS_PATH);
 
-        PrintWriter mockWriter = Mockito.mock(PrintWriter.class);
-        when(httpServletResponse.getWriter()).thenReturn(mockWriter);
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID, "some message");
         when(tppErrorMessageBuilder.buildTppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID))
                 .thenReturn(tppErrorMessage);
+
+        ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
 
         // When
         tokenAuthenticationFilter.doFilter(httpServletRequest, httpServletResponse, filterChain);
 
         // Then
-        verify(httpServletResponse).setStatus(HttpServletResponse.SC_FORBIDDEN);
-        verify(httpServletResponse).setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        verify(mockWriter).print(tppErrorMessage.toString());
         verify(filterChain, never()).doFilter(any(), any());
+        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
+        assertTrue(integerArgumentCaptor.getValue() == HttpServletResponse.SC_FORBIDDEN);
+        assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
     @Test
@@ -380,20 +389,21 @@ public class TokenAuthenticationFilterTest {
         when(httpServletRequest.getHeader(HttpHeaders.AUTHORIZATION))
                 .thenReturn(null);
 
-        PrintWriter mockWriter = Mockito.mock(PrintWriter.class);
-        when(httpServletResponse.getWriter()).thenReturn(mockWriter);
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.UNAUTHORIZED_NO_TOKEN, IDP_CONFIGURATION_LINK);
         when(tppErrorMessageBuilder.buildTppErrorMessageWithPlaceholder(MessageCategory.ERROR, MessageErrorCode.UNAUTHORIZED_NO_TOKEN, IDP_CONFIGURATION_LINK))
                 .thenReturn(tppErrorMessage);
+
+        ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
 
         // When
         tokenAuthenticationFilter.doFilter(httpServletRequest, httpServletResponse, filterChain);
 
         // Then
-        verify(httpServletResponse).setStatus(HttpServletResponse.SC_FORBIDDEN);
-        verify(httpServletResponse).setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        verify(mockWriter).print(tppErrorMessage.toString());
         verify(filterChain, never()).doFilter(any(), any());
+        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
+        assertTrue(integerArgumentCaptor.getValue() == HttpServletResponse.SC_FORBIDDEN);
+        assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
     @Test
@@ -408,11 +418,12 @@ public class TokenAuthenticationFilterTest {
         when(tokenValidationService.validate(BEARER_TOKEN_INVALID_VALUE))
                 .thenReturn(null);
 
-        PrintWriter mockWriter = Mockito.mock(PrintWriter.class);
-        when(httpServletResponse.getWriter()).thenReturn(mockWriter);
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID, "some message");
         when(tppErrorMessageBuilder.buildTppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID))
                 .thenReturn(tppErrorMessage);
+
+        ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
+        ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
 
         // When
         tokenAuthenticationFilter.doFilter(httpServletRequest, httpServletResponse, filterChain);
@@ -420,9 +431,9 @@ public class TokenAuthenticationFilterTest {
         // Then
         verify(tokenValidationService).validate(BEARER_TOKEN_INVALID_VALUE);
 
-        verify(httpServletResponse).setStatus(HttpServletResponse.SC_FORBIDDEN);
-        verify(httpServletResponse).setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        verify(mockWriter).print(tppErrorMessage.toString());
         verify(filterChain, never()).doFilter(any(), any());
+        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
+        assertTrue(integerArgumentCaptor.getValue() == HttpServletResponse.SC_FORBIDDEN);
+        assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 }
