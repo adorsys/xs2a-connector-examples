@@ -43,6 +43,9 @@ spring:
     properties:
       hibernate:
         default_schema: consent
+  liquibase:
+    change-log: classpath:master.xml
+    enabled: false
 
 ledgers.url: http://localhost:8088
 cms.url: http://localhost:38080
