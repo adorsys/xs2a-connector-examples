@@ -21,14 +21,11 @@ import de.adorsys.psd2.aspsp.profile.domain.AspspSettings;
 import de.adorsys.psd2.aspsp.profile.service.AspspProfileService;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.profile.ScaApproach;
-import de.adorsys.psd2.xs2a.domain.TppMessageInformation;
 import de.adorsys.psd2.xs2a.exception.MessageCategory;
-import de.adorsys.psd2.xs2a.exception.MessageError;
-import de.adorsys.psd2.xs2a.service.mapper.psd2.ErrorMapperContainer;
-import de.adorsys.psd2.xs2a.service.mapper.psd2.ErrorType;
 import de.adorsys.psd2.xs2a.web.error.TppErrorMessageBuilder;
 import de.adorsys.psd2.xs2a.web.error.TppErrorMessageWriter;
 import de.adorsys.psd2.xs2a.web.filter.TppErrorMessage;
+import de.adorsys.psd2.xs2a.web.request.RequestPathResolver;
 import de.adorsys.xs2a.reader.JsonReader;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +35,6 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -72,6 +68,7 @@ public class TokenAuthenticationFilterTest {
     private static final String CONSENTS_PATH = "/v1/consents";
     private static final String FUNDS_CONFIRMATION_PATH = "/v1/funds-confirmations";
     private static final String PAYMENTS_PATH = "/v1/payments/sepa-credits-transfer";
+    private static final String CUSTOM_PATH = "/custom-endpoint";
     private static final String IDP_CONFIGURATION_LINK = "http://localhost:4200/idp";
 
     @Mock
@@ -90,13 +87,19 @@ public class TokenAuthenticationFilterTest {
     private AspspProfileService aspspProfileService;
     @Mock
     private TppErrorMessageWriter tppErrorMessageWriter;
+    @Mock
+    private RequestPathResolver requestPathResolver;
 
     private TokenAuthenticationFilter tokenAuthenticationFilter;
 
     @Before
     public void setUp() {
-        tokenAuthenticationFilter = new TokenAuthenticationFilter(OAUTH_MODE_HEADER_NAME, tppErrorMessageBuilder,
-                                                                  tokenValidationService, aspspProfileService, oauthDataHolder,
+        tokenAuthenticationFilter = new TokenAuthenticationFilter(requestPathResolver,
+                                                                  OAUTH_MODE_HEADER_NAME,
+                                                                  tppErrorMessageBuilder,
+                                                                  tokenValidationService,
+                                                                  aspspProfileService,
+                                                                  oauthDataHolder,
                                                                   tppErrorMessageWriter);
         when(aspspProfileService.getScaApproaches())
                 .thenReturn(Arrays.asList(ScaApproach.REDIRECT, ScaApproach.OAUTH));
@@ -108,7 +111,7 @@ public class TokenAuthenticationFilterTest {
     public void doFilter_withValidToken() throws ServletException, IOException {
         // Given
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME)).thenReturn(OAUTH_MODE_INTEGRATED);
-        when(httpServletRequest.getServletPath()).thenReturn(ACCOUNTS_PATH);
+        when(requestPathResolver.resolveRequestPath(httpServletRequest)).thenReturn(ACCOUNTS_PATH);
 
         String authorisationTokenValue = BEARER_TOKEN_PREFIX + BEARER_TOKEN_VALUE;
         when(httpServletRequest.getHeader(HttpHeaders.AUTHORIZATION))
@@ -132,7 +135,7 @@ public class TokenAuthenticationFilterTest {
     public void doFilter_withValidToken_preStep() throws ServletException, IOException {
         // Given
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME)).thenReturn(OAUTH_MODE_PRE_STEP);
-        when(httpServletRequest.getServletPath()).thenReturn(PAYMENTS_PATH);
+        when(requestPathResolver.resolveRequestPath(httpServletRequest)).thenReturn(PAYMENTS_PATH);
 
         String authorisationTokenValue = BEARER_TOKEN_PREFIX + BEARER_TOKEN_VALUE;
         when(httpServletRequest.getHeader(HttpHeaders.AUTHORIZATION))
@@ -153,10 +156,10 @@ public class TokenAuthenticationFilterTest {
     }
 
     @Test
-    public void doFilter_withTrailingSlashesInPath() throws ServletException, IOException {
+    public void doFilter_withTrailingSlashInPath() throws ServletException, IOException {
         // Given
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME)).thenReturn(OAUTH_MODE_INTEGRATED);
-        when(httpServletRequest.getServletPath()).thenReturn(ACCOUNTS_PATH + "////");
+        when(requestPathResolver.resolveRequestPath(httpServletRequest)).thenReturn(ACCOUNTS_PATH + "/");
 
         String authorisationTokenValue = BEARER_TOKEN_PREFIX + BEARER_TOKEN_VALUE;
         when(httpServletRequest.getHeader(HttpHeaders.AUTHORIZATION))
@@ -180,7 +183,7 @@ public class TokenAuthenticationFilterTest {
         // Given
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME))
                 .thenReturn(OAUTH_MODE_INTEGRATED);
-        when(httpServletRequest.getServletPath())
+        when(requestPathResolver.resolveRequestPath(httpServletRequest))
                 .thenReturn(PAYMENTS_PATH);
 
         String authorisationTokenValue = BEARER_TOKEN_PREFIX + BEARER_TOKEN_VALUE;
@@ -205,7 +208,7 @@ public class TokenAuthenticationFilterTest {
         // Given
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME))
                 .thenReturn(null);
-        when(httpServletRequest.getServletPath())
+        when(requestPathResolver.resolveRequestPath(httpServletRequest))
                 .thenReturn(ACCOUNTS_PATH);
 
         // When
@@ -220,7 +223,7 @@ public class TokenAuthenticationFilterTest {
         // Given
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME))
                 .thenReturn(OAUTH_MODE_INTEGRATED);
-        when(httpServletRequest.getServletPath())
+        when(requestPathResolver.resolveRequestPath(httpServletRequest))
                 .thenReturn(CONSENTS_PATH);
 
         String authorisationTokenValue = BEARER_TOKEN_PREFIX + BEARER_TOKEN_VALUE;
@@ -240,7 +243,7 @@ public class TokenAuthenticationFilterTest {
         // Given
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME))
                 .thenReturn(OAUTH_MODE_INTEGRATED);
-        when(httpServletRequest.getServletPath())
+        when(requestPathResolver.resolveRequestPath(httpServletRequest))
                 .thenReturn(FUNDS_CONFIRMATION_PATH);
 
         String authorisationTokenValue = BEARER_TOKEN_PREFIX + BEARER_TOKEN_VALUE;
@@ -261,7 +264,7 @@ public class TokenAuthenticationFilterTest {
         // Given
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME))
                 .thenReturn(OAUTH_MODE_INTEGRATED);
-        when(httpServletRequest.getServletPath())
+        when(requestPathResolver.resolveRequestPath(httpServletRequest))
                 .thenReturn(ACCOUNTS_PATH);
 
         when(aspspProfileService.getScaApproaches())
@@ -280,7 +283,7 @@ public class TokenAuthenticationFilterTest {
         // Then
         verify(filterChain, never()).doFilter(any(), any());
         verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
-        assertTrue(integerArgumentCaptor.getValue() == HttpServletResponse.SC_BAD_REQUEST);
+        assertEquals((int) integerArgumentCaptor.getValue(), HttpServletResponse.SC_BAD_REQUEST);
         assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
@@ -289,7 +292,8 @@ public class TokenAuthenticationFilterTest {
         // Given
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME))
                 .thenReturn(OAUTH_MODE_INVALID_VALUE);
-        when(httpServletRequest.getServletPath()).thenReturn(ACCOUNTS_PATH);
+        when(requestPathResolver.resolveRequestPath(httpServletRequest))
+                .thenReturn(ACCOUNTS_PATH);
 
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.FORMAT_ERROR, "some message");
         when(tppErrorMessageBuilder.buildTppErrorMessage(MessageCategory.ERROR, MessageErrorCode.FORMAT_ERROR))
@@ -311,8 +315,10 @@ public class TokenAuthenticationFilterTest {
     @Test
     public void doFilterInternalTest_withNoTokenInHeader_shouldReturnError() throws ServletException, IOException {
         // Given
-        when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME)).thenReturn(OAUTH_MODE_INTEGRATED);
-        when(httpServletRequest.getServletPath()).thenReturn(ACCOUNTS_PATH);
+        when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME))
+                .thenReturn(OAUTH_MODE_INTEGRATED);
+        when(requestPathResolver.resolveRequestPath(httpServletRequest))
+                .thenReturn(ACCOUNTS_PATH);
 
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID, ERROR_MESSAGE_TEXT);
         when(tppErrorMessageBuilder.buildTppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID))
@@ -327,7 +333,7 @@ public class TokenAuthenticationFilterTest {
         // Then
         verify(filterChain, never()).doFilter(any(), any());
         verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
-        assertTrue(integerArgumentCaptor.getValue() == HttpServletResponse.SC_FORBIDDEN);
+        assertEquals((int) integerArgumentCaptor.getValue(), HttpServletResponse.SC_FORBIDDEN);
         assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
@@ -337,7 +343,7 @@ public class TokenAuthenticationFilterTest {
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME)).thenReturn(OAUTH_MODE_INTEGRATED);
         when(httpServletRequest.getHeader(HttpHeaders.AUTHORIZATION))
                 .thenReturn("");
-        when(httpServletRequest.getServletPath()).thenReturn(ACCOUNTS_PATH);
+        when(requestPathResolver.resolveRequestPath(httpServletRequest)).thenReturn(ACCOUNTS_PATH);
 
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID, "some message");
         when(tppErrorMessageBuilder.buildTppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID))
@@ -351,7 +357,7 @@ public class TokenAuthenticationFilterTest {
         // Then
         verify(filterChain, never()).doFilter(any(), any());
         verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
-        assertTrue(integerArgumentCaptor.getValue() == HttpServletResponse.SC_FORBIDDEN);
+        assertEquals((int) integerArgumentCaptor.getValue(), HttpServletResponse.SC_FORBIDDEN);
         assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
@@ -361,7 +367,7 @@ public class TokenAuthenticationFilterTest {
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME)).thenReturn(OAUTH_MODE_INTEGRATED);
         when(httpServletRequest.getHeader(HttpHeaders.AUTHORIZATION))
                 .thenReturn(BEARER_TOKEN_VALUE);
-        when(httpServletRequest.getServletPath()).thenReturn(ACCOUNTS_PATH);
+        when(requestPathResolver.resolveRequestPath(httpServletRequest)).thenReturn(ACCOUNTS_PATH);
 
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID, "some message");
         when(tppErrorMessageBuilder.buildTppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID))
@@ -376,7 +382,7 @@ public class TokenAuthenticationFilterTest {
         // Then
         verify(filterChain, never()).doFilter(any(), any());
         verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
-        assertTrue(integerArgumentCaptor.getValue() == HttpServletResponse.SC_FORBIDDEN);
+        assertEquals((int) integerArgumentCaptor.getValue(), HttpServletResponse.SC_FORBIDDEN);
         assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
@@ -384,7 +390,7 @@ public class TokenAuthenticationFilterTest {
     public void doFilterInternalTest_withBlankToken_preStepOauth_shouldReturnError() throws ServletException, IOException {
         // Given
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME)).thenReturn(OAUTH_MODE_PRE_STEP);
-        when(httpServletRequest.getServletPath()).thenReturn(ACCOUNTS_PATH);
+        when(requestPathResolver.resolveRequestPath(httpServletRequest)).thenReturn(ACCOUNTS_PATH);
 
         when(httpServletRequest.getHeader(HttpHeaders.AUTHORIZATION))
                 .thenReturn(null);
@@ -402,7 +408,7 @@ public class TokenAuthenticationFilterTest {
         // Then
         verify(filterChain, never()).doFilter(any(), any());
         verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
-        assertTrue(integerArgumentCaptor.getValue() == HttpServletResponse.SC_FORBIDDEN);
+        assertEquals((int) integerArgumentCaptor.getValue(), HttpServletResponse.SC_FORBIDDEN);
         assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
@@ -410,7 +416,7 @@ public class TokenAuthenticationFilterTest {
     public void doFilter_withInvalidToken_shouldReturnError() throws ServletException, IOException {
         // Given
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME)).thenReturn(OAUTH_MODE_INTEGRATED);
-        when(httpServletRequest.getServletPath()).thenReturn(ACCOUNTS_PATH);
+        when(requestPathResolver.resolveRequestPath(httpServletRequest)).thenReturn(ACCOUNTS_PATH);
 
         String authorisationTokenValue = BEARER_TOKEN_PREFIX + BEARER_TOKEN_INVALID_VALUE;
         when(httpServletRequest.getHeader(HttpHeaders.AUTHORIZATION))
@@ -433,7 +439,21 @@ public class TokenAuthenticationFilterTest {
 
         verify(filterChain, never()).doFilter(any(), any());
         verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
-        assertTrue(integerArgumentCaptor.getValue() == HttpServletResponse.SC_FORBIDDEN);
+        assertEquals((int) integerArgumentCaptor.getValue(), HttpServletResponse.SC_FORBIDDEN);
         assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
+    }
+
+    @Test
+    public void doFilter_onCustomEndpoint_shouldSkipFilter() throws ServletException, IOException {
+        // Given
+        when(requestPathResolver.resolveRequestPath(httpServletRequest))
+                .thenReturn(CUSTOM_PATH);
+
+        // When
+        tokenAuthenticationFilter.doFilter(httpServletRequest, httpServletResponse, filterChain);
+
+        // Then
+        verify(filterChain).doFilter(httpServletRequest, httpServletResponse);
+        verifyZeroInteractions(aspspProfileService, tppErrorMessageWriter, tokenValidationService, oauthDataHolder);
     }
 }

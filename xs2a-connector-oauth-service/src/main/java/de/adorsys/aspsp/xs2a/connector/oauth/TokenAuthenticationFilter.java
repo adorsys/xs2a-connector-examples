@@ -24,6 +24,7 @@ import de.adorsys.psd2.xs2a.web.error.TppErrorMessageBuilder;
 import de.adorsys.psd2.xs2a.web.error.TppErrorMessageWriter;
 import de.adorsys.psd2.xs2a.web.filter.AbstractXs2aFilter;
 import de.adorsys.psd2.xs2a.web.filter.TppErrorMessage;
+import de.adorsys.psd2.xs2a.web.request.RequestPathResolver;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -50,6 +51,8 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
     private static final String BEARER_TOKEN_PREFIX = "Bearer ";
     private static final String CONSENT_ENP_ENDING = "consents";
     private static final String FUNDS_CONF_ENP_ENDING = "funds-confirmations";
+
+    private final RequestPathResolver requestPathResolver;
     private final String oauthModeHeaderName;
     private final TppErrorMessageBuilder tppErrorMessageBuilder;
     private final TokenValidationService tokenValidationService;
@@ -57,11 +60,15 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
     private final OauthDataHolder oauthDataHolder;
     private final TppErrorMessageWriter tppErrorMessageWriter;
 
-    public TokenAuthenticationFilter(@Value("${oauth.header-name:X-OAUTH-PREFERRED}") String oauthModeHeaderName,
+    public TokenAuthenticationFilter(RequestPathResolver requestPathResolver,
+                                     @Value("${oauth.header-name:X-OAUTH-PREFERRED}") String oauthModeHeaderName,
                                      TppErrorMessageBuilder tppErrorMessageBuilder,
                                      TokenValidationService tokenValidationService,
                                      AspspProfileService aspspProfileService,
-                                     OauthDataHolder oauthDataHolder, TppErrorMessageWriter tppErrorMessageWriter) {
+                                     OauthDataHolder oauthDataHolder,
+                                     TppErrorMessageWriter tppErrorMessageWriter) {
+        super(requestPathResolver);
+        this.requestPathResolver = requestPathResolver;
         this.oauthModeHeaderName = oauthModeHeaderName;
         this.tppErrorMessageBuilder = tppErrorMessageBuilder;
         this.tokenValidationService = tokenValidationService;
@@ -114,7 +121,8 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
             return true;
         }
 
-        boolean tokenRequired = isTokenRequired(oauthType, request.getServletPath());
+        String requestPath = requestPathResolver.resolveRequestPath(request);
+        boolean tokenRequired = isTokenRequired(oauthType, requestPath);
         if (tokenRequired && isTokenInvalid(bearerToken)) {
             log.info("Token authentication error: token is invalid");
             tppErrorMessageWriter.writeError(response, HttpServletResponse.SC_FORBIDDEN, buildTppErrorMessage(MessageErrorCode.TOKEN_INVALID));
@@ -124,18 +132,18 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
         return false;
     }
 
-    private boolean isTokenRequired(OauthType oauthType, String servletPath) {
+    private boolean isTokenRequired(OauthType oauthType, String requestPath) {
         if (oauthType == OauthType.PRE_STEP) {
             return true;
         }
 
-        String trimmedServletPath = trimEndingSlash(servletPath);
-        if (trimmedServletPath.endsWith(CONSENT_ENP_ENDING) || trimmedServletPath.endsWith(FUNDS_CONF_ENP_ENDING)) {
+        String trimmedRequestPath = trimEndingSlash(requestPath);
+        if (trimmedRequestPath.endsWith(CONSENT_ENP_ENDING) || trimmedRequestPath.endsWith(FUNDS_CONF_ENP_ENDING)) {
             return false;
         } else {
             Set<String> supportedProducts = aspspProfileService.getAspspSettings().getPis().getSupportedPaymentTypeAndProductMatrix().values().stream()
                                                     .flatMap(Collection::stream).collect(Collectors.toSet());
-            return supportedProducts.stream().noneMatch(trimmedServletPath::endsWith);
+            return supportedProducts.stream().noneMatch(trimmedRequestPath::endsWith);
         }
     }
 
