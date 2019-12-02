@@ -123,7 +123,8 @@ public class OauthProfileServiceWrapper implements AspspProfileService {
                                              existingSetting.getMulticurrencyAccountLevelSupported(),
                                              existingSetting.isAisPisSessionsSupported(),
                                              existingSetting.isSigningBasketSupported(),
-                                             existingSetting.isCheckTppRolesFromCertificateSupported());
+                                             existingSetting.isCheckTppRolesFromCertificateSupported(),
+                                             existingSetting.getAspspNotificationsSupported());
     }
 
     private AisAspspProfileSetting buildCustomAisAspspProfileSetting(AisAspspProfileSetting existingSetting, String redirectUrlSuffix) {

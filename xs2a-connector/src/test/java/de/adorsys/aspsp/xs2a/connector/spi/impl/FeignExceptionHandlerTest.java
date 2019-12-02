@@ -5,6 +5,8 @@ import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import feign.FeignException;
 import org.junit.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.client.ResourceAccessException;
+import java.net.ConnectException;
 
 import static org.junit.Assert.assertEquals;
 
@@ -80,5 +82,13 @@ public class FeignExceptionHandlerTest {
 
         assertEquals(MessageErrorCode.PSU_CREDENTIALS_INVALID, tppMessage.getErrorCode());
         assertEquals("", tppMessage.getMessageText());
+    }
+
+    @Test(expected = ResourceAccessException.class)
+    public void getFailureMessage_resourceAccessException() {
+        FeignException feignException = FeignException.errorStatus("message1", FeignExceptionHandler.error(HttpStatus.INTERNAL_SERVER_ERROR));
+        feignException.initCause(new ConnectException("Connection refused"));
+
+        FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.INTERNAL_SERVER_ERROR);
     }
 }
