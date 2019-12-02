@@ -67,7 +67,7 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
                                      AspspProfileService aspspProfileService,
                                      OauthDataHolder oauthDataHolder,
                                      TppErrorMessageWriter tppErrorMessageWriter) {
-        super(requestPathResolver);
+        super(tppErrorMessageWriter, requestPathResolver);
         this.requestPathResolver = requestPathResolver;
         this.oauthModeHeaderName = oauthModeHeaderName;
         this.tppErrorMessageBuilder = tppErrorMessageBuilder;
@@ -78,7 +78,7 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain chain) throws IOException, ServletException {
+    protected void doFilterInternalCustom(HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain chain) throws IOException, ServletException {
         String oauthHeader = request.getHeader(oauthModeHeaderName);
         boolean isOauthMode = StringUtils.isNotBlank(oauthHeader);
 

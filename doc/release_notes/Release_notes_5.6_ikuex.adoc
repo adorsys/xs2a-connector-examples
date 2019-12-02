@@ -1,0 +1,11 @@
+= Release notes v.5.6
+
+== Table of Contents
+
+* Bugfix: Incorrect response when XS2A remote components are unavailable
+
+== Bugfix: Incorrect response when XS2A remote components are unavailable
+
+From now on, filter `TokenAuthenticationFilter` extends `GlobalAbstractExceptionFilter` class that handles `ResourceAccessException` error
+which can be thrown when remote components are unavailable.
+

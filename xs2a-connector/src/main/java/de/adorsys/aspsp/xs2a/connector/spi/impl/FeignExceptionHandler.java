@@ -9,7 +9,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.client.ResourceAccessException;
 
+import java.net.ConnectException;
 import java.util.Collections;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -22,6 +24,10 @@ public class FeignExceptionHandler {
 
     public static TppMessage getFailureMessage(FeignException e, MessageErrorCode errorCode) {
         logger.error(e.getMessage(), e);
+
+        if (e.getCause() instanceof ConnectException) {
+            throw new ResourceAccessException(e.getMessage());
+        }
 
         switch (HttpStatus.valueOf(e.status())) {
             case INTERNAL_SERVER_ERROR:
