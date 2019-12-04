@@ -17,6 +17,7 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.AisConsentMapper;
+import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaLoginMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
@@ -26,6 +27,7 @@ import de.adorsys.ledgers.middleware.api.domain.sca.*;
 import de.adorsys.ledgers.middleware.api.domain.um.AisConsentTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
+import de.adorsys.ledgers.rest.client.AccountRestClient;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.ConsentRestClient;
 import de.adorsys.psd2.xs2a.core.consent.ConsentStatus;
@@ -34,9 +36,11 @@ import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountConsent;
+import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
+import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiInitiateAisConsentResponse;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiVerifyScaAuthorisationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
@@ -57,6 +61,8 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
@@ -72,6 +78,8 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
     private static final String SCA_STATUS_LOG = "SCA status is {}";
 
     private final ConsentRestClient consentRestClient;
+    private final AccountRestClient accountRestClient;
+    private final LedgersSpiAccountMapper accountMapper;
     private final TokenStorageService tokenStorageService;
     private final AisConsentMapper aisConsentMapper;
     private final AuthRequestInterceptor authRequestInterceptor;
@@ -85,7 +93,7 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
     public AisConsentSpiImpl(ConsentRestClient consentRestClient, TokenStorageService tokenStorageService,
                              AisConsentMapper aisConsentMapper, AuthRequestInterceptor authRequestInterceptor,
                              AspspConsentDataService consentDataService, GeneralAuthorisationService authorisationService,
-                             ScaMethodConverter scaMethodConverter, ScaLoginMapper scaLoginMapper, FeignExceptionReader feignExceptionReader) {
+                             ScaMethodConverter scaMethodConverter, ScaLoginMapper scaLoginMapper, FeignExceptionReader feignExceptionReader, AccountRestClient accountRestClient, LedgersSpiAccountMapper accountMapper) {
         super(authRequestInterceptor, consentDataService, authorisationService, scaMethodConverter, feignExceptionReader, tokenStorageService);
         this.consentRestClient = consentRestClient;
         this.tokenStorageService = tokenStorageService;
@@ -94,6 +102,8 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
         this.consentDataService = consentDataService;
         this.scaLoginMapper = scaLoginMapper;
         this.feignExceptionReader = feignExceptionReader;
+        this.accountRestClient = accountRestClient;
+        this.accountMapper = accountMapper;
     }
 
     /*
@@ -296,6 +306,19 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
             SCAResponseTO sca = consentDataService.response(initialAspspConsentData);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
+            SpiAccountAccess spiAccountAccess = accountConsent.getAccess();
+            boolean isAllAvailableAccounts = spiAccountAccess.getAvailableAccounts() != null;
+            boolean isAllPsd2 = spiAccountAccess.getAllPsd2() != null;
+
+            if (isAllAvailableAccounts || isAllPsd2) {
+                List<SpiAccountReference> references = getReferences();
+                spiAccountAccess.setAccounts(references);
+                if (isAllPsd2) {
+                    spiAccountAccess.setBalances(references);
+                    spiAccountAccess.setTransactions(references);
+                }
+            }
+
             AisConsentTO aisConsent = aisConsentMapper.mapToAisConsent(accountConsent);
 
             // Bearer token only returned in case of exempted consent.
@@ -310,5 +333,12 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
+    }
+
+    private List<SpiAccountReference> getReferences() {
+        return Optional.ofNullable(accountRestClient.getListOfAccounts().getBody())
+                       .map(l -> l.stream().map(accountMapper::toSpiAccountDetails)
+                                         .map(SpiAccountReference::new).collect(Collectors.toList()))
+                       .orElseGet(Collections::emptyList);
     }
 }
