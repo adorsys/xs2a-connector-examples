@@ -79,6 +79,7 @@ public class AisConsentSpiImplTest {
     private JsonReader jsonReader = new JsonReader();
     private SpiAccountConsent spiAccountConsent = jsonReader.getObjectFromFile("json/spi/impl/spi-account-consent.json", SpiAccountConsent.class);
     private SpiAccountConsent spiAccountConsentAvailableAccounts = jsonReader.getObjectFromFile("json/spi/impl/spi-account-consent-available-accounts.json", SpiAccountConsent.class);
+    private SpiAccountConsent spiAccountConsentAvailableAccountsWithBalances = jsonReader.getObjectFromFile("json/spi/impl/spi-account-consent-available-accounts-with-balances.json", SpiAccountConsent.class);
     private SpiAccountConsent spiAccountConsentGlobal = jsonReader.getObjectFromFile("json/spi/impl/spi-account-consent-global.json", SpiAccountConsent.class);
 
     @InjectMocks
@@ -151,6 +152,43 @@ public class AisConsentSpiImplTest {
 
         SpiAccountConsent spiAccountConsent = Mockito.spy(spiAccountConsentAvailableAccounts);
         SpiAccountAccess spiAccountAccess = Mockito.spy(spiAccountConsentAvailableAccounts.getAccess());
+        spiAccountConsent.setAccess(spiAccountAccess);
+
+        when(accountMapper.toSpiAccountDetails(accountDetailsTOS.get(0))).thenReturn(spiAccountDetails.get(0));
+        when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.of(Optional.of(accountDetailsTOS)));
+        when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
+        when(consentDataService.response(any())).thenReturn(scaResponseTO);
+        when(consentRestClient.startSCA(spiAccountConsent.getId(), aisConsentMapper.mapToAisConsent(spiAccountConsent))).thenReturn(ResponseEntity.ok(sca));
+
+        SpiResponse<SpiInitiateAisConsentResponse> actualResponse = spi.initiateAisConsent(SPI_CONTEXT_DATA, spiAccountConsent, spiAspspConsentDataProvider);
+
+        assertTrue(actualResponse.getErrors().isEmpty());
+        assertNotNull(actualResponse.getPayload());
+        verify(consentRestClient, times((1))).startSCA(spiAccountConsent.getId(), aisConsentMapper.mapToAisConsent(spiAccountConsent));
+        verify(consentDataService).response(ASPSP_CONSENT_DATA.getAspspConsentData());
+        verify(authRequestInterceptor).setAccessToken(null);
+
+        List<SpiAccountReference> spiAccountReferences = spiAccountDetails.stream().map(SpiAccountReference::new).collect(Collectors.toList());
+        verify(spiAccountConsent, times(2)).getAccess();
+        verify(spiAccountAccess).setAccounts(spiAccountReferences);
+    }
+
+    @Test
+    public void initiateAisConsent_WithInitialAspspConsentData_availableAccountsWithBalances() {
+        SCAConsentResponseTO sca = new SCAConsentResponseTO();
+        BearerTokenTO token = new BearerTokenTO();
+        token.setExpires_in(100);
+        token.setAccessTokenObject(new AccessTokenTO());
+        token.setRefresh_token("refresh_token");
+        token.setAccess_token(ACCESS_TOKEN);
+        when(scaResponseTO.getBearerToken()).thenReturn(token);
+        sca.setBearerToken(token);
+
+        List<AccountDetailsTO> accountDetailsTOS = buildListOfAccounts();
+        List<SpiAccountDetails> spiAccountDetails = buildSpiAccountDetails();
+
+        SpiAccountConsent spiAccountConsent = Mockito.spy(spiAccountConsentAvailableAccountsWithBalances);
+        SpiAccountAccess spiAccountAccess = Mockito.spy(spiAccountConsentAvailableAccountsWithBalances.getAccess());
         spiAccountConsent.setAccess(spiAccountAccess);
 
         when(accountMapper.toSpiAccountDetails(accountDetailsTOS.get(0))).thenReturn(spiAccountDetails.get(0));
