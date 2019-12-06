@@ -14,8 +14,6 @@ import de.adorsys.ledgers.rest.client.AccountRestClient;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
-import de.adorsys.psd2.xs2a.core.tpp.TppInfo;
-import de.adorsys.psd2.xs2a.core.tpp.TppRole;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
@@ -35,9 +33,12 @@ import org.springframework.http.ResponseEntity;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Currency;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -107,9 +108,13 @@ public class AccountSpiImplTest {
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
         when(accountRestClient.getTransactionById(accountReference.getResourceId(), TRANSACTION_ID)).thenReturn(ResponseEntity.ok(transactionTO));
         when(accountRestClient.getAccountDetailsById(RESOURCE_ID)).thenReturn(ResponseEntity.ok(accountDetailsTO));
-        when(accountRestClient.getAccountDetailsByIban(IBAN)).thenReturn(ResponseEntity.ok(accountDetailsTO));
         when(accountRestClient.getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
         when(accountRestClient.getBalances(RESOURCE_ID)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
+
+        AccountDetailsTO accountDetails_1 = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
+        AccountDetailsTO accountDetails_2 = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
+        accountDetails_2.setCurrency(Currency.getInstance("USD"));
+        when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(Arrays.asList(accountDetails_1, accountDetails_2)));
     }
 
     @Test
@@ -178,10 +183,7 @@ public class AccountSpiImplTest {
 
         assertTrue(actualResponse.getErrors().isEmpty());
         assertNotNull(actualResponse.getPayload());
-        verify(accountRestClient, times(1)).getAccountDetailsByIban(IBAN);
-        verify(tokenService, times(2)).response(ASPSP_CONSENT_DATA.getAspspConsentData());
-        verify(authRequestInterceptor, times(2)).setAccessToken("access_token");
-        verify(authRequestInterceptor, times(2)).setAccessToken(null);
+        verifyGetListOfAccounts();
     }
 
     @Test
@@ -191,10 +193,7 @@ public class AccountSpiImplTest {
 
         assertTrue(actualResponse.getErrors().isEmpty());
         assertNotNull(actualResponse.getPayload());
-        verify(accountRestClient, times(1)).getAccountDetailsByIban(IBAN);
-        verify(tokenService, times(2)).response(ASPSP_CONSENT_DATA.getAspspConsentData());
-        verify(authRequestInterceptor, times(2)).setAccessToken("access_token");
-        verify(authRequestInterceptor, times(2)).setAccessToken(null);
+        verifyGetListOfAccounts();
     }
 
     @Test
@@ -206,10 +205,7 @@ public class AccountSpiImplTest {
 
         assertTrue(actualResponse.getErrors().isEmpty());
         assertNotNull(actualResponse.getPayload());
-        verify(accountRestClient, times(1)).getListOfAccounts();
-        verify(tokenService, times(2)).response(ASPSP_CONSENT_DATA.getAspspConsentData());
-        verify(authRequestInterceptor, times(2)).setAccessToken("access_token");
-        verify(authRequestInterceptor, times(2)).setAccessToken(null);
+        verifyGetListOfAccounts();
     }
 
     @Test
@@ -226,13 +222,37 @@ public class AccountSpiImplTest {
         verify(authRequestInterceptor, times(1)).setAccessToken(null);
     }
 
-    private static TppInfo buildTppInfo() {
-        TppInfo tppInfo = new TppInfo();
-        tppInfo.setAuthorisationNumber("registrationNumber");
-        tppInfo.setTppName("tppName");
-        tppInfo.setTppRoles(Collections.singletonList(TppRole.PISP));
-        tppInfo.setAuthorityId("authorityId");
-        return tppInfo;
+    @Test
+    public void requestAccountList_withoutBalance_regularConsent_noCurrency() {
+        spiAccountConsent = jsonReader.getObjectFromFile("json/spi/impl/spi-account-consent-no-currency.json", SpiAccountConsent.class);
+
+        SpiResponse<List<SpiAccountDetails>> actualResponse = accountSpi.requestAccountList(SPI_CONTEXT_DATA, false,
+                                                                                            spiAccountConsent, aspspConsentDataProvider);
+
+        assertTrue(actualResponse.getErrors().isEmpty());
+        List<SpiAccountDetails> spiAccountDetails = actualResponse.getPayload();
+        assertNotNull(spiAccountDetails);
+        assertThat(spiAccountDetails.size(), is(2));
+        verifyGetListOfAccounts();
+    }
+
+    @Test
+    public void requestAccountList_withoutBalance_regularConsent_currencyPresent() {
+        SpiResponse<List<SpiAccountDetails>> actualResponse = accountSpi.requestAccountList(SPI_CONTEXT_DATA, false,
+                                                                                            spiAccountConsent, aspspConsentDataProvider);
+
+        assertTrue(actualResponse.getErrors().isEmpty());
+        List<SpiAccountDetails> spiAccountDetails = actualResponse.getPayload();
+        assertNotNull(spiAccountDetails);
+        assertThat(spiAccountDetails.size(), is(1));
+        verifyGetListOfAccounts();
+    }
+
+    private void verifyGetListOfAccounts() {
+        verify(accountRestClient, times(1)).getListOfAccounts();
+        verify(tokenService, times(2)).response(ASPSP_CONSENT_DATA.getAspspConsentData());
+        verify(authRequestInterceptor, times(2)).setAccessToken("access_token");
+        verify(authRequestInterceptor, times(2)).setAccessToken(null);
     }
 
     @Test

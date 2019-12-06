@@ -385,27 +385,30 @@ public class AccountSpiImpl implements AccountSpi {
 
     private List<SpiAccountDetails> getAccountDetailsFromReferences(List<SpiAccountReference> references,
                                                                     byte[] aspspConsentData) {
-        return references.stream().map(r -> getAccountDetailsByAccountReference(r, aspspConsentData))
-                       .filter(Optional::isPresent).map(Optional::get).collect(Collectors.toList());
-    }
-
-    private Optional<SpiAccountDetails> getAccountDetailsByAccountReference(SpiAccountReference reference,
-                                                                            byte[] aspspConsentData) {
-        if (reference == null) {
-            return Optional.empty();
-        }
 
         try {
             applyAuthorisation(aspspConsentData);
 
-            // TODO don't use IBAN as an account identifier
-            // https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/440
-            AccountDetailsTO response = accountRestClient.getAccountDetailsByIban(reference.getIban()).getBody();
+            List<AccountDetailsTO> accountDetails = accountRestClient.getListOfAccounts().getBody();
 
-            return Optional.ofNullable(response).map(accountMapper::toSpiAccountDetails);
+            if (accountDetails == null) {
+                return Collections.emptyList();
+            }
+
+            return accountDetails.stream()
+                           .filter(account -> filterAccountDetailsByIbanAndCurrency(references, account))
+                           .map(accountMapper::toSpiAccountDetails)
+                           .collect(Collectors.toList());
+
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
+    }
+
+    private boolean filterAccountDetailsByIbanAndCurrency(List<SpiAccountReference> references, AccountDetailsTO account) {
+        return references.stream()
+                       .filter(reference -> reference.getIban().equals(account.getIban()))
+                       .anyMatch(reference -> reference.getCurrency() == null || reference.getCurrency().equals(account.getCurrency()));
     }
 
     private List<SpiAccountDetails> filterAccountDetailsByWithBalance(boolean withBalance, List<SpiAccountDetails> details,
