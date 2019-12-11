@@ -1,4 +1,10 @@
 = Release notes v. 4.6
 
 == Table of Contents
+* Fixed wrong consentStatus returned in Get Consent Status request for Global and
+Available Accounts consents
 
+== Fixed wrong consentStatus returned in Get Consent Status request for Global and Available Accounts consents
+
+From now on, `GET v1/consents/{consentId}/status` returns correct `valid` status
+for global and available accounts, in case of succesful authorisation during Multilevel SCA.
