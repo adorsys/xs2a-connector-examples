@@ -3,9 +3,19 @@
 == Table of Contents
 
 * Bugfix: Incorrect response when XS2A remote components are unavailable
+* Adjust xs2a-connector-examples to return correct value for multilevelScaRequired on initiating payment/consent
+* Refactoring connector-examples by using multilevelScaRequired
+
 
 == Bugfix: Incorrect response when XS2A remote components are unavailable
 
 From now on, filter `TokenAuthenticationFilter` extends `GlobalAbstractExceptionFilter` class that handles `ResourceAccessException` error
 which can be thrown when remote components are unavailable.
 
+== Adjust xs2a-connector-examples to return correct value for multilevelScaRequired on initiating payment/consent
+
+From now on, on initiate payment and create consent there is an additional call to Ledgers that returns correct `multilevelScaRequired` parameter based on PSU and account references.
+
+== Refactoring connector-examples by using multilevelScaRequired
+
+From now on, create consent and initiate payment in Ledgers are invoked based on the `multilevelScaRequired` parameter.

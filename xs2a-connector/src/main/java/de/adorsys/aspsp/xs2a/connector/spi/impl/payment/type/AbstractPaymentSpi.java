@@ -14,6 +14,7 @@ import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiGetPaymentStatusResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
+import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
 import feign.FeignException;
@@ -41,7 +42,7 @@ public abstract class AbstractPaymentSpi<P extends SpiPayment, R extends SpiPaym
                                                    @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         byte[] initialAspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
         if (ArrayUtils.isEmpty(initialAspspConsentData)) {
-            return processEmptyAspspConsentData(payment, aspspConsentDataProvider);
+            return processEmptyAspspConsentData(payment, aspspConsentDataProvider, contextData.getPsuData());
         }
         try {
             SCAPaymentResponseTO response = initiatePaymentInternal(payment, initialAspspConsentData);
@@ -107,7 +108,8 @@ public abstract class AbstractPaymentSpi<P extends SpiPayment, R extends SpiPaym
     protected abstract SCAPaymentResponseTO initiatePaymentInternal(P payment, byte[] initialAspspConsentData);
 
     protected abstract SpiResponse<R> processEmptyAspspConsentData(@NotNull P payment,
-                                                                   @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider);
+                                                                   @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider,
+                                                                   @NotNull SpiPsuData spiPsuData);
 
     @NotNull
     protected abstract R getToSpiPaymentResponse(SCAPaymentResponseTO response);
