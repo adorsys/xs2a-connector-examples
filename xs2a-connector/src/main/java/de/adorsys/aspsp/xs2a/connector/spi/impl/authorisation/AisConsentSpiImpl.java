@@ -23,6 +23,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.MultilevelScaService;
 import de.adorsys.ledgers.middleware.api.domain.sca.*;
 import de.adorsys.ledgers.middleware.api.domain.um.AisConsentTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
@@ -43,6 +44,7 @@ import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiInitiateAisConsentResponse;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiVerifyScaAuthorisationResponse;
+import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse.VoidResponse;
 import de.adorsys.psd2.xs2a.spi.service.AisConsentSpi;
@@ -58,11 +60,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 
@@ -86,6 +86,7 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
     private final AspspConsentDataService consentDataService;
     private final ScaLoginMapper scaLoginMapper;
     private final FeignExceptionReader feignExceptionReader;
+    private final MultilevelScaService multilevelScaService;
 
     @Value("${online-banking.url}")
     private String onlineBankingUrl;
@@ -93,7 +94,8 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
     public AisConsentSpiImpl(ConsentRestClient consentRestClient, TokenStorageService tokenStorageService,
                              AisConsentMapper aisConsentMapper, AuthRequestInterceptor authRequestInterceptor,
                              AspspConsentDataService consentDataService, GeneralAuthorisationService authorisationService,
-                             ScaMethodConverter scaMethodConverter, ScaLoginMapper scaLoginMapper, FeignExceptionReader feignExceptionReader, AccountRestClient accountRestClient, LedgersSpiAccountMapper accountMapper) {
+                             ScaMethodConverter scaMethodConverter, ScaLoginMapper scaLoginMapper, FeignExceptionReader feignExceptionReader,
+                             AccountRestClient accountRestClient, LedgersSpiAccountMapper accountMapper, MultilevelScaService multilevelScaService) {
         super(authRequestInterceptor, consentDataService, authorisationService, scaMethodConverter, feignExceptionReader, tokenStorageService);
         this.consentRestClient = consentRestClient;
         this.tokenStorageService = tokenStorageService;
@@ -104,6 +106,7 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
         this.feignExceptionReader = feignExceptionReader;
         this.accountRestClient = accountRestClient;
         this.accountMapper = accountMapper;
+        this.multilevelScaService = multilevelScaService;
     }
 
     /*
@@ -115,7 +118,7 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
                                                                          SpiAccountConsent accountConsent, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         byte[] initialAspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
         if (ArrayUtils.isEmpty(initialAspspConsentData)) {
-            return firstCallInstantiatingConsent(accountConsent, aspspConsentDataProvider, new SpiInitiateAisConsentResponse());
+            return firstCallInstantiatingConsent(accountConsent, aspspConsentDataProvider, new SpiInitiateAisConsentResponse(), contextData.getPsuData());
         }
 
         SCAConsentResponseTO aisConsentResponse;
@@ -237,20 +240,38 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
     }
 
     @Override
-    protected boolean isFirstInitiationOfMultilevelSca(SpiAccountConsent businessObject) {
-        return businessObject.getPsuData().size() <= 1;
+    protected boolean isFirstInitiationOfMultilevelSca(SpiAccountConsent businessObject, SCAConsentResponseTO scaConsentResponseTO) {
+        return !scaConsentResponseTO.isMultilevelScaRequired() || businessObject.getPsuData().size() <= 1;
     }
 
     private <T extends SpiInitiateAisConsentResponse> SpiResponse<T> firstCallInstantiatingConsent(
             @NotNull SpiAccountConsent accountConsent,
-            @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, T responsePayload) {
+            @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, T responsePayload,
+            @NotNull SpiPsuData spiPsuData) {
+
+        boolean isMultilevelScaRequired = isMultilevelScaRequired(accountConsent, spiPsuData);
+
         SCAConsentResponseTO response = new SCAConsentResponseTO();
         response.setScaStatus(ScaStatusTO.STARTED);
-        responsePayload.setAccountAccess(accountConsent.getAccess());
+        response.setMultilevelScaRequired(isMultilevelScaRequired);
         aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response, false));
+
+        responsePayload.setAccountAccess(accountConsent.getAccess());
+        responsePayload.setMultilevelScaRequired(isMultilevelScaRequired);
+
         return SpiResponse.<T>builder()
                        .payload(responsePayload)
                        .build();
+    }
+
+    private boolean isMultilevelScaRequired(@NotNull SpiAccountConsent accountConsent, @NotNull SpiPsuData spiPsuData) {
+        SpiAccountAccess access = accountConsent.getAccess();
+
+        Set<SpiAccountReference> spiAccountReferences = Stream.of(access.getAccounts(), access.getBalances(), access.getTransactions())
+                                                                .flatMap(Collection::stream)
+                                                                .collect(Collectors.toSet());
+
+        return multilevelScaService.isMultilevelScaRequired(spiPsuData, spiAccountReferences);
     }
 
     @Override
@@ -291,6 +312,7 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
         SCAConsentResponseTO consentResponse = scaLoginMapper.toConsentResponse(scaResponseTO);
         consentResponse.setObjectType(SCAConsentResponseTO.class.getSimpleName());
         consentResponse.setConsentId(businessObject.getId());
+        consentResponse.setMultilevelScaRequired(originalResponse.isMultilevelScaRequired());
         return consentResponse;
     }
 
@@ -315,7 +337,7 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
                 List<SpiAccountReference> references = getReferences();
                 spiAccountAccess.setAccounts(references);
 
-                if(isAllAvailableAccountsWithBalance || isAllPsd2 ){
+                if (isAllAvailableAccountsWithBalance || isAllPsd2) {
                     spiAccountAccess.setBalances(references);
                 }
 

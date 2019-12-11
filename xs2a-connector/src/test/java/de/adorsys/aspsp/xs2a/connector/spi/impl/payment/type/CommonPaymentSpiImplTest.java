@@ -24,6 +24,8 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.MediaType;
 
+import java.util.HashSet;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
@@ -70,7 +72,7 @@ public class CommonPaymentSpiImplTest {
         SpiSinglePaymentInitiationResponse spiSinglePaymentInitiationResponse = new SpiSinglePaymentInitiationResponse();
         spiSinglePaymentInitiationResponse.setPaymentId(PAYMENT_ID);
 
-        when(generalPaymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, spiPaymentInfo, spiAspspConsentDataProvider, new SpiSinglePaymentInitiationResponse()))
+        when(generalPaymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, spiPaymentInfo, spiAspspConsentDataProvider, new SpiSinglePaymentInitiationResponse(), SPI_CONTEXT_DATA.getPsuData(), new HashSet<>()))
                 .thenReturn(buildSpiResponse(spiSinglePaymentInitiationResponse));
 
         //When
@@ -88,11 +90,11 @@ public class CommonPaymentSpiImplTest {
         SpiSinglePaymentInitiationResponse spiSinglePaymentInitiationResponse = new SpiSinglePaymentInitiationResponse();
         spiSinglePaymentInitiationResponse.setPaymentId(PAYMENT_ID);
 
-        when(generalPaymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, spiPaymentInfo, spiAspspConsentDataProvider, new SpiSinglePaymentInitiationResponse()))
+        when(generalPaymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, spiPaymentInfo, spiAspspConsentDataProvider, new SpiSinglePaymentInitiationResponse(), SPI_CONTEXT_DATA.getPsuData(), new HashSet<>()))
                 .thenReturn(buildSpiResponse(spiSinglePaymentInitiationResponse));
 
         //When
-        SpiResponse<SpiPaymentInitiationResponse> response = commonPaymentSpi.processEmptyAspspConsentData(spiPaymentInfo, spiAspspConsentDataProvider);
+        SpiResponse<SpiPaymentInitiationResponse> response = commonPaymentSpi.processEmptyAspspConsentData(spiPaymentInfo, spiAspspConsentDataProvider, SPI_CONTEXT_DATA.getPsuData());
 
         //Then
         assertTrue(response.isSuccessful());

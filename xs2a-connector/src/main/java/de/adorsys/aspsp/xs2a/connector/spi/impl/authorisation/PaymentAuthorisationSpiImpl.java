@@ -134,12 +134,13 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
         }
         String unsupportedPaymentProductMessage = String.format("Unsupported payment product %s", paymentProduct);
         paymentResponse.setPaymentProduct(PaymentProductTO.getByValue(paymentProduct).orElseThrow(() -> new IOException(unsupportedPaymentProductMessage)));
+        paymentResponse.setMultilevelScaRequired(originalResponse.isMultilevelScaRequired());
         return paymentResponse;
     }
 
     @Override
-    protected boolean isFirstInitiationOfMultilevelSca(SpiPayment businessObject) {
-        return businessObject.getPsuDataList().size() <= 1;
+    protected boolean isFirstInitiationOfMultilevelSca(SpiPayment businessObject, SCAPaymentResponseTO scaPaymentResponseTO) {
+        return !scaPaymentResponseTO.isMultilevelScaRequired() || businessObject.getPsuDataList().size() <= 1;
     }
 
     @Override

@@ -1,9 +1,6 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 
-import de.adorsys.aspsp.xs2a.connector.spi.converter.AddressMapperImpl;
-import de.adorsys.aspsp.xs2a.connector.spi.converter.ChallengeDataMapperImpl;
-import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
-import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapperImpl;
+import de.adorsys.aspsp.xs2a.connector.spi.converter.*;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
@@ -19,6 +16,7 @@ import de.adorsys.psd2.xs2a.core.pis.FrequencyCode;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
+import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiGetPaymentStatusResponse;
@@ -34,13 +32,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = {LedgersSpiPaymentMapperImpl.class, AddressMapperImpl.class, ChallengeDataMapperImpl.class})
+@ContextConfiguration(classes = {LedgersSpiPaymentMapperImpl.class, AddressMapperImpl.class, ChallengeDataMapperImpl.class, LedgersSpiAccountMapperImpl.class})
 public class PeriodicPaymentSpiImplTest {
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
     private static final SpiContextData SPI_CONTEXT_DATA = TestSpiDataProvider.getSpiContextData();
@@ -134,8 +136,9 @@ public class PeriodicPaymentSpiImplTest {
                 = ArgumentCaptor.forClass(SpiPeriodicPaymentInitiationResponse.class);
 
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(new byte[]{});
+        Set<SpiAccountReference> spiAccountReferences = new HashSet<>(Collections.singleton(payment.getDebtorAccount()));
         when(paymentService.firstCallInstantiatingPayment(eq(PaymentTypeTO.PERIODIC), eq(payment),
-                                                          eq(spiAspspConsentDataProvider), spiPeriodicPaymentInitiationResponseCaptor.capture()))
+                                                          eq(spiAspspConsentDataProvider), spiPeriodicPaymentInitiationResponseCaptor.capture(), eq(SPI_CONTEXT_DATA.getPsuData()), eq(spiAccountReferences)))
                 .thenReturn(SpiResponse.<SpiPeriodicPaymentInitiationResponse>builder()
                                     .payload(new SpiPeriodicPaymentInitiationResponse())
                                     .build());
@@ -144,7 +147,7 @@ public class PeriodicPaymentSpiImplTest {
 
         verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
         verify(paymentService, times(1)).firstCallInstantiatingPayment(eq(PaymentTypeTO.PERIODIC), eq(payment),
-                                                                       eq(spiAspspConsentDataProvider), any(SpiPeriodicPaymentInitiationResponse.class));
+                                                                       eq(spiAspspConsentDataProvider), any(SpiPeriodicPaymentInitiationResponse.class), eq(SPI_CONTEXT_DATA.getPsuData()), eq(spiAccountReferences));
         assertNull(spiPeriodicPaymentInitiationResponseCaptor.getValue().getPaymentId());
     }
 

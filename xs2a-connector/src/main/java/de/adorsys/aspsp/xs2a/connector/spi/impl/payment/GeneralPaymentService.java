@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.MultilevelScaService;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
@@ -33,10 +34,12 @@ import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
+import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiGetPaymentStatusResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
+import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
 import feign.FeignException;
@@ -52,6 +55,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -67,19 +71,22 @@ public class GeneralPaymentService {
     private final FeignExceptionReader feignExceptionReader;
     private final ObjectMapper objectMapper;
     private final String transactionStatusXmlBody;
+    private final MultilevelScaService multilevelScaService;
 
     public GeneralPaymentService(PaymentRestClient ledgersRestClient,
                                  AuthRequestInterceptor authRequestInterceptor,
                                  AspspConsentDataService consentDataService,
                                  FeignExceptionReader feignExceptionReader,
                                  ObjectMapper objectMapper,
-                                 @Value("${test-transaction-status-xml-body}") String transactionStatusXmlBody) {
+                                 @Value("${test-transaction-status-xml-body}") String transactionStatusXmlBody,
+                                 MultilevelScaService multilevelScaService) {
         this.paymentRestClient = ledgersRestClient;
         this.authRequestInterceptor = authRequestInterceptor;
         this.consentDataService = consentDataService;
         this.feignExceptionReader = feignExceptionReader;
         this.objectMapper = objectMapper;
         this.transactionStatusXmlBody = transactionStatusXmlBody;
+        this.multilevelScaService = multilevelScaService;
     }
 
     public SpiResponse<SpiGetPaymentStatusResponse> getPaymentStatusById(@NotNull PaymentTypeTO paymentType,
@@ -168,7 +175,8 @@ public class GeneralPaymentService {
      */
     public <T extends SpiPaymentInitiationResponse> SpiResponse<T> firstCallInstantiatingPayment(
             @NotNull PaymentTypeTO paymentType, @NotNull SpiPayment payment,
-            @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, T responsePayload
+            @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, T responsePayload,
+            @NotNull SpiPsuData spiPsuData, Set<SpiAccountReference> spiAccountReferences
     ) {
         String paymentId = StringUtils.isNotBlank(payment.getPaymentId())
                                    ? payment.getPaymentId()
@@ -181,6 +189,10 @@ public class GeneralPaymentService {
         responsePayload.setPaymentId(paymentId);
 //		responsePayload.setAspspAccountId();// TODO ID of the deposit account
         responsePayload.setTransactionStatus(TransactionStatus.valueOf(response.getTransactionStatus().name()));
+
+        boolean isMultilevelScaRequired = multilevelScaService.isMultilevelScaRequired(spiPsuData, spiAccountReferences);
+        response.setMultilevelScaRequired(isMultilevelScaRequired);
+        responsePayload.setMultilevelScaRequired(isMultilevelScaRequired);
 
         aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response, false));
 
