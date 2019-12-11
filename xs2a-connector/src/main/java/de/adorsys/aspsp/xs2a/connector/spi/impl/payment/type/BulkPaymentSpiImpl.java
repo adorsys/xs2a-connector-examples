@@ -25,13 +25,19 @@ import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
+import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiBulkPaymentInitiationResponse;
+import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.BulkPaymentSpi;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Component
@@ -67,8 +73,12 @@ public class BulkPaymentSpiImpl extends AbstractPaymentSpi<SpiBulkPayment, SpiBu
 
     @Override
     protected SpiResponse<SpiBulkPaymentInitiationResponse> processEmptyAspspConsentData(@NotNull SpiBulkPayment payment,
-                                                                                         @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.BULK, payment, aspspConsentDataProvider, new SpiBulkPaymentInitiationResponse());
+                                                                                         @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider,
+                                                                                         @NotNull SpiPsuData spiPsuData) {
+        Set<SpiAccountReference> spiAccountReferences = payment.getPayments().stream()
+                                                                .map(SpiSinglePayment::getDebtorAccount)
+                                                                .collect(Collectors.toSet());
+        return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.BULK, payment, aspspConsentDataProvider, new SpiBulkPaymentInitiationResponse(), spiPsuData, spiAccountReferences);
     }
 
     @NotNull

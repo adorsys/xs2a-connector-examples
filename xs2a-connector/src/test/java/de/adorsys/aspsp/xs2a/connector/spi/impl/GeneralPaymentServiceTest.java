@@ -46,12 +46,14 @@ public class GeneralPaymentServiceTest {
     private ObjectMapper objectMapper;
     @Mock
     private LedgersSpiPaymentMapper paymentMapper;
+    @Mock
+    private MultilevelScaService multilevelScaService;
 
     private GeneralPaymentService generalPaymentService;
 
     @Before
     public void setUp() {
-        generalPaymentService = new GeneralPaymentService(paymentRestClient, authRequestInterceptor, consentDataService, null, objectMapper, MOCK_XML_BODY);
+        generalPaymentService = new GeneralPaymentService(paymentRestClient, authRequestInterceptor, consentDataService, null, objectMapper, MOCK_XML_BODY, multilevelScaService);
     }
 
     @Test

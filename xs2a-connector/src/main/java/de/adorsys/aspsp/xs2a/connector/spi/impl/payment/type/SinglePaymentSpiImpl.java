@@ -25,13 +25,19 @@ import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
+import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiationResponse;
+import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.SinglePaymentSpi;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 @Component
 public class SinglePaymentSpiImpl extends AbstractPaymentSpi<SpiSinglePayment, SpiSinglePaymentInitiationResponse> implements SinglePaymentSpi {
@@ -66,8 +72,10 @@ public class SinglePaymentSpiImpl extends AbstractPaymentSpi<SpiSinglePayment, S
 
     @Override
     protected SpiResponse<SpiSinglePaymentInitiationResponse> processEmptyAspspConsentData(@NotNull SpiSinglePayment payment,
-                                                                                           @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, payment, aspspConsentDataProvider, new SpiSinglePaymentInitiationResponse());
+                                                                                           @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider,
+                                                                                           @NotNull SpiPsuData spiPsuData) {
+        Set<SpiAccountReference> spiAccountReferences = new HashSet<>(Collections.singleton(payment.getDebtorAccount()));
+        return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, payment, aspspConsentDataProvider, new SpiSinglePaymentInitiationResponse(), spiPsuData, spiAccountReferences);
     }
 
     @NotNull

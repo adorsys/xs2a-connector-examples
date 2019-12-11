@@ -113,4 +113,6 @@ public abstract class LedgersSpiAccountMapper {
     }//Full manual mapping here, no extra tests necessary
 
     public abstract FundsConfirmationRequestTO toFundsConfirmationTO(SpiPsuData psuData, SpiFundsConfirmationRequest spiFundsConfirmationRequest);
+
+    public abstract AccountReferenceTO mapToAccountReferenceTO(SpiAccountReference spiAccountReference);
 }

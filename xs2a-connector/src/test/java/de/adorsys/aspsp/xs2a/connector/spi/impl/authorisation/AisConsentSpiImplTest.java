@@ -7,6 +7,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.MultilevelScaService;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.middleware.api.domain.account.AccountDetailsTO;
@@ -110,6 +111,8 @@ public class AisConsentSpiImplTest {
     private AccountRestClient accountRestClient;
     @Mock
     private LedgersSpiAccountMapper accountMapper;
+    @Mock
+    private MultilevelScaService multilevelScaService;
 
     @Test
     public void initiateAisConsent_WithInitialAspspConsentData() {
@@ -256,6 +259,7 @@ public class AisConsentSpiImplTest {
         sca.setObjectType("SCAConsentResponseTO");
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(new byte[]{});
         when(consentDataService.store(sca, false)).thenReturn(new byte[]{});
+        when(multilevelScaService.isMultilevelScaRequired(SPI_CONTEXT_DATA.getPsuData(), Collections.singleton(spiAccountConsent.getAccess().getAccounts().get(0)))).thenReturn(true);
 
         SpiResponse<SpiInitiateAisConsentResponse> actualResponse = spi.initiateAisConsent(SPI_CONTEXT_DATA, spiAccountConsent, spiAspspConsentDataProvider);
 
@@ -329,7 +333,6 @@ public class AisConsentSpiImplTest {
         SpiPsuData spiPsuData2 = new SpiPsuData("psu2", null, null, null, null);
         spiAccountConsent.setPsuData(Arrays.asList(spiPsuData, spiPsuData2));
         SCAConsentResponseTO scaConsentResponseTO = buildSCAConsentResponseTO(PSUIDENTIFIED);
-        AisConsentTO aisConsentTO = new AisConsentTO();
         String password = "password";
         SCALoginResponseTO scaLoginResponseTO = new SCALoginResponseTO();
 
@@ -348,6 +351,8 @@ public class AisConsentSpiImplTest {
 
         SCAConsentResponseTO startScaResponse = new SCAConsentResponseTO();
         startScaResponse.setScaStatus(PSUAUTHENTICATED);
+        when(consentDataService.response(CONSENT_DATA_BYTES)).thenReturn(scaConsentResponseTO);
+        when(consentRestClient.startSCA(spiAccountConsent.getId(), aisConsentMapper.mapToAisConsent(spiAccountConsent))).thenReturn(ResponseEntity.ok(startScaResponse));
 
         // When
         SpiResponse<SpiPsuAuthorisationResponse> actualResponse = spi.authorisePsu(SPI_CONTEXT_DATA, spiPsuData, password, spiAccountConsent, spiAspspConsentDataProvider);
@@ -356,7 +361,7 @@ public class AisConsentSpiImplTest {
         assertFalse(actualResponse.hasError());
         assertEquals(SpiAuthorisationStatus.SUCCESS, actualResponse.getPayload().getSpiAuthorisationStatus());
 
-        verify(spiAspspConsentDataProvider, times(1)).updateAspspConsentData(tokenStorageService.toBytes(scaConsentResponseTO));
+        verify(spiAspspConsentDataProvider, times(2)).updateAspspConsentData(tokenStorageService.toBytes(scaConsentResponseTO));
         verify(authorisationService).authorisePsuForConsent(spiPsuData, password, CONSENT_ID, OpTypeTO.CONSENT, spiAspspConsentDataProvider);
     }
 
