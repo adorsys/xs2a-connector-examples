@@ -35,6 +35,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Collections;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
@@ -46,7 +47,6 @@ import static org.mockito.Mockito.*;
 @ContextConfiguration(classes = {LedgersSpiPaymentMapperImpl.class, AddressMapperImpl.class, ChallengeDataMapperImpl.class, LedgersSpiAccountMapperImpl.class})
 public class BulkPaymentSpiImplTest {
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
-    private static final SpiPsuData PSU_ID_DATA = new SpiPsuData("1", "2", "3", "4", "5");
     private static final SpiContextData SPI_CONTEXT_DATA = TestSpiDataProvider.getSpiContextData();
     private static final String PAYMENT_ID = "c966f143-f6a2-41db-9036-8abaeeef3af7";
     private static final byte[] CONSENT_DATA_BYTES = "consent_data".getBytes();
