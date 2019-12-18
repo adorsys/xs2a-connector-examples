@@ -101,7 +101,9 @@ public class MultilevelScaServiceTest {
     }
 
     private SpiPsuData buildSpiPsuData(String psuId) {
-        return new SpiPsuData(psuId, null, null, null, null);
+        return SpiPsuData.builder()
+                       .psuId(psuId)
+                       .build();
     }
 
     private SpiAccountReference buildSpiAccountReference(String iban) {

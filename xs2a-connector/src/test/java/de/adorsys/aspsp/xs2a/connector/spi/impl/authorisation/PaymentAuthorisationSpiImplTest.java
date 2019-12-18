@@ -48,8 +48,38 @@ import static org.mockito.Mockito.*;
 public class PaymentAuthorisationSpiImplTest {
 
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
-    private static final SpiPsuData PSU_ID_DATA_1 = new SpiPsuData("1", "2", "3", "4", "5");
-    private static final SpiPsuData PSU_ID_DATA_2 = new SpiPsuData("11", "22", "33", "44", "55");
+    private static final SpiPsuData PSU_ID_DATA_1 = SpiPsuData.builder()
+                                                            .psuId("1")
+                                                            .psuIdType("2")
+                                                            .psuCorporateId("3")
+                                                            .psuCorporateIdType("4")
+                                                            .psuIpAddress("5")
+                                                            .psuIpPort("6")
+                                                            .psuUserAgent("7")
+                                                            .psuGeoLocation("8")
+                                                            .psuAccept("9")
+                                                            .psuAcceptCharset("10")
+                                                            .psuAcceptEncoding("11")
+                                                            .psuAcceptLanguage("12")
+                                                            .psuHttpMethod("13")
+                                                            .psuDeviceId(UUID.randomUUID())
+                                                            .build();
+    private static final SpiPsuData PSU_ID_DATA_2  = SpiPsuData.builder()
+                                                            .psuId("11")
+                                                            .psuIdType("22")
+                                                            .psuCorporateId("33")
+                                                            .psuCorporateIdType("44")
+                                                            .psuIpAddress("55")
+                                                            .psuIpPort("66")
+                                                            .psuUserAgent("77")
+                                                            .psuGeoLocation("88")
+                                                            .psuAccept("99")
+                                                            .psuAcceptCharset("1010")
+                                                            .psuAcceptEncoding("1111")
+                                                            .psuAcceptLanguage("1212")
+                                                            .psuHttpMethod("1313")
+                                                            .psuDeviceId(UUID.randomUUID())
+                                                            .build();
     private static final String ACCESS_TOKEN = "access_token";
     private static final SpiContextData SPI_CONTEXT_DATA = new SpiContextData(PSU_ID_DATA_1, new TppInfo(), UUID.randomUUID(), UUID.randomUUID(), ACCESS_TOKEN);
     private static final String AUTHORISATION_ID = "6f3c444d-c664-4cfc-aff3-576651000726";
@@ -154,7 +184,7 @@ public class PaymentAuthorisationSpiImplTest {
         when(paymentInternalGeneral.initiatePaymentInternal(businessObject, CONSENT_DATA_BYTES)).thenReturn(scaPaymentResponseTO);
 
         SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.authorisePsu(SPI_CONTEXT_DATA, PSU_ID_DATA_1, SECRET,
-                                                                                   businessObject, spiAspspConsentDataProvider);
+                                                                                        businessObject, spiAspspConsentDataProvider);
 
         assertFalse(actual.hasError());
         assertEquals(SpiAuthorisationStatus.SUCCESS, actual.getPayload().getSpiAuthorisationStatus());

@@ -38,6 +38,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.UUID;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -48,7 +49,22 @@ import static org.mockito.Mockito.*;
 public class PaymentCancellationSpiImplTest {
 
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
-    private static final SpiPsuData PSU_ID_DATA = new SpiPsuData("1", "2", "3", "4", "5");
+    private static final SpiPsuData PSU_ID_DATA = SpiPsuData.builder()
+                                                          .psuId("1")
+                                                          .psuIdType("2")
+                                                          .psuCorporateId("3")
+                                                          .psuCorporateIdType("4")
+                                                          .psuIpAddress("5")
+                                                          .psuIpPort("6")
+                                                          .psuUserAgent("7")
+                                                          .psuGeoLocation("8")
+                                                          .psuAccept("9")
+                                                          .psuAcceptCharset("10")
+                                                          .psuAcceptEncoding("11")
+                                                          .psuAcceptLanguage("12")
+                                                          .psuHttpMethod("13")
+                                                          .psuDeviceId(UUID.randomUUID())
+                                                          .build();
     private static final SpiContextData SPI_CONTEXT_DATA = TestSpiDataProvider.getSpiContextData();
     private static final String AUTHORISATION_ID = "6f3c444d-c664-4cfc-aff3-576651000726";
     private static final String AUTHENTICATION_METHOD_ID = "VJJwaiPJT2EptJO0jqL37E";
