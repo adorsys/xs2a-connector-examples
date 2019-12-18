@@ -33,9 +33,12 @@ import de.adorsys.ledgers.util.Ids;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
+import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
+import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiConfirmationCode;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiConfirmationCodeCheckingResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiGetPaymentStatusResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
@@ -163,6 +166,16 @@ public class GeneralPaymentService {
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
+    }
+
+    public SpiResponse<SpiConfirmationCodeCheckingResponse> checkConfirmationCode(@NotNull SpiConfirmationCode spiConfirmationCode,
+                                                                                  @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        // TODO: This stub for happy-path should be removed after implementing this flow in ledgers.
+        //  https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/500
+
+        return SpiResponse.<SpiConfirmationCodeCheckingResponse>builder()
+                       .payload(new SpiConfirmationCodeCheckingResponse(ScaStatus.FINALISED))
+                       .build();
     }
 
     /**

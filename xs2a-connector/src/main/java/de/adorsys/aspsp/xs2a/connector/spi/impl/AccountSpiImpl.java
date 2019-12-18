@@ -59,6 +59,7 @@ import java.util.stream.Collectors;
 public class AccountSpiImpl implements AccountSpi {
 
     private static final String RESPONSE_STATUS_200_WITH_EMPTY_BODY = "Response status was 200, but the body was empty!";
+    private static final String ADDITIONAL_INFORMATION_PREFIX = "additional information for: ";
     @Value("${test-download-transaction-list}")
     private String transactionList;
 
@@ -97,6 +98,8 @@ public class AccountSpiImpl implements AccountSpi {
             List<SpiAccountDetails> accountDetailsList = getSpiAccountDetails(withBalance, accountConsent, aspspConsentData);
 
             aspspConsentDataProvider.updateAspspConsentData(tokenService.store(response));
+
+            accountDetailsList.forEach(sad -> enrichSpiAccountDetailsWithOwnerName(sad, accountConsent.getAccess()));
 
             return SpiResponse.<List<SpiAccountDetails>>builder()
                            .payload(filterAccountDetailsByWithBalance(withBalance, accountDetailsList, accountConsent.getAccess()))
@@ -465,4 +468,20 @@ public class AccountSpiImpl implements AccountSpi {
                                                             null, additionalInformationStructured));
     }
 
+    private void enrichSpiAccountDetailsWithOwnerName(SpiAccountDetails accountDetails, SpiAccountAccess access) {
+        SpiAdditionalInformationAccess spiAdditionalInformationAccess = access.getSpiAdditionalInformationAccess();
+        if (spiAdditionalInformationAccess != null && spiAdditionalInformationAccess.getOwnerName() != null) {
+            accountDetails.setOwnerName(getOwnerName(accountDetails.getName()));
+        } else {
+            AccountAccessType allAccountsWithOwnerName = AccountAccessType.ALL_ACCOUNTS_WITH_OWNER_NAME;
+            List<AccountAccessType> accountAccessTypes = Arrays.asList(access.getAvailableAccounts(), access.getAvailableAccountsWithBalance(), access.getAllPsd2());
+            if (accountAccessTypes.contains(allAccountsWithOwnerName)) {
+                accountDetails.setOwnerName(getOwnerName(accountDetails.getName()));
+            }
+        }
+    }
+
+    private String getOwnerName(String name) {
+        return ADDITIONAL_INFORMATION_PREFIX + name;
+    }
 }
