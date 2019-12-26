@@ -59,7 +59,7 @@ import java.util.stream.Collectors;
 public class AccountSpiImpl implements AccountSpi {
 
     private static final String RESPONSE_STATUS_200_WITH_EMPTY_BODY = "Response status was 200, but the body was empty!";
-    private static final String ADDITIONAL_INFORMATION_PREFIX = "additional information for: ";
+    private static final String ADDITIONAL_INFORMATION_MOCK = "additional information";
     @Value("${test-download-transaction-list}")
     private String transactionList;
 
@@ -471,17 +471,13 @@ public class AccountSpiImpl implements AccountSpi {
     private void enrichSpiAccountDetailsWithOwnerName(SpiAccountDetails accountDetails, SpiAccountAccess access) {
         SpiAdditionalInformationAccess spiAdditionalInformationAccess = access.getSpiAdditionalInformationAccess();
         if (spiAdditionalInformationAccess != null && spiAdditionalInformationAccess.getOwnerName() != null) {
-            accountDetails.setOwnerName(getOwnerName(accountDetails.getName()));
+            accountDetails.setOwnerName(ADDITIONAL_INFORMATION_MOCK);
         } else {
             AccountAccessType allAccountsWithOwnerName = AccountAccessType.ALL_ACCOUNTS_WITH_OWNER_NAME;
             List<AccountAccessType> accountAccessTypes = Arrays.asList(access.getAvailableAccounts(), access.getAvailableAccountsWithBalance(), access.getAllPsd2());
             if (accountAccessTypes.contains(allAccountsWithOwnerName)) {
-                accountDetails.setOwnerName(getOwnerName(accountDetails.getName()));
+                accountDetails.setOwnerName(ADDITIONAL_INFORMATION_MOCK);
             }
         }
-    }
-
-    private String getOwnerName(String name) {
-        return ADDITIONAL_INFORMATION_PREFIX + name;
     }
 }
