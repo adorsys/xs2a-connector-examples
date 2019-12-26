@@ -155,7 +155,13 @@ public class GeneralPaymentService {
         SCAPaymentResponseTO response = new SCAPaymentResponseTO();
         response.setPaymentId(paymentId);
         response.setTransactionStatus(TransactionStatusTO.RCVD);
-        response.setPaymentProduct(PaymentProductTO.getByValue(payment.getPaymentProduct()).orElse(null));
+
+        String paymentProduct = payment.getPaymentProduct();
+        String productTO = PaymentProductTO.getByValue(paymentProduct)
+                                   .map(PaymentProductTO::getValue)
+                                   .orElse(null);
+
+        response.setPaymentProduct(productTO);
         response.setPaymentType(paymentType);
         responsePayload.setPaymentId(paymentId);
 //		responsePayload.setAspspAccountId();// TODO ID of the deposit account
