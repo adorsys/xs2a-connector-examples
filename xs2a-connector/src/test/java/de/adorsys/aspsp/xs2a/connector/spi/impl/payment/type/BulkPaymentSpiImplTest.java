@@ -192,7 +192,7 @@ public class BulkPaymentSpiImplTest {
 
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAPaymentResponseTO scaPaymentResponseTO = new SCAPaymentResponseTO();
-        scaPaymentResponseTO.setPaymentProduct(PaymentProductTO.SEPA);
+        scaPaymentResponseTO.setPaymentProduct(PaymentProductTO.SEPA.getValue());
         when(paymentService.getSCAPaymentResponseTO(CONSENT_DATA_BYTES)).thenReturn(scaPaymentResponseTO);
         SCAPaymentResponseTO response = new SCAPaymentResponseTO();
         response.setScaStatus(ScaStatusTO.PSUIDENTIFIED);
@@ -224,7 +224,7 @@ public class BulkPaymentSpiImplTest {
 
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAPaymentResponseTO scaPaymentResponseTO = new SCAPaymentResponseTO();
-        scaPaymentResponseTO.setPaymentProduct(PaymentProductTO.SEPA);
+        scaPaymentResponseTO.setPaymentProduct(PaymentProductTO.SEPA.getValue());
         when(paymentService.getSCAPaymentResponseTO(CONSENT_DATA_BYTES)).thenReturn(scaPaymentResponseTO);
         SCAPaymentResponseTO response = new SCAPaymentResponseTO();
         response.setScaStatus(ScaStatusTO.PSUIDENTIFIED);

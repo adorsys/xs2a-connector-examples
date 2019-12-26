@@ -42,7 +42,11 @@
   },
   "ultimateDebtor": "Max",
   "remittanceInformationUnstructured": "Ref Number Merchant",
-  "remittanceInformationStructured": "Ref Number Merchant",
+  "remittanceInformationStructured": {
+    "reference": "Ref Number Merchant",
+    "referenceIssuer": "string",
+    "referenceType": "string"
+  },
   "purposeCode": "CDCS",
   "bankTransactionCode": "DE52500105173911841934",
   "proprietaryBankTransactionCode": "DE52500105173911841934"
