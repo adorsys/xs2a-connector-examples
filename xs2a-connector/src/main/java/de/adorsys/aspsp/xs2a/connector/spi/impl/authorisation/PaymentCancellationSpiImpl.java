@@ -214,12 +214,13 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
         paymentResponse.setPaymentType(PaymentTypeTO.valueOf(paymentTypeString));
         String paymentProduct = businessObject.getPaymentProduct();
         if (paymentProduct == null && originalResponse != null && originalResponse.getPaymentProduct() != null) {
-            paymentProduct = originalResponse.getPaymentProduct().getValue();
+            paymentProduct = originalResponse.getPaymentProduct();
         } else {
             throw new IOException("Missing payment product");
         }
         String unsupportedPaymentProductMessage = String.format("Unsupported payment product %s", paymentProduct);
-        paymentResponse.setPaymentProduct(PaymentProductTO.getByValue(paymentProduct).orElseThrow(() -> new IOException(unsupportedPaymentProductMessage)));
+        PaymentProductTO productTO = PaymentProductTO.getByValue(paymentProduct).orElseThrow(() -> new IOException(unsupportedPaymentProductMessage));
+        paymentResponse.setPaymentProduct(productTO.getValue());
         paymentResponse.setMultilevelScaRequired(originalResponse.isMultilevelScaRequired());
         return paymentResponse;
     }
