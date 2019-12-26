@@ -466,7 +466,7 @@ public class PaymentAuthorisationSpiImplTest {
     private SCAPaymentResponseTO getScaPaymentResponseTO(ScaStatusTO scaStatusTO) {
         SCAPaymentResponseTO scaPaymentResponseTO = new SCAPaymentResponseTO();
         scaPaymentResponseTO.setPaymentId(PAYMENT_ID);
-        scaPaymentResponseTO.setPaymentProduct(PaymentProductTO.SEPA);
+        scaPaymentResponseTO.setPaymentProduct(PaymentProductTO.SEPA.getValue());
         scaPaymentResponseTO.setAuthorisationId(AUTHORISATION_ID);
         scaPaymentResponseTO.setScaStatus(scaStatusTO);
         BearerTokenTO bearerToken = new BearerTokenTO();
