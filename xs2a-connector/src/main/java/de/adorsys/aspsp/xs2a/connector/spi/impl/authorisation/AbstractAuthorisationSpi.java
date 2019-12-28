@@ -229,23 +229,23 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
 
         if (EnumSet.of(EXEMPTED, PSUAUTHENTICATED, PSUIDENTIFIED).contains(scaBusinessObjectResponse.getScaStatus())
                     && isFirstInitiationOfMultilevelSca(businessObject, scaBusinessObjectResponse)) {
-            SCAResponseTO aisConsentResponse;
+            SCAResponseTO scaResponseTO;
             try {
-                aisConsentResponse = initiateBusinessObject(businessObject, aspspConsentDataProvider.loadAspspConsentData());
+                scaResponseTO = initiateBusinessObject(businessObject, aspspConsentDataProvider.loadAspspConsentData());
             } catch (FeignException feignException) {
                 return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                                .error(FeignExceptionHandler.getFailureMessage(feignException, PSU_CREDENTIALS_INVALID))
                                .build();
             }
 
-            if (aisConsentResponse == null) {
+            if (scaResponseTO == null) {
                 return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                                .error(getAuthorisePsuFailureMessage(businessObject))
                                .build();
             }
-            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(aisConsentResponse));
+            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(scaResponseTO));
 
-            String scaStatusName = aisConsentResponse.getScaStatus().name();
+            String scaStatusName = scaResponseTO.getScaStatus().name();
             log.info("SCA status is: {}", scaStatusName);
         }
 

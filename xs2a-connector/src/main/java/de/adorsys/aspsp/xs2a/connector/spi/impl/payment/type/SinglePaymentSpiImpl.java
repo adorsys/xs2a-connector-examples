@@ -17,10 +17,7 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
-import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
@@ -46,9 +43,8 @@ public class SinglePaymentSpiImpl extends AbstractPaymentSpi<SpiSinglePayment, S
     private GeneralPaymentService paymentService;
 
     @Autowired
-    public SinglePaymentSpiImpl(GeneralPaymentService paymentService, AspspConsentDataService consentDataService,
-                                FeignExceptionReader feignExceptionReader, LedgersSpiPaymentMapper paymentMapper) {
-        super(paymentService, consentDataService, feignExceptionReader);
+    public SinglePaymentSpiImpl(GeneralPaymentService paymentService, LedgersSpiPaymentMapper paymentMapper) {
+        super(paymentService);
         this.paymentService = paymentService;
         this.paymentMapper = paymentMapper;
     }
@@ -60,16 +56,6 @@ public class SinglePaymentSpiImpl extends AbstractPaymentSpi<SpiSinglePayment, S
                                                                  @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         return paymentService.getPaymentById(payment, aspspConsentDataProvider, SinglePaymentTO.class,
                                              paymentMapper::toSpiSinglePayment, PaymentTypeTO.SINGLE);
-    }
-
-    @Override
-    protected SCAPaymentResponseTO initiatePaymentInternal(SpiSinglePayment payment, byte[] initialAspspConsentData) {
-        SinglePaymentTO request = paymentMapper.toSinglePaymentTO(payment);
-        if (request.getPaymentProduct() == null) {
-            String product = paymentService.getSCAPaymentResponseTO(initialAspspConsentData).getPaymentProduct();
-            request.setPaymentProduct(PaymentProductTO.getByValue(product).orElse(null));
-        }
-        return paymentService.initiatePaymentInternal(payment, initialAspspConsentData, PaymentTypeTO.SINGLE, request);
     }
 
     @Override

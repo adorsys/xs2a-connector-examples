@@ -1,17 +1,11 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.*;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
-import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
-import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.pis.FrequencyCode;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
@@ -28,7 +22,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -36,13 +29,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = {LedgersSpiPaymentMapperImpl.class, AddressMapperImpl.class, ChallengeDataMapperImpl.class, LedgersSpiAccountMapperImpl.class})
+@ContextConfiguration(classes = {LedgersSpiPaymentMapperImpl.class, AddressMapperImpl.class, ChallengeDataMapperImpl.class, LedgersSpiAccountMapperImpl.class, ObjectMapper.class})
 public class PeriodicPaymentSpiImplTest {
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
     private static final SpiContextData SPI_CONTEXT_DATA = TestSpiDataProvider.getSpiContextData();
@@ -51,10 +44,7 @@ public class PeriodicPaymentSpiImplTest {
     private static final String JSON_ACCEPT_MEDIA_TYPE = "application/json";
 
     private PeriodicPaymentSpiImpl paymentSpi;
-
     private GeneralPaymentService paymentService;
-    private AspspConsentDataService consentDataService;
-    private FeignExceptionReader feignExceptionReader;
 
     @Autowired
     private LedgersSpiPaymentMapper spiPaymentMapper;
@@ -69,11 +59,8 @@ public class PeriodicPaymentSpiImplTest {
         payment.setFrequency(FrequencyCode.MONTHLY);
 
         paymentService = mock(GeneralPaymentService.class);
-        consentDataService = mock(AspspConsentDataService.class);
-        feignExceptionReader = mock(FeignExceptionReader.class);
         spiAspspConsentDataProvider = mock(SpiAspspConsentDataProvider.class);
-
-        paymentSpi = new PeriodicPaymentSpiImpl(paymentService, consentDataService, feignExceptionReader, spiPaymentMapper);
+        paymentSpi = new PeriodicPaymentSpiImpl(paymentService, spiPaymentMapper);
     }
 
     @Test
@@ -145,100 +132,8 @@ public class PeriodicPaymentSpiImplTest {
 
         paymentSpi.initiatePayment(SPI_CONTEXT_DATA, payment, spiAspspConsentDataProvider);
 
-        verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
         verify(paymentService, times(1)).firstCallInstantiatingPayment(eq(PaymentTypeTO.PERIODIC), eq(payment),
                                                                        eq(spiAspspConsentDataProvider), any(SpiPeriodicPaymentInitiationResponse.class), eq(SPI_CONTEXT_DATA.getPsuData()), eq(spiAccountReferences));
         assertNull(spiPeriodicPaymentInitiationResponseCaptor.getValue().getPaymentId());
-    }
-
-    @Test
-    public void initiatePayment_success() {
-        ArgumentCaptor<PeriodicPaymentTO> periodicPaymentTOCaptor
-                = ArgumentCaptor.forClass(PeriodicPaymentTO.class);
-
-        when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
-        SCAPaymentResponseTO response = new SCAPaymentResponseTO();
-        response.setScaStatus(ScaStatusTO.PSUIDENTIFIED);
-        when(paymentService.initiatePaymentInternal(eq(payment),
-                                                    eq(CONSENT_DATA_BYTES), eq(PaymentTypeTO.PERIODIC), periodicPaymentTOCaptor.capture()))
-                .thenReturn(response);
-        byte[] responseBytes = "response_byte".getBytes();
-        when(consentDataService.store(response)).thenReturn(responseBytes);
-        doNothing().when(spiAspspConsentDataProvider).updateAspspConsentData(responseBytes);
-
-        SpiResponse<SpiPeriodicPaymentInitiationResponse> actual = paymentSpi.initiatePayment(SPI_CONTEXT_DATA, payment, spiAspspConsentDataProvider);
-
-        verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
-        verify(paymentService, times(1)).initiatePaymentInternal(eq(payment), eq(CONSENT_DATA_BYTES),
-                                                                 eq(PaymentTypeTO.PERIODIC), any(PeriodicPaymentTO.class));
-        verify(paymentService, never()).getSCAPaymentResponseTO(any());
-        verify(consentDataService, times(1)).store(response);
-        verify(spiAspspConsentDataProvider, times(1)).updateAspspConsentData(responseBytes);
-
-        assertFalse(actual.hasError());
-        assertEquals(PaymentProductTO.SEPA, periodicPaymentTOCaptor.getValue().getPaymentProduct());
-    }
-
-    @Test
-    public void initiatePayment_success_paymentProductIsNull() {
-        payment.setPaymentProduct(null);
-        ArgumentCaptor<PeriodicPaymentTO> periodicPaymentTOCaptor
-                = ArgumentCaptor.forClass(PeriodicPaymentTO.class);
-
-        when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
-        SCAPaymentResponseTO scaPaymentResponseTO = new SCAPaymentResponseTO();
-        scaPaymentResponseTO.setPaymentProduct(PaymentProductTO.SEPA.getValue());
-        when(paymentService.getSCAPaymentResponseTO(CONSENT_DATA_BYTES)).thenReturn(scaPaymentResponseTO);
-        SCAPaymentResponseTO response = new SCAPaymentResponseTO();
-        response.setScaStatus(ScaStatusTO.PSUIDENTIFIED);
-        when(paymentService.initiatePaymentInternal(eq(payment),
-                                                    eq(CONSENT_DATA_BYTES), eq(PaymentTypeTO.PERIODIC), periodicPaymentTOCaptor.capture()))
-                .thenReturn(response);
-        byte[] responseBytes = "response_byte".getBytes();
-        when(consentDataService.store(response)).thenReturn(responseBytes);
-        doNothing().when(spiAspspConsentDataProvider).updateAspspConsentData(responseBytes);
-
-        SpiResponse<SpiPeriodicPaymentInitiationResponse> actual = paymentSpi.initiatePayment(SPI_CONTEXT_DATA, payment, spiAspspConsentDataProvider);
-
-        verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
-        verify(paymentService, times(1)).initiatePaymentInternal(eq(payment), eq(CONSENT_DATA_BYTES),
-                                                                 eq(PaymentTypeTO.PERIODIC), any(PeriodicPaymentTO.class));
-        verify(paymentService, times(1)).getSCAPaymentResponseTO(any());
-        verify(consentDataService, times(1)).store(response);
-        verify(spiAspspConsentDataProvider, times(1)).updateAspspConsentData(responseBytes);
-
-        assertFalse(actual.hasError());
-        assertEquals(PaymentProductTO.SEPA, periodicPaymentTOCaptor.getValue().getPaymentProduct());
-    }
-
-    @Test
-    public void initiatePayment_error() {
-        payment.setPaymentProduct(null);
-        ArgumentCaptor<PeriodicPaymentTO> periodicPaymentTOCaptor
-                = ArgumentCaptor.forClass(PeriodicPaymentTO.class);
-
-        when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
-        SCAPaymentResponseTO scaPaymentResponseTO = new SCAPaymentResponseTO();
-        scaPaymentResponseTO.setPaymentProduct(PaymentProductTO.SEPA.getValue());
-        when(paymentService.getSCAPaymentResponseTO(CONSENT_DATA_BYTES)).thenReturn(scaPaymentResponseTO);
-        SCAPaymentResponseTO response = new SCAPaymentResponseTO();
-        response.setScaStatus(ScaStatusTO.PSUIDENTIFIED);
-        when(paymentService.initiatePaymentInternal(eq(payment),
-                                                    eq(CONSENT_DATA_BYTES), eq(PaymentTypeTO.PERIODIC), periodicPaymentTOCaptor.capture()))
-                .thenThrow(FeignExceptionHandler.getException(HttpStatus.BAD_REQUEST, "message1"));
-
-        SpiResponse<SpiPeriodicPaymentInitiationResponse> actual = paymentSpi.initiatePayment(SPI_CONTEXT_DATA, payment, spiAspspConsentDataProvider);
-
-        verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
-        verify(paymentService, times(1)).initiatePaymentInternal(eq(payment), eq(CONSENT_DATA_BYTES),
-                                                                 eq(PaymentTypeTO.PERIODIC), any(PeriodicPaymentTO.class));
-        verify(paymentService, times(1)).getSCAPaymentResponseTO(any());
-        verify(consentDataService, never()).store(any());
-        verify(spiAspspConsentDataProvider, never()).updateAspspConsentData(any());
-
-        assertEquals(PaymentProductTO.SEPA, periodicPaymentTOCaptor.getValue().getPaymentProduct());
-
-        assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.PAYMENT_FAILED, actual.getErrors().get(0).getErrorCode());
     }
 }

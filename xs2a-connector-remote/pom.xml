@@ -59,6 +59,12 @@
 
 		<dependency>
 			<groupId>de.adorsys.psd2</groupId>
+			<artifactId>xs2a-payment-support-impl</artifactId>
+			<version>${xs2a.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>de.adorsys.psd2</groupId>
 			<artifactId>event-service-rest-client</artifactId>
 			<version>${xs2a.version}</version>
 			<exclusions>

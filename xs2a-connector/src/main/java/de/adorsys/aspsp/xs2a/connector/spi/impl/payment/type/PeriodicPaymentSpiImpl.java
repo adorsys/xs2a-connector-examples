@@ -17,10 +17,7 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
-import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
@@ -47,9 +44,8 @@ public class PeriodicPaymentSpiImpl extends AbstractPaymentSpi<SpiPeriodicPaymen
     private final GeneralPaymentService paymentService;
 
     @Autowired
-    public PeriodicPaymentSpiImpl(GeneralPaymentService paymentService, AspspConsentDataService consentDataService,
-                                  FeignExceptionReader feignExceptionReader, LedgersSpiPaymentMapper paymentMapper) {
-        super(paymentService, consentDataService, feignExceptionReader);
+    public PeriodicPaymentSpiImpl(GeneralPaymentService paymentService, LedgersSpiPaymentMapper paymentMapper) {
+        super(paymentService);
         this.paymentService = paymentService;
         this.paymentMapper = paymentMapper;
     }
@@ -61,16 +57,6 @@ public class PeriodicPaymentSpiImpl extends AbstractPaymentSpi<SpiPeriodicPaymen
                                                                    @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         return paymentService.getPaymentById(payment, aspspConsentDataProvider, PeriodicPaymentTO.class,
                                              paymentMapper::mapToSpiPeriodicPayment, PaymentTypeTO.PERIODIC);
-    }
-
-    @Override
-    protected SCAPaymentResponseTO initiatePaymentInternal(SpiPeriodicPayment payment, byte[] initialAspspConsentData) {
-        PeriodicPaymentTO request = paymentMapper.toPeriodicPaymentTO(payment);
-        if (request.getPaymentProduct() == null) {
-            String product = paymentService.getSCAPaymentResponseTO(initialAspspConsentData).getPaymentProduct();
-            request.setPaymentProduct(PaymentProductTO.getByValue(product).orElse(null));
-        }
-        return paymentService.initiatePaymentInternal(payment, initialAspspConsentData, PaymentTypeTO.PERIODIC, request);
     }
 
     @Override
