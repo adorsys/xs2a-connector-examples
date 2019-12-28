@@ -1,5 +1,6 @@
 package de.adorsys.aspsp.xs2a.connector.spi.converter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.ledgers.middleware.api.domain.payment.BulkPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
@@ -36,7 +37,7 @@ import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {LedgersSpiPaymentMapperImpl.class, LedgersSpiAccountMapperImpl.class,
-        ChallengeDataMapperImpl.class, AddressMapperImpl.class})
+        ChallengeDataMapperImpl.class, AddressMapperImpl.class, ObjectMapper.class})
 public class LedgersSpiPaymentMapperTest {
 
     @Autowired

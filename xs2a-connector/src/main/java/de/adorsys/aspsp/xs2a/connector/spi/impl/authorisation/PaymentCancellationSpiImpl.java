@@ -213,7 +213,7 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
         paymentResponse.setPaymentId(businessObject.getPaymentId());
         paymentResponse.setPaymentType(PaymentTypeTO.valueOf(paymentTypeString));
         String paymentProduct = businessObject.getPaymentProduct();
-        if (paymentProduct == null && originalResponse != null && originalResponse.getPaymentProduct() != null) {
+        if (originalResponse != null && originalResponse.getPaymentProduct() != null) {
             paymentProduct = originalResponse.getPaymentProduct();
         } else {
             throw new IOException("Missing payment product");

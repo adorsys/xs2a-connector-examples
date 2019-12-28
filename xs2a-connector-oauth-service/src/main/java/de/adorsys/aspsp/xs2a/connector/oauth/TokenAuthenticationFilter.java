@@ -43,7 +43,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static de.adorsys.psd2.xs2a.core.error.MessageErrorCode.UNAUTHORIZED_NO_TOKEN;
-import static de.adorsys.psd2.xs2a.exception.MessageCategory.ERROR;
+import static de.adorsys.psd2.xs2a.core.domain.MessageCategory.ERROR;
 
 @Slf4j
 @Component

@@ -1,9 +1,8 @@
 = Release notes v. 4.6
 
+== Table of Contents
 * Fixed wrong consentStatus returned in Get Consent Status request for Global and
 Available Accounts consents
-
-== Table of Contents
 
 == Fixed wrong consentStatus returned in Get Consent Status request for Global and Available Accounts consents
 

@@ -60,6 +60,12 @@
             </exclusions>
         </dependency>
 
+        <dependency>
+            <groupId>de.adorsys.psd2</groupId>
+            <artifactId>xs2a-payment-support-impl</artifactId>
+            <version>${xs2a.version}</version>
+        </dependency>
+
         <!-- ASPSP Profile embedded mode -->
         <dependency>
             <groupId>de.adorsys.psd2</groupId>
@@ -107,6 +113,12 @@
         <dependency>
             <groupId>de.adorsys.psd2</groupId>
             <artifactId>cms-db-schema</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>de.adorsys.psd2</groupId>
+            <artifactId>cms-payment-support-impl</artifactId>
             <version>${project.version}</version>
         </dependency>
 

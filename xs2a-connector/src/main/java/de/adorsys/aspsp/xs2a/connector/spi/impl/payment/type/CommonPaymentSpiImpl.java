@@ -17,8 +17,6 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
@@ -48,11 +46,8 @@ public class CommonPaymentSpiImpl extends AbstractPaymentSpi<SpiPaymentInfo, Spi
     private GeneralPaymentService generalPaymentService;
     private LedgersSpiPaymentMapper ledgersSpiPaymentMapper;
 
-    public CommonPaymentSpiImpl(GeneralPaymentService generalPaymentService,
-                                AspspConsentDataService consentDataService,
-                                FeignExceptionReader feignExceptionReader,
-                                LedgersSpiPaymentMapper ledgersSpiPaymentMapper) {
-        super(generalPaymentService, consentDataService, feignExceptionReader);
+    public CommonPaymentSpiImpl(GeneralPaymentService generalPaymentService, LedgersSpiPaymentMapper ledgersSpiPaymentMapper) {
+        super(generalPaymentService);
         this.generalPaymentService = generalPaymentService;
         this.ledgersSpiPaymentMapper = ledgersSpiPaymentMapper;
     }
@@ -65,11 +60,6 @@ public class CommonPaymentSpiImpl extends AbstractPaymentSpi<SpiPaymentInfo, Spi
     @Override
     public @NotNull SpiResponse<SpiPaymentExecutionResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiContextData contextData, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiPaymentInfo payment, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         return SpiResponse.<SpiPaymentExecutionResponse>builder().error(new TppMessage(MessageErrorCode.SERVICE_NOT_SUPPORTED)).build();
-    }
-
-    @Override
-    protected SCAPaymentResponseTO initiatePaymentInternal(SpiPaymentInfo payment, byte[] initialAspspConsentData) {
-        return new SCAPaymentResponseTO();
     }
 
     @Override
