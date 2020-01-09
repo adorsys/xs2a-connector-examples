@@ -260,7 +260,7 @@ public class AisConsentSpiImplTest {
         sca.setObjectType("SCAConsentResponseTO");
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(new byte[]{});
         when(consentDataService.store(sca, false)).thenReturn(new byte[]{});
-        when(multilevelScaService.isMultilevelScaRequired(SPI_CONTEXT_DATA.getPsuData(), Collections.singleton(spiAccountConsent.getAccess().getAccounts().get(0)))).thenReturn(true);
+        when(multilevelScaService.isMultilevelScaRequired(SPI_CONTEXT_DATA.getPsuData(), Collections.singleton(spiAccountConsent.getAccess().getAccounts().get(0)))).thenReturn(Optional.of(Boolean.TRUE));
 
         SpiResponse<SpiInitiateAisConsentResponse> actualResponse = spi.initiateAisConsent(SPI_CONTEXT_DATA, spiAccountConsent, spiAspspConsentDataProvider);
 

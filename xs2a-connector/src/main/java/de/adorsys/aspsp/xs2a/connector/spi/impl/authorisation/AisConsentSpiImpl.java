@@ -262,7 +262,15 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
             @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, T responsePayload,
             @NotNull SpiPsuData spiPsuData) {
 
-        boolean isMultilevelScaRequired = isMultilevelScaRequired(accountConsent, spiPsuData);
+        Optional<Boolean> isMultilevelScaRequiredOptional = isMultilevelScaRequired(accountConsent, spiPsuData);
+
+        if (!isMultilevelScaRequiredOptional.isPresent()) {
+            return SpiResponse.<T>builder()
+                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR))
+                           .build();
+        }
+
+        boolean isMultilevelScaRequired = isMultilevelScaRequiredOptional.get();
 
         SCAConsentResponseTO response = new SCAConsentResponseTO();
         response.setScaStatus(ScaStatusTO.STARTED);
@@ -277,7 +285,7 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
                        .build();
     }
 
-    private boolean isMultilevelScaRequired(@NotNull SpiAccountConsent accountConsent, @NotNull SpiPsuData spiPsuData) {
+    private Optional<Boolean> isMultilevelScaRequired(@NotNull SpiAccountConsent accountConsent, @NotNull SpiPsuData spiPsuData) {
         SpiAccountAccess access = accountConsent.getAccess();
 
         Set<SpiAccountReference> spiAccountReferences = Stream.of(access.getAccounts(), access.getBalances(), access.getTransactions())

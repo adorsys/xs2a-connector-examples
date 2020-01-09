@@ -209,7 +209,16 @@ public class GeneralPaymentService {
 //		responsePayload.setAspspAccountId();// TODO ID of the deposit account
         responsePayload.setTransactionStatus(TransactionStatus.valueOf(response.getTransactionStatus().name()));
 
-        boolean isMultilevelScaRequired = multilevelScaService.isMultilevelScaRequired(spiPsuData, spiAccountReferences);
+        Optional<Boolean> isMultilevelScaRequiredOptional = multilevelScaService.isMultilevelScaRequired(spiPsuData, spiAccountReferences);
+
+        if (!isMultilevelScaRequiredOptional.isPresent()) {
+            return SpiResponse.<T>builder()
+                           .error(new TppMessage(MessageErrorCode.PAYMENT_FAILED))
+                           .build();
+        }
+
+        boolean isMultilevelScaRequired = isMultilevelScaRequiredOptional.get();
+
         response.setMultilevelScaRequired(isMultilevelScaRequired);
         responsePayload.setMultilevelScaRequired(isMultilevelScaRequired);
 

@@ -21,15 +21,20 @@ import de.adorsys.ledgers.middleware.api.domain.account.AccountReferenceTO;
 import de.adorsys.ledgers.rest.client.UserMgmtRestClient;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
+import feign.FeignException;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class MultilevelScaServiceImpl implements MultilevelScaService {
@@ -37,18 +42,27 @@ public class MultilevelScaServiceImpl implements MultilevelScaService {
     private final LedgersSpiAccountMapper ledgersSpiAccountMapper;
 
     @Override
-    public boolean isMultilevelScaRequired(SpiPsuData spiPsuData, Set<SpiAccountReference> spiAccountReferences) {
+    public Optional<Boolean> isMultilevelScaRequired(SpiPsuData spiPsuData, Set<SpiAccountReference> spiAccountReferences) {
         String psuId = spiPsuData.getPsuId();
 
         if (StringUtils.isBlank(psuId)) {
-            return false;
+            return Optional.of(Boolean.FALSE);
         }
 
         List<AccountReferenceTO> accountReferences = spiAccountReferences.stream()
                                                              .map(ledgersSpiAccountMapper::mapToAccountReferenceTO)
                                                              .collect(Collectors.toList());
 
-        return BooleanUtils.toBoolean(userMgmtRestClient.multilevelAccounts(psuId, accountReferences).getBody());
+        ResponseEntity<Boolean> response;
+
+        try {
+            response = userMgmtRestClient.multilevelAccounts(psuId, accountReferences);
+        } catch (FeignException e) {
+            log.error("Error during REST call to ledgers for account multilevel checking, PSU ID: {}", psuId);
+            return Optional.empty();
+        }
+
+        return Optional.of(BooleanUtils.toBoolean(response.getBody()));
     }
 
 }
