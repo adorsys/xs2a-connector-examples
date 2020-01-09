@@ -44,7 +44,7 @@ public class LedgersSpiPaymentToMapper {
     public PaymentTO toCommonPaymentTO(SpiPaymentInfo spiPaymentInfo) {
         PaymentTO paymentTO = new PaymentTO();
         paymentTO.setPaymentId(spiPaymentInfo.getPaymentId());
-        paymentTO.setPaymentType(PaymentTypeTO.valueOf(spiPaymentInfo.getPaymentType().toString()));
+        paymentTO.setPaymentType(PaymentTypeTO.valueOf(spiPaymentInfo.getPaymentType().name()));
         paymentTO.setPaymentProduct(spiPaymentInfo.getPaymentProduct());
 
         return paymentTO;
@@ -58,7 +58,7 @@ public class LedgersSpiPaymentToMapper {
 
                            PaymentTO paymentTO = new PaymentTO();
                            paymentTO.setPaymentId(spiPaymentInfo.getPaymentId());
-                           paymentTO.setPaymentType(PaymentTypeTO.valueOf(spiPaymentInfo.getPaymentType().toString()));
+                           paymentTO.setPaymentType(PaymentTypeTO.valueOf(spiPaymentInfo.getPaymentType().name()));
                            paymentTO.setPaymentProduct(spiPaymentInfo.getPaymentProduct());
                            paymentTO.setDebtorAccount(mapToAccountReferenceTO(payment.getDebtorAccount()));
                            paymentTO.setDebtorName(payment.getUltimateDebtor());
@@ -77,7 +77,7 @@ public class LedgersSpiPaymentToMapper {
 
                            PaymentTO paymentTO = new PaymentTO();
                            paymentTO.setPaymentId(spiPaymentInfo.getPaymentId());
-                           paymentTO.setPaymentType(PaymentTypeTO.valueOf(spiPaymentInfo.getPaymentType().toString()));
+                           paymentTO.setPaymentType(PaymentTypeTO.valueOf(spiPaymentInfo.getPaymentType().name()));
                            paymentTO.setPaymentProduct(spiPaymentInfo.getPaymentProduct());
                            paymentTO.setDebtorAccount(mapToAccountReferenceTO(payment.getDebtorAccount()));
                            paymentTO.setBatchBookingPreferred(payment.getBatchBookingPreferred());
@@ -100,27 +100,28 @@ public class LedgersSpiPaymentToMapper {
 
                            PaymentTO paymentTO = new PaymentTO();
                            paymentTO.setPaymentId(spiPaymentInfo.getPaymentId());
-                           paymentTO.setPaymentType(PaymentTypeTO.valueOf(spiPaymentInfo.getPaymentType().toString()));
+                           paymentTO.setPaymentType(PaymentTypeTO.valueOf(spiPaymentInfo.getPaymentType().name()));
                            paymentTO.setPaymentProduct(spiPaymentInfo.getPaymentProduct());
                            paymentTO.setDebtorAccount(mapToAccountReferenceTO(payment.getDebtorAccount()));
 
                            paymentTO.setStartDate(payment.getStartDate());
                            paymentTO.setEndDate(payment.getEndDate());
-                           paymentTO.setExecutionRule(Optional.ofNullable(payment.getExecutionRule()).map(ExecutionRule::toString).orElse(null));
+                           paymentTO.setExecutionRule(Optional.ofNullable(payment.getExecutionRule())
+                                                              .map(ExecutionRule::toString)
+                                                              .orElse(null));
                            paymentTO.setFrequency(mapToFrequencyCodeTO(payment.getFrequency()));
                            paymentTO.setDayOfExecution(Integer.valueOf(payment.getDayOfExecution().toString()));
                            paymentTO.setDebtorName(payment.getUltimateDebtor());
                            paymentTO.setTargets(Collections.singletonList(mapToPaymentTargetTO(payment, spiPaymentInfo)));
 
                            return paymentTO;
-
                        })
                        .orElse(null);
     }
 
     private FrequencyCodeTO mapToFrequencyCodeTO(FrequencyCode frequencyCode) {
         return Optional.ofNullable(frequencyCode)
-                       .map(FrequencyCode::toString)
+                       .map(FrequencyCode::name)
                        .map(FrequencyCodeTO::valueOf)
                        .orElse(null);
     }
@@ -229,7 +230,7 @@ public class LedgersSpiPaymentToMapper {
 
     private PurposeCodeTO mapToPurposeCodeTO(PurposeCode purposeCode) {
         return Optional.ofNullable(purposeCode)
-                       .map(PurposeCode::toString)
+                       .map(PurposeCode::name)
                        .map(PurposeCodeTO::valueOf)
                        .orElse(null);
     }
@@ -258,8 +259,6 @@ public class LedgersSpiPaymentToMapper {
         addressTO.setCity(address.getTownName());
         addressTO.setPostalCode(address.getPostCode());
         addressTO.setCountry(address.getCountry());
-//        addressTO.setLine1();
-//        addressTO.setLine2();
 
         return addressTO;
     }
