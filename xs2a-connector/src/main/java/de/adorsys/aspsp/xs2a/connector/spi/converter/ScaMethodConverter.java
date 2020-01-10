@@ -16,13 +16,12 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.converter;
 
-import java.util.List;
-
+import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
+import de.adorsys.psd2.xs2a.core.authorisation.AuthenticationObject;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
-import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
+import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface ScaMethodConverter {
@@ -30,8 +29,8 @@ public interface ScaMethodConverter {
     @Mapping(source = "scaMethod", target = "authenticationType")
     @Mapping(source = "methodValue", target = "name")
     @Mapping(source = "id", target = "authenticationMethodId")
-    SpiAuthenticationObject toSpiAuthenticationObject(ScaUserDataTO method);
+    AuthenticationObject toAuthenticationObject(ScaUserDataTO method);
 
-    List<SpiAuthenticationObject> toSpiAuthenticationObjectList(List<ScaUserDataTO> methods);
+    List<AuthenticationObject> toAuthenticationObjectList(List<ScaUserDataTO> methods);
 }
 

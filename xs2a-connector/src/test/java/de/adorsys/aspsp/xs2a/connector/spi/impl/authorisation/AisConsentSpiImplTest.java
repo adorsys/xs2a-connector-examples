@@ -642,7 +642,7 @@ public class AisConsentSpiImplTest {
         when(consentDataService.response(CONSENT_DATA_BYTES, SCAConsentResponseTO.class, true)).thenReturn(scaConsentResponseTO);
 
         when(authorisationService.validateToken(ACCESS_TOKEN)).thenReturn(scaConsentResponseTO.getBearerToken());
-        when(scaMethodConverter.toSpiAuthenticationObjectList(Collections.emptyList())).thenReturn(Collections.emptyList());
+        when(scaMethodConverter.toAuthenticationObjectList(Collections.emptyList())).thenReturn(Collections.emptyList());
         byte[] responseBytes = "response_byte".getBytes();
         when(consentDataService.store(scaConsentResponseTO)).thenReturn(responseBytes);
         doNothing().when(spiAspspConsentDataProvider).updateAspspConsentData(responseBytes);
