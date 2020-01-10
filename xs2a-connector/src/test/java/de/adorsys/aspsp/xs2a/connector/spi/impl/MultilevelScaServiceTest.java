@@ -67,10 +67,9 @@ public class MultilevelScaServiceTest {
         SpiPsuData spiPsuData = buildSpiPsuData(null);
         Set<SpiAccountReference> spiAccountReferences = new HashSet<>();
         //When
-        Optional<Boolean> multilevelScaRequired = multilevelScaService.isMultilevelScaRequired(spiPsuData, spiAccountReferences);
+        boolean multilevelScaRequired = multilevelScaService.isMultilevelScaRequired(spiPsuData, spiAccountReferences);
         //Then
-        assertTrue(multilevelScaRequired.isPresent());
-        assertFalse(multilevelScaRequired.get());
+        assertFalse(multilevelScaRequired);
     }
 
     @Test
@@ -79,10 +78,9 @@ public class MultilevelScaServiceTest {
         SpiPsuData spiPsuData = buildSpiPsuData("");
         Set<SpiAccountReference> spiAccountReferences = new HashSet<>();
         //When
-        Optional<Boolean> multilevelScaRequired = multilevelScaService.isMultilevelScaRequired(spiPsuData, spiAccountReferences);
+        boolean multilevelScaRequired = multilevelScaService.isMultilevelScaRequired(spiPsuData, spiAccountReferences);
         //Then
-        assertTrue(multilevelScaRequired.isPresent());
-        assertFalse(multilevelScaRequired.get());
+        assertFalse(multilevelScaRequired);
     }
 
     @Test
@@ -98,31 +96,10 @@ public class MultilevelScaServiceTest {
         Stream.of(referenceIban_1, referenceIban_2)
                 .forEach(reference -> when(ledgersSpiAccountMapper.mapToAccountReferenceTO(reference)).thenReturn(mapToAccountReferenceTO(reference)));
         //When
-        Optional<Boolean> multilevelScaRequired = multilevelScaService.isMultilevelScaRequired(spiPsuData, spiAccountReferences);
+        boolean multilevelScaRequired = multilevelScaService.isMultilevelScaRequired(spiPsuData, spiAccountReferences);
         //Then
-        assertTrue(multilevelScaRequired.isPresent());
-        assertTrue(multilevelScaRequired.get());
+        assertTrue(multilevelScaRequired);
         verify(userMgmtRestClient, atLeastOnce()).multilevelAccounts(PSU_ID, spiAccountReferences.stream().map(this::mapToAccountReferenceTO).collect(Collectors.toList()));
-    }
-
-    @Test
-    public void isMultilevelScaRequired_references_exception_in_ledgers() {
-        // Given
-        SpiPsuData spiPsuData = buildSpiPsuData(PSU_ID);
-        SpiAccountReference referenceIban_1 = buildSpiAccountReference(IBAN_1);
-        SpiAccountReference referenceIban_2 = buildSpiAccountReference(IBAN_2);
-        Set<SpiAccountReference> spiAccountReferences = new HashSet<>();
-        spiAccountReferences.add(referenceIban_1);
-        spiAccountReferences.add(referenceIban_2);
-
-        when(userMgmtRestClient.multilevelAccounts(any(), any())).thenThrow(FeignExceptionHandler.getException(HttpStatus.BAD_REQUEST, "message"));
-
-        Stream.of(referenceIban_1, referenceIban_2)
-                .forEach(reference -> when(ledgersSpiAccountMapper.mapToAccountReferenceTO(reference)).thenReturn(mapToAccountReferenceTO(reference)));
-        // When
-        Optional<Boolean> multilevelScaRequired = multilevelScaService.isMultilevelScaRequired(spiPsuData, spiAccountReferences);
-        // Then
-        assertFalse(multilevelScaRequired.isPresent());
     }
 
     private SpiPsuData buildSpiPsuData(String psuId) {

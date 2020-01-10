@@ -3,25 +3,38 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
+import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
+import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
+import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
+import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiGetPaymentStatusResponse;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiationResponse;
+import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
+import feign.FeignException;
+import feign.Request;
+import feign.Response;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.ResponseEntity;
+
+import java.util.Collections;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -33,6 +46,8 @@ public class GeneralPaymentServiceTest {
     private static final String JSON_MEDIA_TYPE = "application/json";
     private static final String XML_MEDIA_TYPE = "application/xml";
     private static final String MOCK_XML_BODY = "<Document xmlns=\"urn:iso:std:iso:20022:tech:xsd:pain.002.001.03\"><CstmrPmtStsRpt><GrpHdr><MsgId>4572457256725689726906</MsgId><CreDtTm>2017-02-14T20:24:56.021Z</CreDtTm><DbtrAgt><FinInstnId><BIC>ABCDDEFF</BIC></FinInstnId></DbtrAgt><CdtrAgt><FinInstnId><BIC>DCBADEFF</BIC></FinInstnId></CdtrAgt></GrpHdr><OrgnlGrpInfAndSts><OrgnlMsgId>MIPI-123456789RI-123456789</OrgnlMsgId><OrgnlMsgNmId>pain.001.001.03</OrgnlMsgNmId><OrgnlCreDtTm>2017-02-14T20:23:34.000Z</OrgnlCreDtTm><OrgnlNbOfTxs>1</OrgnlNbOfTxs><OrgnlCtrlSum>123</OrgnlCtrlSum><GrpSts>ACCT</GrpSts></OrgnlGrpInfAndSts><OrgnlPmtInfAndSts><OrgnlPmtInfId>BIPI-123456789RI-123456789</OrgnlPmtInfId><OrgnlNbOfTxs>1</OrgnlNbOfTxs><OrgnlCtrlSum>123</OrgnlCtrlSum><PmtInfSts>ACCT</PmtInfSts></OrgnlPmtInfAndSts></CstmrPmtStsRpt></Document>";
+
+    private JsonReader jsonReader = new JsonReader();
 
     @Mock
     private SpiAspspConsentDataProvider spiAspspConsentDataProvider;
@@ -54,6 +69,51 @@ public class GeneralPaymentServiceTest {
     @Before
     public void setUp() {
         generalPaymentService = new GeneralPaymentService(paymentRestClient, authRequestInterceptor, consentDataService, null, objectMapper, MOCK_XML_BODY, multilevelScaService);
+    }
+
+    @Test
+    public void firstCallInstantiatingPayment_LedgersError() {
+        SpiPayment initialPayment = getSpiSingle(TransactionStatus.RCVD, "initialPayment");
+
+        SpiAccountReference spiAccountReference = jsonReader.getObjectFromFile("json/spi/impl/account-reference.json", SpiAccountReference.class);
+
+        SpiSinglePaymentInitiationResponse responsePayload = new SpiSinglePaymentInitiationResponse();
+
+        SpiPsuData spiPsuData = SpiPsuData.builder().build();
+
+        when(multilevelScaService.isMultilevelScaRequired(spiPsuData, Collections.singleton(spiAccountReference))).thenThrow(getFeignException()); //spiPsuData, spiAccountReferences
+
+        SpiResponse<SpiPaymentInitiationResponse> actualResponse = generalPaymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, initialPayment, spiAspspConsentDataProvider, responsePayload, spiPsuData, Collections.singleton(spiAccountReference));
+
+        assertFalse(actualResponse.getErrors().isEmpty());
+        assertNull(actualResponse.getPayload());
+        assertTrue(actualResponse.getErrors().contains(new TppMessage(MessageErrorCode.FORMAT_ERROR_UNKNOWN_ACCOUNT)));
+    }
+
+    @Test
+    public void firstCallInstantiatingPayment_Success() {
+        SCAPaymentResponseTO response = new SCAPaymentResponseTO();
+        response.setPaymentId("myPaymentId");
+        response.setTransactionStatus(TransactionStatusTO.RCVD);
+        response.setPaymentProduct("sepa-credit-transfers");
+        response.setPaymentType(PaymentTypeTO.SINGLE);
+
+        SpiPayment initialPayment = getSpiSingle(TransactionStatus.RCVD, "initialPayment");
+
+        SpiAccountReference spiAccountReference = jsonReader.getObjectFromFile("json/spi/impl/account-reference.json", SpiAccountReference.class);
+
+        SpiSinglePaymentInitiationResponse responsePayload = new SpiSinglePaymentInitiationResponse();
+
+        SpiPsuData spiPsuData = SpiPsuData.builder().build();
+
+        when(multilevelScaService.isMultilevelScaRequired(spiPsuData, Collections.singleton(spiAccountReference))).thenReturn(true); //spiPsuData, spiAccountReferences
+
+        SpiResponse<SpiPaymentInitiationResponse> actualResponse = generalPaymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, initialPayment, spiAspspConsentDataProvider, responsePayload, spiPsuData, Collections.singleton(spiAccountReference));
+
+        assertTrue(actualResponse.getErrors().isEmpty());
+        assertNotNull(actualResponse.getPayload());
+        verify(consentDataService, times(1)).store(response, false);
+        verify(spiAspspConsentDataProvider, times(1)).updateAspspConsentData(any());
     }
 
     @Test
@@ -140,5 +200,18 @@ public class GeneralPaymentServiceTest {
         spiPayment.setCreditorAgent(agent);
         spiPayment.setPaymentStatus(transactionStatus);
         return spiPayment;
+    }
+
+    private FeignException getFeignException() {
+        return FeignException.errorStatus("User doesn't have access to the requested account",
+                                          buildErrorResponseForbidden());
+    }
+
+    private Response buildErrorResponseForbidden() {
+        return Response.builder()
+                       .status(403)
+                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
+                       .headers(Collections.emptyMap())
+                       .build();
     }
 }

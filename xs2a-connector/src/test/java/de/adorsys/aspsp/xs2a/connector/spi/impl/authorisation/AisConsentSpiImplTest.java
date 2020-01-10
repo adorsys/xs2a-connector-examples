@@ -260,7 +260,7 @@ public class AisConsentSpiImplTest {
         sca.setObjectType("SCAConsentResponseTO");
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(new byte[]{});
         when(consentDataService.store(sca, false)).thenReturn(new byte[]{});
-        when(multilevelScaService.isMultilevelScaRequired(SPI_CONTEXT_DATA.getPsuData(), Collections.singleton(spiAccountConsent.getAccess().getAccounts().get(0)))).thenReturn(Optional.of(Boolean.TRUE));
+        when(multilevelScaService.isMultilevelScaRequired(SPI_CONTEXT_DATA.getPsuData(), Collections.singleton(spiAccountConsent.getAccess().getAccounts().get(0)))).thenReturn(true);
 
         SpiResponse<SpiInitiateAisConsentResponse> actualResponse = spi.initiateAisConsent(SPI_CONTEXT_DATA, spiAccountConsent, spiAspspConsentDataProvider);
 
@@ -268,6 +268,18 @@ public class AisConsentSpiImplTest {
         assertNotNull(actualResponse.getPayload());
         verify(consentDataService).store(sca, false);
         verify(spiAspspConsentDataProvider).updateAspspConsentData(any());
+    }
+
+
+    @Test
+    public void initiateAisConsent_WithEmptyInitialAspspConsentDataAndFeignException() {
+        when(multilevelScaService.isMultilevelScaRequired(SPI_CONTEXT_DATA.getPsuData(), Collections.singleton(spiAccountConsent.getAccess().getAccounts().get(0)))).thenThrow(getFeignException());
+
+        SpiResponse<SpiInitiateAisConsentResponse> actualResponse = spi.initiateAisConsent(SPI_CONTEXT_DATA, spiAccountConsent, spiAspspConsentDataProvider);
+
+        assertFalse(actualResponse.getErrors().isEmpty());
+        assertNull(actualResponse.getPayload());
+        assertTrue(actualResponse.getErrors().contains(new TppMessage(MessageErrorCode.FORMAT_ERROR_UNKNOWN_ACCOUNT)));
     }
 
     @Test
@@ -970,5 +982,18 @@ public class AisConsentSpiImplTest {
 
     private List<SpiAccountDetails> buildSpiAccountDetails() {
         return Collections.singletonList(jsonReader.getObjectFromFile("json/spi/impl/spi-account-details.json", SpiAccountDetails.class));
+    }
+
+    private FeignException getFeignException() {
+        return FeignException.errorStatus("User doesn't have access to the requested account",
+                                          buildErrorResponseForbidden());
+    }
+
+    private Response buildErrorResponseForbidden() {
+        return Response.builder()
+                       .status(403)
+                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
+                       .headers(Collections.emptyMap())
+                       .build();
     }
 }
