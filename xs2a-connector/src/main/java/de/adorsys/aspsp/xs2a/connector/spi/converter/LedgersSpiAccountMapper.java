@@ -48,8 +48,6 @@ public abstract class LedgersSpiAccountMapper {
     public abstract List<SpiTransaction> toSpiTransactions(List<TransactionTO> transactions);
 
     public SpiTransaction toSpiTransaction(TransactionTO transaction) {
-
-
         return Optional.ofNullable(transaction)
                        .map(t -> new SpiTransaction(
                                t.getTransactionId(),
@@ -64,16 +62,19 @@ public abstract class LedgersSpiAccountMapper {
                                toSpiExchangeRateList(t.getExchangeRate()),
                                t.getCreditorName(),
                                toSpiAccountReference(t.getCreditorAccount()),
+                               "creditorAgent", // TODO: https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/522 replace with real data.
                                t.getUltimateCreditor(),
                                t.getDebtorName(),
                                toSpiAccountReference(t.getDebtorAccount()),
+                               "debtorAgent", // TODO: https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/522 replace with real data.
                                t.getUltimateDebtor(),
                                t.getRemittanceInformationUnstructured(),
                                mapRemittanceInformationToString(t.getRemittanceInformationStructured()),
                                t.getPurposeCode(),
                                t.getBankTransactionCode(),
                                t.getProprietaryBankTransactionCode(),
-                               null)) // TODO Map proper field https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1100
+                               null, // TODO Map proper field https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1100
+                               new SpiAccountBalance())) // TODO: https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/522 replace with real data.
                        .orElse(null);
     }  //Full manual mapping here, no extra tests necessary
 

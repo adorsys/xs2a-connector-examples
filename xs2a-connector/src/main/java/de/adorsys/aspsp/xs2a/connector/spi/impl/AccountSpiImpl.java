@@ -32,6 +32,7 @@ import de.adorsys.psd2.xs2a.core.pis.PisExecutionRule;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
+import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.AccountSpi;
@@ -49,7 +50,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -463,9 +466,9 @@ public class AccountSpiImpl implements AccountSpi {
         return Collections.singletonList(new SpiTransaction(null, null, null, null, null,
                                                             null, null, null, null, null,
                                                             "John Miles", spiAccountReference, null, null,
-                                                            null, null, null,
+                                                            null, null, null, null, null,
                                                             "", null, "PMNT-ICDT-STDO",
-                                                            null, additionalInformationStructured));
+                                                            null, additionalInformationStructured, buildSpiAccountBalance()));
     }
 
     private void enrichSpiAccountDetailsWithOwnerName(SpiAccountDetails accountDetails, SpiAccountAccess access) {
@@ -479,5 +482,15 @@ public class AccountSpiImpl implements AccountSpi {
                 accountDetails.setOwnerName(ADDITIONAL_INFORMATION_MOCK);
             }
         }
+    }
+
+    private SpiAccountBalance buildSpiAccountBalance() {
+        SpiAccountBalance accountBalance = new SpiAccountBalance();
+        accountBalance.setSpiBalanceAmount(new SpiAmount(Currency.getInstance("EUR"), new BigDecimal(1000)));
+        accountBalance.setSpiBalanceType(SpiBalanceType.INTERIM_AVAILABLE);
+        accountBalance.setLastCommittedTransaction("abcd");
+        accountBalance.setReferenceDate(LocalDate.of(2020, Month.JANUARY, 1));
+        accountBalance.setLastChangeDateTime(LocalDateTime.of(2019, Month.FEBRUARY, 15, 10, 0, 0, 0));
+        return accountBalance;
     }
 }
