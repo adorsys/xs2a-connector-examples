@@ -261,16 +261,16 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
             @NotNull SpiAccountConsent accountConsent,
             @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, T responsePayload,
             @NotNull SpiPsuData spiPsuData) {
+        boolean isMultilevelScaRequired;
 
-        Optional<Boolean> isMultilevelScaRequiredOptional = isMultilevelScaRequired(accountConsent, spiPsuData);
-
-        if (!isMultilevelScaRequiredOptional.isPresent()) {
+        try {
+            isMultilevelScaRequired = isMultilevelScaRequired(accountConsent, spiPsuData);
+        } catch (FeignException e) {
+            logger.error("Error during REST call for consent initiation to ledgers for account multilevel checking, PSU ID: {}", spiPsuData.getPsuId());
             return SpiResponse.<T>builder()
-                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR))
+                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR_UNKNOWN_ACCOUNT))
                            .build();
         }
-
-        boolean isMultilevelScaRequired = isMultilevelScaRequiredOptional.get();
 
         SCAConsentResponseTO response = new SCAConsentResponseTO();
         response.setScaStatus(ScaStatusTO.STARTED);
@@ -285,7 +285,7 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
                        .build();
     }
 
-    private Optional<Boolean> isMultilevelScaRequired(@NotNull SpiAccountConsent accountConsent, @NotNull SpiPsuData spiPsuData) {
+    private boolean isMultilevelScaRequired(@NotNull SpiAccountConsent accountConsent, @NotNull SpiPsuData spiPsuData) {
         SpiAccountAccess access = accountConsent.getAccess();
 
         Set<SpiAccountReference> spiAccountReferences = Stream.of(access.getAccounts(), access.getBalances(), access.getTransactions())

@@ -19,9 +19,8 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 
-import java.util.Optional;
 import java.util.Set;
 
 public interface MultilevelScaService {
-    Optional<Boolean> isMultilevelScaRequired(SpiPsuData spiPsuData, Set<SpiAccountReference> spiAccountReferences);
+    boolean isMultilevelScaRequired(SpiPsuData spiPsuData, Set<SpiAccountReference> spiAccountReferences);
 }

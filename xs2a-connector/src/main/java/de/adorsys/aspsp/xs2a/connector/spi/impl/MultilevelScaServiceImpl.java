@@ -21,7 +21,6 @@ import de.adorsys.ledgers.middleware.api.domain.account.AccountReferenceTO;
 import de.adorsys.ledgers.rest.client.UserMgmtRestClient;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
-import feign.FeignException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
@@ -30,7 +29,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,27 +40,20 @@ public class MultilevelScaServiceImpl implements MultilevelScaService {
     private final LedgersSpiAccountMapper ledgersSpiAccountMapper;
 
     @Override
-    public Optional<Boolean> isMultilevelScaRequired(SpiPsuData spiPsuData, Set<SpiAccountReference> spiAccountReferences) {
+    public boolean isMultilevelScaRequired(SpiPsuData spiPsuData, Set<SpiAccountReference> spiAccountReferences) {
         String psuId = spiPsuData.getPsuId();
 
         if (StringUtils.isBlank(psuId)) {
-            return Optional.of(Boolean.FALSE);
+            return false;
         }
 
         List<AccountReferenceTO> accountReferences = spiAccountReferences.stream()
                                                              .map(ledgersSpiAccountMapper::mapToAccountReferenceTO)
                                                              .collect(Collectors.toList());
 
-        ResponseEntity<Boolean> response;
+        ResponseEntity<Boolean> response = userMgmtRestClient.multilevelAccounts(psuId, accountReferences);
 
-        try {
-            response = userMgmtRestClient.multilevelAccounts(psuId, accountReferences);
-        } catch (FeignException e) {
-            log.error("Error during REST call to ledgers for account multilevel checking, PSU ID: {}", psuId);
-            return Optional.empty();
-        }
-
-        return Optional.of(BooleanUtils.toBoolean(response.getBody()));
+        return BooleanUtils.toBoolean(response.getBody());
     }
 
 }

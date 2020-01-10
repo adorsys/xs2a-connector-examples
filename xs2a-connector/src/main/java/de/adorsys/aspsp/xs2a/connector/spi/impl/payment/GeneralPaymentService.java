@@ -209,15 +209,16 @@ public class GeneralPaymentService {
 //		responsePayload.setAspspAccountId();// TODO ID of the deposit account
         responsePayload.setTransactionStatus(TransactionStatus.valueOf(response.getTransactionStatus().name()));
 
-        Optional<Boolean> isMultilevelScaRequiredOptional = multilevelScaService.isMultilevelScaRequired(spiPsuData, spiAccountReferences);
+        boolean isMultilevelScaRequired;
 
-        if (!isMultilevelScaRequiredOptional.isPresent()) {
+        try {
+            isMultilevelScaRequired = multilevelScaService.isMultilevelScaRequired(spiPsuData, spiAccountReferences);
+        } catch (FeignException e) {
+            logger.error("Error during REST call for payment initiation to ledgers for account multilevel checking, PSU ID: {}", spiPsuData.getPsuId());
             return SpiResponse.<T>builder()
-                           .error(new TppMessage(MessageErrorCode.PAYMENT_FAILED))
+                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR_UNKNOWN_ACCOUNT))
                            .build();
         }
-
-        boolean isMultilevelScaRequired = isMultilevelScaRequiredOptional.get();
 
         response.setMultilevelScaRequired(isMultilevelScaRequired);
         responsePayload.setMultilevelScaRequired(isMultilevelScaRequired);

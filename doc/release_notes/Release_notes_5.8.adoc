@@ -4,6 +4,7 @@
 
 * Allow custom payment validation
 * Migrate to common payment object
+* Fixed incorrect response for creating AIS consent or payment with wrong `IBAN`
 
 == Allow custom payment validation
 
@@ -38,3 +39,8 @@ To handle only common payments, previously mentioned dependency should be replac
 ----
 
 In case of using common implementations, all payments will be forwarded to `CommonPaymentSpi`.
+
+== Fixed incorrect response for creating AIS consent or payment with wrong `IBAN`
+
+From now on, when you try to create consent or payment with `IBAN` which is wrong for `PSU ID`, you'll get an error
+`FORMAT_ERROR` with text `Addressed account is unknown to the ASPSP or not associated to the PSU`.
