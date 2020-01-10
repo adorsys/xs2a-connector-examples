@@ -138,7 +138,7 @@ public class GeneralAuthorisationService {
         SpiAuthorizationCodeResult spiAuthorizationCodeResult = new SpiAuthorizationCodeResult();
         ChallengeData challengeData = Optional.ofNullable(challengeDataMapper.toChallengeData(sca.getChallengeData())).orElse(new ChallengeData());
         spiAuthorizationCodeResult.setChallengeData(challengeData);
-        spiAuthorizationCodeResult.setSelectedScaMethod(scaMethodConverter.toSpiAuthenticationObject(sca.getChosenScaMethod()));
+        spiAuthorizationCodeResult.setSelectedScaMethod(scaMethodConverter.toAuthenticationObject(sca.getChosenScaMethod()));
         aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(sca));
         return SpiResponse.<SpiAuthorizationCodeResult>builder()
                        .payload(spiAuthorizationCodeResult)

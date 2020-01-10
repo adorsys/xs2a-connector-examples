@@ -12,6 +12,7 @@ import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
 import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
+import de.adorsys.psd2.xs2a.core.authorisation.AuthenticationObject;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
@@ -106,7 +107,7 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
                 sca.setBearerToken(bearerTokenTO);
 
                 // Return contained sca methods.
-                List<SpiAuthenticationObject> authenticationObjects = scaMethodConverter.toSpiAuthenticationObjectList(scaMethods.get());
+                List<AuthenticationObject> authenticationObjects = scaMethodConverter.toAuthenticationObjectList(scaMethods.get());
                 aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(sca));
                 return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
                                .payload(new SpiAvailableScaMethodsResponse(authenticationObjects))
