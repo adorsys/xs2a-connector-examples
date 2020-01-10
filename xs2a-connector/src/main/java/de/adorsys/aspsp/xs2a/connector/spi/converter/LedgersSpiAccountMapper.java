@@ -60,15 +60,18 @@ public abstract class LedgersSpiAccountMapper {
                                toSpiExchangeRateList(t.getExchangeRate()),
                                t.getCreditorName(),
                                toSpiAccountReference(t.getCreditorAccount()),
+                               "creditorAgent", // TODO: https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/522 replace with real data.
                                t.getUltimateCreditor(),
                                t.getDebtorName(),
                                toSpiAccountReference(t.getDebtorAccount()),
+                               "debtorAgent", // TODO: https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/522 replace with real data.
                                t.getUltimateDebtor(),
                                t.getRemittanceInformationUnstructured(),
                                mapRemittanceInformationToString(t.getRemittanceInformationStructured()),
                                t.getPurposeCode(),
                                t.getBankTransactionCode(),
-                               t.getProprietaryBankTransactionCode()))
+                               t.getProprietaryBankTransactionCode(),
+                               new SpiAccountBalance())) // TODO: https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/522 replace with real data.
                        .orElse(null);
     }  //Full manual mapping here, no extra tests necessary
 
