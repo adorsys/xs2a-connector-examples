@@ -5,12 +5,17 @@ jdk:
   - openjdk8
 #  - openjdk11
 
+addons:
+  sonarcloud:
+    organization: "adorsys"
+    token: ${SONAR_TOKEN}
+
 git:
   submodules: false
 
 cache:
   directories:
-  - $HOME/.m2
+  - "$HOME/.m2"
 
 # Schritte um Build-Dependencies herunterladen
 before_install:
@@ -27,6 +32,7 @@ script:
   - mvn -B -V clean install
   - mvn -B -V javadoc:javadoc
   - mvn -B -V pmd:check
+  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -Dsonar.projectKey=adorsys_xs2a-connector-examples
 
 # Schritte um Release zu veröffentlichen
 before_deploy:
