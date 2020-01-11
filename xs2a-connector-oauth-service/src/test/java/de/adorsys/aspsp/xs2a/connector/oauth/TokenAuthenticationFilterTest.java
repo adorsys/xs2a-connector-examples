@@ -19,10 +19,10 @@ package de.adorsys.aspsp.xs2a.connector.oauth;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.psd2.aspsp.profile.domain.AspspSettings;
 import de.adorsys.psd2.aspsp.profile.service.AspspProfileService;
+import de.adorsys.psd2.xs2a.core.domain.MessageCategory;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.profile.ScaApproach;
-import de.adorsys.psd2.xs2a.core.domain.MessageCategory;
-import de.adorsys.psd2.xs2a.web.error.TppErrorMessageBuilder;
+import de.adorsys.psd2.xs2a.web.Xs2aEndpointChecker;
 import de.adorsys.psd2.xs2a.web.error.TppErrorMessageWriter;
 import de.adorsys.psd2.xs2a.web.filter.TppErrorMessage;
 import de.adorsys.psd2.xs2a.web.request.RequestPathResolver;
@@ -62,17 +62,12 @@ public class TokenAuthenticationFilterTest {
     private static final String BEARER_TOKEN_VALUE = "some_token";
     private static final String BEARER_TOKEN_INVALID_VALUE = "invalid value";
 
-    private static final String ERROR_MESSAGE_TEXT = "some message";
-
     private static final String ACCOUNTS_PATH = "/v1/accounts";
     private static final String CONSENTS_PATH = "/v1/consents";
     private static final String FUNDS_CONFIRMATION_PATH = "/v1/funds-confirmations";
     private static final String PAYMENTS_PATH = "/v1/payments/sepa-credits-transfer";
-    private static final String CUSTOM_PATH = "/custom-endpoint";
     private static final String IDP_CONFIGURATION_LINK = "http://localhost:4200/idp";
 
-    @Mock
-    private TppErrorMessageBuilder tppErrorMessageBuilder;
     @Mock
     private TokenValidationService tokenValidationService;
     @Mock
@@ -89,6 +84,8 @@ public class TokenAuthenticationFilterTest {
     private TppErrorMessageWriter tppErrorMessageWriter;
     @Mock
     private RequestPathResolver requestPathResolver;
+    @Mock
+    private Xs2aEndpointChecker xs2aEndpointChecker;
 
     private TokenAuthenticationFilter tokenAuthenticationFilter;
 
@@ -96,7 +93,7 @@ public class TokenAuthenticationFilterTest {
     public void setUp() {
         tokenAuthenticationFilter = new TokenAuthenticationFilter(requestPathResolver,
                                                                   OAUTH_MODE_HEADER_NAME,
-                                                                  tppErrorMessageBuilder,
+                                                                  xs2aEndpointChecker,
                                                                   tokenValidationService,
                                                                   aspspProfileService,
                                                                   oauthDataHolder,
@@ -105,6 +102,7 @@ public class TokenAuthenticationFilterTest {
                 .thenReturn(Arrays.asList(ScaApproach.REDIRECT, ScaApproach.OAUTH));
         when(aspspProfileService.getAspspSettings())
                 .thenReturn(new JsonReader().getObjectFromFile(ASPSP_SETTINGS_JSON_PATH, AspspSettings.class));
+        when(xs2aEndpointChecker.isXs2aEndpoint(httpServletRequest)).thenReturn(true);
     }
 
     @Test
@@ -128,7 +126,6 @@ public class TokenAuthenticationFilterTest {
         verify(filterChain).doFilter(httpServletRequest, httpServletResponse);
 
         verify(httpServletResponse, never()).setStatus(ArgumentMatchers.anyInt());
-        verify(tppErrorMessageBuilder, never()).buildTppErrorMessage(any(), any());
     }
 
     @Test
@@ -152,7 +149,6 @@ public class TokenAuthenticationFilterTest {
         verify(filterChain).doFilter(httpServletRequest, httpServletResponse);
 
         verify(httpServletResponse, never()).setStatus(ArgumentMatchers.anyInt());
-        verify(tppErrorMessageBuilder, never()).buildTppErrorMessage(any(), any());
     }
 
     @Test
@@ -175,7 +171,6 @@ public class TokenAuthenticationFilterTest {
         verify(filterChain).doFilter(httpServletRequest, httpServletResponse);
 
         verify(httpServletResponse, never()).setStatus(ArgumentMatchers.anyInt());
-        verify(tppErrorMessageBuilder, never()).buildTppErrorMessage(any(), any());
     }
 
     @Test
@@ -200,7 +195,6 @@ public class TokenAuthenticationFilterTest {
         verify(filterChain).doFilter(httpServletRequest, httpServletResponse);
 
         verify(httpServletResponse, never()).setStatus(ArgumentMatchers.anyInt());
-        verify(tppErrorMessageBuilder, never()).buildTppErrorMessage(any(), any());
     }
 
     @Test
@@ -208,8 +202,6 @@ public class TokenAuthenticationFilterTest {
         // Given
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME))
                 .thenReturn(null);
-        when(requestPathResolver.resolveRequestPath(httpServletRequest))
-                .thenReturn(ACCOUNTS_PATH);
 
         // When
         tokenAuthenticationFilter.doFilter(httpServletRequest, httpServletResponse, filterChain);
@@ -264,15 +256,11 @@ public class TokenAuthenticationFilterTest {
         // Given
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME))
                 .thenReturn(OAUTH_MODE_INTEGRATED);
-        when(requestPathResolver.resolveRequestPath(httpServletRequest))
-                .thenReturn(ACCOUNTS_PATH);
 
         when(aspspProfileService.getScaApproaches())
                 .thenReturn(Collections.singletonList(ScaApproach.REDIRECT));
 
-        TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.FORMAT_ERROR, "some message");
-        when(tppErrorMessageBuilder.buildTppErrorMessage(MessageCategory.ERROR, MessageErrorCode.FORMAT_ERROR))
-                .thenReturn(tppErrorMessage);
+        TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.FORMAT_ERROR);
 
         ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
         ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
@@ -292,12 +280,8 @@ public class TokenAuthenticationFilterTest {
         // Given
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME))
                 .thenReturn(OAUTH_MODE_INVALID_VALUE);
-        when(requestPathResolver.resolveRequestPath(httpServletRequest))
-                .thenReturn(ACCOUNTS_PATH);
 
-        TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.FORMAT_ERROR, "some message");
-        when(tppErrorMessageBuilder.buildTppErrorMessage(MessageCategory.ERROR, MessageErrorCode.FORMAT_ERROR))
-                .thenReturn(tppErrorMessage);
+        TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.FORMAT_ERROR);
 
         ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
         ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
@@ -320,9 +304,7 @@ public class TokenAuthenticationFilterTest {
         when(requestPathResolver.resolveRequestPath(httpServletRequest))
                 .thenReturn(ACCOUNTS_PATH);
 
-        TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID, ERROR_MESSAGE_TEXT);
-        when(tppErrorMessageBuilder.buildTppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID))
-                .thenReturn(tppErrorMessage);
+        TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID);
 
         ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
         ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
@@ -345,9 +327,8 @@ public class TokenAuthenticationFilterTest {
                 .thenReturn("");
         when(requestPathResolver.resolveRequestPath(httpServletRequest)).thenReturn(ACCOUNTS_PATH);
 
-        TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID, "some message");
-        when(tppErrorMessageBuilder.buildTppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID))
-                .thenReturn(tppErrorMessage);
+        TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID);
+
         // When
         tokenAuthenticationFilter.doFilter(httpServletRequest, httpServletResponse, filterChain);
 
@@ -369,9 +350,7 @@ public class TokenAuthenticationFilterTest {
                 .thenReturn(BEARER_TOKEN_VALUE);
         when(requestPathResolver.resolveRequestPath(httpServletRequest)).thenReturn(ACCOUNTS_PATH);
 
-        TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID, "some message");
-        when(tppErrorMessageBuilder.buildTppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID))
-                .thenReturn(tppErrorMessage);
+        TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID);
 
         ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
         ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
@@ -390,14 +369,11 @@ public class TokenAuthenticationFilterTest {
     public void doFilterInternalTest_withBlankToken_preStepOauth_shouldReturnError() throws ServletException, IOException {
         // Given
         when(httpServletRequest.getHeader(OAUTH_MODE_HEADER_NAME)).thenReturn(OAUTH_MODE_PRE_STEP);
-        when(requestPathResolver.resolveRequestPath(httpServletRequest)).thenReturn(ACCOUNTS_PATH);
 
         when(httpServletRequest.getHeader(HttpHeaders.AUTHORIZATION))
                 .thenReturn(null);
 
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.UNAUTHORIZED_NO_TOKEN, IDP_CONFIGURATION_LINK);
-        when(tppErrorMessageBuilder.buildTppErrorMessageWithPlaceholder(MessageCategory.ERROR, MessageErrorCode.UNAUTHORIZED_NO_TOKEN, IDP_CONFIGURATION_LINK))
-                .thenReturn(tppErrorMessage);
 
         ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
         ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
@@ -424,9 +400,7 @@ public class TokenAuthenticationFilterTest {
         when(tokenValidationService.validate(BEARER_TOKEN_INVALID_VALUE))
                 .thenReturn(null);
 
-        TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID, "some message");
-        when(tppErrorMessageBuilder.buildTppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID))
-                .thenReturn(tppErrorMessage);
+        TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID);
 
         ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
         ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
@@ -445,11 +419,7 @@ public class TokenAuthenticationFilterTest {
 
     @Test
     public void doFilter_onCustomEndpoint_shouldSkipFilter() throws ServletException, IOException {
-        // Given
-        when(requestPathResolver.resolveRequestPath(httpServletRequest))
-                .thenReturn(CUSTOM_PATH);
-
-        // When
+       // When
         tokenAuthenticationFilter.doFilter(httpServletRequest, httpServletResponse, filterChain);
 
         // Then

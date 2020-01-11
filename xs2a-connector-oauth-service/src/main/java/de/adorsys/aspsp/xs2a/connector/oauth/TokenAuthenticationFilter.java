@@ -20,7 +20,7 @@ import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.psd2.aspsp.profile.service.AspspProfileService;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.profile.ScaApproach;
-import de.adorsys.psd2.xs2a.web.error.TppErrorMessageBuilder;
+import de.adorsys.psd2.xs2a.web.Xs2aEndpointChecker;
 import de.adorsys.psd2.xs2a.web.error.TppErrorMessageWriter;
 import de.adorsys.psd2.xs2a.web.filter.AbstractXs2aFilter;
 import de.adorsys.psd2.xs2a.web.filter.TppErrorMessage;
@@ -54,7 +54,6 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
 
     private final RequestPathResolver requestPathResolver;
     private final String oauthModeHeaderName;
-    private final TppErrorMessageBuilder tppErrorMessageBuilder;
     private final TokenValidationService tokenValidationService;
     private final AspspProfileService aspspProfileService;
     private final OauthDataHolder oauthDataHolder;
@@ -62,15 +61,14 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
 
     public TokenAuthenticationFilter(RequestPathResolver requestPathResolver,
                                      @Value("${oauth.header-name:X-OAUTH-PREFERRED}") String oauthModeHeaderName,
-                                     TppErrorMessageBuilder tppErrorMessageBuilder,
+                                     Xs2aEndpointChecker xs2aEndpointChecker,
                                      TokenValidationService tokenValidationService,
                                      AspspProfileService aspspProfileService,
                                      OauthDataHolder oauthDataHolder,
                                      TppErrorMessageWriter tppErrorMessageWriter) {
-        super(tppErrorMessageWriter, requestPathResolver);
+        super(tppErrorMessageWriter, xs2aEndpointChecker);
         this.requestPathResolver = requestPathResolver;
         this.oauthModeHeaderName = oauthModeHeaderName;
-        this.tppErrorMessageBuilder = tppErrorMessageBuilder;
         this.tokenValidationService = tokenValidationService;
         this.aspspProfileService = aspspProfileService;
         this.oauthDataHolder = oauthDataHolder;
@@ -170,11 +168,7 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
         return result;
     }
 
-    private TppErrorMessage buildTppErrorMessage(MessageErrorCode messageErrorCode) {
-        return tppErrorMessageBuilder.buildTppErrorMessage(ERROR, messageErrorCode);
-    }
-
-    private TppErrorMessage buildTppErrorMessage(MessageErrorCode messageErrorCode, String placeHolder) {
-        return tppErrorMessageBuilder.buildTppErrorMessageWithPlaceholder(ERROR, messageErrorCode, placeHolder);
+    private TppErrorMessage buildTppErrorMessage(MessageErrorCode messageErrorCode, Object... params) {
+        return new TppErrorMessage(ERROR, messageErrorCode, params);
     }
 }
