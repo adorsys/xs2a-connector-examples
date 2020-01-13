@@ -71,6 +71,8 @@ validation:
   payment:
     endToEndIdentification:
       maxLength: 35
+    instructionIdentification:
+      maxLength: 35
     ultimateDebtor:
       maxLength: 70
     ultimateCreditor:
