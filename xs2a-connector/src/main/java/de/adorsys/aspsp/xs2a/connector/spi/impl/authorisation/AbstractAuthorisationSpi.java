@@ -235,7 +235,7 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
                 scaResponseTO = initiateBusinessObject(businessObject, aspspConsentDataProvider.loadAspspConsentData());
             } catch (FeignException feignException) {
                 String devMessage = feignExceptionReader.getErrorMessage(feignException);
-                log.info("Processing of successful authorisation failed: devMessage {}", devMessage);
+                log.info("Processing of successful authorisation failed: devMessage '{}'", devMessage);
                 return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                                .error(FeignExceptionHandler.getFailureMessage(feignException, FORMAT_ERROR))
                                .build();
