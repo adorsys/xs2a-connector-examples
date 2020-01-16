@@ -18,8 +18,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {FeignExceptionReader.class, TestConfiguration.class})
@@ -47,6 +46,17 @@ public class FeignExceptionReaderTest {
     public void getErrorMessageNoDevMessage() throws JsonProcessingException {
         //Given
         String feignBodyString = buildFeignBodyMessage("message", DEV_MESSAGE);
+        FeignException feignException = FeignException.errorStatus("", buildErrorResponse(feignBodyString));
+        //When
+        String errorMessage = feignExceptionReader.getErrorMessage(feignException);
+        //Then
+        assertNotNull(errorMessage);
+    }
+
+    @Test
+    public void getErrorMessageNoDevMessageAndNoMessage() throws JsonProcessingException {
+        //Given
+        String feignBodyString = buildFeignBodyMessage("other message", DEV_MESSAGE);
         FeignException feignException = FeignException.errorStatus("", buildErrorResponse(feignBodyString));
         //When
         String errorMessage = feignExceptionReader.getErrorMessage(feignException);
