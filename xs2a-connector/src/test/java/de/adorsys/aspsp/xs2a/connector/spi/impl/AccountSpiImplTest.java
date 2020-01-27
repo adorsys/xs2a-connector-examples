@@ -21,13 +21,13 @@ import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
@@ -38,19 +38,17 @@ import java.util.Collections;
 import java.util.Currency;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
-public class AccountSpiImplTest {
+@ExtendWith(MockitoExtension.class)
+class AccountSpiImplTest {
     private static final String CONSENT_ID = "c966f143-f6a2-41db-9036-8abaeeef3af7";
     private static final byte[] BYTES = "data".getBytes();
 
     private static final SpiContextData SPI_CONTEXT_DATA = TestSpiDataProvider.getSpiContextData();
     private static final AspspConsentData ASPSP_CONSENT_DATA = new AspspConsentData(BYTES, CONSENT_ID);
     private static final String RESOURCE_ID = "11111-999999999";
-    private static final String IBAN = "DE89370400440532013000";
 
     private final static LocalDate DATE_FROM = LocalDate.of(2019, 1, 1);
     private final static LocalDate DATE_TO = LocalDate.of(2020, 1, 1);
@@ -84,8 +82,8 @@ public class AccountSpiImplTest {
     private SpiAccountReference accountReference;
     private TransactionTO transactionTO;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         spiAccountConsent = jsonReader.getObjectFromFile("json/spi/impl/spi-account-consent.json", SpiAccountConsent.class);
         spiAccountConsentGlobal = jsonReader.getObjectFromFile("json/spi/impl/spi-account-consent-global.json", SpiAccountConsent.class);
         accountDetailsTO = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
@@ -101,24 +99,18 @@ public class AccountSpiImplTest {
         sca.setBearerToken(token);
         when(tokenService.response(ASPSP_CONSENT_DATA.getAspspConsentData())).thenReturn(sca);
         when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
+    }
+
+    @Test
+    void requestTransactionsForAccount_success() {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
-        when(accountRestClient.getTransactionById(accountReference.getResourceId(), TRANSACTION_ID)).thenReturn(ResponseEntity.ok(transactionTO));
-        when(accountRestClient.getAccountDetailsById(RESOURCE_ID)).thenReturn(ResponseEntity.ok(accountDetailsTO));
         when(accountRestClient.getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
         when(accountRestClient.getBalances(RESOURCE_ID)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
 
-        AccountDetailsTO accountDetails_1 = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
-        AccountDetailsTO accountDetails_2 = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
-        accountDetails_2.setCurrency(Currency.getInstance("USD"));
-        when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(Arrays.asList(accountDetails_1, accountDetails_2)));
-    }
-
-    @Test
-    public void requestTransactionsForAccount_success() {
         SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, buildSpiTransactionReportParameters(MediaType.APPLICATION_XML_VALUE),
                                                                                                     accountReference, spiAccountConsent, aspspConsentDataProvider);
 
@@ -132,7 +124,15 @@ public class AccountSpiImplTest {
     }
 
     @Test
-    public void requestTransactionsForAccount_useDefaultAcceptTypeWhenNull_success() {
+    void requestTransactionsForAccount_useDefaultAcceptTypeWhenNull_success() {
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+        when(accountRestClient.getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
+        when(accountRestClient.getBalances(RESOURCE_ID)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
+
         SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, buildSpiTransactionReportParameters(null),
                                                                                                     accountReference, spiAccountConsent, aspspConsentDataProvider);
 
@@ -146,7 +146,15 @@ public class AccountSpiImplTest {
     }
 
     @Test
-    public void requestTransactionsForAccount_useDefaultAcceptTypeWhenWildcard_success() {
+    void requestTransactionsForAccount_useDefaultAcceptTypeWhenWildcard_success() {
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+        when(accountRestClient.getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
+        when(accountRestClient.getBalances(RESOURCE_ID)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
+
         SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, buildSpiTransactionReportParameters("*/*"),
                                                                                                     accountReference, spiAccountConsent, aspspConsentDataProvider);
 
@@ -160,7 +168,15 @@ public class AccountSpiImplTest {
     }
 
     @Test
-    public void requestTransactionsForAccount_withException() {
+    void requestTransactionsForAccount_withException() {
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+        when(accountRestClient.getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
+        when(accountRestClient.getBalances(RESOURCE_ID)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
+
         when(tokenService.store(scaResponseTO)).thenThrow(getFeignException());
 
         SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, buildSpiTransactionReportParameters(MediaType.APPLICATION_XML_VALUE),
@@ -177,7 +193,18 @@ public class AccountSpiImplTest {
     }
 
     @Test
-    public void requestAccountList_withoutBalance_regularConsent() {
+    void requestAccountList_withoutBalance_regularConsent() {
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+
+        AccountDetailsTO accountDetails_1 = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
+        AccountDetailsTO accountDetails_2 = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
+        accountDetails_2.setCurrency(Currency.getInstance("USD"));
+        when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(Arrays.asList(accountDetails_1, accountDetails_2)));
+
         SpiResponse<List<SpiAccountDetails>> actualResponse = accountSpi.requestAccountList(SPI_CONTEXT_DATA, false,
                                                                                             spiAccountConsent, aspspConsentDataProvider);
 
@@ -187,7 +214,18 @@ public class AccountSpiImplTest {
     }
 
     @Test
-    public void requestAccountList_withBalance_regularConsent() {
+    void requestAccountList_withBalance_regularConsent() {
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+
+        AccountDetailsTO accountDetails_1 = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
+        AccountDetailsTO accountDetails_2 = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
+        accountDetails_2.setCurrency(Currency.getInstance("USD"));
+        when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(Arrays.asList(accountDetails_1, accountDetails_2)));
+
         SpiResponse<List<SpiAccountDetails>> actualResponse = accountSpi.requestAccountList(SPI_CONTEXT_DATA, true,
                                                                                             spiAccountConsent, aspspConsentDataProvider);
 
@@ -197,7 +235,13 @@ public class AccountSpiImplTest {
     }
 
     @Test
-    public void requestAccountList_withBalance_globalConsent() {
+    void requestAccountList_withBalance_globalConsent() {
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+
         when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(Collections.singletonList(accountDetailsTO)));
 
         SpiResponse<List<SpiAccountDetails>> actualResponse = accountSpi.requestAccountList(SPI_CONTEXT_DATA, true,
@@ -209,7 +253,7 @@ public class AccountSpiImplTest {
     }
 
     @Test
-    public void requestAccountList_withoutBalanceAndException_regularConsent() {
+    void requestAccountList_withoutBalanceAndException_regularConsent() {
         when(tokenService.response(BYTES)).thenThrow(getFeignException());
 
         SpiResponse<List<SpiAccountDetails>> actualResponse = accountSpi.requestAccountList(SPI_CONTEXT_DATA, false,
@@ -223,7 +267,19 @@ public class AccountSpiImplTest {
     }
 
     @Test
-    public void requestAccountList_withoutBalance_regularConsent_noCurrency() {
+    void requestAccountList_withoutBalance_regularConsent_noCurrency() {
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+
+        AccountDetailsTO accountDetails_1 = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
+        AccountDetailsTO accountDetails_2 = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
+        accountDetails_2.setCurrency(Currency.getInstance("USD"));
+        when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(Arrays.asList(accountDetails_1, accountDetails_2)));
+
+
         spiAccountConsent = jsonReader.getObjectFromFile("json/spi/impl/spi-account-consent-no-currency.json", SpiAccountConsent.class);
 
         SpiResponse<List<SpiAccountDetails>> actualResponse = accountSpi.requestAccountList(SPI_CONTEXT_DATA, false,
@@ -232,19 +288,30 @@ public class AccountSpiImplTest {
         assertTrue(actualResponse.getErrors().isEmpty());
         List<SpiAccountDetails> spiAccountDetails = actualResponse.getPayload();
         assertNotNull(spiAccountDetails);
-        assertThat(spiAccountDetails.size(), is(2));
+        assertEquals(2, spiAccountDetails.size());
         verifyGetListOfAccounts();
     }
 
     @Test
-    public void requestAccountList_withoutBalance_regularConsent_currencyPresent() {
+    void requestAccountList_withoutBalance_regularConsent_currencyPresent() {
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+
+        AccountDetailsTO accountDetails_1 = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
+        AccountDetailsTO accountDetails_2 = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
+        accountDetails_2.setCurrency(Currency.getInstance("USD"));
+        when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(Arrays.asList(accountDetails_1, accountDetails_2)));
+
         SpiResponse<List<SpiAccountDetails>> actualResponse = accountSpi.requestAccountList(SPI_CONTEXT_DATA, false,
                                                                                             spiAccountConsent, aspspConsentDataProvider);
 
         assertTrue(actualResponse.getErrors().isEmpty());
         List<SpiAccountDetails> spiAccountDetails = actualResponse.getPayload();
         assertNotNull(spiAccountDetails);
-        assertThat(spiAccountDetails.size(), is(1));
+        assertEquals(1, spiAccountDetails.size());
         verifyGetListOfAccounts();
     }
 
@@ -256,7 +323,15 @@ public class AccountSpiImplTest {
     }
 
     @Test
-    public void requestAccountDetailForAccount_withBalance() {
+    void requestAccountDetailForAccount_withBalance() {
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+
+        when(accountRestClient.getAccountDetailsById(RESOURCE_ID)).thenReturn(ResponseEntity.ok(accountDetailsTO));
+
         SpiResponse<SpiAccountDetails> actualResponse = accountSpi.requestAccountDetailForAccount(SPI_CONTEXT_DATA, true, accountReference,
                                                                                                   spiAccountConsent, aspspConsentDataProvider);
 
@@ -270,7 +345,14 @@ public class AccountSpiImplTest {
     }
 
     @Test
-    public void requestAccountDetailForAccount_withoutBalance() {
+    void requestAccountDetailForAccount_withoutBalance() {
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+        when(accountRestClient.getAccountDetailsById(RESOURCE_ID)).thenReturn(ResponseEntity.ok(accountDetailsTO));
+
         SpiResponse<SpiAccountDetails> actualResponse = accountSpi.requestAccountDetailForAccount(SPI_CONTEXT_DATA, false, accountReference,
                                                                                                   spiAccountConsent, aspspConsentDataProvider);
 
@@ -284,7 +366,12 @@ public class AccountSpiImplTest {
     }
 
     @Test
-    public void requestAccountDetailForAccount_withoutBalanceAndException() {
+    void requestAccountDetailForAccount_withoutBalanceAndException() {
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+
         when(accountRestClient.getAccountDetailsById(RESOURCE_ID)).thenThrow(getFeignException());
 
         SpiResponse<SpiAccountDetails> actualResponse = accountSpi
@@ -298,7 +385,14 @@ public class AccountSpiImplTest {
     }
 
     @Test
-    public void requestTransactionForAccountByTransactionId_success() {
+    void requestTransactionForAccountByTransactionId_success() {
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+        when(accountRestClient.getTransactionById(accountReference.getResourceId(), TRANSACTION_ID)).thenReturn(ResponseEntity.ok(transactionTO));
+
         SpiResponse<SpiTransaction> actualResponse = accountSpi
                                                              .requestTransactionForAccountByTransactionId(SPI_CONTEXT_DATA, TRANSACTION_ID, accountReference, spiAccountConsent, aspspConsentDataProvider);
 
@@ -312,7 +406,12 @@ public class AccountSpiImplTest {
     }
 
     @Test
-    public void requestTransactionForAccountByTransactionId_WithException() {
+    void requestTransactionForAccountByTransactionId_WithException() {
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+
         when(accountRestClient.getTransactionById(accountReference.getResourceId(), TRANSACTION_ID))
                 .thenThrow(getFeignException());
 
@@ -327,7 +426,13 @@ public class AccountSpiImplTest {
     }
 
     @Test
-    public void requestTransactionsByDownloadLink_success() throws NoSuchFieldException, IllegalAccessException {
+    void requestTransactionsByDownloadLink_success() throws NoSuchFieldException, IllegalAccessException {
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+
         String transactionList = "transactionList";
         Field fieldTransactionList = accountSpi.getClass().getDeclaredField(transactionList);
         fieldTransactionList.setAccessible(true);
@@ -342,7 +447,7 @@ public class AccountSpiImplTest {
     }
 
     @Test
-    public void requestTransactionsByDownloadLink_WithError() {
+    void requestTransactionsByDownloadLink_WithError() {
         when(tokenService.response(BYTES)).thenThrow(getFeignException());
 
         SpiResponse<SpiTransactionsDownloadResponse> actualResponse = accountSpi

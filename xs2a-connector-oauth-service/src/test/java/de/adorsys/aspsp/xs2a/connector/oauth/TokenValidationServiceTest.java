@@ -22,24 +22,24 @@ import de.adorsys.ledgers.rest.client.UserMgmtRestClient;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.Collections;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
-public class TokenValidationServiceTest {
+@ExtendWith(MockitoExtension.class)
+class TokenValidationServiceTest {
     @Mock
     private AuthRequestInterceptor authRequestInterceptor;
     @Mock
@@ -49,7 +49,7 @@ public class TokenValidationServiceTest {
     private TokenValidationService tokenValidationService;
 
     @Test
-    public void validate_withValidToken_shouldReturnValidToken() {
+    void validate_withValidToken_shouldReturnValidToken() {
         // Given
         String token = "some token";
         BearerTokenTO expected = new BearerTokenTO();
@@ -69,7 +69,7 @@ public class TokenValidationServiceTest {
     }
 
     @Test
-    public void validate_onFeignException_shouldReturnNull() {
+    void validate_onFeignException_shouldReturnNull() {
         // Given
         String token = "some token";
         Response feignResponse = Response.builder()

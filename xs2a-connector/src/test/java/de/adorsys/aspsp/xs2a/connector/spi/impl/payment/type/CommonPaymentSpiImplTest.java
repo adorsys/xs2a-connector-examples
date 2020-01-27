@@ -17,21 +17,21 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionRespo
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 
 import java.util.HashSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
-public class CommonPaymentSpiImplTest {
+@ExtendWith(MockitoExtension.class)
+class CommonPaymentSpiImplTest {
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
     private static final String PAYMENT_ID = "c966f143-f6a2-41db-9036-8abaeeef3af7";
     private static final SpiContextData SPI_CONTEXT_DATA = TestSpiDataProvider.getSpiContextData();
@@ -46,7 +46,7 @@ public class CommonPaymentSpiImplTest {
     private LedgersSpiPaymentMapper ledgersSpiPaymentMapper;
 
     @Test
-    public void executePaymentWithoutSca() {
+    void executePaymentWithoutSca() {
         //When
         SpiResponse<SpiPaymentExecutionResponse> response = commonPaymentSpi.executePaymentWithoutSca(SPI_CONTEXT_DATA, new SpiPaymentInfo(PAYMENT_PRODUCT), spiAspspConsentDataProvider);
 
@@ -56,7 +56,7 @@ public class CommonPaymentSpiImplTest {
     }
 
     @Test
-    public void verifyScaAuthorisationAndExecutePayment() {
+    void verifyScaAuthorisationAndExecutePayment() {
         //When
         SpiResponse<SpiPaymentExecutionResponse> response = commonPaymentSpi.verifyScaAuthorisationAndExecutePayment(SPI_CONTEXT_DATA, new SpiScaConfirmation(), new SpiPaymentInfo(PAYMENT_PRODUCT), spiAspspConsentDataProvider);
 
@@ -66,7 +66,7 @@ public class CommonPaymentSpiImplTest {
     }
 
     @Test
-    public void initiatePayment() {
+    void initiatePayment() {
         //Given
         SpiPaymentInfo spiPaymentInfo = new SpiPaymentInfo(PAYMENT_PRODUCT);
         SpiSinglePaymentInitiationResponse spiSinglePaymentInitiationResponse = new SpiSinglePaymentInitiationResponse();
@@ -84,7 +84,7 @@ public class CommonPaymentSpiImplTest {
     }
 
     @Test
-    public void processEmptyAspspConsentData() {
+    void processEmptyAspspConsentData() {
         //Given
         SpiPaymentInfo spiPaymentInfo = new SpiPaymentInfo(PAYMENT_PRODUCT);
         SpiSinglePaymentInitiationResponse spiSinglePaymentInitiationResponse = new SpiSinglePaymentInitiationResponse();
@@ -102,7 +102,7 @@ public class CommonPaymentSpiImplTest {
     }
 
     @Test
-    public void getToSpiPaymentResponse() {
+    void getToSpiPaymentResponse() {
         //Given
         SpiSinglePaymentInitiationResponse spiSinglePaymentInitiationResponse = new SpiSinglePaymentInitiationResponse();
         spiSinglePaymentInitiationResponse.setPaymentId(PAYMENT_ID);
@@ -119,7 +119,7 @@ public class CommonPaymentSpiImplTest {
     }
 
     @Test
-    public void getPaymentById() {
+    void getPaymentById() {
         //Given
         SpiPaymentInfo spiPaymentInfo = new SpiPaymentInfo(PAYMENT_PRODUCT);
 
@@ -131,7 +131,7 @@ public class CommonPaymentSpiImplTest {
     }
 
     @Test
-    public void getPaymentStatusById_JSON() {
+    void getPaymentStatusById_JSON() {
         //Given
         String mediaType = MediaType.APPLICATION_JSON_VALUE;
 
@@ -150,7 +150,7 @@ public class CommonPaymentSpiImplTest {
     }
 
     @Test
-    public void getPaymentStatusById_XML() {
+    void getPaymentStatusById_XML() {
         //Given
         String mediaType = MediaType.APPLICATION_XML_VALUE;
 
@@ -174,7 +174,7 @@ public class CommonPaymentSpiImplTest {
         assertEquals(spiGetPaymentStatusResponse, paymentStatusById.getPayload());
     }
 
-    public <T> SpiResponse<T> buildSpiResponse(T responsePayload) {
+    private <T> SpiResponse<T> buildSpiResponse(T responsePayload) {
         return SpiResponse.<T>builder()
                        .payload(responsePayload)
                        .build();

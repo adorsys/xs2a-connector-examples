@@ -6,23 +6,23 @@ import de.adorsys.aspsp.xs2a.util.TestConfiguration;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {FeignExceptionReader.class, TestConfiguration.class})
-public class FeignExceptionReaderTest {
+class FeignExceptionReaderTest {
     private static final String DEV_MESSAGE = "devMessage";
 
     @Autowired
@@ -32,7 +32,7 @@ public class FeignExceptionReaderTest {
     private ObjectMapper objectMapper;
 
     @Test
-    public void getErrorMessageSuccess() throws JsonProcessingException {
+    void getErrorMessageSuccess() throws JsonProcessingException {
         //Given
         String feignBodyString = buildFeignBodyMessage(DEV_MESSAGE);
         FeignException feignException = FeignException.errorStatus("", buildErrorResponse(feignBodyString));
@@ -43,7 +43,7 @@ public class FeignExceptionReaderTest {
     }
 
     @Test
-    public void getErrorMessageNoDevMessage() throws JsonProcessingException {
+    void getErrorMessageNoDevMessage() throws JsonProcessingException {
         //Given
         String feignBodyString = buildFeignBodyMessage("message", DEV_MESSAGE);
         FeignException feignException = FeignException.errorStatus("", buildErrorResponse(feignBodyString));
@@ -54,7 +54,7 @@ public class FeignExceptionReaderTest {
     }
 
     @Test
-    public void getErrorMessageNoDevMessageAndNoMessage() throws JsonProcessingException {
+    void getErrorMessageNoDevMessageAndNoMessage() throws JsonProcessingException {
         //Given
         String feignBodyString = buildFeignBodyMessage("other message", DEV_MESSAGE);
         FeignException feignException = FeignException.errorStatus("", buildErrorResponse(feignBodyString));
@@ -65,7 +65,7 @@ public class FeignExceptionReaderTest {
     }
 
     @Test
-    public void getErrorMessageNoContent() {
+    void getErrorMessageNoContent() {
         //Given
         FeignException feignException = FeignException.errorStatus("", FeignExceptionHandler.error(HttpStatus.BAD_REQUEST));
         //When
@@ -79,7 +79,7 @@ public class FeignExceptionReaderTest {
                        .status(HttpStatus.BAD_REQUEST.value())
                        .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
                        .headers(Collections.emptyMap())
-                       .body(body, Charset.forName("utf-8"))
+                       .body(body, StandardCharsets.UTF_8)
                        .build();
     }
 

@@ -18,25 +18,25 @@ package de.adorsys.aspsp.xs2a.connector.oauth;
 
 import de.adorsys.psd2.aspsp.profile.domain.AspspSettings;
 import de.adorsys.psd2.aspsp.profile.service.AspspProfileService;
+import de.adorsys.psd2.xs2a.core.mapper.ServiceType;
 import de.adorsys.psd2.xs2a.core.profile.ScaApproach;
 import de.adorsys.psd2.xs2a.service.discovery.ServiceTypeDiscoveryService;
-import de.adorsys.psd2.xs2a.core.mapper.ServiceType;
 import de.adorsys.xs2a.reader.JsonReader;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
-public class OauthProfileServiceWrapperTest {
+@ExtendWith(MockitoExtension.class)
+class OauthProfileServiceWrapperTest {
     private static final String ASPSP_SETTINGS_JSON_PATH = "json/oauth/aspsp-settings.json";
     private static final String ASPSP_SETTINGS_INTEGRATED_AIS_JSON_PATH = "json/oauth/aspsp-settings-oauth-integrated-ais.json";
     private static final String ASPSP_SETTINGS_INTEGRATED_PIS_JSON_PATH = "json/oauth/aspsp-settings-oauth-integrated-pis.json";
@@ -59,21 +59,18 @@ public class OauthProfileServiceWrapperTest {
     private OauthProfileServiceWrapper oauthProfileServiceWrapper;
 
     private JsonReader jsonReader = new JsonReader();
-    private AspspSettings realAspspSettings;
+    private AspspSettings realAspspSettings = jsonReader.getObjectFromFile(ASPSP_SETTINGS_JSON_PATH, AspspSettings.class);
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         oauthProfileServiceWrapper = new OauthProfileServiceWrapper(aspspProfileService, oauthDataHolder, serviceTypeDiscoveryService, AIS_INTEGRATED_OAUTH_SUFFIX, PIS_INTEGRATED_OAUTH_SUFFIX, AIS_PRESTEP_OAUTH_SUFFIX, PIS_PRESTEP_OAUTH_SUFFIX);
-
-        realAspspSettings = jsonReader.getObjectFromFile(ASPSP_SETTINGS_JSON_PATH, AspspSettings.class);
-
-        when(aspspProfileService.getAspspSettings())
-                .thenReturn(realAspspSettings);
     }
 
     @Test
-    public void getAspspSettings_withNullOauthType_shouldNotChangeProfile() {
+    void getAspspSettings_withNullOauthType_shouldNotChangeProfile() {
         // When
+        when(aspspProfileService.getAspspSettings()).thenReturn(realAspspSettings);
+
         AspspSettings aspspSettings = oauthProfileServiceWrapper.getAspspSettings();
 
         // Then
@@ -81,8 +78,10 @@ public class OauthProfileServiceWrapperTest {
     }
 
     @Test
-    public void getAspspSettings_withIntegratedOauthType_ais_shouldChangeFlowAndLinks() {
+    void getAspspSettings_withIntegratedOauthType_ais_shouldChangeFlowAndLinks() {
         // Given
+        when(aspspProfileService.getAspspSettings()).thenReturn(realAspspSettings);
+
         AspspSettings modifiedSettings = jsonReader.getObjectFromFile(ASPSP_SETTINGS_INTEGRATED_AIS_JSON_PATH, AspspSettings.class);
 
         when(oauthDataHolder.getOauthType())
@@ -98,8 +97,10 @@ public class OauthProfileServiceWrapperTest {
     }
 
     @Test
-    public void getAspspSettings_withIntegratedOauthType_pis_shouldChangeFlowAndLinks() {
+    void getAspspSettings_withIntegratedOauthType_pis_shouldChangeFlowAndLinks() {
         // Given
+        when(aspspProfileService.getAspspSettings()).thenReturn(realAspspSettings);
+
         AspspSettings modifiedSettings = jsonReader.getObjectFromFile(ASPSP_SETTINGS_INTEGRATED_PIS_JSON_PATH, AspspSettings.class);
 
         when(oauthDataHolder.getOauthType())
@@ -115,8 +116,10 @@ public class OauthProfileServiceWrapperTest {
     }
 
     @Test
-    public void getAspspSettings_withIntegratedOauthType_otherServiceType_shouldChangeFlow() {
+    void getAspspSettings_withIntegratedOauthType_otherServiceType_shouldChangeFlow() {
         // Given
+        when(aspspProfileService.getAspspSettings()).thenReturn(realAspspSettings);
+
         AspspSettings modifiedSettings = jsonReader.getObjectFromFile(ASPSP_SETTINGS_INTEGRATED_JSON_PATH, AspspSettings.class);
 
         when(oauthDataHolder.getOauthType())
@@ -132,8 +135,10 @@ public class OauthProfileServiceWrapperTest {
     }
 
     @Test
-    public void getAspspSettings_withPreStepOauthType_pis_shouldChangeFlowAndLinks() {
+    void getAspspSettings_withPreStepOauthType_pis_shouldChangeFlowAndLinks() {
         // Given
+        when(aspspProfileService.getAspspSettings()).thenReturn(realAspspSettings);
+
         AspspSettings modifiedSettings = jsonReader.getObjectFromFile(ASPSP_SETTINGS_PRESTEP_JSON_PATH, AspspSettings.class);
 
         when(oauthDataHolder.getOauthType())
@@ -149,7 +154,7 @@ public class OauthProfileServiceWrapperTest {
     }
 
     @Test
-    public void getScaApproaches() {
+    void getScaApproaches() {
         // Given
         List<ScaApproach> expectedScaApproaches = Collections.singletonList(ScaApproach.REDIRECT);
         when(aspspProfileService.getScaApproaches())

@@ -22,18 +22,18 @@ import de.adorsys.psd2.xs2a.core.profile.ScaApproach;
 import de.adorsys.psd2.xs2a.core.tpp.TppInfo;
 import de.adorsys.psd2.xs2a.service.TppService;
 import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -50,6 +50,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import static org.apache.commons.io.IOUtils.resourceToString;
@@ -58,13 +59,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = LedgersXs2aGatewayApplication.class)
-public class ServiceUnavailableIT {
+class ServiceUnavailableIT {
     private static final Charset UTF_8 = StandardCharsets.UTF_8;
     private static final String DEDICATED_CONSENT_REQUEST_JSON_PATH = "/json/account/req/DedicatedConsent.json";
     private static final String SERVICE_UNAVAILABLE_ERROR_MESSAGE_JSON_PATH = "/json/account/res/ServiceUnavailableErrorMessage.json";
     private static final TppInfo TPP_INFO = buildTppInfo();
+
+    @RegisterExtension
+    final BeforeEachCallback resourceAvailableCallback = this::onStartingTest;
 
     private HttpHeaders httpHeadersImplicit = new HttpHeaders();
 
@@ -78,31 +82,14 @@ public class ServiceUnavailableIT {
     private TokenAuthenticationFilter tokenAuthenticationFilter;
     private Supplier<ResourceAccessException> resourceAccessExceptionSupplier = () -> new ResourceAccessException("");
 
-    @Rule
-    public TestWatcher watcher = new TestWatcher() {
-
-        @Override
-        protected void starting(Description description) {
-            try {
-                onStartingTest(description);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    };
-
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.FIELD, ElementType.METHOD})
     public @interface ResourceAvailable {
         boolean profile() default true;
-
-        boolean cms() default true;
-
-        boolean connector() default true;
     }
 
-    @Before
-    public void init() {
+    @BeforeEach
+    void init() {
         HashMap<String, String> headerMap = new HashMap<>();
         headerMap.put("Content-Type", "application/json");
         headerMap.put("Accept", "application/json");
@@ -119,23 +106,9 @@ public class ServiceUnavailableIT {
         httpHeadersImplicit.setAll(headerMap);
     }
 
-    private void onStartingTest(Description description) throws Exception {
-        ResourceAvailable resourceAvailable = description.getAnnotation(ResourceAvailable.class);
-        makePreparationsCommon();
-        if (resourceAvailable == null) {
-            makePreparationsCms(false);
-            makePreparationsProfile(false);
-            makePreparationsConnector(false);
-        } else {
-            makePreparationsCms(!resourceAvailable.cms());
-            makePreparationsProfile(!resourceAvailable.profile());
-            makePreparationsConnector(!resourceAvailable.connector());
-        }
-    }
-
     @Test
     @ResourceAvailable(profile = false)
-    public void aspsp_profile_not_accessible_in_token_authentification_filter() throws Exception {
+    void aspsp_profile_not_accessible_in_token_authentification_filter() throws Exception {
         MockMvc mockMvc = buildMockMvcWithFilters(tokenAuthenticationFilter);
         create_consent_service_unavailable_test(mockMvc);
     }
@@ -168,15 +141,23 @@ public class ServiceUnavailableIT {
                 .andExpect(content().json(IOUtils.resourceToString(SERVICE_UNAVAILABLE_ERROR_MESSAGE_JSON_PATH, UTF_8)));
     }
 
-    //Preparations
-    private void makePreparationsCms(boolean throwException) throws Exception {
+    private void onStartingTest(ExtensionContext extensionContext) {
+        Optional<ResourceAvailable> resourceAvailableOptional = extensionContext.getElement()
+                                                                        .map(e -> e.getAnnotation(ResourceAvailable.class));
+        makePreparationsCommon();
+
+        if (resourceAvailableOptional.isPresent()) {
+            ResourceAvailable resourceAvailable = resourceAvailableOptional.get();
+            makePreparationsProfile(!resourceAvailable.profile());
+            return;
+        }
+
+        makePreparationsProfile(false);
     }
 
+    //Preparations
     private void makePreparationsProfile(boolean throwException) {
         givenReturnOrThrowException(aspspProfileService.getScaApproaches(), Collections.singletonList(ScaApproach.EMBEDDED), throwException);
-    }
-
-    private void makePreparationsConnector(boolean throwException) {
     }
 
     private void makePreparationsCommon() {

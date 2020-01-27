@@ -1,3 +1,9 @@
 = Release notes v. 5.9
 
 == Table of Contents
+
+* Migrate to JUnit 5 and Mockito 3
+
+== Migrate to JUnit 5 and Mockito 3
+
+From now on, the project uses JUnit 5 and Mockito 3 for testing.

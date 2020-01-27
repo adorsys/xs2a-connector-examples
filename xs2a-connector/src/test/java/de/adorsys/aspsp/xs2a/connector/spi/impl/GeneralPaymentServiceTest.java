@@ -27,21 +27,21 @@ import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
 import java.util.Collections;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
-public class GeneralPaymentServiceTest {
+@ExtendWith(MockitoExtension.class)
+class GeneralPaymentServiceTest {
     private static final String ANY_MEDIA_TYPE = "*/*";
     private static final String JSON_MEDIA_TYPE = "application/json";
     private static final String XML_MEDIA_TYPE = "application/xml";
@@ -66,13 +66,13 @@ public class GeneralPaymentServiceTest {
 
     private GeneralPaymentService generalPaymentService;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         generalPaymentService = new GeneralPaymentService(paymentRestClient, authRequestInterceptor, consentDataService, null, objectMapper, MOCK_XML_BODY, multilevelScaService);
     }
 
     @Test
-    public void firstCallInstantiatingPayment_LedgersError() {
+    void firstCallInstantiatingPayment_LedgersError() {
         SpiPayment initialPayment = getSpiSingle(TransactionStatus.RCVD, "initialPayment");
 
         SpiAccountReference spiAccountReference = jsonReader.getObjectFromFile("json/spi/impl/account-reference.json", SpiAccountReference.class);
@@ -91,7 +91,7 @@ public class GeneralPaymentServiceTest {
     }
 
     @Test
-    public void firstCallInstantiatingPayment_Success() {
+    void firstCallInstantiatingPayment_Success() {
         SCAPaymentResponseTO response = new SCAPaymentResponseTO();
         response.setPaymentId("myPaymentId");
         response.setTransactionStatus(TransactionStatusTO.RCVD);
@@ -117,7 +117,7 @@ public class GeneralPaymentServiceTest {
     }
 
     @Test
-    public void getPaymentStatusById_withXmlMediaType_shouldReturnMockResponse() {
+    void getPaymentStatusById_withXmlMediaType_shouldReturnMockResponse() {
         // Given
         byte[] xmlBody = MOCK_XML_BODY.getBytes();
         byte[] aspspConsentData = "".getBytes();
@@ -134,7 +134,7 @@ public class GeneralPaymentServiceTest {
     }
 
     @Test
-    public void getPaymentStatusById_withNotAcspStatus_shouldReturnSameStatus() {
+    void getPaymentStatusById_withNotAcspStatus_shouldReturnSameStatus() {
         // Given
         byte[] aspspConsentData = "".getBytes();
         SpiGetPaymentStatusResponse expectedResponse = new SpiGetPaymentStatusResponse(TransactionStatus.ACSC, null, JSON_MEDIA_TYPE, null);
@@ -150,7 +150,7 @@ public class GeneralPaymentServiceTest {
     }
 
     @Test
-    public void getPaymentByIdTransactionStatusRCVD() {
+    void getPaymentByIdTransactionStatusRCVD() {
         //Given
         SpiPayment initialPayment = getSpiSingle(TransactionStatus.RCVD, "initialPayment");
         //When
@@ -161,7 +161,7 @@ public class GeneralPaymentServiceTest {
     }
 
     @Test
-    public void getPaymentByIdTransactionStatusACSP() {
+    void getPaymentByIdTransactionStatusACSP() {
         //Given
         SpiPayment initialPayment = getSpiSingle(TransactionStatus.ACSP, "initialPayment");
         SpiPayment paymentAspsp = getSpiSingle(TransactionStatus.ACSP, "paymentAspsp");

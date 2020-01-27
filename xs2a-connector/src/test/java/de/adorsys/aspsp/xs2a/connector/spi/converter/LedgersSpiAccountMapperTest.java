@@ -10,24 +10,25 @@ import de.adorsys.psd2.xs2a.spi.domain.account.SpiTransaction;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {LedgersSpiAccountMapperImpl.class})
-public class LedgersSpiAccountMapperTest {
+class LedgersSpiAccountMapperTest {
 
     @Autowired
     private LedgersSpiAccountMapper ledgersSpiAccountMapper;
     private JsonReader jsonReader = new JsonReader();
 
     @Test
-    public void toFundsConfirmationTOWithRealData() {
+    void toFundsConfirmationTOWithRealData() {
         SpiPsuData inputData = jsonReader.getObjectFromFile("json/mappers/spi-psu-data.json", SpiPsuData.class);
         SpiFundsConfirmationRequest inputDataRequest = jsonReader.getObjectFromFile("json/mappers/spi-funds-confirmation-request.json", SpiFundsConfirmationRequest.class);
         FundsConfirmationRequestTO actualResult = ledgersSpiAccountMapper.toFundsConfirmationTO(inputData, inputDataRequest);
@@ -36,13 +37,13 @@ public class LedgersSpiAccountMapperTest {
     }
 
     @Test
-    public void toFundsConfirmationTOWithNull() {
+    void toFundsConfirmationTOWithNull() {
         FundsConfirmationRequestTO actualResult = ledgersSpiAccountMapper.toFundsConfirmationTO(null, null);
         assertNull(actualResult);
     }
 
     @Test
-    public void toSpiAccountDetailsListWithRealData() {
+    void toSpiAccountDetailsListWithRealData() {
         AccountDetailsTO inputData = jsonReader.getObjectFromFile("json/mappers/account-details-to.json", AccountDetailsTO.class);
         SpiAccountDetails actualResult = ledgersSpiAccountMapper.toSpiAccountDetails(inputData);
         SpiAccountDetails expectedResult = jsonReader.getObjectFromFile("json/mappers/spi-account-details.json", SpiAccountDetails.class);
@@ -50,13 +51,13 @@ public class LedgersSpiAccountMapperTest {
     }
 
     @Test
-    public void toSpiAccountDetailsListWithNull() {
+    void toSpiAccountDetailsListWithNull() {
         SpiAccountDetails actualResult = ledgersSpiAccountMapper.toSpiAccountDetails(null);
         assertNull(actualResult);
     }
 
     @Test
-    public void toSpiTransactionWithRealData() {
+    void toSpiTransactionWithRealData() {
         TransactionTO inputData = jsonReader.getObjectFromFile("json/mappers/transaction-to.json", TransactionTO.class);
         SpiTransaction actualResult = ledgersSpiAccountMapper.toSpiTransaction(inputData);
         SpiTransaction expectedResult = jsonReader.getObjectFromFile("json/mappers/spi-transaction.json", SpiTransaction.class);
@@ -64,13 +65,13 @@ public class LedgersSpiAccountMapperTest {
     }
 
     @Test
-    public void toSpiTransactionWithNull() {
+    void toSpiTransactionWithNull() {
         SpiTransaction actualResult = ledgersSpiAccountMapper.toSpiTransaction(null);
         assertNull(actualResult);
     }
 
     @Test
-    public void toSpiAccountReferenceWithRealData() {
+    void toSpiAccountReferenceWithRealData() {
         AccountReferenceTO inputData = jsonReader.getObjectFromFile("json/mappers/account-reference-to.json", AccountReferenceTO.class);
         SpiAccountReference actualResult = ledgersSpiAccountMapper.toSpiAccountReference(inputData);
         SpiAccountReference expectedResult = jsonReader.getObjectFromFile("json/mappers/spi-account-reference.json", SpiAccountReference.class);
@@ -78,13 +79,13 @@ public class LedgersSpiAccountMapperTest {
     }
 
     @Test
-    public void toSpiAccountReferenceWithNull() {
+    void toSpiAccountReferenceWithNull() {
         SpiAccountReference actualResult = ledgersSpiAccountMapper.toSpiAccountReference(null);
         assertNull(actualResult);
     }
 
     @Test
-    public void toSpiExchangeRateWithRealData() {
+    void toSpiExchangeRateWithRealData() {
         ExchangeRateTO inputData = jsonReader.getObjectFromFile("json/mappers/exchange-rate-to.json", ExchangeRateTO.class);
         SpiExchangeRate actualResult = ledgersSpiAccountMapper.toSpiExchangeRate(inputData);
         SpiExchangeRate expectedResult = jsonReader.getObjectFromFile("json/mappers/spi-exchange-rate.json", SpiExchangeRate.class);
@@ -92,13 +93,13 @@ public class LedgersSpiAccountMapperTest {
     }
 
     @Test
-    public void toSpiExchangeRateWithNull() {
+    void toSpiExchangeRateWithNull() {
         SpiExchangeRate actualResult = ledgersSpiAccountMapper.toSpiExchangeRate(null);
         assertNull(actualResult);
     }
 
     @Test
-    public void toSpiAmountWithRealData() {
+    void toSpiAmountWithRealData() {
         AmountTO inputData = jsonReader.getObjectFromFile("json/mappers/amount-to.json", AmountTO.class);
         SpiAmount actualResult = ledgersSpiAccountMapper.toSpiAmount(inputData);
         SpiAmount expectedResult = jsonReader.getObjectFromFile("json/mappers/spi-amount.json", SpiAmount.class);
@@ -106,7 +107,7 @@ public class LedgersSpiAccountMapperTest {
     }
 
     @Test
-    public void toSpiAmountWithNull() {
+    void toSpiAmountWithNull() {
         SpiAmount actualResult = ledgersSpiAccountMapper.toSpiAmount(null);
         assertNull(actualResult);
     }

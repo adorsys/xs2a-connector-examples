@@ -16,9 +16,9 @@
 
 package de.adorsys.aspsp.xs2a.util;
 
-public class ParseContentJsonReaderException extends RuntimeException {
+class ParseContentJsonReaderException extends RuntimeException {
 
-    public ParseContentJsonReaderException(String message) {
+    ParseContentJsonReaderException(String message) {
         super(message);
     }
 }

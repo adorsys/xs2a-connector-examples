@@ -1,16 +1,18 @@
 package de.adorsys.aspsp.xs2a.remote.connector.test;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = LedgersXs2aGatewayApplication.class)
-public class StarterIT {
+class StarterIT {
 
+	// Suppress "Tests should include assertions" Sonar rule as this test is not supposed to assert anything
+	@SuppressWarnings("squid:S2699")
 	@Test
-	public void test() {
-		// DO nothing.
+	void test() {
+		// Test whether application starts up
 	}
 }
