@@ -37,13 +37,13 @@ import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -53,12 +53,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.*;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
-public class AisConsentSpiImplTest {
+@ExtendWith(MockitoExtension.class)
+class AisConsentSpiImplTest {
     private static final String ACCESS_TOKEN = "access_token";
     private static final String AUTHORISATION_ID = "authorisation id";
     private static final String AUTHENTICATION_METHOD_ID = "authentication method id";
@@ -113,7 +113,7 @@ public class AisConsentSpiImplTest {
     private LedgersSpiAccountMapper accountMapper;
 
     @Test
-    public void initiateAisConsent_WithInitialAspspConsentData() {
+    void initiateAisConsent_WithInitialAspspConsentData() {
         SCAConsentResponseTO sca = new SCAConsentResponseTO();
         BearerTokenTO token = new BearerTokenTO();
         token.setExpires_in(100);
@@ -137,7 +137,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void initiateAisConsent_WithInitialAspspConsentData_availableAccounts() {
+    void initiateAisConsent_WithInitialAspspConsentData_availableAccounts() {
         SCAConsentResponseTO sca = new SCAConsentResponseTO();
         BearerTokenTO token = new BearerTokenTO();
         token.setExpires_in(100);
@@ -174,7 +174,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void initiateAisConsent_WithInitialAspspConsentData_availableAccountsWithBalances() {
+    void initiateAisConsent_WithInitialAspspConsentData_availableAccountsWithBalances() {
         SCAConsentResponseTO sca = new SCAConsentResponseTO();
         BearerTokenTO token = new BearerTokenTO();
         token.setExpires_in(100);
@@ -211,7 +211,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void initiateAisConsent_WithInitialAspspConsentData_global() {
+    void initiateAisConsent_WithInitialAspspConsentData_global() {
         SCAConsentResponseTO sca = new SCAConsentResponseTO();
         BearerTokenTO token = new BearerTokenTO();
         token.setExpires_in(100);
@@ -251,7 +251,7 @@ public class AisConsentSpiImplTest {
 
 
     @Test
-    public void initiateAisConsent_WithEmptyInitialAspspConsentData() {
+    void initiateAisConsent_WithEmptyInitialAspspConsentData() {
         SCAConsentResponseTO sca = new SCAConsentResponseTO();
         sca.setScaStatus(STARTED);
         sca.setObjectType("SCAConsentResponseTO");
@@ -267,7 +267,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void initiateAisConsent_WithException() {
+    void initiateAisConsent_WithException() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         when(consentDataService.response(any())).thenThrow(FeignException.errorStatus(RESPONSE_STATUS_200_WITH_EMPTY_BODY,
                                                                                       buildErrorResponse()));
@@ -279,7 +279,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void authorisePsu() throws IOException {
+    void authorisePsu() throws IOException {
         // Given
         SpiPsuData spiPsuData = new SpiPsuData("psu", null, null, null, null);
         SCAConsentResponseTO scaConsentResponseTO = buildSCAConsentResponseTO(ScaStatusTO.PSUIDENTIFIED);
@@ -292,11 +292,11 @@ public class AisConsentSpiImplTest {
 
         when(authorisationService.authorisePsuForConsent(spiPsuData, password, CONSENT_ID, OpTypeTO.CONSENT, spiAspspConsentDataProvider))
                 .thenReturn(SpiResponse.<SpiAuthorisationStatus>builder().payload(SpiAuthorisationStatus.SUCCESS).build());
-        when(consentDataService.response(CONSENT_DATA_BYTES, SCAConsentResponseTO.class, false))
-                .thenReturn(scaConsentResponseTO);
+        doReturn(scaConsentResponseTO).when(consentDataService)
+                .response(CONSENT_DATA_BYTES, SCAConsentResponseTO.class, false);
 
-        when(consentDataService.response(CONSENT_DATA_BYTES))
-                .thenReturn(scaConsentResponseTO);
+        doReturn(scaConsentResponseTO).when(consentDataService)
+                .response(CONSENT_DATA_BYTES);
 
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
 
@@ -325,7 +325,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void authorisePsu_multilevel() throws IOException {
+    void authorisePsu_multilevel() throws IOException {
         // Given
         SpiPsuData spiPsuData = new SpiPsuData("psu", null, null, null, null);
         SpiPsuData spiPsuData2 = new SpiPsuData("psu2", null, null, null, null);
@@ -360,7 +360,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void authorisePsu_consentInternalError() throws IOException {
+    void authorisePsu_consentInternalError() throws IOException {
         // Given
         SpiPsuData spiPsuData = new SpiPsuData("psu", null, null, null, null);
         SCAConsentResponseTO scaConsentResponseTO = buildSCAConsentResponseTO(ScaStatusTO.PSUIDENTIFIED);
@@ -373,11 +373,8 @@ public class AisConsentSpiImplTest {
 
         when(authorisationService.authorisePsuForConsent(spiPsuData, password, CONSENT_ID, OpTypeTO.CONSENT, spiAspspConsentDataProvider))
                 .thenReturn(SpiResponse.<SpiAuthorisationStatus>builder().payload(SpiAuthorisationStatus.SUCCESS).build());
-        when(consentDataService.response(CONSENT_DATA_BYTES, SCAConsentResponseTO.class, false))
-                .thenReturn(scaConsentResponseTO);
-
-        when(consentDataService.response(CONSENT_DATA_BYTES))
-                .thenReturn(scaConsentResponseTO);
+        doReturn(scaConsentResponseTO).when(consentDataService).response(CONSENT_DATA_BYTES, SCAConsentResponseTO.class, false);
+        doReturn(scaConsentResponseTO).when(consentDataService).response(CONSENT_DATA_BYTES);
 
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
 
@@ -404,7 +401,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void authorisePsu_feignExceptionOnGetSCAConsentResponse() {
+    void authorisePsu_feignExceptionOnGetSCAConsentResponse() {
         // Given
         SpiPsuData spiPsuData = new SpiPsuData("psu", null, null, null, null);
 
@@ -433,7 +430,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void authorisePsu_failureStatus() {
+    void authorisePsu_failureStatus() {
         // Given
         SpiPsuData spiPsuData = new SpiPsuData("psu", null, null, null, null);
         SCAConsentResponseTO scaConsentResponseTO = buildSCAConsentResponseTO(ScaStatusTO.PSUIDENTIFIED);
@@ -458,13 +455,13 @@ public class AisConsentSpiImplTest {
 
         // Then
         assertFalse(actualResponse.hasError());
-        assertEquals(actualResponse.getPayload(), SPI_AUTHORISATION_STATUS_FAILURE);
+        assertEquals(SPI_AUTHORISATION_STATUS_FAILURE, actualResponse.getPayload());
 
         verify(authorisationService).authorisePsuForConsent(spiPsuData, password, CONSENT_ID, OpTypeTO.CONSENT, spiAspspConsentDataProvider);
     }
 
     @Test
-    public void authorisePsu_errorOnRetrievingTokenWhenMappingToScaResponse() throws IOException {
+    void authorisePsu_errorOnRetrievingTokenWhenMappingToScaResponse() throws IOException {
         // Given
         SpiPsuData spiPsuData = new SpiPsuData("psu", null, null, null, null);
         SCAConsentResponseTO scaConsentResponseTO = new SCAConsentResponseTO();
@@ -499,7 +496,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void revokeAisConsent() {
+    void revokeAisConsent() {
         // Given
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
 
@@ -518,7 +515,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void revokeAisConsent_feignException() {
+    void revokeAisConsent_feignException() {
         // Given
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
 
@@ -534,7 +531,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void verifyScaAuthorisation() {
+    void verifyScaAuthorisation() {
         // Given
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
 
@@ -569,7 +566,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void verifyScaAuthorisation_partiallyAuthorised() {
+    void verifyScaAuthorisation_partiallyAuthorised() {
         // Given
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
 
@@ -606,7 +603,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void verifyScaAuthorisation_feignException() {
+    void verifyScaAuthorisation_feignException() {
         // Given
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
 
@@ -633,7 +630,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void requestAvailableScaMethods_success() {
+    void requestAvailableScaMethods_success() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAConsentResponseTO scaConsentResponseTO = buildSCAConsentResponseTO(ScaStatusTO.PSUIDENTIFIED);
         scaConsentResponseTO.setScaMethods(Collections.emptyList());
@@ -658,7 +655,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void requestAvailableScaMethods_scaMethodUnknown() {
+    void requestAvailableScaMethods_scaMethodUnknown() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAConsentResponseTO scaConsentResponseTO = buildSCAConsentResponseTO(ScaStatusTO.PSUIDENTIFIED);
         scaConsentResponseTO.setScaMethods(null);
@@ -678,7 +675,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void requestAvailableScaMethods_feignException() {
+    void requestAvailableScaMethods_feignException() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAConsentResponseTO scaConsentResponseTO = buildSCAConsentResponseTO(ScaStatusTO.PSUIDENTIFIED);
         scaConsentResponseTO.setScaMethods(Collections.emptyList());
@@ -702,7 +699,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void requestAuthorisationCode() {
+    void requestAuthorisationCode() {
         // Given
 
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
@@ -732,7 +729,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void requestAuthorisationCode_feignException501() {
+    void requestAuthorisationCode_feignException501() {
         // Given
 
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
@@ -757,7 +754,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void requestAuthorisationCode_feignException400() {
+    void requestAuthorisationCode_feignException400() {
         // Given
 
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
@@ -782,7 +779,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void requestAuthorisationCode_feignException404() {
+    void requestAuthorisationCode_feignException404() {
         // Given
 
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
@@ -807,7 +804,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void requestAuthorisationCode_noBearerTokenInSelectMethodResponse() {
+    void requestAuthorisationCode_noBearerTokenInSelectMethodResponse() {
         // Given
 
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
@@ -838,7 +835,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void startScaDecoupled_success() {
+    void startScaDecoupled_success() {
         SpiAspspConsentDataProvider spiAspspConsentDataProviderWithEncryptedId = new SpiAspspConsentDataProviderWithEncryptedId(spiAspspConsentDataProvider, CONSENT_ID);
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAConsentResponseTO scaConsentResponseTO = buildSCAConsentResponseTO(ScaStatusTO.PSUIDENTIFIED);
@@ -871,7 +868,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void startScaDecoupled_errorOnReturningScaMethodSelection() {
+    void startScaDecoupled_errorOnReturningScaMethodSelection() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAConsentResponseTO scaConsentResponseTO = buildSCAConsentResponseTO(ScaStatusTO.PSUIDENTIFIED);
 
@@ -901,7 +898,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void startScaDecoupled_scaSelected() {
+    void startScaDecoupled_scaSelected() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAConsentResponseTO scaConsentResponseTO = buildSCAConsentResponseTO(ScaStatusTO.FINALISED);
         when(consentDataService.response(CONSENT_DATA_BYTES, SCAConsentResponseTO.class, true)).thenReturn(scaConsentResponseTO);
@@ -931,7 +928,7 @@ public class AisConsentSpiImplTest {
     }
 
     @Test
-    public void requestAvailableScaMethods_authenticationMethodIdIsNull() {
+    void requestAvailableScaMethods_authenticationMethodIdIsNull() {
         SpiResponse<SpiAuthorisationDecoupledScaResponse> actual = spi.startScaDecoupled(SPI_CONTEXT_DATA, AUTHORISATION_ID, null,
                                                                                          spiAccountConsent, spiAspspConsentDataProvider);
 

@@ -2,19 +2,20 @@ package de.adorsys.aspsp.xs2a.connector.spi.converter;
 
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ScaMethodUtilsTest {
+class ScaMethodUtilsTest {
 
     private JsonReader jsonReader = new JsonReader();
 
     @Test
-    public void toScaMethod_success() {
+    void toScaMethod_success() {
         ScaUserDataTO userData = jsonReader.getObjectFromFile("json/spi/converter/sca-user-data.json", ScaUserDataTO.class);
         String scaMethod = ScaMethodUtils.toScaMethod(userData);
 
@@ -22,7 +23,7 @@ public class ScaMethodUtilsTest {
     }
 
     @Test
-    public void toScaMethods_success() {
+    void toScaMethods_success() {
         ScaUserDataTO userData = jsonReader.getObjectFromFile("json/spi/converter/sca-user-data.json", ScaUserDataTO.class);
 
         List<String> scaMethods = ScaMethodUtils.toScaMethods(Collections.singletonList(userData));
@@ -33,7 +34,7 @@ public class ScaMethodUtilsTest {
     }
 
     @Test
-    public void toScaMethods_emptyList() {
+    void toScaMethods_emptyList() {
         assertTrue(ScaMethodUtils.toScaMethods(null).isEmpty());
         assertTrue(ScaMethodUtils.toScaMethods(Collections.emptyList()).isEmpty());
     }

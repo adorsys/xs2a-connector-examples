@@ -15,30 +15,37 @@ import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
-public class GeneralPaymentServiceTest {
-    @InjectMocks private GeneralPaymentService generalPaymentService;
-    @Mock private SpiAspspConsentDataProvider spiAspspConsentDataProvider;
-    @Mock private AuthRequestInterceptor authRequestInterceptor;
-    @Mock private AspspConsentDataService consentDataService;
-    @Mock private PaymentRestClient paymentRestClient;
-    @Mock private ObjectMapper objectMapper;
-    @Mock private LedgersSpiPaymentMapper paymentMapper;
+@ExtendWith(MockitoExtension.class)
+class GeneralPaymentServiceTest {
+    @InjectMocks
+    private GeneralPaymentService generalPaymentService;
+    @Mock
+    private SpiAspspConsentDataProvider spiAspspConsentDataProvider;
+    @Mock
+    private AuthRequestInterceptor authRequestInterceptor;
+    @Mock
+    private AspspConsentDataService consentDataService;
+    @Mock
+    private PaymentRestClient paymentRestClient;
+    @Mock
+    private ObjectMapper objectMapper;
+    @Mock
+    private LedgersSpiPaymentMapper paymentMapper;
 
     @Test
-    public void getPaymentByIdTransactionStatusRCVD() {
+    void getPaymentByIdTransactionStatusRCVD() {
         //Given
         SpiPayment initialPayment = getSpiSingle(TransactionStatus.RCVD, "initialPayment");
         //When
@@ -49,7 +56,7 @@ public class GeneralPaymentServiceTest {
     }
 
     @Test
-    public void getPaymentByIdTransactionStatusACSP() {
+    void getPaymentByIdTransactionStatusACSP() {
         //Given
         SpiPayment initialPayment = getSpiSingle(TransactionStatus.ACSP, "initialPayment");
         SpiPayment paymentAspsp = getSpiSingle(TransactionStatus.ACSP, "paymentAspsp");

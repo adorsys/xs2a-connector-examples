@@ -9,18 +9,19 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentInfo;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(MockitoJUnitRunner.class)
-public class CommonPaymentSpiImplTest {
+@ExtendWith(MockitoExtension.class)
+class CommonPaymentSpiImplTest {
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
     private static final SpiPsuData PSU_ID_DATA = new SpiPsuData("1", "2", "3", "4", "5");
     private static final SpiContextData SPI_CONTEXT_DATA = new SpiContextData(PSU_ID_DATA, new TppInfo(), UUID.randomUUID(), UUID.randomUUID());
@@ -31,7 +32,7 @@ public class CommonPaymentSpiImplTest {
     private SpiAspspConsentDataProvider spiAspspConsentDataProvider;
 
     @Test
-    public void executePaymentWithoutSca() {
+    void executePaymentWithoutSca() {
         SpiResponse<SpiPaymentExecutionResponse> response = commonPaymentSpi.executePaymentWithoutSca(SPI_CONTEXT_DATA, new SpiPaymentInfo(PAYMENT_PRODUCT), spiAspspConsentDataProvider);
 
         assertTrue(response.hasError());
@@ -39,7 +40,7 @@ public class CommonPaymentSpiImplTest {
     }
 
     @Test
-    public void verifyScaAuthorisationAndExecutePayment() {
+    void verifyScaAuthorisationAndExecutePayment() {
         SpiResponse<SpiPaymentExecutionResponse> response = commonPaymentSpi.verifyScaAuthorisationAndExecutePayment(SPI_CONTEXT_DATA, new SpiScaConfirmation(), new SpiPaymentInfo(PAYMENT_PRODUCT), spiAspspConsentDataProvider);
 
         assertTrue(response.hasError());
