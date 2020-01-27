@@ -13,6 +13,7 @@ stages:
   - "Test"       # run tests and code quality checks
   - "Package"    # dockerize jar and push to docker registry
   - "Deployment" # push to openshift registry (snapshot Deploymentment) or release registry
+  - "Notification" # Notify to specific channel about applications versions 
 
 # ------------------------------------------------------------------
 # variables
@@ -172,6 +173,21 @@ Deploy Openshift (develop):
     OPENSHIFT_NAMESPACE: "${DEV_NAMESPACE}"
   <<: *deploy_openshift
 
+Notify Slack channel (develop):
+  image: "bash:4"
+  stage: "Notification"
+  cache: {}
+  only:
+    - develop
+  variables:
+    HELM_RELEASE: dev-psd2
+    ENV_JSON_FILE: scripts/notifications/psd2-dev.json
+    SLACK_CHANNEL: ${SLACK_PSD2_DEVELOP_CHANNEL}
+  script:
+    - apk update && apk add jq curl
+    - sleep 60
+    - scripts/notifications/./webhook_slack.sh xs2a cms aspspprofile ledgers 
+
 ##########
 # master #
 ##########
@@ -227,3 +243,18 @@ Deploy Openshift (Nightly):
     DOCKER_TAG: nightly
     OPENSHIFT_NAMESPACE: "${INTEG_NAMESPACE}"
   <<: *deploy_openshift
+
+Notify Slack channel (Integ):
+  image: "bash:4"
+  stage: "Notification"
+  cache: {}
+  only:
+    - schedules
+  variables:
+    HELM_RELEASE: integ-psd2
+    ENV_JSON_FILE: scripts/notifications/psd2-integ.json
+    SLACK_CHANNEL: ${SLACK_PSD2_INTEG_CHANNEL}
+  script:
+    - apk update && apk add jq curl
+    - sleep 60
+    - scripts/notifications/./webhook_slack.sh xs2a cms aspspprofile ledgers 
