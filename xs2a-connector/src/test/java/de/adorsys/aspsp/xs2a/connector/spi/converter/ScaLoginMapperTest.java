@@ -4,18 +4,19 @@ import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCALoginResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class ScaLoginMapperTest {
+class ScaLoginMapperTest {
 
     private ScaLoginMapper mapper = Mappers.getMapper(ScaLoginMapper.class);
     private JsonReader jsonReader = new JsonReader();
 
     @Test
-    public void toConsentResponse_success() {
+    void toConsentResponse_success() {
         SCALoginResponseTO scaLoginResponseTO = jsonReader.getObjectFromFile("json/spi/converter/sca-login-response.json", SCALoginResponseTO.class);
         SCAConsentResponseTO scaConsentResponseTO = mapper.toConsentResponse(scaLoginResponseTO);
 
@@ -24,13 +25,13 @@ public class ScaLoginMapperTest {
     }
 
     @Test
-    public void toConsentResponse_nullValue() {
+    void toConsentResponse_nullValue() {
         SCAConsentResponseTO scaConsentResponseTO = mapper.toConsentResponse(null);
         assertNull(scaConsentResponseTO);
     }
 
     @Test
-    public void toPaymentResponse_success() {
+    void toPaymentResponse_success() {
         SCALoginResponseTO scaLoginResponseTO = jsonReader.getObjectFromFile("json/spi/converter/sca-login-response.json", SCALoginResponseTO.class);
         SCAPaymentResponseTO scaPaymentResponseTO = mapper.toPaymentResponse(scaLoginResponseTO);
 
@@ -39,7 +40,7 @@ public class ScaLoginMapperTest {
     }
 
     @Test
-    public void toPaymentResponse_nullValue() {
+    void toPaymentResponse_nullValue() {
         SCAPaymentResponseTO scaPaymentResponseTO = mapper.toPaymentResponse(null);
         assertNull(scaPaymentResponseTO);
     }

@@ -3,7 +3,6 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl.payment;
 import de.adorsys.psd2.xs2a.core.tpp.TppInfo;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
-import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
@@ -15,18 +14,18 @@ import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.BulkPaymentSpi;
 import de.adorsys.psd2.xs2a.spi.service.PeriodicPaymentSpi;
 import de.adorsys.psd2.xs2a.spi.service.SinglePaymentSpi;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
 
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
-public class PaymentSpiImplTest {
+@ExtendWith(MockitoExtension.class)
+class PaymentSpiImplTest {
 
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
     private static final SpiPsuData PSU_ID_DATA = new SpiPsuData("1", "2", "3", "4", "5");
@@ -46,37 +45,32 @@ public class PaymentSpiImplTest {
     private SpiAspspConsentDataProvider spiAspspConsentDataProvider;
 
     @Test
-    public void initiatePayment_singlePayment() throws NotSupportedPaymentTypeException {
+    void initiatePayment_singlePayment() throws NotSupportedPaymentTypeException {
         SpiSinglePayment spiPayment = new SpiSinglePayment(PAYMENT_PRODUCT);
         when(singlePaymentSpi.initiatePayment(SPI_CONTEXT_DATA, spiPayment, spiAspspConsentDataProvider)).thenReturn(SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
-                                                                                                                           .build());
+                                                                                                                             .build());
         paymentSpi.initiatePayment(SPI_CONTEXT_DATA, spiPayment, spiAspspConsentDataProvider);
 
         verify(singlePaymentSpi, times(1)).initiatePayment(SPI_CONTEXT_DATA, spiPayment, spiAspspConsentDataProvider);
     }
 
     @Test
-    public void initiatePayment_periodicPayment() throws NotSupportedPaymentTypeException {
+    void initiatePayment_periodicPayment() throws NotSupportedPaymentTypeException {
         SpiPeriodicPayment spiPayment = new SpiPeriodicPayment(PAYMENT_PRODUCT);
         when(periodicPaymentSpi.initiatePayment(SPI_CONTEXT_DATA, spiPayment, spiAspspConsentDataProvider)).thenReturn(SpiResponse.<SpiPeriodicPaymentInitiationResponse>builder()
-                                                                                                                             .build());
+                                                                                                                               .build());
         paymentSpi.initiatePayment(SPI_CONTEXT_DATA, spiPayment, spiAspspConsentDataProvider);
 
         verify(periodicPaymentSpi, times(1)).initiatePayment(SPI_CONTEXT_DATA, spiPayment, spiAspspConsentDataProvider);
     }
 
     @Test
-    public void initiatePayment_bulkPayment() throws NotSupportedPaymentTypeException {
+    void initiatePayment_bulkPayment() throws NotSupportedPaymentTypeException {
         SpiBulkPayment spiPayment = new SpiBulkPayment();
         when(bulkPaymentSpi.initiatePayment(SPI_CONTEXT_DATA, spiPayment, spiAspspConsentDataProvider)).thenReturn(SpiResponse.<SpiBulkPaymentInitiationResponse>builder()
-                                                                                                                               .build());
+                                                                                                                           .build());
         paymentSpi.initiatePayment(SPI_CONTEXT_DATA, spiPayment, spiAspspConsentDataProvider);
 
         verify(bulkPaymentSpi, times(1)).initiatePayment(SPI_CONTEXT_DATA, spiPayment, spiAspspConsentDataProvider);
-    }
-
-    private SpiResponse<SpiAuthorizationCodeResult> buildSuccessSpiResponse() {
-        return SpiResponse.<SpiAuthorizationCodeResult>builder()
-                       .build();
     }
 }

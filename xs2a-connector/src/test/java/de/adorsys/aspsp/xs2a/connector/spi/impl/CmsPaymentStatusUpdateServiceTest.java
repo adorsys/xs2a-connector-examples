@@ -6,18 +6,18 @@ import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
-public class CmsPaymentStatusUpdateServiceTest {
+@ExtendWith(MockitoExtension.class)
+class CmsPaymentStatusUpdateServiceTest {
     private static final String PAYMENT_ID = "some payment id";
     private static final String INSTANCE_ID = "UNDEFINED";
     private static final byte[] ASPSP_CONSENT_DATA = "some ASPSP consent Data".getBytes();
@@ -33,7 +33,7 @@ public class CmsPaymentStatusUpdateServiceTest {
     private CmsPaymentStatusUpdateService cmsPaymentStatusUpdateService;
 
     @Test
-    public void updatePaymentStatus_withIdentifiedAuthorisation_shouldUpdateToAccp() throws IOException {
+    void updatePaymentStatus_withIdentifiedAuthorisation_shouldUpdateToAccp() throws IOException {
         // Given
         when(spiAspspConsentDataProvider.loadAspspConsentData())
                 .thenReturn(ASPSP_CONSENT_DATA);
@@ -49,7 +49,7 @@ public class CmsPaymentStatusUpdateServiceTest {
     }
 
     @Test
-    public void updatePaymentStatus_withExemptedAuthorisation_shouldUpdateToAccp() throws IOException {
+    void updatePaymentStatus_withExemptedAuthorisation_shouldUpdateToAccp() throws IOException {
         // Given
         when(spiAspspConsentDataProvider.loadAspspConsentData())
                 .thenReturn(ASPSP_CONSENT_DATA);
@@ -65,7 +65,7 @@ public class CmsPaymentStatusUpdateServiceTest {
     }
 
     @Test
-    public void updatePaymentStatus_withAuthenticatedAuthorisation_shouldUpdateToActc() throws IOException {
+    void updatePaymentStatus_withAuthenticatedAuthorisation_shouldUpdateToActc() throws IOException {
         // Given
         when(spiAspspConsentDataProvider.loadAspspConsentData())
                 .thenReturn(ASPSP_CONSENT_DATA);
@@ -81,7 +81,7 @@ public class CmsPaymentStatusUpdateServiceTest {
     }
 
     @Test
-    public void updatePaymentStatus_withOtherAuthorisationStatus_shouldUpdateToRcvd() throws IOException {
+    void updatePaymentStatus_withOtherAuthorisationStatus_shouldUpdateToRcvd() throws IOException {
         // Given
         when(spiAspspConsentDataProvider.loadAspspConsentData())
                 .thenReturn(ASPSP_CONSENT_DATA);
@@ -97,7 +97,7 @@ public class CmsPaymentStatusUpdateServiceTest {
     }
 
     @Test
-    public void updatePaymentStatus_withExceptionOnReadingToken_shouldSkipUpdate() throws IOException {
+    void updatePaymentStatus_withExceptionOnReadingToken_shouldSkipUpdate() throws IOException {
         // Given
         when(spiAspspConsentDataProvider.loadAspspConsentData())
                 .thenReturn(ASPSP_CONSENT_DATA);

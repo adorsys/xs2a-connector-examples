@@ -18,11 +18,11 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiBulkPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPeriodicPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiationResponse;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -32,12 +32,13 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Currency;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {LedgersSpiPaymentMapperImpl.class, LedgersSpiAccountMapperImpl.class,
         ChallengeDataMapperImpl.class, AddressMapperImpl.class})
-public class LedgersSpiPaymentMapperTest {
+class LedgersSpiPaymentMapperTest {
 
     @Autowired
     private LedgersSpiPaymentMapper ledgersSpiPaymentMapper;
@@ -47,7 +48,7 @@ public class LedgersSpiPaymentMapperTest {
     private static final PaymentProductTO PAYMENT_PRODUCT_CROSS_BORDER = PaymentProductTO.CROSS_BORDER;
 
     @Test
-    public void toSinglePaymentTOWithRealData() {
+    void toSinglePaymentTOWithRealData() {
         SpiSinglePayment inputData = getSpiSingle();
         SinglePaymentTO actualResult = ledgersSpiPaymentMapper.toSinglePaymentTO(inputData);
         SinglePaymentTO expectedResult = jsonReader.getObjectFromFile("json/mappers/single-payment-to.json", SinglePaymentTO.class);
@@ -55,13 +56,13 @@ public class LedgersSpiPaymentMapperTest {
     }
 
     @Test
-    public void toSinglePaymentTOWithNull() {
+    void toSinglePaymentTOWithNull() {
         SinglePaymentTO actualResult = ledgersSpiPaymentMapper.toSinglePaymentTO(null);
         assertNull(actualResult);
     }
 
     @Test
-    public void toPeriodicPaymentTOWithRealData() {
+    void toPeriodicPaymentTOWithRealData() {
         SpiPeriodicPayment inputData = getPeriodic();
         PeriodicPaymentTO actualResult = ledgersSpiPaymentMapper.toPeriodicPaymentTO(inputData);
         PeriodicPaymentTO expectedResult = jsonReader.getObjectFromFile("json/mappers/periodic-payment-to.json", PeriodicPaymentTO.class);
@@ -69,13 +70,13 @@ public class LedgersSpiPaymentMapperTest {
     }
 
     @Test
-    public void toPeriodicPaymentTOWithNull() {
+    void toPeriodicPaymentTOWithNull() {
         PeriodicPaymentTO actualResult = ledgersSpiPaymentMapper.toPeriodicPaymentTO(null);
         assertNull(actualResult);
     }
 
     @Test
-    public void toBulkPaymentTOWithRealData() {
+    void toBulkPaymentTOWithRealData() {
         SpiBulkPayment inputData = getBulk();
         BulkPaymentTO actualResult = ledgersSpiPaymentMapper.toBulkPaymentTO(inputData);
         BulkPaymentTO expectedResult = jsonReader.getObjectFromFile("json/mappers/bulk-payment-to.json", BulkPaymentTO.class);
@@ -83,43 +84,43 @@ public class LedgersSpiPaymentMapperTest {
     }
 
     @Test
-    public void toBulkPaymentTOWithNull() {
+    void toBulkPaymentTOWithNull() {
         BulkPaymentTO actualResult = ledgersSpiPaymentMapper.toBulkPaymentTO(null);
         assertNull(actualResult);
     }
 
     @Test
-    public void toSpiSingleResponseWithRealData() {
+    void toSpiSingleResponseWithRealData() {
         SinglePaymentTO inputData = jsonReader.getObjectFromFile("json/mappers/single-payment-to.json", SinglePaymentTO.class);
         SpiSinglePaymentInitiationResponse actualResult = ledgersSpiPaymentMapper.toSpiSingleResponse(inputData);
         SpiSinglePaymentInitiationResponse expectedResult = jsonReader
-                .getObjectFromFile("json/mappers/spi-payment-initiation-response.json", SpiSinglePaymentInitiationResponse.class);
+                                                                    .getObjectFromFile("json/mappers/spi-payment-initiation-response.json", SpiSinglePaymentInitiationResponse.class);
         assertEquals(expectedResult, actualResult);
     }
 
     @Test
-    public void toSpiSingleResponseWithNull() {
+    void toSpiSingleResponseWithNull() {
         SpiSinglePaymentInitiationResponse actualResult = ledgersSpiPaymentMapper.toSpiSingleResponse((SinglePaymentTO) null);
         assertNull(actualResult);
     }
 
     @Test
-    public void toSpiPeriodicResponseWithRealData() {
+    void toSpiPeriodicResponseWithRealData() {
         PeriodicPaymentTO inputData = jsonReader.getObjectFromFile("json/mappers/periodic-payment-to.json", PeriodicPaymentTO.class);
         SpiPeriodicPaymentInitiationResponse actualResult = ledgersSpiPaymentMapper.toSpiPeriodicResponse(inputData);
         SpiPeriodicPaymentInitiationResponse expectedResult = jsonReader
-                .getObjectFromFile("json/mappers/spi-payment-initiation-response.json", SpiPeriodicPaymentInitiationResponse.class);
+                                                                      .getObjectFromFile("json/mappers/spi-payment-initiation-response.json", SpiPeriodicPaymentInitiationResponse.class);
         assertEquals(expectedResult, actualResult);
     }
 
     @Test
-    public void toSpiPeriodicResponseWithNull() {
+    void toSpiPeriodicResponseWithNull() {
         SpiPeriodicPaymentInitiationResponse actualResult = ledgersSpiPaymentMapper.toSpiPeriodicResponse((PeriodicPaymentTO) null);
         assertNull(actualResult);
     }
 
     @Test
-    public void toSpiBulkResponseWithRealData() {
+    void toSpiBulkResponseWithRealData() {
         BulkPaymentTO inputData = jsonReader.getObjectFromFile("json/mappers/bulk-payment-to.json", BulkPaymentTO.class);
         SpiBulkPaymentInitiationResponse actualResult = ledgersSpiPaymentMapper.toSpiBulkResponse(inputData);
         SpiBulkPaymentInitiationResponse expectedResult = getBulkResponse();
@@ -127,21 +128,21 @@ public class LedgersSpiPaymentMapperTest {
     }
 
     @Test
-    public void toSpiBulkResponseWithNull() {
+    void toSpiBulkResponseWithNull() {
         SpiBulkPaymentInitiationResponse actualResult = ledgersSpiPaymentMapper.toSpiBulkResponse((BulkPaymentTO) null);
         assertNull(actualResult);
     }
 
     @Test
-    public void mapToSpiBulkPaymentWithRealData() {
+    void mapToSpiBulkPaymentWithRealData() {
         BulkPaymentTO inputData = jsonReader.getObjectFromFile("json/mappers/bulk-payment-to.json", BulkPaymentTO.class);
         SpiBulkPayment actualResult = ledgersSpiPaymentMapper.mapToSpiBulkPayment(inputData);
-        SpiBulkPayment expectedResult = getBulk();;
+        SpiBulkPayment expectedResult = getBulk();
         assertEquals(expectedResult, actualResult);
     }
 
     @Test
-    public void mapToSpiBulkPaymentWithNull() {
+    void mapToSpiBulkPaymentWithNull() {
         SpiBulkPayment actualResult = ledgersSpiPaymentMapper.mapToSpiBulkPayment(null);
         assertNull(actualResult);
     }

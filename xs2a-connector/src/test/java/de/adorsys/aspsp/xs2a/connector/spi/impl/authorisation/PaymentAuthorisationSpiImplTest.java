@@ -28,25 +28,28 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import feign.FeignException;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
-public class PaymentAuthorisationSpiImplTest {
+@ExtendWith(MockitoExtension.class)
+class PaymentAuthorisationSpiImplTest {
 
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
     private static final SpiPsuData PSU_ID_DATA_1 = new SpiPsuData("1", "2", "3", "4", "5");
@@ -89,15 +92,15 @@ public class PaymentAuthorisationSpiImplTest {
 
     private SpiSinglePayment businessObject;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         businessObject = new SpiSinglePayment(PAYMENT_PRODUCT);
         businessObject.setPaymentId(PAYMENT_ID);
         businessObject.setPsuDataList(Collections.singletonList(PSU_ID_DATA_1));
     }
 
     @Test
-    public void authorisePsu_success() throws IOException {
+    void authorisePsu_success() throws IOException {
         businessObject.setPaymentProduct(null);
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAPaymentResponseTO scaPaymentResponseTO = getScaPaymentResponseTO(ScaStatusTO.PSUIDENTIFIED);
@@ -117,7 +120,7 @@ public class PaymentAuthorisationSpiImplTest {
         when(paymentInternalGeneral.initiatePaymentInternal(businessObject, CONSENT_DATA_BYTES)).thenReturn(scaPaymentResponseTO);
         byte[] responseBytes = "response_byte".getBytes();
         when(consentDataService.store(scaPaymentResponseTO)).thenReturn(responseBytes);
-        doNothing().when(spiAspspConsentDataProvider).updateAspspConsentData(responseBytes);
+        lenient().doNothing().when(spiAspspConsentDataProvider).updateAspspConsentData(responseBytes);
 
         SpiResponse<SpiAuthorisationStatus> actual = authorisationSpi.authorisePsu(SPI_CONTEXT_DATA, PSU_ID_DATA_1, SECRET,
                                                                                    businessObject, spiAspspConsentDataProvider);
@@ -136,7 +139,7 @@ public class PaymentAuthorisationSpiImplTest {
     }
 
     @Test
-    public void authorisePsu_multilevel_success() throws IOException {
+    void authorisePsu_multilevel_success() throws IOException {
         businessObject.setPaymentProduct(null);
         businessObject.setPsuDataList(Arrays.asList(PSU_ID_DATA_1, PSU_ID_DATA_2));
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
@@ -166,7 +169,7 @@ public class PaymentAuthorisationSpiImplTest {
     }
 
     @Test
-    public void authorisePsu_FeignException() throws IOException {
+    void authorisePsu_FeignException() throws IOException {
         businessObject.setPaymentProduct(null);
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAPaymentResponseTO scaPaymentResponseTO = getScaPaymentResponseTO(ScaStatusTO.PSUIDENTIFIED);
@@ -204,7 +207,7 @@ public class PaymentAuthorisationSpiImplTest {
     }
 
     @Test
-    public void authorisePsu_onSuccessfulAuthorisation_paymentInternalError() throws IOException {
+    void authorisePsu_onSuccessfulAuthorisation_paymentInternalError() throws IOException {
         businessObject.setPaymentProduct(null);
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAPaymentResponseTO scaPaymentResponseTO = getScaPaymentResponseTO(ScaStatusTO.PSUIDENTIFIED);
@@ -238,7 +241,7 @@ public class PaymentAuthorisationSpiImplTest {
     }
 
     @Test
-    public void authorisePsu_formatError() throws IOException {
+    void authorisePsu_formatError() throws IOException {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAPaymentResponseTO scaPaymentResponseTO = getScaPaymentResponseTO(ScaStatusTO.PSUIDENTIFIED);
         scaPaymentResponseTO.setScaMethods(Collections.emptyList());
@@ -264,7 +267,7 @@ public class PaymentAuthorisationSpiImplTest {
     }
 
     @Test
-    public void authorisePsu_failureStatus() {
+    void authorisePsu_failureStatus() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAPaymentResponseTO scaPaymentResponseTO = getScaPaymentResponseTO(ScaStatusTO.PSUIDENTIFIED);
         scaPaymentResponseTO.setScaMethods(Collections.emptyList());
@@ -278,7 +281,7 @@ public class PaymentAuthorisationSpiImplTest {
                                                                                    businessObject, spiAspspConsentDataProvider);
 
         assertFalse(actual.hasError());
-        assertEquals(actual.getPayload(), SPI_AUTHORISATION_STATUS_FAILURE);
+        assertEquals(SPI_AUTHORISATION_STATUS_FAILURE, actual.getPayload());
 
         verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
         verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false);
@@ -286,7 +289,7 @@ public class PaymentAuthorisationSpiImplTest {
     }
 
     @Test
-    public void authorisePsu_feignException() {
+    void authorisePsu_feignException() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAPaymentResponseTO scaPaymentResponseTO = getScaPaymentResponseTO(ScaStatusTO.PSUIDENTIFIED);
         scaPaymentResponseTO.setScaMethods(Collections.emptyList());
@@ -307,7 +310,7 @@ public class PaymentAuthorisationSpiImplTest {
     }
 
     @Test
-    public void requestAvailableScaMethods_success() {
+    void requestAvailableScaMethods_success() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAPaymentResponseTO scaPaymentResponseTO = getScaPaymentResponseTO(ScaStatusTO.PSUIDENTIFIED);
         scaPaymentResponseTO.setScaMethods(Collections.emptyList());
@@ -331,7 +334,7 @@ public class PaymentAuthorisationSpiImplTest {
     }
 
     @Test
-    public void requestAvailableScaMethods_noScaMethodsInResponseTO() {
+    void requestAvailableScaMethods_noScaMethodsInResponseTO() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAPaymentResponseTO scaPaymentResponseTO = getScaPaymentResponseTO(ScaStatusTO.PSUIDENTIFIED);
         scaPaymentResponseTO.setScaMethods(null);
@@ -355,7 +358,7 @@ public class PaymentAuthorisationSpiImplTest {
     }
 
     @Test
-    public void requestAvailableScaMethods_feignException() {
+    void requestAvailableScaMethods_feignException() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAPaymentResponseTO scaPaymentResponseTO = getScaPaymentResponseTO(ScaStatusTO.PSUIDENTIFIED);
         scaPaymentResponseTO.setScaMethods(Collections.emptyList());
@@ -379,7 +382,7 @@ public class PaymentAuthorisationSpiImplTest {
     }
 
     @Test
-    public void startScaDecoupled_success() {
+    void startScaDecoupled_success() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAPaymentResponseTO scaPaymentResponseTO = getScaPaymentResponseTO(ScaStatusTO.PSUIDENTIFIED);
         when(consentDataService.response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, true)).thenReturn(scaPaymentResponseTO);
@@ -405,7 +408,7 @@ public class PaymentAuthorisationSpiImplTest {
     }
 
     @Test
-    public void startScaDecoupled_errorOnReturningScaMethodSelection() {
+    void startScaDecoupled_errorOnReturningScaMethodSelection() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAPaymentResponseTO scaPaymentResponseTO = getScaPaymentResponseTO(ScaStatusTO.PSUIDENTIFIED);
 
@@ -434,7 +437,7 @@ public class PaymentAuthorisationSpiImplTest {
     }
 
     @Test
-    public void startScaDecoupled_scaSelected() {
+    void startScaDecoupled_scaSelected() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         SCAPaymentResponseTO scaPaymentResponseTO = getScaPaymentResponseTO(ScaStatusTO.FINALISED);
         when(consentDataService.response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, true)).thenReturn(scaPaymentResponseTO);
@@ -455,7 +458,7 @@ public class PaymentAuthorisationSpiImplTest {
     }
 
     @Test
-    public void requestAvailableScaMethods_authenticationMethodIdIsNull() {
+    void requestAvailableScaMethods_authenticationMethodIdIsNull() {
         SpiResponse<SpiAuthorisationDecoupledScaResponse> actual = authorisationSpi.startScaDecoupled(SPI_CONTEXT_DATA, AUTHORISATION_ID, null,
                                                                                                       businessObject, spiAspspConsentDataProvider);
 
