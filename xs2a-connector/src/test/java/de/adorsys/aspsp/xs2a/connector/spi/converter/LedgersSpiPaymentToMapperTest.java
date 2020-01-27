@@ -20,24 +20,24 @@ import de.adorsys.aspsp.xs2a.connector.config.JacksonConfig;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentInfo;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {LedgersSpiPaymentToMapper.class, JacksonConfig.class})
-public class LedgersSpiPaymentToMapperTest {
+class LedgersSpiPaymentToMapperTest {
     private JsonReader jsonReader = new JsonReader();
 
     @Autowired
     private LedgersSpiPaymentToMapper ledgersSpiPaymentToMapper;
 
     @Test
-    public void toCommonPaymentTO() {
+    void toCommonPaymentTO() {
         // Given
         PaymentTO expectedResult = jsonReader.getObjectFromFile("json/mappers/payment-to-from-common-payment-Initiation.json", PaymentTO.class);
         SpiPaymentInfo spiPaymentInfo = jsonReader.getObjectFromFile("json/mappers/common-payment-initiation.json", SpiPaymentInfo.class);
@@ -50,7 +50,7 @@ public class LedgersSpiPaymentToMapperTest {
     }
 
     @Test
-    public void toPaymentTO_Single() {
+    void toPaymentTO_Single() {
         // Given
         PaymentTO expectedResult = jsonReader.getObjectFromFile("json/mappers/payment-to-from-single-payment-Initiation.json", PaymentTO.class);
         SpiPaymentInfo spiPaymentInfo = jsonReader.getObjectFromFile("json/mappers/payment-initiation.json", SpiPaymentInfo.class);
@@ -63,7 +63,7 @@ public class LedgersSpiPaymentToMapperTest {
     }
 
     @Test
-    public void toPaymentTO_Bulk() {
+    void toPaymentTO_Bulk() {
         // Given
         PaymentTO expectedResult = jsonReader.getObjectFromFile("json/mappers/payment-to-from-bulk-payment-Initiation.json", PaymentTO.class);
         SpiPaymentInfo spiPaymentInfo = jsonReader.getObjectFromFile("json/mappers/bulk-payment-initiation.json", SpiPaymentInfo.class);
@@ -76,7 +76,7 @@ public class LedgersSpiPaymentToMapperTest {
     }
 
     @Test
-    public void toPaymentTO_Periodic_valid() {
+    void toPaymentTO_Periodic_valid() {
         // Given
         PaymentTO expectedResult = jsonReader.getObjectFromFile("json/mappers/payment-to-from-periodic-payment-Initiation.json", PaymentTO.class);
         SpiPaymentInfo spiPaymentInfo = jsonReader.getObjectFromFile("json/mappers/periodic-payment-Initiation.json", SpiPaymentInfo.class);

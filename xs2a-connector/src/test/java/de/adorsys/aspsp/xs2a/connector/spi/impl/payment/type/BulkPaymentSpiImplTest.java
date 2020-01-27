@@ -17,26 +17,26 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiBulkPaymentInitiation
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiGetPaymentStatusResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {LedgersSpiPaymentMapperImpl.class, AddressMapperImpl.class, ChallengeDataMapperImpl.class, LedgersSpiAccountMapperImpl.class, ObjectMapper.class})
-public class BulkPaymentSpiImplTest {
+class BulkPaymentSpiImplTest {
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
     private static final SpiContextData SPI_CONTEXT_DATA = TestSpiDataProvider.getSpiContextData();
     private static final String PAYMENT_ID = "c966f143-f6a2-41db-9036-8abaeeef3af7";
@@ -51,8 +51,8 @@ public class BulkPaymentSpiImplTest {
     private SpiAspspConsentDataProvider spiAspspConsentDataProvider;
     private SpiBulkPayment payment;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         payment = new SpiBulkPayment();
         payment.setPaymentId(PAYMENT_ID);
         payment.setPaymentProduct(PAYMENT_PRODUCT);
@@ -66,7 +66,7 @@ public class BulkPaymentSpiImplTest {
     }
 
     @Test
-    public void getPaymentById() {
+    void getPaymentById() {
         when(paymentService.getPaymentById(eq(payment), eq(spiAspspConsentDataProvider), eq(BulkPaymentTO.class),
                                            any(), eq(PaymentTypeTO.BULK)))
                 .thenReturn(SpiResponse.<SpiBulkPayment>builder()
@@ -81,7 +81,7 @@ public class BulkPaymentSpiImplTest {
     }
 
     @Test
-    public void getPaymentStatusById() {
+    void getPaymentStatusById() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         when(paymentService.getPaymentStatusById(PaymentTypeTO.BULK, JSON_ACCEPT_MEDIA_TYPE, PAYMENT_ID, TransactionStatus.RCVD, CONSENT_DATA_BYTES))
                 .thenReturn(SpiResponse.<SpiGetPaymentStatusResponse>builder()
@@ -95,7 +95,7 @@ public class BulkPaymentSpiImplTest {
     }
 
     @Test
-    public void executePaymentWithoutSca() {
+    void executePaymentWithoutSca() {
         when(paymentService.executePaymentWithoutSca(spiAspspConsentDataProvider))
                 .thenReturn(SpiResponse.<SpiPaymentExecutionResponse>builder()
                                     .payload(new SpiPaymentExecutionResponse(TransactionStatus.RCVD))
@@ -107,7 +107,7 @@ public class BulkPaymentSpiImplTest {
     }
 
     @Test
-    public void verifyScaAuthorisationAndExecutePayment() {
+    void verifyScaAuthorisationAndExecutePayment() {
         SpiScaConfirmation spiScaConfirmation = new SpiScaConfirmation();
         when(paymentService.verifyScaAuthorisationAndExecutePayment(spiScaConfirmation, spiAspspConsentDataProvider))
                 .thenReturn(SpiResponse.<SpiPaymentExecutionResponse>builder()
@@ -120,7 +120,7 @@ public class BulkPaymentSpiImplTest {
     }
 
     @Test
-    public void initiatePayment_emptyConsentData() {
+    void initiatePayment_emptyConsentData() {
         ArgumentCaptor<SpiBulkPaymentInitiationResponse> spiBulkPaymentInitiationResponseCaptor
                 = ArgumentCaptor.forClass(SpiBulkPaymentInitiationResponse.class);
 

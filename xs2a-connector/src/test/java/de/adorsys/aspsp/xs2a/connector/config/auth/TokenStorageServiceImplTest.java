@@ -6,20 +6,21 @@ import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.aspsp.xs2a.util.TestConfiguration;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import feign.FeignException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {TestConfiguration.class, TokenStorageServiceImpl.class})
-public class TokenStorageServiceImplTest {
+class TokenStorageServiceImplTest {
 
     @Autowired
     private TokenStorageServiceImpl tokenStorageService;
@@ -30,7 +31,7 @@ public class TokenStorageServiceImplTest {
     private JsonReader jsonReader = new JsonReader();
 
     @Test
-    public void fromBytes_SCAConsentResponseTO_success() throws IOException {
+    void fromBytes_SCAConsentResponseTO_success() throws IOException {
         byte[] tokenBytes = jsonReader.getStringFromFile("json/config/auth/sca-consent-response.json").getBytes();
         SCAResponseTO scaResponseTO = tokenStorageService.fromBytes(tokenBytes);
 
@@ -38,23 +39,23 @@ public class TokenStorageServiceImplTest {
         assertTrue(scaResponseTO instanceof SCAConsentResponseTO);
     }
 
-    @Test(expected = IOException.class)
-    public void fromBytes_objectTypesNull() throws IOException {
-        tokenStorageService.fromBytes("{}".getBytes());
-    }
-
-    @Test(expected = feign.FeignException.class)
-    public void fromBytes_nullValue_shouldThrowException() throws IOException {
-        tokenStorageService.fromBytes(null);
-    }
-
-    @Test(expected = feign.FeignException.class)
-    public void fromBytes_emptyArray_shouldThrowException() throws IOException {
-        tokenStorageService.fromBytes(new byte[]{});
+    @Test
+    void fromBytes_objectTypesNull() {
+        assertThrows(IOException.class, () -> tokenStorageService.fromBytes("{}".getBytes()));
     }
 
     @Test
-    public void objectType() throws IOException {
+    void fromBytes_nullValue_shouldThrowException() {
+        assertThrows(FeignException.class, () -> tokenStorageService.fromBytes(null));
+    }
+
+    @Test
+    void fromBytes_emptyArray_shouldThrowException() {
+        assertThrows(FeignException.class, () -> tokenStorageService.fromBytes(new byte[]{}));
+    }
+
+    @Test
+    void objectType() throws IOException {
         assertEquals("test1", tokenStorageService.objectType(mapper.readTree("{\"objectType\": \"test1\"}")));
         assertNull(tokenStorageService.objectType(new TextNode("")));
         assertNull(tokenStorageService.objectType(new TextNode("{}")));

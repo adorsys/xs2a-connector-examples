@@ -17,26 +17,26 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiGetPaymentStatusRespo
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPeriodicPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {LedgersSpiPaymentMapperImpl.class, AddressMapperImpl.class, ChallengeDataMapperImpl.class, LedgersSpiAccountMapperImpl.class, ObjectMapper.class})
-public class PeriodicPaymentSpiImplTest {
+class PeriodicPaymentSpiImplTest {
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
     private static final SpiContextData SPI_CONTEXT_DATA = TestSpiDataProvider.getSpiContextData();
     private static final String PAYMENT_ID = "c966f143-f6a2-41db-9036-8abaeeef3af7";
@@ -51,8 +51,8 @@ public class PeriodicPaymentSpiImplTest {
     private SpiAspspConsentDataProvider spiAspspConsentDataProvider;
     private SpiPeriodicPayment payment;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         payment = new SpiPeriodicPayment(PAYMENT_PRODUCT);
         payment.setPaymentId(PAYMENT_ID);
         payment.setPaymentStatus(TransactionStatus.RCVD);
@@ -64,7 +64,7 @@ public class PeriodicPaymentSpiImplTest {
     }
 
     @Test
-    public void getPaymentById() {
+    void getPaymentById() {
         when(paymentService.getPaymentById(eq(payment), eq(spiAspspConsentDataProvider), eq(PeriodicPaymentTO.class),
                                            any(), eq(PaymentTypeTO.PERIODIC)))
                 .thenReturn(SpiResponse.<SpiPeriodicPayment>builder()
@@ -79,7 +79,7 @@ public class PeriodicPaymentSpiImplTest {
     }
 
     @Test
-    public void getPaymentStatusById() {
+    void getPaymentStatusById() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         when(paymentService.getPaymentStatusById(PaymentTypeTO.PERIODIC, JSON_ACCEPT_MEDIA_TYPE, PAYMENT_ID, TransactionStatus.RCVD, CONSENT_DATA_BYTES))
                 .thenReturn(SpiResponse.<SpiGetPaymentStatusResponse>builder()
@@ -93,7 +93,7 @@ public class PeriodicPaymentSpiImplTest {
     }
 
     @Test
-    public void executePaymentWithoutSca() {
+    void executePaymentWithoutSca() {
         when(paymentService.executePaymentWithoutSca(spiAspspConsentDataProvider))
                 .thenReturn(SpiResponse.<SpiPaymentExecutionResponse>builder()
                                     .payload(new SpiPaymentExecutionResponse(TransactionStatus.RCVD))
@@ -105,7 +105,7 @@ public class PeriodicPaymentSpiImplTest {
     }
 
     @Test
-    public void verifyScaAuthorisationAndExecutePayment() {
+    void verifyScaAuthorisationAndExecutePayment() {
         SpiScaConfirmation spiScaConfirmation = new SpiScaConfirmation();
         when(paymentService.verifyScaAuthorisationAndExecutePayment(spiScaConfirmation, spiAspspConsentDataProvider))
                 .thenReturn(SpiResponse.<SpiPaymentExecutionResponse>builder()
@@ -118,7 +118,7 @@ public class PeriodicPaymentSpiImplTest {
     }
 
     @Test
-    public void initiatePayment_emptyConsentData() {
+    void initiatePayment_emptyConsentData() {
         ArgumentCaptor<SpiPeriodicPaymentInitiationResponse> spiPeriodicPaymentInitiationResponseCaptor
                 = ArgumentCaptor.forClass(SpiPeriodicPaymentInitiationResponse.class);
 

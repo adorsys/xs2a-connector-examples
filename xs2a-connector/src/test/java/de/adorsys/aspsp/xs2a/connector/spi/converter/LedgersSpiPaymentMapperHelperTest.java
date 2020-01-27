@@ -4,14 +4,15 @@ import de.adorsys.ledgers.middleware.api.domain.payment.FrequencyCodeTO;
 import de.adorsys.psd2.xs2a.core.pis.FrequencyCode;
 import de.adorsys.psd2.xs2a.core.pis.PisDayOfExecution;
 import de.adorsys.psd2.xs2a.core.pis.PisExecutionRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class LedgersSpiPaymentMapperHelperTest {
+class LedgersSpiPaymentMapperHelperTest {
 
     @Test
-    public void mapPisDayOfExecution() {
+    void mapPisDayOfExecution() {
         assertEquals(1, LedgersSpiPaymentMapperHelper.mapPisDayOfExecution(null));
         for (PisDayOfExecution execution : PisDayOfExecution.values()) {
             assertEquals(Integer.parseInt(execution.getValue()), LedgersSpiPaymentMapperHelper.mapPisDayOfExecution(execution));
@@ -19,7 +20,7 @@ public class LedgersSpiPaymentMapperHelperTest {
     }
 
     @Test
-    public void mapPisExecutionRule() {
+    void mapPisExecutionRule() {
         assertNull(LedgersSpiPaymentMapperHelper.mapPisExecutionRule(null));
         for (PisExecutionRule executionRule : PisExecutionRule.values()) {
             assertEquals(executionRule.getValue(), LedgersSpiPaymentMapperHelper.mapPisExecutionRule(executionRule));
@@ -27,7 +28,7 @@ public class LedgersSpiPaymentMapperHelperTest {
     }
 
     @Test
-    public void mapFrequencyCode() {
+    void mapFrequencyCode() {
         assertEquals(FrequencyCodeTO.DAILY, LedgersSpiPaymentMapperHelper.mapFrequencyCode(FrequencyCode.DAILY));
         assertEquals(FrequencyCodeTO.WEEKLY, LedgersSpiPaymentMapperHelper.mapFrequencyCode(FrequencyCode.WEEKLY));
         assertEquals(FrequencyCodeTO.EVERYTWOWEEKS, LedgersSpiPaymentMapperHelper.mapFrequencyCode(FrequencyCode.EVERYTWOWEEKS));

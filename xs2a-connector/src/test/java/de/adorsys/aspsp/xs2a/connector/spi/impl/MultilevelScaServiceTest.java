@@ -22,29 +22,26 @@ import de.adorsys.ledgers.middleware.api.domain.account.AccountReferenceTO;
 import de.adorsys.ledgers.rest.client.UserMgmtRestClient;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.http.HttpStatus;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
-public class MultilevelScaServiceTest {
+@ExtendWith(MockitoExtension.class)
+class MultilevelScaServiceTest {
     private static final String IBAN_1 = "DE52500105173911841934";
     private static final String IBAN_2 = "DE52500105173911841935";
     private static final String PSU_ID = "psuId";
@@ -56,13 +53,8 @@ public class MultilevelScaServiceTest {
     private LedgersSpiAccountMapper ledgersSpiAccountMapper;
     private JsonReader jsonReader = new JsonReader();
 
-    @Before
-    public void setUp() {
-        when(userMgmtRestClient.multilevelAccounts(anyString(), anyList())).thenReturn(ResponseEntity.ok(Boolean.TRUE));
-    }
-
     @Test
-    public void isMultilevelScaRequired_psuIdNull() {
+    void isMultilevelScaRequired_psuIdNull() {
         //Given
         SpiPsuData spiPsuData = buildSpiPsuData(null);
         Set<SpiAccountReference> spiAccountReferences = new HashSet<>();
@@ -73,7 +65,7 @@ public class MultilevelScaServiceTest {
     }
 
     @Test
-    public void isMultilevelScaRequired_psuIdEmpty() {
+    void isMultilevelScaRequired_psuIdEmpty() {
         //Given
         SpiPsuData spiPsuData = buildSpiPsuData("");
         Set<SpiAccountReference> spiAccountReferences = new HashSet<>();
@@ -84,8 +76,10 @@ public class MultilevelScaServiceTest {
     }
 
     @Test
-    public void isMultilevelScaRequired_references() {
+    void isMultilevelScaRequired_references() {
         //Given
+        when(userMgmtRestClient.multilevelAccounts(anyString(), anyList())).thenReturn(ResponseEntity.ok(Boolean.TRUE));
+
         SpiPsuData spiPsuData = buildSpiPsuData(PSU_ID);
         SpiAccountReference referenceIban_1 = buildSpiAccountReference(IBAN_1);
         SpiAccountReference referenceIban_2 = buildSpiAccountReference(IBAN_2);
