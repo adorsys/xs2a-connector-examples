@@ -44,6 +44,7 @@ import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAvailableScaMethodsRespo
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiConfirmationCode;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
+import de.adorsys.psd2.xs2a.spi.domain.consent.SpiConsentConfirmationCodeValidationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiInitiateAisConsentResponse;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiVerifyScaAuthorisationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiConfirmationCodeCheckingResponse;
@@ -219,6 +220,18 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
         //  https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/500
         return SpiResponse.<SpiConfirmationCodeCheckingResponse>builder()
                        .payload(new SpiConfirmationCodeCheckingResponse(ScaStatus.FINALISED))
+                       .build();
+    }
+
+    @Override
+    public @NotNull SpiResponse<SpiConsentConfirmationCodeValidationResponse> notifyConfirmationCodeValidation(@NotNull SpiContextData spiContextData, @NotNull boolean confirmationCodeValidationResult, @NotNull SpiAccountConsent spiAccountConsent, @NotNull SpiAspspConsentDataProvider spiAspspConsentDataProvider) {
+        ScaStatus scaStatus  = confirmationCodeValidationResult ? ScaStatus.FINALISED : ScaStatus.FAILED;
+        ConsentStatus consentStatus = confirmationCodeValidationResult ? ConsentStatus.VALID : ConsentStatus.REJECTED;
+
+        SpiConsentConfirmationCodeValidationResponse response = new SpiConsentConfirmationCodeValidationResponse(scaStatus, consentStatus);
+
+        return SpiResponse.<SpiConsentConfirmationCodeValidationResponse>builder()
+                       .payload(response)
                        .build();
     }
 
