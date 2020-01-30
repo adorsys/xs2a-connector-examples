@@ -8,10 +8,13 @@ import de.adorsys.ledgers.middleware.api.domain.payment.RemittanceInformationStr
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiAddress;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.math.BigDecimal;
+import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,7 +48,28 @@ public abstract class LedgersSpiAccountMapper {
                        .orElse(null);
     } //Full manual mapping here, no extra tests necessary
 
+    public SpiCardAccountDetails toSpiCardAccountDetails(AccountDetailsTO accountDetails) {
+        return Optional.ofNullable(accountDetails)
+                       .map(d -> new SpiCardAccountDetails(
+                               d.getIban(),
+                               d.getId(),
+                               d.getMaskedPan(),
+                               d.getCurrency(),
+                               d.getName(),
+                               d.getProduct(),
+                               SpiAccountStatus.valueOf(d.getAccountStatus().name()),
+                               SpiAccountType.valueOf(d.getAccountType().name()),
+                               SpiUsageType.valueOf(d.getUsageType().name()),
+                               d.getDetails(),
+                               new SpiAmount(Currency.getInstance("EUR"), new BigDecimal(10000)), // Currently mocked data is used here. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1152
+                               toSpiAccountBalancesList(d.getBalances()),
+                               null))
+                       .orElse(null);
+    } //Full manual mapping here, no extra tests necessary
+
     public abstract List<SpiTransaction> toSpiTransactions(List<TransactionTO> transactions);
+
+    public abstract List<SpiCardTransaction> toSpiCardTransactions(List<TransactionTO> transactions);
 
     public SpiTransaction toSpiTransaction(TransactionTO transaction) {
         return Optional.ofNullable(transaction)
@@ -75,6 +99,28 @@ public abstract class LedgersSpiAccountMapper {
                                t.getProprietaryBankTransactionCode(),
                                null, // TODO Map proper field https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1100
                                new SpiAccountBalance())) // TODO: https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/522 replace with real data.
+                       .orElse(null);
+    }  //Full manual mapping here, no extra tests necessary
+
+    public SpiCardTransaction toSpiCardTransaction(TransactionTO transaction) {
+        return Optional.ofNullable(transaction)
+                       .map(t -> new SpiCardTransaction(
+                               t.getTransactionId(),
+                               "terminalId",
+                               t.getValueDate(),
+                               t.getBookingDate(),
+                               toSpiAmount(t.getAmount()),
+                               toSpiExchangeRateList(t.getExchangeRate()),
+                               toSpiAmount(t.getAmount()),
+                               toSpiAmount(t.getAmount()),
+                               "markupFeePercentage",
+                               t.getCreditorId(),
+                               new SpiAddress("street", "buildNum", "town", "post", "EU"),
+"merchantCategoryCode",
+                               "493702******0836",
+                               "transactionDetails",
+                               false,
+                               t.getProprietaryBankTransactionCode())) // TODO: https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/522 replace with real data.
                        .orElse(null);
     }  //Full manual mapping here, no extra tests necessary
 

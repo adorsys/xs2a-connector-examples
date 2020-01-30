@@ -54,6 +54,7 @@ import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse.VoidResponse;
 import de.adorsys.psd2.xs2a.spi.service.AisConsentSpi;
 import feign.FeignException;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -305,6 +306,10 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
                                                                 .flatMap(Collection::stream)
                                                                 .collect(Collectors.toSet());
 
+        if (isCardAccountConsent(spiAccountReferences)) { // Currently mocked data is used here. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1152
+            return false;
+        }
+
         return multilevelScaService.isMultilevelScaRequired(spiPsuData, spiAccountReferences);
     }
 
@@ -402,4 +407,11 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
                                          .map(SpiAccountReference::new).collect(Collectors.toList()))
                        .orElseGet(Collections::emptyList);
     }
+
+    private boolean isCardAccountConsent(Set<SpiAccountReference> spiAccountReferences) {
+        return spiAccountReferences.stream()
+                       .anyMatch(ref -> StringUtils.isNotBlank(ref.getMaskedPan())
+                                                || StringUtils.isNotBlank(ref.getPan()));
+    }
+
 }
