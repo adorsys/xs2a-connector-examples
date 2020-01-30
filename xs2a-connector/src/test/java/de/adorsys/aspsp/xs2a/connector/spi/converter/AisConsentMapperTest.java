@@ -1,5 +1,6 @@
 package de.adorsys.aspsp.xs2a.connector.spi.converter;
 
+import de.adorsys.aspsp.xs2a.connector.spi.impl.IbanResolverMockService;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.ledgers.middleware.api.domain.um.AisConsentTO;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountConsent;
@@ -13,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {AisConsentMapperImpl.class})
+@ContextConfiguration(classes = {AisConsentMapperImpl.class, IbanResolverMockService.class})
 class AisConsentMapperTest {
 
     @Autowired

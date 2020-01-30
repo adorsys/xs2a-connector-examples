@@ -76,14 +76,16 @@ public class AccountSpiImpl implements AccountSpi {
     private final AuthRequestInterceptor authRequestInterceptor;
     private final AspspConsentDataService tokenService;
     private final FeignExceptionReader feignExceptionReader;
+    private final IbanResolverMockService ibanResolverMockService;
 
     public AccountSpiImpl(AccountRestClient restClient, LedgersSpiAccountMapper accountMapper,
-                          AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService tokenService, FeignExceptionReader feignExceptionReader) {
+                          AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService tokenService, FeignExceptionReader feignExceptionReader, IbanResolverMockService ibanResolverMockService) {
         this.accountRestClient = restClient;
         this.accountMapper = accountMapper;
         this.authRequestInterceptor = authRequestInterceptor;
         this.tokenService = tokenService;
         this.feignExceptionReader = feignExceptionReader;
+        this.ibanResolverMockService = ibanResolverMockService;
     }
 
     @Override
@@ -104,8 +106,10 @@ public class AccountSpiImpl implements AccountSpi {
 
             accountDetailsList.forEach(sad -> enrichSpiAccountDetailsWithOwnerName(sad, accountConsent.getAccess()));
 
+            List<SpiAccountDetails> payload = filterAccountDetailsByWithBalance(withBalance, accountDetailsList, accountConsent.getAccess());
+
             return SpiResponse.<List<SpiAccountDetails>>builder()
-                           .payload(filterAccountDetailsByWithBalance(withBalance, accountDetailsList, accountConsent.getAccess()))
+                           .payload(payload)
                            .build();
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
@@ -413,7 +417,10 @@ public class AccountSpiImpl implements AccountSpi {
 
     private boolean filterAccountDetailsByIbanAndCurrency(List<SpiAccountReference> references, AccountDetailsTO account) {
         return references.stream()
-                       .filter(reference -> reference.getIban().equals(account.getIban()))
+                       .filter(reference -> Optional.ofNullable(reference.getIban())
+                                                    .orElseGet(() -> ibanResolverMockService.handleIbanByAccountReference(reference)) // Currently mocked data is used here. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1152
+                                                    .equals(account.getIban()))
+
                        .anyMatch(reference -> reference.getCurrency() == null || reference.getCurrency().equals(account.getCurrency()));
     }
 
@@ -493,4 +500,5 @@ public class AccountSpiImpl implements AccountSpi {
         accountBalance.setLastChangeDateTime(LocalDateTime.of(2019, Month.FEBRUARY, 15, 10, 0, 0, 0));
         return accountBalance;
     }
+
 }
