@@ -17,13 +17,9 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.ledgers.middleware.api.domain.payment.BulkPaymentTO;
-import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
@@ -37,15 +33,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class BulkPaymentSpiImpl extends AbstractPaymentSpi<SpiBulkPayment, SpiBulkPaymentInitiationResponse> implements BulkPaymentSpi {
-    private final LedgersSpiPaymentMapper paymentMapper;
-    private final GeneralPaymentService paymentService;
 
     @Autowired
-    public BulkPaymentSpiImpl(GeneralPaymentService paymentService, AspspConsentDataService consentDataService,
-                              FeignExceptionReader feignExceptionReader, LedgersSpiPaymentMapper paymentMapper) {
-        super(paymentService, consentDataService, feignExceptionReader);
-        this.paymentService = paymentService;
-        this.paymentMapper = paymentMapper;
+    public BulkPaymentSpiImpl(GeneralPaymentService paymentService, LedgersSpiPaymentMapper paymentMapper) {
+        super(paymentService, paymentMapper);
     }
 
     @Override
@@ -57,25 +48,9 @@ public class BulkPaymentSpiImpl extends AbstractPaymentSpi<SpiBulkPayment, SpiBu
     }
 
     @Override
-    protected SCAPaymentResponseTO initiatePaymentInternal(SpiBulkPayment payment, byte[] initialAspspConsentData) {
-        BulkPaymentTO request = paymentMapper.toBulkPaymentTO(payment);
-        if (request.getPaymentProduct() == null) {
-            String product = paymentService.getSCAPaymentResponseTO(initialAspspConsentData).getPaymentProduct();
-            request.setPaymentProduct(PaymentProductTO.getByValue(product).orElse(null));
-        }
-        return paymentService.initiatePaymentInternal(payment, initialAspspConsentData, PaymentTypeTO.BULK, request);
-    }
-
-    @Override
     protected SpiResponse<SpiBulkPaymentInitiationResponse> processEmptyAspspConsentData(@NotNull SpiBulkPayment payment,
                                                                                          @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.BULK, payment, aspspConsentDataProvider, new SpiBulkPaymentInitiationResponse());
-    }
-
-    @NotNull
-    @Override
-    protected SpiBulkPaymentInitiationResponse getToSpiPaymentResponse(SCAPaymentResponseTO response) {
-        return paymentMapper.toSpiBulkResponse(response);
     }
 
 }

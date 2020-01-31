@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
@@ -15,11 +16,15 @@ import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
+import feign.FeignException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -62,11 +67,7 @@ class GeneralPaymentServiceTest {
         SpiPayment paymentAspsp = getSpiSingle(TransactionStatus.ACSP, "paymentAspsp");
 
         SinglePaymentTO singlePaymentTO = new SinglePaymentTO();
-        SCAPaymentResponseTO sca = new SCAPaymentResponseTO();
-        sca.setPaymentId(initialPayment.getPaymentId());
-        BearerTokenTO bearerTokenTO = new BearerTokenTO();
-        bearerTokenTO.setAccess_token("accessToken");
-        sca.setBearerToken(bearerTokenTO);
+        SCAPaymentResponseTO sca = getScaPaymentResponseTO(initialPayment);
         byte[] aspspConsentData = "".getBytes();
 
         doReturn(ResponseEntity.ok(paymentAspsp))
@@ -87,6 +88,61 @@ class GeneralPaymentServiceTest {
         //Then
         assertTrue(paymentById.isSuccessful());
         assertEquals(paymentAspsp, paymentById.getPayload());
+    }
+
+    @Test
+    void initiatePaymentInternal_success() {
+        //Given
+        SpiSinglePayment payment = getSpiSingle(TransactionStatus.ACSP, "initialPayment");;
+        PaymentTO paymentTO = new PaymentTO();
+        byte[] aspspConsentData = "".getBytes();
+
+        SCAPaymentResponseTO sca = getScaPaymentResponseTO(payment);
+        PaymentTypeTO paymentTypeTO = PaymentTypeTO.SINGLE;
+        SCAPaymentResponseTO scaPaymentResponseTOExpected = new SCAPaymentResponseTO();
+        ArgumentCaptor<PaymentTO> paymentTOArgumentCaptor = ArgumentCaptor.forClass(PaymentTO.class);
+        when(paymentRestClient.initiatePayment(eq(paymentTypeTO), paymentTOArgumentCaptor.capture())).thenReturn(ResponseEntity.ok(scaPaymentResponseTOExpected));
+        when(consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class)).thenReturn(sca);
+        doNothing().when(authRequestInterceptor).setAccessToken(anyString());
+
+        //When
+        SCAPaymentResponseTO scaPaymentResponseTO = generalPaymentService.initiatePaymentInternal(payment, aspspConsentData, paymentTypeTO, paymentTO);
+        //Then
+        assertEquals(scaPaymentResponseTOExpected, scaPaymentResponseTO);
+        assertEquals(paymentTOArgumentCaptor.getValue().getPaymentProduct(), sca.getPaymentProduct());
+        verify(authRequestInterceptor, times(1)).setAccessToken(sca.getBearerToken().getAccess_token());
+    }
+
+    @Test
+    void initiatePaymentInternal_exception() {
+        //Given
+        SpiSinglePayment payment = getSpiSingle(TransactionStatus.ACSP, "initialPayment");;
+        PaymentTO paymentTO = new PaymentTO();
+        byte[] aspspConsentData = "".getBytes();
+
+        SCAPaymentResponseTO sca = getScaPaymentResponseTO(payment);
+        PaymentTypeTO paymentTypeTO = PaymentTypeTO.SINGLE;
+        when(consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class)).thenReturn(sca);
+        doNothing().when(authRequestInterceptor).setAccessToken(anyString());
+
+        FeignException feignExceptionExpected = FeignExceptionHandler.getException(HttpStatus.BAD_REQUEST, "message1");
+        when(paymentRestClient.initiatePayment(paymentTypeTO, paymentTO)).thenThrow(feignExceptionExpected);
+
+        //When
+        FeignException feignException = Assertions.assertThrows(FeignException.class, () -> generalPaymentService.initiatePaymentInternal(payment, aspspConsentData, paymentTypeTO, paymentTO));
+        //Then
+        assertEquals(feignExceptionExpected, feignException);
+        verify(authRequestInterceptor, times(1)).setAccessToken(null);
+    }
+
+    private SCAPaymentResponseTO getScaPaymentResponseTO(SpiPayment payment) {
+        SCAPaymentResponseTO sca = new SCAPaymentResponseTO();
+        sca.setPaymentId(payment.getPaymentId());
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("accessToken");
+        sca.setBearerToken(bearerTokenTO);
+        sca.setPaymentProduct("sepa-credit-transfers");
+        return sca;
     }
 
     private SpiSinglePayment getSpiSingle(TransactionStatus transactionStatus, String agent) {

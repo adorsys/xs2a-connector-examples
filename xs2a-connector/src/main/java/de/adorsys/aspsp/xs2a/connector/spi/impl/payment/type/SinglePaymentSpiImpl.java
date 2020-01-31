@@ -17,13 +17,9 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
-import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
@@ -36,15 +32,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class SinglePaymentSpiImpl extends AbstractPaymentSpi<SpiSinglePayment, SpiSinglePaymentInitiationResponse> implements SinglePaymentSpi {
-    private LedgersSpiPaymentMapper paymentMapper;
-    private GeneralPaymentService paymentService;
 
     @Autowired
-    public SinglePaymentSpiImpl(GeneralPaymentService paymentService, AspspConsentDataService consentDataService,
-                                FeignExceptionReader feignExceptionReader, LedgersSpiPaymentMapper paymentMapper) {
-        super(paymentService, consentDataService, feignExceptionReader);
-        this.paymentService = paymentService;
-        this.paymentMapper = paymentMapper;
+    public SinglePaymentSpiImpl(GeneralPaymentService paymentService, LedgersSpiPaymentMapper paymentMapper) {
+        super(paymentService, paymentMapper);
     }
 
     @Override
@@ -56,24 +47,8 @@ public class SinglePaymentSpiImpl extends AbstractPaymentSpi<SpiSinglePayment, S
     }
 
     @Override
-    protected SCAPaymentResponseTO initiatePaymentInternal(SpiSinglePayment payment, byte[] initialAspspConsentData) {
-        SinglePaymentTO request = paymentMapper.toSinglePaymentTO(payment);
-        if (request.getPaymentProduct() == null) {
-            String product = paymentService.getSCAPaymentResponseTO(initialAspspConsentData).getPaymentProduct();
-            request.setPaymentProduct(PaymentProductTO.getByValue(product).orElse(null));
-        }
-        return paymentService.initiatePaymentInternal(payment, initialAspspConsentData, PaymentTypeTO.SINGLE, request);
-    }
-
-    @Override
     protected SpiResponse<SpiSinglePaymentInitiationResponse> processEmptyAspspConsentData(@NotNull SpiSinglePayment payment,
                                                                                            @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, payment, aspspConsentDataProvider, new SpiSinglePaymentInitiationResponse());
-    }
-
-    @NotNull
-    @Override
-    protected SpiSinglePaymentInitiationResponse getToSpiPaymentResponse(SCAPaymentResponseTO response) {
-        return paymentMapper.toSpiSingleResponse(response);
     }
 }
