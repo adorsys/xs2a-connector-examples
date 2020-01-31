@@ -1,0 +1,81 @@
+{
+  "paymentId": "myPaymentId",
+  "batchBookingPreferred": false,
+  "paymentType": "BULK",
+  "paymentProduct": "sepa-credit-transfers",
+  "requestedExecutionDate":"2018-12-12",
+  "debtorAccount": {
+    "currency": "EUR",
+    "iban": "DE52500105173911841934",
+    "bban": "Test BBAN",
+    "maskedPan": "23456xxxxxx1234",
+    "msisdn": "0172/1111111",
+    "pan": "1111"
+  },
+  "targets": [
+    {
+      "paymentId": "myPaymentId1",
+      "endToEndIdentification": "123456788",
+      "instructedAmount": {
+        "currency": "EUR",
+        "amount": 200
+      },
+      "creditorAccount": {
+        "currency": "EUR",
+        "iban": "DE52500105173911841934",
+        "bban": "Test BBAN",
+        "maskedPan": "23456xxxxxx1234",
+        "msisdn": "0172/1111111",
+        "pan": "1111"
+      },
+      "creditorAgent": "agent",
+      "creditorName": "Rozetka.ua",
+      "creditorAddress": {
+        "street": "SomeStreet",
+        "buildingNumber": "666",
+        "city": "Kiev",
+        "postalCode": "04210",
+        "country": "Ukraine"
+      },
+      "purposeCode": "BKDF",
+      "remittanceInformationUnstructured": "remittance",
+      "remittanceInformationStructured": {
+        "reference": "Ref Number Merchant",
+        "referenceType": "reference type",
+        "referenceIssuer": "reference issuer"
+      }
+    },
+    {
+      "paymentId": "myPaymentId2",
+      "endToEndIdentification": "123456789",
+      "instructedAmount": {
+        "currency": "EUR",
+        "amount": 100
+      },
+      "creditorAccount": {
+        "currency": "EUR",
+        "iban": "DE52500105173911841934",
+        "bban": "Test BBAN",
+        "maskedPan": "23456xxxxxx1234",
+        "msisdn": "0172/1111111",
+        "pan": "1111"
+      },
+      "creditorAgent": "agent",
+      "creditorName": "Sokol.ua",
+      "creditorAddress": {
+        "street": "SomeStreet",
+        "buildingNumber": "666",
+        "city": "Kiev",
+        "postalCode": "04210",
+        "country": "Ukraine"
+      },
+      "purposeCode": "BKDF",
+      "remittanceInformationUnstructured": "remittance",
+      "remittanceInformationStructured": {
+        "reference": "Ref Number Merchant",
+        "referenceType": "reference type",
+        "referenceIssuer": "reference issuer"
+      }
+    }
+  ]
+}

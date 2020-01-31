@@ -17,13 +17,9 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
-import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
@@ -37,15 +33,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class PeriodicPaymentSpiImpl extends AbstractPaymentSpi<SpiPeriodicPayment, SpiPeriodicPaymentInitiationResponse> implements PeriodicPaymentSpi {
 
-    private final LedgersSpiPaymentMapper paymentMapper;
-    private final GeneralPaymentService paymentService;
-
     @Autowired
-    public PeriodicPaymentSpiImpl(GeneralPaymentService paymentService, AspspConsentDataService consentDataService,
-                                  FeignExceptionReader feignExceptionReader, LedgersSpiPaymentMapper paymentMapper) {
-        super(paymentService, consentDataService, feignExceptionReader);
-        this.paymentService = paymentService;
-        this.paymentMapper = paymentMapper;
+    public PeriodicPaymentSpiImpl(GeneralPaymentService paymentService, LedgersSpiPaymentMapper paymentMapper) {
+        super(paymentService, paymentMapper);
     }
 
     @Override
@@ -57,25 +47,8 @@ public class PeriodicPaymentSpiImpl extends AbstractPaymentSpi<SpiPeriodicPaymen
     }
 
     @Override
-    protected SCAPaymentResponseTO initiatePaymentInternal(SpiPeriodicPayment payment, byte[] initialAspspConsentData) {
-        PeriodicPaymentTO request = paymentMapper.toPeriodicPaymentTO(payment);
-        if (request.getPaymentProduct() == null) {
-            String product = paymentService.getSCAPaymentResponseTO(initialAspspConsentData).getPaymentProduct();
-            request.setPaymentProduct(PaymentProductTO.getByValue(product).orElse(null));
-        }
-        return paymentService.initiatePaymentInternal(payment, initialAspspConsentData, PaymentTypeTO.PERIODIC, request);
-    }
-
-    @Override
     protected SpiResponse<SpiPeriodicPaymentInitiationResponse> processEmptyAspspConsentData(@NotNull SpiPeriodicPayment payment,
                                                                                              @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.PERIODIC, payment, aspspConsentDataProvider, new SpiPeriodicPaymentInitiationResponse());
     }
-
-    @NotNull
-    @Override
-    protected SpiPeriodicPaymentInitiationResponse getToSpiPaymentResponse(SCAPaymentResponseTO response) {
-        return paymentMapper.toSpiPeriodicResponse(response);
-    }
-
 }

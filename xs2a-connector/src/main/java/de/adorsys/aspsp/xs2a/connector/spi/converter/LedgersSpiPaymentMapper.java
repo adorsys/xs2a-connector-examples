@@ -1,68 +1,26 @@
 package de.adorsys.aspsp.xs2a.connector.spi.converter;
 
+import de.adorsys.ledgers.middleware.api.domain.account.AccountReferenceTO;
 import de.adorsys.ledgers.middleware.api.domain.general.AddressTO;
-import de.adorsys.ledgers.middleware.api.domain.payment.BulkPaymentTO;
-import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
-import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
-import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
-import de.adorsys.psd2.xs2a.core.pis.FrequencyCode;
-import de.adorsys.psd2.xs2a.core.pis.PisDayOfExecution;
-import de.adorsys.psd2.xs2a.core.pis.PisExecutionRule;
-import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
-import de.adorsys.psd2.xs2a.spi.domain.payment.SpiAddress;
-import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
-import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
-import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
-import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiBulkPaymentInitiationResponse;
-import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentCancellationResponse;
-import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPeriodicPaymentInitiationResponse;
-import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiationResponse;
+import de.adorsys.ledgers.middleware.api.domain.payment.*;
+import de.adorsys.psd2.xs2a.core.pis.*;
+import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
+import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
+import de.adorsys.psd2.xs2a.spi.domain.payment.*;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import java.time.*;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", uses = {LedgersSpiAccountMapper.class, ChallengeDataMapper.class, AddressMapper.class},
         imports = {LedgersSpiPaymentMapperHelper.class, ScaMethodUtils.class})
 public abstract class LedgersSpiPaymentMapper {
 
     private LedgersSpiAccountMapper accountMapper = Mappers.getMapper(LedgersSpiAccountMapper.class);
-
-    @Mapping(target = "requestedExecutionTime", expression = "java(toTime(payment.getRequestedExecutionTime()))")
-    @Mapping(target = "paymentProduct", expression = "java(toPaymentProduct(payment.getPaymentProduct()))")
-    public abstract SinglePaymentTO toSinglePaymentTO(SpiSinglePayment payment);
-
-    @Mapping(target = "executionRule", expression = "java(LedgersSpiPaymentMapperHelper.mapPisExecutionRule(payment.getExecutionRule()))")
-    @Mapping(target = "dayOfExecution", expression = "java(LedgersSpiPaymentMapperHelper.mapPisDayOfExecution(payment.getDayOfExecution()))")
-    public abstract PeriodicPaymentTO toPeriodicPaymentTO(SpiPeriodicPayment payment);
-
-    public abstract BulkPaymentTO toBulkPaymentTO(SpiBulkPayment payment);
-
-    @Mapping(source = "paymentStatus", target = "transactionStatus")
-    public abstract SpiSinglePaymentInitiationResponse toSpiSingleResponse(SinglePaymentTO payment);
-
-    @Mapping(target = "scaMethods", expression = "java(ScaMethodUtils.toScaMethods(response.getScaMethods()))")
-    @Mapping(target = "chosenScaMethod", expression = "java(ScaMethodUtils.toScaMethod(response.getChosenScaMethod()))")
-    public abstract SpiSinglePaymentInitiationResponse toSpiSingleResponse(SCAPaymentResponseTO response);
-
-    @Mapping(source = "paymentStatus", target = "transactionStatus")
-    public abstract SpiPeriodicPaymentInitiationResponse toSpiPeriodicResponse(PeriodicPaymentTO payment);
-
-    @Mapping(target = "scaMethods", expression = "java(ScaMethodUtils.toScaMethods(response.getScaMethods()))")
-    @Mapping(target = "chosenScaMethod", expression = "java(ScaMethodUtils.toScaMethod(response.getChosenScaMethod()))")
-    public abstract SpiPeriodicPaymentInitiationResponse toSpiPeriodicResponse(SCAPaymentResponseTO response);
-
-    @Mapping(source = "paymentStatus", target = "transactionStatus")
-    public abstract SpiBulkPaymentInitiationResponse toSpiBulkResponse(BulkPaymentTO payment);
-
-    @Mapping(target = "scaMethods", expression = "java(ScaMethodUtils.toScaMethods(response.getScaMethods()))")
-    @Mapping(target = "chosenScaMethod", expression = "java(ScaMethodUtils.toScaMethod(response.getChosenScaMethod()))")
-    public abstract SpiBulkPaymentInitiationResponse toSpiBulkResponse(SCAPaymentResponseTO response);
 
     public SpiSinglePayment toSpiSinglePayment(SinglePaymentTO payment) {
         SpiSinglePayment spiPayment = new SpiSinglePayment(payment.getPaymentProduct().getValue());
@@ -123,12 +81,6 @@ public abstract class LedgersSpiPaymentMapper {
 
     public abstract List<SpiSinglePayment> toSpiSinglePaymentsList(List<SinglePaymentTO> payments);
 
-    public LocalTime toTime(OffsetDateTime time) {
-        return Optional.ofNullable(time)
-                       .map(OffsetDateTime::toLocalTime)
-                       .orElse(null);
-    } //Direct mapping no need for testing
-
     public OffsetDateTime toDateTime(LocalDate date, LocalTime time) {
         return Optional.ofNullable(date)
                        .map(d -> LocalDateTime.of(d, Optional.ofNullable(time)
@@ -148,30 +100,159 @@ public abstract class LedgersSpiPaymentMapper {
                        .orElse(null);
     } //Direct mapping no need for testing
 
-    public SpiPaymentCancellationResponse toSpiPaymentCancellationResponse(SCAPaymentResponseTO response) {
-        return Optional.ofNullable(response)
-                       .map(t -> {
-                           SpiPaymentCancellationResponse cancellation = new SpiPaymentCancellationResponse();
-                           cancellation.setCancellationAuthorisationMandated(needAuthorization(response));
-                           cancellation.setTransactionStatus(TransactionStatus.valueOf(response.getTransactionStatus().name()));
-                           return cancellation;
-                       }).orElseGet(SpiPaymentCancellationResponse::new);
-    }//Direct mapping no testing necessary
+    public PaymentTO mapToPaymentTO(SpiSinglePayment spiSinglePayment) {
+        return Optional.ofNullable(spiSinglePayment)
+                       .map(payment -> {
 
-    PaymentProductTO toPaymentProduct(String paymentProduct) {
-        if (paymentProduct == null) {
-            return null;
-        }
-        return PaymentProductTO.getByValue(paymentProduct)
+                           PaymentTO paymentTO = new PaymentTO();
+                           paymentTO.setPaymentId(payment.getPaymentId());
+                           paymentTO.setPaymentType(PaymentTypeTO.valueOf(payment.getPaymentType().name()));
+                           paymentTO.setPaymentProduct(payment.getPaymentProduct());
+                           paymentTO.setDebtorAccount(mapToAccountReferenceTO(payment.getDebtorAccount()));
+                           paymentTO.setDebtorName(payment.getUltimateDebtor());
+                           paymentTO.setTargets(Collections.singletonList(mapToPaymentTargetTO(payment)));
+                           return paymentTO;
+                       })
                        .orElse(null);
     }
 
-    /*
-     * How do we know if a payment or a cancellation needs authorization.
-     *
-     * At initiation the SCAStatus shall be set to {@link ScaStatusTO#EXEMPTED}
-     */
-    private boolean needAuthorization(SCAPaymentResponseTO response) {
-        return !ScaStatusTO.EXEMPTED.equals(response.getScaStatus());
+    public PaymentTO mapToPaymentTO(SpiPeriodicPayment spiPeriodicPayment) {
+        return Optional.ofNullable(spiPeriodicPayment)
+                       .map(payment -> {
+
+                           PaymentTO paymentTO = new PaymentTO();
+                           paymentTO.setPaymentId(payment.getPaymentId());
+                           paymentTO.setPaymentType(PaymentTypeTO.valueOf(payment.getPaymentType().name()));
+                           paymentTO.setPaymentProduct(payment.getPaymentProduct());
+                           paymentTO.setDebtorAccount(mapToAccountReferenceTO(payment.getDebtorAccount()));
+
+                           paymentTO.setStartDate(payment.getStartDate());
+                           paymentTO.setEndDate(payment.getEndDate());
+                           paymentTO.setExecutionRule(Optional.ofNullable(payment.getExecutionRule())
+                                                              .map(PisExecutionRule::toString)
+                                                              .orElse(null));
+                           paymentTO.setFrequency(mapToFrequencyCodeTO(payment.getFrequency()));
+                           paymentTO.setDayOfExecution(Integer.valueOf(payment.getDayOfExecution().toString()));
+                           paymentTO.setDebtorName(payment.getUltimateDebtor());
+                           paymentTO.setTargets(Collections.singletonList(mapToPaymentTargetTO(payment)));
+
+                           return paymentTO;
+                       })
+                       .orElse(null);
     }
+
+    public PaymentTO mapToPaymentTO(SpiBulkPayment spiBulkPayment) {
+        return Optional.ofNullable(spiBulkPayment)
+                       .map(payment -> {
+
+                           PaymentTO paymentTO = new PaymentTO();
+                           paymentTO.setPaymentId(payment.getPaymentId());
+                           paymentTO.setPaymentType(PaymentTypeTO.valueOf(payment.getPaymentType().name()));
+                           paymentTO.setPaymentProduct(payment.getPaymentProduct());
+                           paymentTO.setDebtorAccount(mapToAccountReferenceTO(payment.getDebtorAccount()));
+                           paymentTO.setBatchBookingPreferred(payment.getBatchBookingPreferred());
+                           paymentTO.setRequestedExecutionDate(payment.getRequestedExecutionDate());
+                           paymentTO.setRequestedExecutionTime(Optional.ofNullable(payment.getRequestedExecutionTime()).map(OffsetDateTime::toLocalTime).orElse(null));
+                           paymentTO.setTargets(payment.getPayments().stream()
+                                                        .map(this::mapToPaymentTargetTO)
+                                                        .collect(Collectors.toList()));
+                           return paymentTO;
+
+                       })
+                       .orElse(null);
+    }
+
+    private PaymentTargetTO mapToPaymentTargetTO(SpiSinglePayment spiSinglePayment) {
+        if (spiSinglePayment == null) {
+            return null;
+        }
+
+        PaymentTargetTO paymentTargetTO = new PaymentTargetTO();
+
+        paymentTargetTO.setPaymentId(spiSinglePayment.getPaymentId());
+        paymentTargetTO.setEndToEndIdentification(spiSinglePayment.getEndToEndIdentification());
+        paymentTargetTO.setInstructedAmount(mapToAmountTO(spiSinglePayment.getInstructedAmount()));
+        paymentTargetTO.setCreditorAccount(mapToAccountReferenceTO(spiSinglePayment.getCreditorAccount()));
+        paymentTargetTO.setCreditorAgent(spiSinglePayment.getCreditorAgent());
+        paymentTargetTO.setCreditorName(spiSinglePayment.getCreditorName());
+        paymentTargetTO.setCreditorAddress(mapToAddressTO(spiSinglePayment.getCreditorAddress()));
+        paymentTargetTO.setPurposeCode(mapToPurposeCodeTO(spiSinglePayment.getPurposeCode()));
+        paymentTargetTO.setRemittanceInformationUnstructured(spiSinglePayment.getRemittanceInformationUnstructured());
+        paymentTargetTO.setRemittanceInformationStructured(mapToRemittanceInformationStructuredTO(spiSinglePayment.getRemittanceInformationStructured()));
+
+        return paymentTargetTO;
+    }
+
+    private RemittanceInformationStructuredTO mapToRemittanceInformationStructuredTO(SpiRemittance spiRemittance) {
+        if (spiRemittance == null) {
+            return null;
+        }
+
+        RemittanceInformationStructuredTO remittanceInformationStructuredTO = new RemittanceInformationStructuredTO();
+
+        remittanceInformationStructuredTO.setReference(spiRemittance.getReference());
+        remittanceInformationStructuredTO.setReferenceType(spiRemittance.getReferenceType());
+        remittanceInformationStructuredTO.setReferenceIssuer(spiRemittance.getReferenceIssuer());
+
+        return remittanceInformationStructuredTO;
+    }
+
+    private PurposeCodeTO mapToPurposeCodeTO(PurposeCode purposeCode) {
+        return Optional.ofNullable(purposeCode)
+                       .map(PurposeCode::name)
+                       .map(PurposeCodeTO::valueOf)
+                       .orElse(null);
+    }
+
+    private AddressTO mapToAddressTO(SpiAddress address) {
+        if (address == null) {
+            return null;
+        }
+
+        AddressTO addressTO = new AddressTO();
+
+        addressTO.setStreet(address.getStreetName());
+        addressTO.setBuildingNumber(address.getBuildingNumber());
+        addressTO.setCity(address.getTownName());
+        addressTO.setPostalCode(address.getPostCode());
+        addressTO.setCountry(address.getCountry());
+
+        return addressTO;
+    }
+
+    private AmountTO mapToAmountTO(SpiAmount amount) {
+        if (amount == null) {
+            return null;
+        }
+
+        AmountTO amountTO = new AmountTO();
+        amountTO.setCurrency(amount.getCurrency());
+        amountTO.setAmount(amount.getAmount());
+
+        return amountTO;
+    }
+
+    private AccountReferenceTO mapToAccountReferenceTO(SpiAccountReference spiAccountReference) {
+        if (spiAccountReference == null) {
+            return null;
+        }
+        AccountReferenceTO accountReferenceTO = new AccountReferenceTO();
+
+        accountReferenceTO.setIban(spiAccountReference.getIban());
+        accountReferenceTO.setBban(spiAccountReference.getBban());
+        accountReferenceTO.setPan(spiAccountReference.getPan());
+        accountReferenceTO.setMaskedPan(spiAccountReference.getMaskedPan());
+        accountReferenceTO.setMsisdn(spiAccountReference.getMsisdn());
+        accountReferenceTO.setCurrency(spiAccountReference.getCurrency());
+
+        return accountReferenceTO;
+    }
+
+    private FrequencyCodeTO mapToFrequencyCodeTO(FrequencyCode frequencyCode) {
+        return Optional.ofNullable(frequencyCode)
+                       .map(FrequencyCode::name)
+                       .map(FrequencyCodeTO::valueOf)
+                       .orElse(null);
+    }
+
 }

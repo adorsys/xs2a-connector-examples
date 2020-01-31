@@ -21,6 +21,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
@@ -245,11 +246,14 @@ public class GeneralPaymentService {
         }
     }
 
-    public <P> SCAPaymentResponseTO initiatePaymentInternal(P payment, byte[] initialAspspConsentData, PaymentTypeTO paymentTypeTO, Object request) {
+    public <P> SCAPaymentResponseTO initiatePaymentInternal(P payment, byte[] initialAspspConsentData, PaymentTypeTO paymentTypeTO, PaymentTO request) {
         try {
             SCAPaymentResponseTO sca = getSCAPaymentResponseTO(initialAspspConsentData);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
             logger.debug("{} payment body: {}", paymentTypeTO, payment);
+            if (request.getPaymentProduct() == null) {
+                request.setPaymentProduct(sca.getPaymentProduct());
+            }
             return paymentRestClient.initiatePayment(paymentTypeTO, request).getBody();
         } finally {
             authRequestInterceptor.setAccessToken(null);
