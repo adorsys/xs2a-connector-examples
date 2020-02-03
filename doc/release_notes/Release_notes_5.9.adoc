@@ -3,7 +3,18 @@
 == Table of Contents
 
 * Migrate to JUnit 5 and Mockito 3
+* Bugfix: Payment/Consent status doesn't change after ConfirmationCode validation in xs2a
 
 == Migrate to JUnit 5 and Mockito 3
 
 From now on, the project uses JUnit 5 and Mockito 3 for testing.
+
+== Bugfix: Payment/Consent status doesn't change after ConfirmationCode validation in xs2a
+
+From now on, there are additional endpoints in SPI Level:
+
+* `de.adorsys.psd2.xs2a.spi.service.AisConsentSpi#notifyConfirmationCodeValidation` for consent
+* `de.adorsys.psd2.xs2a.spi.service.PaymentSpi#notifyConfirmationCodeValidation` for payment
+
+These endpoints will be called after XS2A checks confirmation code.
+In response, it should be an object with authorisation status and consent / payment status. These statuses will be stored in CMS.
