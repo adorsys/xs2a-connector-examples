@@ -25,11 +25,13 @@ import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.AuthConfirmationTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
+import de.adorsys.ledgers.rest.client.UserMgmtRestClient;
 import de.adorsys.ledgers.util.Ids;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
@@ -37,10 +39,10 @@ import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
-import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiConfirmationCode;
+import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiCheckConfirmationCodeRequest;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
-import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiConfirmationCodeCheckingResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiGetPaymentStatusResponse;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentConfirmationCodeValidationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
@@ -58,6 +60,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -76,6 +79,7 @@ public class GeneralPaymentService {
     private final ObjectMapper objectMapper;
     private final String transactionStatusXmlBody;
     private final MultilevelScaService multilevelScaService;
+    private final UserMgmtRestClient userMgmtRestClient;
 
     public GeneralPaymentService(PaymentRestClient ledgersRestClient,
                                  AuthRequestInterceptor authRequestInterceptor,
@@ -83,7 +87,8 @@ public class GeneralPaymentService {
                                  FeignExceptionReader feignExceptionReader,
                                  ObjectMapper objectMapper,
                                  @Value("${test-transaction-status-xml-body}") String transactionStatusXmlBody,
-                                 MultilevelScaService multilevelScaService) {
+                                 MultilevelScaService multilevelScaService,
+                                 UserMgmtRestClient userMgmtRestClient) {
         this.paymentRestClient = ledgersRestClient;
         this.authRequestInterceptor = authRequestInterceptor;
         this.consentDataService = consentDataService;
@@ -91,6 +96,7 @@ public class GeneralPaymentService {
         this.objectMapper = objectMapper;
         this.transactionStatusXmlBody = transactionStatusXmlBody;
         this.multilevelScaService = multilevelScaService;
+        this.userMgmtRestClient = userMgmtRestClient;
     }
 
     public SpiResponse<SpiGetPaymentStatusResponse> getPaymentStatusById(@NotNull PaymentTypeTO paymentType,
@@ -169,14 +175,48 @@ public class GeneralPaymentService {
         }
     }
 
-    public SpiResponse<SpiConfirmationCodeCheckingResponse> checkConfirmationCode(@NotNull SpiConfirmationCode spiConfirmationCode,
-                                                                                  @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        // TODO: This stub for happy-path should be removed after implementing this flow in ledgers.
-        //  https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/500
+    public SpiResponse<SpiPaymentConfirmationCodeValidationResponse> checkConfirmationCode(@NotNull SpiCheckConfirmationCodeRequest spiCheckConfirmationCodeRequest,
+                                                                                           @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
 
-        return SpiResponse.<SpiConfirmationCodeCheckingResponse>builder()
-                       .payload(new SpiConfirmationCodeCheckingResponse(ScaStatus.FINALISED))
-                       .build();
+        try {
+            SCAPaymentResponseTO sca = consentDataService.response(aspspConsentDataProvider.loadAspspConsentData(), SCAPaymentResponseTO.class);
+            authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
+
+            ResponseEntity<AuthConfirmationTO> authConfirmationTOResponse =
+                    userMgmtRestClient.verifyAuthConfirmationCode(spiCheckConfirmationCodeRequest.getAuthorisationId(), spiCheckConfirmationCodeRequest.getConfirmationCode());
+
+            AuthConfirmationTO authConfirmationTO = authConfirmationTOResponse.getBody();
+
+            // ToDo also check whether verification was successful https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1207
+            if (authConfirmationTO == null) {
+                // No response in payload from ASPSP or confirmation code verification failed.
+                return getConfirmationCodeResponseForXs2a(ScaStatus.FAILED, TransactionStatus.RJCT);
+            }
+
+            if (authConfirmationTO.isPartiallyAuthorised()) {
+                // This authorisation is finished, but others are left.
+                return getConfirmationCodeResponseForXs2a(ScaStatus.FINALISED, TransactionStatus.PATC);
+            }
+
+            TransactionStatus xs2aTransactionStatus = Optional.ofNullable(authConfirmationTO.getTransactionStatus())
+                                                              .map(TransactionStatusTO::getName)
+                                                              .map(TransactionStatus::getByValue)
+                                                              .orElse(TransactionStatus.RJCT);
+
+            ScaStatus authorisationStatus = EnumSet.of(TransactionStatus.CANC, TransactionStatus.RJCT).contains(xs2aTransactionStatus)
+                                                    ? ScaStatus.FAILED
+                                                    : ScaStatus.FINALISED;
+
+            return getConfirmationCodeResponseForXs2a(authorisationStatus, xs2aTransactionStatus);
+
+        } catch (FeignException feignException) {
+            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            return SpiResponse.<SpiPaymentConfirmationCodeValidationResponse>builder()
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
+                           .build();
+        } finally {
+            authRequestInterceptor.setAccessToken(null);
+        }
     }
 
     /**
@@ -280,6 +320,14 @@ public class GeneralPaymentService {
                        .map(buildSuccessResponse)
                        .orElseGet(buildFailedResponse);
 
+    }
+
+    private SpiResponse<SpiPaymentConfirmationCodeValidationResponse> getConfirmationCodeResponseForXs2a(ScaStatus scaStatus, TransactionStatus transactionStatus) {
+        SpiPaymentConfirmationCodeValidationResponse response = new SpiPaymentConfirmationCodeValidationResponse(scaStatus, transactionStatus);
+
+        return SpiResponse.<SpiPaymentConfirmationCodeValidationResponse>builder()
+                       .payload(response)
+                       .build();
     }
 
     private Optional<Object> getPaymentFromLedgers(String paymentId, String toString, byte[] aspspConsentData, PaymentTypeTO paymentTypeTO) {
