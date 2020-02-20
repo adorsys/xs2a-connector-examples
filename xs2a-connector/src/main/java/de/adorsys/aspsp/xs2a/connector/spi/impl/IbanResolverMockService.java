@@ -40,6 +40,18 @@ public class IbanResolverMockService {
 
         ibanMap.put("037504******4669", "DE38760700240320465700"); //multiple
         ibanMap.put("0375049529584669", "DE38760700240320465700"); //multiple
+
+        ibanMap.put("111122******4444", "DE13760700241122334401");
+        ibanMap.put("1111222233334444", "DE13760700241122334401");
+
+        ibanMap.put("222233******5555", "DE83760700241122334402");
+        ibanMap.put("2222333344445555", "DE83760700241122334402");
+
+        ibanMap.put("333344******6666", "DE56760700241122334403");
+        ibanMap.put("3333444455556666", "DE56760700241122334403");
+
+        ibanMap.put("444455******7777", "DE29760700241122334404");
+        ibanMap.put("4444555566667777", "DE29760700241122334404");
     }
 
     public String handleIbanByAccountReference(SpiAccountReference accountReference) {
