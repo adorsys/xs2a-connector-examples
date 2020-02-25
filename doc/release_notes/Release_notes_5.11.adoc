@@ -1,3 +1,11 @@
 = Release notes v.5.11
 
 == Table of Contents
+
+* Fixed incorrect response for Get Account Details request for consents with ownerName
+
+== Fixed incorrect response for Get Account Details request for consents with ownerName
+
+From now on, the endpoint `GET /v1/accounts/{resource-id}` will return `ownerName` in the response, if a consent
+with a correct `ownerName` property in its `additionalInformation` has been created and successfully authorised
+beforehand.
