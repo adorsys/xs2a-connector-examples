@@ -140,6 +140,8 @@ public class AccountSpiImpl implements AccountSpi {
                                                        .map(accountMapper::toSpiAccountDetails)
                                                        .orElseThrow(() -> FeignExceptionHandler.getException(HttpStatus.NOT_FOUND, RESPONSE_STATUS_200_WITH_EMPTY_BODY));
 
+            enrichSpiAccountDetailsWithOwnerName(accountDetails, accountConsent.getAccess());
+
             if (!withBalance) {
                 accountDetails.emptyBalances();
             }
@@ -374,7 +376,8 @@ public class AccountSpiImpl implements AccountSpi {
             applyAuthorisation(aspspConsentData);
 
             return Optional.ofNullable(accountRestClient.getListOfAccounts().getBody())
-                           .map(l -> l.stream().map(accountMapper::toSpiAccountDetails).collect(Collectors.toList()))
+                           .map(l -> l.stream().map(accountMapper::toSpiAccountDetails)
+                                             .collect(Collectors.toList()))
                            .orElseGet(Collections::emptyList);
         } finally {
             authRequestInterceptor.setAccessToken(null);
@@ -406,7 +409,7 @@ public class AccountSpiImpl implements AccountSpi {
             }
 
             return accountDetails.stream()
-                           .filter(account -> filterAccountDetailsByIbanAndCurrency(references, account))
+                           .filter(account -> filterAccountDetailsByIbanAndCurrency(references, account.getIban(), account.getCurrency()))
                            .map(accountMapper::toSpiAccountDetails)
                            .collect(Collectors.toList());
 
@@ -415,13 +418,13 @@ public class AccountSpiImpl implements AccountSpi {
         }
     }
 
-    private boolean filterAccountDetailsByIbanAndCurrency(List<SpiAccountReference> references, AccountDetailsTO account) {
+    private boolean filterAccountDetailsByIbanAndCurrency(List<SpiAccountReference> references, String iban, Currency currency) {
         return references.stream()
                        .filter(reference -> Optional.ofNullable(reference.getIban())
-                                                    .orElseGet(() -> ibanResolverMockService.handleIbanByAccountReference(reference)) // Currently mocked data is used here. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1152
-                                                    .equals(account.getIban()))
+                                                    .orElseGet(() -> ibanResolverMockService.handleIbanByAccountReference(reference)) // TODO: Currently mocked data is used here. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1152
+                                                    .equals(iban))
 
-                       .anyMatch(reference -> reference.getCurrency() == null || reference.getCurrency().equals(account.getCurrency()));
+                       .anyMatch(reference -> reference.getCurrency() == null || reference.getCurrency().equals(currency));
     }
 
     private List<SpiAccountDetails> filterAccountDetailsByWithBalance(boolean withBalance, List<SpiAccountDetails> details,
@@ -480,7 +483,7 @@ public class AccountSpiImpl implements AccountSpi {
 
     private void enrichSpiAccountDetailsWithOwnerName(SpiAccountDetails accountDetails, SpiAccountAccess access) {
         SpiAdditionalInformationAccess spiAdditionalInformationAccess = access.getSpiAdditionalInformationAccess();
-        if (spiAdditionalInformationAccess != null && spiAdditionalInformationAccess.getOwnerName() != null) {
+        if (spiAdditionalInformationAccess != null && spiAdditionalInformationAccess.getOwnerName() != null && filterAccountDetailsByIbanAndCurrency(spiAdditionalInformationAccess.getOwnerName(), accountDetails.getIban(), accountDetails.getCurrency())) {
             accountDetails.setOwnerName(ADDITIONAL_INFORMATION_MOCK);
         } else {
             AccountAccessType allAccountsWithOwnerName = AccountAccessType.ALL_ACCOUNTS_WITH_OWNER_NAME;
