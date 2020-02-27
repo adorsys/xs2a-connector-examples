@@ -23,6 +23,8 @@ import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 // Currently mocked data is used here. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1152
 @Service
@@ -57,6 +59,22 @@ public class IbanResolverMockService {
     public String handleIbanByAccountReference(SpiAccountReference accountReference) {
         return Optional.ofNullable(ibanMap.get(accountReference.getMaskedPan()))
                        .orElse(ibanMap.get(accountReference.getPan()));
+    }
+
+    public String getMaskedPanByIban(String iban) {
+
+        // Find all keys by the definite value.
+        Set<String> keys = ibanMap.entrySet()
+                                   .stream()
+                                   .filter(entry -> entry.getValue().equals(iban))
+                                   .map(Map.Entry::getKey)
+                                   .collect(Collectors.toSet());
+
+        // Select those, which contains masked symbols (as ASPSP always returns masked PAN).
+        return keys.stream()
+                       .filter(key -> key.contains("******"))
+                       .findFirst()
+                       .orElse("No value of masked PAN for this IBAN");
     }
 
 }

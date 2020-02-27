@@ -87,6 +87,8 @@ class CardAccountSpiImplTest {
     private SCAResponseTO scaResponseTO;
     @Mock
     private FeignExceptionReader feignExceptionReader;
+    @Mock
+    private IbanResolverMockService ibanResolverMockService;
 
     private JsonReader jsonReader = new JsonReader();
     private SpiAccountConsent spiAccountConsent;
