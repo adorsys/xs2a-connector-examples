@@ -3,9 +3,19 @@
 == Table of Contents
 
 * Fixed incorrect response for Get Account Details request for consents with ownerName
+* Update version of spring-data-jpa to 2.2.4.RELEASE
 
 == Fixed incorrect response for Get Account Details request for consents with ownerName
 
 From now on, the endpoint `GET /v1/accounts/{resource-id}` will return `ownerName` in the response, if a consent
 with a correct `ownerName` property in its `additionalInformation` has been created and successfully authorised
 beforehand.
+
+== Update version of spring-data-jpa to 2.2.4.RELEASE
+
+Updated version of spring-data-jpa to 2.2.4.RELEASE. It led to updating following dependencies:
+
+* spring 5.1.6 -> 5.2.3
+* spring-boot 2.1.11 -> 2.2.4
+* spring-cloud Greenwich.RELEASE -> Hoxton.RELEASE
+* mapstruct 1.3.0.Final -> 1.3.1.Final
