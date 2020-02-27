@@ -128,7 +128,7 @@ public class CardAccountSpiImpl implements CardAccountSpi {
                                                                .map(accountMapper::toSpiCardAccountDetails)
                                                                .orElseThrow(() -> FeignExceptionHandler.getException(HttpStatus.NOT_FOUND, RESPONSE_STATUS_200_WITH_EMPTY_BODY));
 
-            cardAccountDetails.setMaskedPan("525412******3241"); // Currently mocked data is used here. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1152
+            cardAccountDetails.setMaskedPan(ibanResolverMockService.getMaskedPanByIban(cardAccountDetails.getAspspAccountId())); // Currently mocked data is used here. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1152
 
             aspspConsentDataProvider.updateAspspConsentData(tokenService.store(response));
             enrichSpiCardAccountDetailsWithOwnerName(cardAccountDetails, accountConsent.getAccess());
@@ -386,7 +386,7 @@ public class CardAccountSpiImpl implements CardAccountSpi {
     }
 
     private List<SpiCardAccountDetails> mapToCardAccountList(List<SpiCardAccountDetails> details) {
-        details.forEach(det -> det.setMaskedPan("525412******3241")); // Currently mocked data is used here. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1152
+        details.forEach(det -> det.setMaskedPan(ibanResolverMockService.getMaskedPanByIban(det.getAspspAccountId()))); // Currently mocked data is used here. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1152
         return details;
     }
 
