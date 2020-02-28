@@ -6,3 +6,13 @@
 XS2A Connector for the Ledgers project
 
 [These instructions](GETTING_STARTED.md) will get you a copy of the project up and running on your local machine for development and testing purposes.
+
+## Versions correspondance
+
+Please use correct version of xs2a-connector-examples and Ledgers. Matches are defined in the table below:
+
+| xs2a-connector-examples | Ledgers |
+|-------------------------|---------|
+| v.5.11.1                | v.2.9   |
+| v.5.11                  | v.2.8   |
+| v.5.10                  | v.2.8   |
