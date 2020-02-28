@@ -31,7 +31,7 @@
 		<dependency>
 			<groupId>de.adorsys.psd2</groupId>
 			<artifactId>xs2a-core-payments</artifactId>
-			<version>${project.version}</version>
+			<version>${xs2a.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>de.adorsys.ledgers</groupId>
