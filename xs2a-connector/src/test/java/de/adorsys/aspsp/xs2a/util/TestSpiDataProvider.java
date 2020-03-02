@@ -25,6 +25,7 @@ public class TestSpiDataProvider {
     private static final String PSU_ACCEPT_LANGUAGE = "psuAcceptLanguage";
     private static final String PSU_HTTP_METHOD = "psuHttpMethod";
     private static final UUID PSU_DEVICE_ID = UUID.randomUUID();
+    private static final String TPP_BRAND_LOGGING_INFORMATION = "tppBrandLoggingInformation";
 
     public static SpiContextData getSpiContextData() {
         return new SpiContextData(
@@ -47,7 +48,8 @@ public class TestSpiDataProvider {
                 new TppInfo(),
                 X_REQUEST_ID,
                 INTERNAL_REQUEST_ID,
-                AUTHORISATION
+                AUTHORISATION,
+                TPP_BRAND_LOGGING_INFORMATION
         );
     }
 
