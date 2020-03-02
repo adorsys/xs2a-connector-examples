@@ -26,7 +26,7 @@ variables: &variables
   # Docker images variables #
   ###########################
 
-  DOCKER_IMAGE_NAME_XS2A_CONNECTOR: "adorsys/xs2a-connector-examples"
+  DOCKER_IMAGE_NAME_XS2A_CONNECTOR: "xs2a-connector-examples"
 
   ###########################
   # Build variables         #
@@ -39,10 +39,7 @@ variables: &variables
   # Deployment variables    #
   ###########################
 
-  DEV_NAMESPACE: adorsys-psd2-develop
-  DEMO_NAMESPACE: adorsys-psd2-demo
-  INTEG_NAMESPACE: adorsys-psd2-integ
-  OPENSHIFT_NAMESPACE_SUPPORT6X: "adorsys-psd2-support6x"
+  OPENSHIFT_NAMESPACE_SUPPORT6X: adorsys-psd2-support6x
 
 # ------------------------------------------------------------------
 # reusable yaml anchors
@@ -165,8 +162,8 @@ Deploy to Openshift (support-6.x):
     - support-6.x
   variables:
     GIT_STRATEGY: none
-    DOCKER_TAG: support4x # Dockerhub source tag
-    OPENSHIFT_NAMESPACE: ${OPENSHIFT_NAMESPACE_SUPPORT4X} # Openshift target namespace
+    DOCKER_TAG: support6x # Dockerhub source tag
+    OPENSHIFT_NAMESPACE: ${OPENSHIFT_NAMESPACE_SUPPORT6X} # Openshift target namespace
   <<: *deploy_openshift
 
 Notify Slack channel (support-6.x):
@@ -176,7 +173,7 @@ Notify Slack channel (support-6.x):
   only:
     - support-6.x
   variables:
-    HELM_RELEASE: suppor6x-psd2
+    HELM_RELEASE: support6x-psd2
     ENV_JSON_FILE: scripts/notifications/psd2-support6x.json
     SLACK_CHANNEL: ${SLACK_PSD2_SUPPORT6X_CHANNEL}
   script:
