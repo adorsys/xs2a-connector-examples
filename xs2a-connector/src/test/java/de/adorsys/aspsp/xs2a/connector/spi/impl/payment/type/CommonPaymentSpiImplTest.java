@@ -35,6 +35,7 @@ class CommonPaymentSpiImplTest {
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
     private static final String PAYMENT_ID = "c966f143-f6a2-41db-9036-8abaeeef3af7";
     private static final SpiContextData SPI_CONTEXT_DATA = TestSpiDataProvider.getSpiContextData();
+    private static final String PSU_MESSAGE = "Mocked PSU message from SPI for this payment";
 
     @InjectMocks
     private CommonPaymentSpiImpl commonPaymentSpi;
@@ -140,7 +141,7 @@ class CommonPaymentSpiImplTest {
         spiPaymentInfo.setPaymentId(PAYMENT_ID);
         spiPaymentInfo.setPaymentStatus(TransactionStatus.ACSP);
 
-        SpiGetPaymentStatusResponse spiGetPaymentStatusResponse = new SpiGetPaymentStatusResponse(spiPaymentInfo.getPaymentStatus(), null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null);
+        SpiGetPaymentStatusResponse spiGetPaymentStatusResponse = new SpiGetPaymentStatusResponse(spiPaymentInfo.getPaymentStatus(), null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE);
 
         //When
         SpiResponse<SpiGetPaymentStatusResponse> paymentStatusById = commonPaymentSpi.getPaymentStatusById(SPI_CONTEXT_DATA, mediaType, spiPaymentInfo, spiAspspConsentDataProvider);
@@ -159,7 +160,7 @@ class CommonPaymentSpiImplTest {
         spiPaymentInfo.setPaymentId(PAYMENT_ID);
         spiPaymentInfo.setPaymentStatus(TransactionStatus.ACSP);
 
-        SpiGetPaymentStatusResponse spiGetPaymentStatusResponse = new SpiGetPaymentStatusResponse(spiPaymentInfo.getPaymentStatus(), null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null);
+        SpiGetPaymentStatusResponse spiGetPaymentStatusResponse = new SpiGetPaymentStatusResponse(spiPaymentInfo.getPaymentStatus(), null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE);
 
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn("".getBytes());
         when(generalPaymentService.getPaymentStatusById(PaymentTypeTO.valueOf(spiPaymentInfo.getPaymentType().name()),
