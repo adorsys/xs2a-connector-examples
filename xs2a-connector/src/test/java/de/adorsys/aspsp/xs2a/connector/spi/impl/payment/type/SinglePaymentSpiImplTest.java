@@ -41,6 +41,7 @@ class SinglePaymentSpiImplTest {
     private static final String PAYMENT_ID = "c966f143-f6a2-41db-9036-8abaeeef3af7";
     private static final byte[] CONSENT_DATA_BYTES = "consent_data".getBytes();
     private static final String JSON_ACCEPT_MEDIA_TYPE = "application/json";
+    private static final String PSU_MESSAGE = "Mocked PSU message from SPI for this payment";
 
     private SinglePaymentSpiImpl paymentSpi;
 
@@ -83,7 +84,7 @@ class SinglePaymentSpiImplTest {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         when(paymentService.getPaymentStatusById(PaymentTypeTO.SINGLE, JSON_ACCEPT_MEDIA_TYPE, PAYMENT_ID, TransactionStatus.RCVD, CONSENT_DATA_BYTES))
                 .thenReturn(SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                                    .payload(new SpiGetPaymentStatusResponse(TransactionStatus.RCVD, false, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null))
+                                    .payload(new SpiGetPaymentStatusResponse(TransactionStatus.RCVD, false, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE))
                                     .build());
 
         paymentSpi.getPaymentStatusById(SPI_CONTEXT_DATA, JSON_ACCEPT_MEDIA_TYPE, payment, spiAspspConsentDataProvider);

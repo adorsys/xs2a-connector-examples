@@ -42,6 +42,7 @@ public class CommonPaymentSpiImpl extends AbstractPaymentSpi<SpiPaymentInfo, Spi
 
     private GeneralPaymentService generalPaymentService;
     private LedgersSpiPaymentMapper ledgersSpiPaymentMapper;
+    private static final String PSU_MESSAGE = "Mocked PSU message from SPI for this payment";
 
     public CommonPaymentSpiImpl(GeneralPaymentService generalPaymentService, LedgersSpiPaymentMapper ledgersSpiPaymentMapper) {
         super(generalPaymentService);
@@ -87,7 +88,7 @@ public class CommonPaymentSpiImpl extends AbstractPaymentSpi<SpiPaymentInfo, Spi
         }
 
         return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                       .payload(new SpiGetPaymentStatusResponse(TransactionStatus.ACSP, null, MediaType.APPLICATION_JSON_VALUE, null))
+                       .payload(new SpiGetPaymentStatusResponse(TransactionStatus.ACSP, null, MediaType.APPLICATION_JSON_VALUE, null, PSU_MESSAGE))
                        .build();
     }
 }
