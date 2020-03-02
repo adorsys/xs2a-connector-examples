@@ -147,24 +147,6 @@ Sonarcube:
   only:
     - develop
 
-Push to DockerHub (develop):
-  stage: "Package"
-  only:
-    - develop
-  variables:
-    DOCKER_TAG: develop
-  <<: *build_dockerhub_image
-
-Deploy Openshift (develop):
-  stage: "Deployment"
-  only:
-    - develop
-  variables:
-    <<: *variables
-    DOCKER_TAG: develop
-    OPENSHIFT_NAMESPACE: "${DEV_NAMESPACE}"
-  <<: *deploy_openshift
-
 #Build Support-6.x images and deploy to support-6.x
 
 Push to DockerHub (support-6.x):
@@ -187,7 +169,7 @@ Deploy to Openshift (support-6.x):
     OPENSHIFT_NAMESPACE: ${OPENSHIFT_NAMESPACE_SUPPORT4X} # Openshift target namespace
   <<: *deploy_openshift
 
-Notify Slack channel (support-4.x):
+Notify Slack channel (support-6.x):
   image: "bash:4"
   stage: "Notification"
   cache: {}
@@ -202,28 +184,6 @@ Notify Slack channel (support-4.x):
     - sleep 60
     - scripts/notifications/./webhook_slack.sh xs2a cms aspspprofile ledgers
 
-##########
-# master #
-##########
-
-Push to DockerHub (master):
-  stage: "Package"
-  only:
-    - master
-  variables:
-    DOCKER_TAG: latest
-  <<: *build_dockerhub_image
-
-Deploy Openshift (master):
-  stage: "Deployment"
-  only:
-    - master
-  variables:
-    <<: *variables
-    DOCKER_TAG: latest
-    OPENSHIFT_NAMESPACE: "${DEMO_NAMESPACE}"
-  <<: *deploy_openshift
-
 ###########
 # release #
 ###########
@@ -235,15 +195,4 @@ Push to DockerHub (Release):
   variables:
     DOCKER_TAG: $CI_COMMIT_TAG
   <<: *build_dockerhub_image
-
-Deploy Openshift (Release):
-  stage: "Deployment"
-  when: manual
-  only:
-    - tags
-  variables:
-    <<: *variables
-    DOCKER_TAG: $CI_COMMIT_TAG
-    OPENSHIFT_NAMESPACE: "${DEMO_NAMESPACE}"
-  <<: *deploy_openshift
 
