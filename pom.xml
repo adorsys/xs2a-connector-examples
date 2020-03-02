@@ -76,7 +76,7 @@
 
 	<properties>
 		<!-- common properties -->
-		<java.version>1.8</java.version>
+		<java.version>11</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<dependency.locations.enabled>false</dependency.locations.enabled>
@@ -84,7 +84,6 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
 		<ruleset.basedir>${project.basedir}</ruleset.basedir>
-		<pmd.plugin.version>3.10.0</pmd.plugin.version>
 
 		<!-- xs2a version -->
 		<xs2a.version>7.0-SNAPSHOT</xs2a.version>
@@ -114,6 +113,7 @@
 		<junit-jupiter.version>5.5.2</junit-jupiter.version>
 		<mockito.version>3.2.4</mockito.version>
 
+		<maven-pmd-plugin.version>3.12.0</maven-pmd-plugin.version>
 		<maven-enforcer-plugin.version>3.0.0-M2</maven-enforcer-plugin.version>
 		<maven-surefire-plugin.version>3.0.0-M4</maven-surefire-plugin.version>
 		<maven-failsafe-plugin.version>3.0.0-M4</maven-failsafe-plugin.version>
@@ -348,7 +348,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-pmd-plugin</artifactId>
-				<version>${pmd.plugin.version}</version>
+				<version>${maven-pmd-plugin.version}</version>
 				<configuration>
 					<sourceEncoding>${project.build.sourceEncoding}</sourceEncoding>
 					<minimumTokens>100</minimumTokens>
