@@ -129,7 +129,7 @@ public class GeneralAuthorisationService {
         } else {
             Object[] messageTextArgs = {SCAMETHODSELECTED.toString(), PSUIDENTIFIED.toString(), sca.getScaStatus().toString()};
             return SpiResponse.<SpiAuthorizationCodeResult>builder()
-                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR_SCA_STATUS, messageTextArgs))
+                           .error(new TppMessage(MessageErrorCode.SCA_INVALID, messageTextArgs))
                            .build();
         }
     }
