@@ -140,11 +140,15 @@ public abstract class LedgersSpiAccountMapper {
 
     public abstract List<SpiAccountBalance> toSpiAccountBalancesList(List<AccountBalanceTO> accountBalanceTOS);
 
-    @Mapping(source = "balanceType", target = "spiBalanceType")
+    @Mapping(target = "spiBalanceType", expression = "java(mapToSpiBalanceType(accountBalanceTO.getBalanceType()))")
     @Mapping(source = "amount", target = "spiBalanceAmount")
     public abstract SpiAccountBalance accountBalanceTOToSpiAccountBalance(AccountBalanceTO accountBalanceTO);
 
     public abstract List<SpiExchangeRate> toSpiExchangeRateList(List<ExchangeRateTO> exchangeRates);
+
+    protected SpiBalanceType mapToSpiBalanceType(BalanceTypeTO balanceTypeTO) {
+        return SpiBalanceType.valueOf(balanceTypeTO.name());
+    }
 
     public SpiExchangeRate toSpiExchangeRate(ExchangeRateTO exchangeRate) {
         return Optional.ofNullable(exchangeRate)
