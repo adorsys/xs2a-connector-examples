@@ -70,14 +70,17 @@ Compile:
   script:
     - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
     - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
-    - mvn -DskipTests -Dci.build.number=Build\:${CI_PIPELINE_ID} clean install
+    - mvn -DskipITs -DskipTests -Dci.build.number=Build\:${CI_PIPELINE_ID} clean install
   artifacts:
     paths:
       - "gateway-app/target/gateway-app*jar"
       - "ledgers-rest-client/target/ledgers-rest-client*jar"
       - "xs2a-connector/target/xs2a-connector*jar"
+      - "**/target/*"
+      - "**/**/target/*"
+      - ".m2/repository/de/adorsys/ledgers/*/*"
     name: "$CI_PROJECT_NAME-${CI_BUILD_REF_NAME#*v}"
-    expire_in: "1 day"
+    expire_in: "10 day"
 
 PMD Report:
   stage: "Compile"
@@ -117,12 +120,21 @@ Unit Tests:
   script:
     - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
     - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
-    - mvn --fail-at-end clean install
+    - mvn -DskipITs --fail-at-end clean install
   artifacts:
     paths:
       - "**/target/surefire-reports/*"
     name: "$CI_PROJECT_NAME-${CI_BUILD_REF_NAME#*v}-*"
     expire_in: "10 day"
+
+IT Tests:
+  stage: "Test"
+  script:
+    - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
+    - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
+    - mvn -ntp failsafe:integration-test failsafe:verify
+  variables:
+    JAVA_TOOL_OPTIONS: "-Djavax.net.ssl.trustStorePassword=changeit -XX:MaxRAM=3G"
 
 Test Docker Image:
   stage: "Test"
