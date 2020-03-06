@@ -483,8 +483,11 @@ public class AccountSpiImpl implements AccountSpi {
 
     private void enrichSpiAccountDetailsWithOwnerName(SpiAccountDetails accountDetails, SpiAccountAccess access) {
         SpiAdditionalInformationAccess spiAdditionalInformationAccess = access.getSpiAdditionalInformationAccess();
-        if (spiAdditionalInformationAccess != null && spiAdditionalInformationAccess.getOwnerName() != null && filterAccountDetailsByIbanAndCurrency(spiAdditionalInformationAccess.getOwnerName(), accountDetails.getIban(), accountDetails.getCurrency())) {
-            accountDetails.setOwnerName(ADDITIONAL_INFORMATION_MOCK);
+        if (spiAdditionalInformationAccess != null && spiAdditionalInformationAccess.getOwnerName() != null) {
+            List<SpiAccountReference> ownerName = spiAdditionalInformationAccess.getOwnerName();
+            if (ownerName.isEmpty() || filterAccountDetailsByIbanAndCurrency(ownerName, accountDetails.getIban(), accountDetails.getCurrency())) {
+                accountDetails.setOwnerName(ADDITIONAL_INFORMATION_MOCK);
+            }
         } else {
             AccountAccessType allAccountsWithOwnerName = AccountAccessType.ALL_ACCOUNTS_WITH_OWNER_NAME;
             List<AccountAccessType> accountAccessTypes = Arrays.asList(access.getAvailableAccounts(), access.getAvailableAccountsWithBalance(), access.getAllPsd2());

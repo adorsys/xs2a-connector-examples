@@ -9,7 +9,7 @@
   "usageType": "PRIV",
   "balances": [
     {
-      "balanceType": "AUTHORISED",
+      "balanceType": "EXPECTED",
       "amount": {
         "currency": "EUR",
         "amount": "1000"
