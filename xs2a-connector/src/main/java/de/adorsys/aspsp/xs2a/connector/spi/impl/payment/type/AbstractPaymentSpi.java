@@ -23,6 +23,9 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 @RequiredArgsConstructor
 public abstract class AbstractPaymentSpi<P extends SpiPayment, R extends SpiPaymentInitiationResponse> {
+
+    protected static final String DEBTOR_NAME = "Mocked debtor name from ASPSP";
+
     private final GeneralPaymentService paymentService;
 
     /*
