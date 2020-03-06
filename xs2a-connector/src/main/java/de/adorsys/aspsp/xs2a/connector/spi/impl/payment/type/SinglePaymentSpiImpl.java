@@ -55,6 +55,7 @@ public class SinglePaymentSpiImpl extends AbstractPaymentSpi<SpiSinglePayment, S
                                                                  @NotNull String acceptMediaType,
                                                                  @NotNull SpiSinglePayment payment,
                                                                  @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        payment.setDebtorName(DEBTOR_NAME);
         return paymentService.getPaymentById(payment, aspspConsentDataProvider, SinglePaymentTO.class,
                                              paymentMapper::toSpiSinglePayment, PaymentTypeTO.SINGLE);
     }
