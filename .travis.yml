@@ -5,6 +5,11 @@ jdk:
   - openjdk8
 #  - openjdk11
 
+addons:
+  sonarcloud:
+    organization: "adorsys"
+    token: ${SONAR_TOKEN}
+
 git:
   submodules: false
 
