@@ -37,6 +37,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Currency;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -315,6 +316,126 @@ class AccountSpiImplTest {
         verifyGetListOfAccounts();
     }
 
+    @Test
+    void requestAccountList_AdditionalInformation_OwnerNameAllAccounts() {
+        //Given
+        SpiAccountConsent spiAccountConsent = buildSpiAccountConsent();
+        spiAccountConsent.getAccess().setSpiAdditionalInformationAccess(new SpiAdditionalInformationAccess(Collections.emptyList()));
+
+        List<AccountDetailsTO> accountDetailsTOList = spiAccountConsent.getAccess().getAccounts().stream()
+                                                              .map(SpiAccountReference::getIban)
+                                                              .map(this::buildAccountDetailsTO)
+                                                              .collect(Collectors.toList());
+        when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(accountDetailsTOList));
+        //When
+        SpiResponse<List<SpiAccountDetails>> actualResponse = accountSpi.requestAccountList(SPI_CONTEXT_DATA, false,
+                                                                                            spiAccountConsent, aspspConsentDataProvider);
+        //Then
+        assertTrue(actualResponse.getErrors().isEmpty());
+        List<SpiAccountDetails> spiAccountDetails = actualResponse.getPayload();
+        assertNotNull(spiAccountDetails);
+        spiAccountDetails.forEach(ad -> assertNotNull(ad.getOwnerName()));
+    }
+
+    @Test
+    void requestAccountList_AdditionalInformation_OwnerNameAllDedicatedAccounts() {
+        //Given
+        SpiAccountConsent spiAccountConsent = buildSpiAccountConsent();
+        List<SpiAccountReference> accounts = spiAccountConsent.getAccess().getAccounts();
+        spiAccountConsent.getAccess().setSpiAdditionalInformationAccess(new SpiAdditionalInformationAccess(accounts));
+
+        List<AccountDetailsTO> accountDetailsTOList = accounts.stream()
+                                                              .map(SpiAccountReference::getIban)
+                                                              .map(this::buildAccountDetailsTO)
+                                                              .collect(Collectors.toList());
+        when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(accountDetailsTOList));
+        //When
+        SpiResponse<List<SpiAccountDetails>> actualResponse = accountSpi.requestAccountList(SPI_CONTEXT_DATA, false,
+                                                                                            spiAccountConsent, aspspConsentDataProvider);
+        //Then
+        assertTrue(actualResponse.getErrors().isEmpty());
+        List<SpiAccountDetails> spiAccountDetails = actualResponse.getPayload();
+        assertNotNull(spiAccountDetails);
+        spiAccountDetails.forEach(ad -> assertNotNull(ad.getOwnerName()));
+    }
+
+    @Test
+    void requestAccountList_AdditionalInformation_OwnerNameOneDedicatedAccount() {
+        //Given
+        SpiAccountConsent spiAccountConsent = buildSpiAccountConsent();
+        List<SpiAccountReference> accounts = spiAccountConsent.getAccess().getAccounts();
+        SpiAccountReference spiAccountReference = accounts.get(0);
+        SpiAdditionalInformationAccess spiAdditionalInformationAccess = new SpiAdditionalInformationAccess(Collections.singletonList(spiAccountReference));
+        spiAccountConsent.getAccess().setSpiAdditionalInformationAccess(spiAdditionalInformationAccess);
+
+        List<AccountDetailsTO> accountDetailsTOList = spiAccountConsent.getAccess().getAccounts().stream()
+                                                              .map(SpiAccountReference::getIban)
+                                                              .map(this::buildAccountDetailsTO)
+                                                              .collect(Collectors.toList());
+        when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(accountDetailsTOList));
+        //When
+        SpiResponse<List<SpiAccountDetails>> actualResponse = accountSpi.requestAccountList(SPI_CONTEXT_DATA, false,
+                                                                                            spiAccountConsent, aspspConsentDataProvider);
+        //Then
+        assertTrue(actualResponse.getErrors().isEmpty());
+        List<SpiAccountDetails> spiAccountDetails = actualResponse.getPayload();
+        assertNotNull(spiAccountDetails);
+        assertNotNull(spiAccountDetails.get(0).getOwnerName());
+        assertNull(spiAccountDetails.get(1).getOwnerName());
+    }
+
+    @Test
+    void requestAccountDetailForAccount_AdditionalInformation_OwnerNameAllAccounts() {
+        //Given
+        SpiAccountConsent spiAccountConsent = buildSpiAccountConsent();
+        spiAccountConsent.getAccess().setSpiAdditionalInformationAccess(new SpiAdditionalInformationAccess(Collections.emptyList()));
+        when(accountRestClient.getAccountDetailsById(RESOURCE_ID)).thenReturn(ResponseEntity.ok(this.accountDetailsTO));
+        //when
+        SpiResponse<SpiAccountDetails> actualResponse = accountSpi.requestAccountDetailForAccount(SPI_CONTEXT_DATA, false, accountReference,
+                                                                                                  spiAccountConsent, aspspConsentDataProvider);
+        //Then
+        assertTrue(actualResponse.getErrors().isEmpty());
+        SpiAccountDetails spiAccountDetails = actualResponse.getPayload();
+        assertNotNull(spiAccountDetails);
+        assertNotNull(spiAccountDetails.getOwnerName());
+    }
+
+    @Test
+    void requestAccountDetailForAccount_AdditionalInformation_OwnerNameOneDedicatedAccount() {
+        //Given
+        SpiAccountConsent spiAccountConsent = buildSpiAccountConsent();
+        List<SpiAccountReference> accounts = spiAccountConsent.getAccess().getAccounts();
+        SpiAdditionalInformationAccess spiAdditionalInformationAccess = new SpiAdditionalInformationAccess(Collections.singletonList(accounts.get(0)));
+        spiAccountConsent.getAccess().setSpiAdditionalInformationAccess(spiAdditionalInformationAccess);
+        when(accountRestClient.getAccountDetailsById(RESOURCE_ID)).thenReturn(ResponseEntity.ok(this.accountDetailsTO));
+        //when
+        SpiResponse<SpiAccountDetails> actualResponse = accountSpi.requestAccountDetailForAccount(SPI_CONTEXT_DATA, false, accountReference,
+                                                                                                  spiAccountConsent, aspspConsentDataProvider);
+        //Then
+        assertTrue(actualResponse.getErrors().isEmpty());
+        SpiAccountDetails spiAccountDetails = actualResponse.getPayload();
+        assertNotNull(spiAccountDetails);
+        assertNotNull(spiAccountDetails.getOwnerName());
+    }
+
+    @Test
+    void requestAccountDetailForAccount_AdditionalInformation_OwnerNameForAnotherDedicatedAccount() {
+        //Given
+        SpiAccountConsent spiAccountConsent = buildSpiAccountConsent();
+        List<SpiAccountReference> accounts = spiAccountConsent.getAccess().getAccounts();
+        SpiAdditionalInformationAccess spiAdditionalInformationAccess = new SpiAdditionalInformationAccess(Collections.singletonList(accounts.get(1)));
+        spiAccountConsent.getAccess().setSpiAdditionalInformationAccess(spiAdditionalInformationAccess);
+        when(accountRestClient.getAccountDetailsById(RESOURCE_ID)).thenReturn(ResponseEntity.ok(this.accountDetailsTO));
+        //when
+        SpiResponse<SpiAccountDetails> actualResponse = accountSpi.requestAccountDetailForAccount(SPI_CONTEXT_DATA, false, accountReference,
+                                                                                                  spiAccountConsent, aspspConsentDataProvider);
+        //Then
+        assertTrue(actualResponse.getErrors().isEmpty());
+        SpiAccountDetails spiAccountDetails = actualResponse.getPayload();
+        assertNotNull(spiAccountDetails);
+        assertNull(spiAccountDetails.getOwnerName());
+    }
+
     private void verifyGetListOfAccounts() {
         verify(accountRestClient, times(1)).getListOfAccounts();
         verify(tokenService, times(2)).response(ASPSP_CONSENT_DATA.getAspspConsentData());
@@ -481,5 +602,15 @@ class AccountSpiImplTest {
 
     private SpiTransactionReportParameters buildSpiTransactionReportParameters(String mediaType) {
         return new SpiTransactionReportParameters(mediaType, true, DATE_FROM, DATE_TO, BookingStatus.BOOKED, null, null);
+    }
+
+    private AccountDetailsTO buildAccountDetailsTO(String iban) {
+        AccountDetailsTO accountDetailsTO = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
+        accountDetailsTO.setIban(iban);
+        return accountDetailsTO;
+    }
+
+    private SpiAccountConsent buildSpiAccountConsent() {
+        return jsonReader.getObjectFromFile("json/spi/impl/spi-account-consent-with-2-accounts.json", SpiAccountConsent.class);
     }
 }
