@@ -175,32 +175,32 @@ Push to DockerHub (support-4.x):
     DOCKER_TAG: support4x
   <<: *build_dockerhub_image
 
-Deploy to Openshift (support-4.x):
-  stage: "Deployment"
-  cache: {}
-  dependencies: []
-  only:
-    - support-4.x
-  variables:
-    GIT_STRATEGY: none
-    DOCKER_TAG: support4x # Dockerhub source tag
-    OPENSHIFT_NAMESPACE: ${OPENSHIFT_NAMESPACE_SUPPORT4X} # Openshift target namespace
-  <<: *deploy_openshift
+#Deploy to Openshift (support-4.x):
+#  stage: "Deployment"
+#  cache: {}
+#  dependencies: []
+#  only:
+#    - support-4.x
+#  variables:
+#    GIT_STRATEGY: none
+#    DOCKER_TAG: support4x # Dockerhub source tag
+#    OPENSHIFT_NAMESPACE: ${OPENSHIFT_NAMESPACE_SUPPORT4X} # Openshift target namespace
+#  <<: *deploy_openshift
 
-Notify Slack channel (support-4.x):
-  image: "bash:4"
-  stage: "Notification"
-  cache: {}
-  only:
-    - support-4.x
-  variables:
-    HELM_RELEASE: support4x-psd2
-    ENV_JSON_FILE: scripts/notifications/psd2-support4x.json
-    SLACK_CHANNEL: ${SLACK_PSD2_SUPPORT4X_CHANNEL}
-  script:
-    - apk update && apk add jq curl
-    - sleep 60
-    - scripts/notifications/./webhook_slack.sh xs2a cms aspspprofile ledgers
+#Notify Slack channel (support-4.x):
+#  image: "bash:4"
+#  stage: "Notification"
+#  cache: {}
+#  only:
+#    - support-4.x
+#  variables:
+#    HELM_RELEASE: support4x-psd2
+#    ENV_JSON_FILE: scripts/notifications/psd2-support4x.json
+#    SLACK_CHANNEL: ${SLACK_PSD2_SUPPORT4X_CHANNEL}
+#  script:
+#    - apk update && apk add jq curl
+#    - sleep 60
+#    - scripts/notifications/./webhook_slack.sh xs2a cms aspspprofile ledgers
 
 ##########
 # master #
