@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.adorsys.aspsp.xs2a.connector.spi.impl;
+package de.adorsys.aspsp.xs2a.connector.mock;
 
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import org.springframework.stereotype.Service;

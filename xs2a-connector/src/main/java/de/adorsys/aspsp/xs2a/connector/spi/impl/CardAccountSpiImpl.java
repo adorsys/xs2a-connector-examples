@@ -16,6 +16,7 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
+import de.adorsys.aspsp.xs2a.connector.mock.IbanResolverMockService;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.ledgers.middleware.api.domain.account.AccountDetailsTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
@@ -44,9 +45,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Month;
+import java.time.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -360,6 +359,7 @@ public class CardAccountSpiImpl implements CardAccountSpi {
         return new SpiCardTransaction(cardTransactionId,
                                       "999999999",
                                       LocalDate.of(2019, Month.JANUARY, 4),
+                                      OffsetDateTime.of(2019, 1, 4, 10, 0, 0, 0, ZoneOffset.UTC),
                                       LocalDate.of(2019, Month.JANUARY, 4),
                                       new SpiAmount(Currency.getInstance("EUR"), new BigDecimal(200)),
                                       new ArrayList<>(),
@@ -367,6 +367,7 @@ public class CardAccountSpiImpl implements CardAccountSpi {
                                       new SpiAmount(Currency.getInstance("EUR"), new BigDecimal(200)),
                                       "2",
                                       "Müller",
+                                      null,
                                       null,
                                       "Müller",
                                       "Müller",

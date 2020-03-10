@@ -8,6 +8,7 @@
   "msisdn": "00499113606980",
   "currency": "EUR",
   "name": "Schmidt",
+  "displayName": "mock display name",
   "product": "product",
   "cashSpiAccountType": "CASH",
   "spiAccountStatus": "ENABLED",
