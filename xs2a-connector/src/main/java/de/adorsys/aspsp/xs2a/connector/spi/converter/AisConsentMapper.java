@@ -1,6 +1,6 @@
 package de.adorsys.aspsp.xs2a.connector.spi.converter;
 
-import de.adorsys.aspsp.xs2a.connector.spi.impl.IbanResolverMockService;
+import de.adorsys.aspsp.xs2a.connector.mock.IbanResolverMockService;
 import de.adorsys.ledgers.middleware.api.domain.um.AisAccountAccessTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.um.AisConsentTO;
 import de.adorsys.psd2.xs2a.core.ais.AccountAccessType;
