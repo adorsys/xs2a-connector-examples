@@ -232,9 +232,8 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
 
             AuthConfirmationTO authConfirmationTO = authConfirmationTOResponse.getBody();
 
-            // ToDo also check whether verification was successful https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1207
-            if (authConfirmationTO == null) {
-                // No response in payload from ASPSP or confirmation code verification failed.
+            if (authConfirmationTO == null || !authConfirmationTO.isSuccess()) {
+                // No response in payload from ASPSP or confirmation code verification failed at ASPSP side.
                 return getConfirmationCodeResponseForXs2a(ScaStatus.FAILED, ConsentStatus.REJECTED);
             }
 
