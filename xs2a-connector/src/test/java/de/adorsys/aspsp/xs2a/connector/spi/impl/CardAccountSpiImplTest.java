@@ -16,6 +16,7 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
+import de.adorsys.aspsp.xs2a.connector.mock.IbanResolverMockService;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapperImpl;
 import de.adorsys.aspsp.xs2a.util.JsonReader;

@@ -2,27 +2,22 @@ package de.adorsys.aspsp.xs2a.connector.spi.converter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.adorsys.aspsp.xs2a.connector.mock.MockAccountData;
 import de.adorsys.ledgers.middleware.api.domain.account.*;
 import de.adorsys.ledgers.middleware.api.domain.payment.AmountTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.RemittanceInformationStructuredTO;
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
-import de.adorsys.psd2.xs2a.spi.domain.payment.SpiAddress;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.math.BigDecimal;
-import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
 
 @Mapper(componentModel = "spring")
 public abstract class LedgersSpiAccountMapper {
-
-    public abstract List<SpiAccountDetails> toSpiAccountDetailsList(List<AccountDetailsTO> accountDetails);
-
     public SpiAccountDetails toSpiAccountDetails(AccountDetailsTO accountDetails) {
         return Optional.ofNullable(accountDetails)
                        .map(d -> new SpiAccountDetails(
@@ -35,6 +30,7 @@ public abstract class LedgersSpiAccountMapper {
                                d.getMsisdn(),
                                d.getCurrency(),
                                d.getName(),
+                               MockAccountData.DISPLAY_NAME,
                                d.getProduct(),
                                SpiAccountType.valueOf(d.getAccountType().name()),
                                SpiAccountStatus.valueOf(d.getAccountStatus().name()),
@@ -56,12 +52,13 @@ public abstract class LedgersSpiAccountMapper {
                                d.getMaskedPan(),
                                d.getCurrency(),
                                d.getName(),
+                               MockAccountData.DISPLAY_NAME,
                                d.getProduct(),
                                SpiAccountStatus.valueOf(d.getAccountStatus().name()),
                                SpiAccountType.valueOf(d.getAccountType().name()),
                                SpiUsageType.valueOf(d.getUsageType().name()),
                                d.getDetails(),
-                               new SpiAmount(Currency.getInstance("EUR"), new BigDecimal(10000)), // Currently mocked data is used here. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1152
+                               MockAccountData.CREDIT_LIMIT, // Currently mocked data is used here. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1152
                                toSpiAccountBalancesList(d.getBalances()),
                                null))
                        .orElse(null);
@@ -86,19 +83,22 @@ public abstract class LedgersSpiAccountMapper {
                                toSpiExchangeRateList(t.getExchangeRate()),
                                t.getCreditorName(),
                                toSpiAccountReference(t.getCreditorAccount()),
-                               "creditorAgent", // TODO: https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/522 replace with real data.
+                               t.getCreditorAgent(),
                                t.getUltimateCreditor(),
                                t.getDebtorName(),
                                toSpiAccountReference(t.getDebtorAccount()),
-                               "debtorAgent", // TODO: https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/522 replace with real data.
+                               t.getDebtorAgent(),
                                t.getUltimateDebtor(),
                                t.getRemittanceInformationUnstructured(),
+                               MockAccountData.REMITTANCE_UNSTRUCTURED_ARRAY,
                                mapRemittanceInformationToString(t.getRemittanceInformationStructured()),
+                               MockAccountData.REMITTANCE_STRUCTURED_ARRAY,
                                t.getPurposeCode(),
                                t.getBankTransactionCode(),
                                t.getProprietaryBankTransactionCode(),
+                               MockAccountData.ADDITIONAL_INFORMATION,
                                null, // TODO Map proper field https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1100
-                               new SpiAccountBalance())) // TODO: https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/522 replace with real data.
+                               accountBalanceTOToSpiAccountBalance(t.getBalanceAfterTransaction())))
                        .orElse(null);
     }  //Full manual mapping here, no extra tests necessary
 
@@ -106,21 +106,23 @@ public abstract class LedgersSpiAccountMapper {
         return Optional.ofNullable(transaction)
                        .map(t -> new SpiCardTransaction(
                                t.getTransactionId(),
-                               "terminalId",
+                               MockAccountData.TERMINAL_ID,
                                t.getValueDate(),
+                               MockAccountData.ACCEPTOR_TRANSACTION_DATE_TIME,
                                t.getBookingDate(),
                                toSpiAmount(t.getAmount()),
                                toSpiExchangeRateList(t.getExchangeRate()),
                                toSpiAmount(t.getAmount()),
                                toSpiAmount(t.getAmount()),
-                               "markupFeePercentage",
+                               MockAccountData.MARKUP_FEE_PERCENTAGE,
                                t.getCreditorId(),
-                               new SpiAddress("street", "buildNum", "town", "post", "EU"),
-"merchantCategoryCode",
-                               "493702******0836",
-                               "transactionDetails",
+                               MockAccountData.CARD_ACCEPTOR_ADDRESS,
+                               MockAccountData.CARD_ACCEPTOR_PHONE,
+                               MockAccountData.MERCHANT_CATEGORY_CODE,
+                               MockAccountData.MASKED_PAN,
+                               MockAccountData.TRANSACTION_DETAILS,
                                false,
-                               t.getProprietaryBankTransactionCode())) // TODO: https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/issues/522 replace with real data.
+                               t.getProprietaryBankTransactionCode()))
                        .orElse(null);
     }  //Full manual mapping here, no extra tests necessary
 
