@@ -89,7 +89,7 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
 
         if (!oauthTypeOptional.isPresent()) {
             log.info("Token authentication error: unknown OAuth type {}", oauthHeader);
-            tppErrorMessageWriter.writeError(response, HttpServletResponse.SC_BAD_REQUEST, buildTppErrorMessage(MessageErrorCode.FORMAT_ERROR));
+            tppErrorMessageWriter.writeError(response, buildTppErrorMessage(MessageErrorCode.FORMAT_ERROR));
             return;
         }
 
@@ -108,14 +108,14 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
     private boolean isInvalidOauthRequest(HttpServletRequest request, @NotNull HttpServletResponse response, OauthType oauthType, String bearerToken) throws IOException {
         if (!aspspProfileService.getScaApproaches().contains(ScaApproach.OAUTH)) {
             log.info("Token authentication error: OAUTH SCA approach is not supported in the profile");
-            tppErrorMessageWriter.writeError(response, HttpServletResponse.SC_BAD_REQUEST, buildTppErrorMessage(MessageErrorCode.FORMAT_ERROR));
+            tppErrorMessageWriter.writeError(response, buildTppErrorMessage(MessageErrorCode.FORMAT_ERROR));
             return true;
         }
 
         if (oauthType == OauthType.PRE_STEP && StringUtils.isBlank(bearerToken)) {
             log.info("Token authentication error: token is absent in pre-step OAuth");
             String oauthConfigurationUrl = aspspProfileService.getAspspSettings().getCommon().getOauthConfigurationUrl();
-            tppErrorMessageWriter.writeError(response, HttpServletResponse.SC_FORBIDDEN, buildTppErrorMessage(UNAUTHORIZED_NO_TOKEN, oauthConfigurationUrl));
+            tppErrorMessageWriter.writeError(response, buildTppErrorMessage(UNAUTHORIZED_NO_TOKEN, oauthConfigurationUrl));
             return true;
         }
 
@@ -123,7 +123,7 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
         boolean tokenRequired = isTokenRequired(oauthType, requestPath);
         if (tokenRequired && isTokenInvalid(bearerToken)) {
             log.info("Token authentication error: token is invalid");
-            tppErrorMessageWriter.writeError(response, HttpServletResponse.SC_FORBIDDEN, buildTppErrorMessage(MessageErrorCode.TOKEN_INVALID));
+            tppErrorMessageWriter.writeError(response, buildTppErrorMessage(MessageErrorCode.TOKEN_INVALID));
             return true;
         }
 
