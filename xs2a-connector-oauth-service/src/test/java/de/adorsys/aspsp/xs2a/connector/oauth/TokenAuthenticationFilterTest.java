@@ -285,7 +285,6 @@ class TokenAuthenticationFilterTest {
 
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.FORMAT_ERROR);
 
-        ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
         ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
 
         // When
@@ -293,8 +292,7 @@ class TokenAuthenticationFilterTest {
 
         // Then
         verify(filterChain, never()).doFilter(any(), any());
-        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
-        assertEquals((int) integerArgumentCaptor.getValue(), HttpServletResponse.SC_BAD_REQUEST);
+        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), tppErrorMessageArgumentCaptor.capture());
         assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
@@ -306,7 +304,6 @@ class TokenAuthenticationFilterTest {
 
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.FORMAT_ERROR);
 
-        ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
         ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
 
         // When
@@ -314,8 +311,7 @@ class TokenAuthenticationFilterTest {
 
         // Then
         verify(filterChain, never()).doFilter(any(), any());
-        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
-        assertEquals((int) integerArgumentCaptor.getValue(), HttpServletResponse.SC_BAD_REQUEST);
+        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), tppErrorMessageArgumentCaptor.capture());
         assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
@@ -335,7 +331,6 @@ class TokenAuthenticationFilterTest {
 
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID);
 
-        ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
         ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
 
         // When
@@ -343,8 +338,7 @@ class TokenAuthenticationFilterTest {
 
         // Then
         verify(filterChain, never()).doFilter(any(), any());
-        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
-        assertEquals((int) integerArgumentCaptor.getValue(), HttpServletResponse.SC_FORBIDDEN);
+        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), tppErrorMessageArgumentCaptor.capture());
         assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
@@ -367,13 +361,11 @@ class TokenAuthenticationFilterTest {
         // When
         tokenAuthenticationFilter.doFilter(httpServletRequest, httpServletResponse, filterChain);
 
-        ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
         ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
 
         // Then
         verify(filterChain, never()).doFilter(any(), any());
-        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
-        assertEquals((int) integerArgumentCaptor.getValue(), HttpServletResponse.SC_FORBIDDEN);
+        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), tppErrorMessageArgumentCaptor.capture());
         assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
@@ -393,7 +385,6 @@ class TokenAuthenticationFilterTest {
 
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID);
 
-        ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
         ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
 
         // When
@@ -401,8 +392,7 @@ class TokenAuthenticationFilterTest {
 
         // Then
         verify(filterChain, never()).doFilter(any(), any());
-        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
-        assertEquals((int) integerArgumentCaptor.getValue(), HttpServletResponse.SC_FORBIDDEN);
+        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), tppErrorMessageArgumentCaptor.capture());
         assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
@@ -422,7 +412,6 @@ class TokenAuthenticationFilterTest {
 
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.UNAUTHORIZED_NO_TOKEN, IDP_CONFIGURATION_LINK);
 
-        ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
         ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
 
         // When
@@ -430,8 +419,7 @@ class TokenAuthenticationFilterTest {
 
         // Then
         verify(filterChain, never()).doFilter(any(), any());
-        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
-        assertEquals((int) integerArgumentCaptor.getValue(), HttpServletResponse.SC_FORBIDDEN);
+        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), tppErrorMessageArgumentCaptor.capture());
         assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
@@ -455,7 +443,6 @@ class TokenAuthenticationFilterTest {
 
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.TOKEN_INVALID);
 
-        ArgumentCaptor<Integer> integerArgumentCaptor = ArgumentCaptor.forClass(Integer.class);
         ArgumentCaptor<TppErrorMessage> tppErrorMessageArgumentCaptor = ArgumentCaptor.forClass(TppErrorMessage.class);
 
         // When
@@ -465,8 +452,7 @@ class TokenAuthenticationFilterTest {
         verify(tokenValidationService).validate(BEARER_TOKEN_INVALID_VALUE);
 
         verify(filterChain, never()).doFilter(any(), any());
-        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), integerArgumentCaptor.capture(), tppErrorMessageArgumentCaptor.capture());
-        assertEquals((int) integerArgumentCaptor.getValue(), HttpServletResponse.SC_FORBIDDEN);
+        verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), tppErrorMessageArgumentCaptor.capture());
         assertEquals(tppErrorMessageArgumentCaptor.getValue(), tppErrorMessage);
     }
 
