@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>de.adorsys.ledgers</groupId>
 		<artifactId>xs2a-connector-examples</artifactId>
-		<version>6.0-SNAPSHOT</version>
+		<version>6.0</version>
 		<relativePath>..</relativePath>
 	</parent>
 
