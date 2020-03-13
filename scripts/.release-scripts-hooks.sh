@@ -32,13 +32,23 @@ function get_remote_repo_name {
 # Hook method to define the develop branch name
 # Returns the develop branch name as text
 function get_develop_branch_name {
-  echo "develop"
+  if [[ "$1" =~ ^6\..* ]]
+  then
+    echo "support-6.x"
+  else
+    echo "develop"
+  fi
 }
 
 # Hook method to define the master branch name
 # Returns the master branch name as text
 function get_master_branch_name {
-  echo "master"
+  if [[ "$1"  =~ ^6\..* ]]
+  then
+    echo "master-6.x"
+  else
+    echo "master"
+  fi
 }
 
 # Hook method to format the release branch name
@@ -72,5 +82,5 @@ function build_release_modules {
 # Should set version numbers in your modules
 # Parameter $1 - version as text
 function set_modules_version {
-  mvn versions:set -DnewVersion=$1
+  mvn versions:set -DnewVersion="$1"
 }
