@@ -1,3 +1,12 @@
 = Release notes v. 6.1
 
 == Table of Contents
+
+* Change types of remittance information structured properties in transactions
+
+== Change types of remittance information structured properties in transactions
+
+In accordance with the changes to OpenAPI file v. 1.3.6, types of `remittanceInformationStructured` and `remittanceInformationStructuredArray` properties in transactions were changed:
+
+- from `String` to `Remittance` for `remittanceInformationStructured`
+- from `List<String>` to `List<Remittance>` for `remittanceInformationStructuredArray`
