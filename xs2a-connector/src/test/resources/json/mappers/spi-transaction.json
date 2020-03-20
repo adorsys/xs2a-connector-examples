@@ -51,9 +51,17 @@
   "remittanceInformationUnstructuredArray": [
     "mock remittance unstructured array"
   ],
-  "remittanceInformationStructured": "{\"reference\":\"Ref Number Merchant\",\"referenceType\":\"string\",\"referenceIssuer\":\"string\"}",
+  "remittanceInformationStructured": {
+    "reference": "Ref Number Merchant",
+    "referenceType": "string",
+    "referenceIssuer": "string"
+  },
   "remittanceInformationStructuredArray": [
-    "mock remittance structured array"
+    {
+      "reference": "Mock remittance reference",
+      "referenceType": "Mock reference type",
+      "referenceIssuer": "Mock reference issuer"
+    }
   ],
   "purposeCode": "CDCS",
   "bankTransactionCodeCode": "DE52500105173911841934",
