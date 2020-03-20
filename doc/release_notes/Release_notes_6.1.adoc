@@ -3,6 +3,7 @@
 == Table of Contents
 
 * Change types of remittance information structured properties in transactions
+* Bugfix: Successful confirmation of authorisation for payment cancellation results in failed SCA
 
 == Change types of remittance information structured properties in transactions
 
@@ -10,3 +11,7 @@ In accordance with the changes to OpenAPI file v. 1.3.6, types of `remittanceInf
 
 - from `String` to `Remittance` for `remittanceInformationStructured`
 - from `List<String>` to `List<Remittance>` for `remittanceInformationStructuredArray`
+
+== Bugfix: Successful confirmation of authorisation for payment cancellation results in failed SCA
+
+From now on, executing confirmation of authorisation request with correct code will result change SCA status to `finalised` instead of `failed`.
