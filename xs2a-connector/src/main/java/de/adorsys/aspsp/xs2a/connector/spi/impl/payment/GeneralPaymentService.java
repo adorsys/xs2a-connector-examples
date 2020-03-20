@@ -60,7 +60,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -188,10 +187,9 @@ public class GeneralPaymentService {
 
             AuthConfirmationTO authConfirmationTO = authConfirmationTOResponse.getBody();
 
-            // ToDo also check whether verification was successful https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1207
             if (authConfirmationTO == null) {
                 // No response in payload from ASPSP or confirmation code verification failed.
-                return getConfirmationCodeResponseForXs2a(ScaStatus.FAILED, TransactionStatus.RJCT);
+                return buildFailedConfirmationCodeResponse();
             }
 
             if (authConfirmationTO.isPartiallyAuthorised()) {
@@ -199,17 +197,12 @@ public class GeneralPaymentService {
                 return getConfirmationCodeResponseForXs2a(ScaStatus.FINALISED, TransactionStatus.PATC);
             }
 
-            TransactionStatus xs2aTransactionStatus = Optional.ofNullable(authConfirmationTO.getTransactionStatus())
-                                                              .map(TransactionStatusTO::getName)
-                                                              .map(TransactionStatus::getByValue)
-                                                              .orElse(TransactionStatus.RJCT);
-
-            ScaStatus authorisationStatus = EnumSet.of(TransactionStatus.CANC, TransactionStatus.RJCT).contains(xs2aTransactionStatus)
-                                                    ? ScaStatus.FAILED
-                                                    : ScaStatus.FINALISED;
-
-            return getConfirmationCodeResponseForXs2a(authorisationStatus, xs2aTransactionStatus);
-
+            Optional<TransactionStatus> xs2aTransactionStatus = Optional.ofNullable(authConfirmationTO.getTransactionStatus())
+                                                                        .map(TransactionStatusTO::getName)
+                                                                        .map(TransactionStatus::getByValue);
+            return xs2aTransactionStatus
+                           .map(transactionStatus -> getConfirmationCodeResponseForXs2a(ScaStatus.FINALISED, transactionStatus))
+                           .orElse(buildFailedConfirmationCodeResponse());
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             return SpiResponse.<SpiPaymentConfirmationCodeValidationResponse>builder()
@@ -321,6 +314,10 @@ public class GeneralPaymentService {
                        .map(buildSuccessResponse)
                        .orElseGet(buildFailedResponse);
 
+    }
+
+    private SpiResponse<SpiPaymentConfirmationCodeValidationResponse> buildFailedConfirmationCodeResponse() {
+        return getConfirmationCodeResponseForXs2a(ScaStatus.FAILED, TransactionStatus.RJCT);
     }
 
     private SpiResponse<SpiPaymentConfirmationCodeValidationResponse> getConfirmationCodeResponseForXs2a(ScaStatus scaStatus, TransactionStatus transactionStatus) {
