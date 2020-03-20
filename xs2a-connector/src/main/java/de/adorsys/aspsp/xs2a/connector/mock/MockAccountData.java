@@ -16,6 +16,7 @@
 
 package de.adorsys.aspsp.xs2a.connector.mock;
 
+import de.adorsys.psd2.xs2a.core.pis.Remittance;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiAddress;
 
@@ -41,9 +42,17 @@ public class MockAccountData {
     // TODO: remove mocked data https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1241
     public static final String DISPLAY_NAME = "mock display name";
     public static final List<String> REMITTANCE_UNSTRUCTURED_ARRAY = Collections.singletonList("mock remittance unstructured array");
-    public static final List<String> REMITTANCE_STRUCTURED_ARRAY = Collections.singletonList("mock remittance structured array");
+    public static final List<Remittance> REMITTANCE_STRUCTURED_ARRAY = Collections.singletonList(buildMockRemittance());
     public static final String ADDITIONAL_INFORMATION = "mock additional information";
 
     private MockAccountData() {
+    }
+
+    private static Remittance buildMockRemittance() {
+        Remittance remittance = new Remittance();
+        remittance.setReference("Mock remittance reference");
+        remittance.setReferenceType("Mock reference type");
+        remittance.setReferenceIssuer("Mock reference issuer");
+        return remittance;
     }
 }
