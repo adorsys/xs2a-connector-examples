@@ -446,7 +446,7 @@ public class AccountSpiImpl implements AccountSpi {
 
     private boolean isConsentSupportedBalances(SpiAccountAccess spiAccountAccess) {
         boolean isConsentGlobal = spiAccountAccess.getAllPsd2() != null;
-        boolean isConsentForAvailableAccountsWithBalances = spiAccountAccess.getAvailableAccountsWithBalance() == AccountAccessType.ALL_ACCOUNTS;
+        boolean isConsentForAvailableAccountsWithBalances = spiAccountAccess.getAvailableAccountsWithBalance() != null;
         return isConsentGlobal || isConsentForAvailableAccountsWithBalances;
     }
 
