@@ -78,6 +78,7 @@ class AccountSpiImplTest {
 
     private JsonReader jsonReader = new JsonReader();
     private SpiAccountConsent spiAccountConsent;
+    private SpiAccountConsent spiAccountConsentWithOwnerName;
     private SpiAccountConsent spiAccountConsentGlobal;
     private AccountDetailsTO accountDetailsTO;
     private SpiAccountReference accountReference;
@@ -86,6 +87,7 @@ class AccountSpiImplTest {
     @BeforeEach
     void setUp() {
         spiAccountConsent = jsonReader.getObjectFromFile("json/spi/impl/spi-account-consent.json", SpiAccountConsent.class);
+        spiAccountConsentWithOwnerName = jsonReader.getObjectFromFile("json/spi/impl/spi-account-consent-with-owner-name.json", SpiAccountConsent.class);
         spiAccountConsentGlobal = jsonReader.getObjectFromFile("json/spi/impl/spi-account-consent-global.json", SpiAccountConsent.class);
         accountDetailsTO = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
         accountReference = jsonReader.getObjectFromFile("json/spi/impl/account-reference.json", SpiAccountReference.class);
@@ -233,6 +235,29 @@ class AccountSpiImplTest {
         assertTrue(actualResponse.getErrors().isEmpty());
         assertNotNull(actualResponse.getPayload());
         verifyGetListOfAccounts();
+    }
+
+    @Test
+    void requestAccountList_withBalance_consentWithOwnerName() {
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+
+        AccountDetailsTO accountDetails_1 = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
+        when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(Collections.singletonList(accountDetails_1)));
+
+        SpiResponse<List<SpiAccountDetails>> actualResponse = accountSpi.requestAccountList(SPI_CONTEXT_DATA, true,
+                                                                                            spiAccountConsentWithOwnerName, aspspConsentDataProvider);
+
+        assertTrue(actualResponse.getErrors().isEmpty());
+        assertNotNull(actualResponse.getPayload());
+        verifyGetListOfAccounts();
+        List<SpiAccountDetails> spiAccountDetailsActual = actualResponse.getPayload();
+        assertNotNull(spiAccountDetailsActual);
+        assertEquals(1, spiAccountDetailsActual.size());
+        assertNotNull(spiAccountDetailsActual.get(0).getBalances());
     }
 
     @Test
