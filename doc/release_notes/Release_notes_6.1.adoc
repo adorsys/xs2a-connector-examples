@@ -4,6 +4,8 @@
 
 * Change types of remittance information structured properties in transactions
 * Bugfix: Successful confirmation of authorisation for payment cancellation results in failed SCA
+* Bugfix: Field `Balances` not available in Read Account List with Balances for Consent on Account List
+of Available Accounts with ownerName
 
 == Change types of remittance information structured properties in transactions
 
@@ -14,4 +16,10 @@ In accordance with the changes to OpenAPI file v. 1.3.6, types of `remittanceInf
 
 == Bugfix: Successful confirmation of authorisation for payment cancellation results in failed SCA
 
-From now on, executing confirmation of authorisation request with correct code will result change SCA status to `finalised` instead of `failed`.
+From now on, executing confirmation of authorisation request with correct code will result change SCA status to `finalised`
+instead of `failed`.
+
+== Bugfix: Field `Balances` not available in `Read Account List with Balances` for `Consent` on `Account List of Available Accounts` with `ownerName`
+
+From now on, field `balances` is present in `Read Account List with Balances` for `Consent` on `Account List
+of Available Accounts` with `ownerName`
