@@ -1,0 +1,17 @@
+{
+  "accounts": [
+    {
+      "iban": "DE89370400440532013000"
+    },
+    {
+      "iban": "DE32760700240271232100"
+    }
+  ],
+  "spiAdditionalInformationAccess": {
+    "ownerName": [
+      {
+        "iban": "DE89370400440532013000"
+      }
+    ]
+  }
+}

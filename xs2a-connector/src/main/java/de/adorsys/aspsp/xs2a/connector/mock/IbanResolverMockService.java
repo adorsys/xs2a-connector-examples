@@ -26,7 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-// Currently mocked data is used here. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1152
+// TODO: Remove when ledgers starts supporting card accounts https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1246
 @Service
 public class IbanResolverMockService {
     private Map<String, String> ibanMap = new HashMap<>();
@@ -59,6 +59,10 @@ public class IbanResolverMockService {
     public String handleIbanByAccountReference(SpiAccountReference accountReference) {
         return Optional.ofNullable(ibanMap.get(accountReference.getMaskedPan()))
                        .orElse(ibanMap.get(accountReference.getPan()));
+    }
+
+    public Optional<String> getIbanByMaskedPan(String maskedPan) {
+        return Optional.ofNullable(ibanMap.get(maskedPan));
     }
 
     public String getMaskedPanByIban(String iban) {

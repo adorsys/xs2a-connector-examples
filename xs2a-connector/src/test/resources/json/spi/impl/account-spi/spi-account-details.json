@@ -1,16 +1,17 @@
 {
-  "id": "11111-999999999",
+  "resourceId": "11111-999999999",
   "iban": "DE89370400440532013000",
   "currency": "EUR",
   "name": "Schmidt",
-  "accountType": "CASH",
-  "accountStatus": "ENABLED",
+  "displayName": "mock display name",
+  "cashSpiAccountType": "CASH",
+  "spiAccountStatus": "ENABLED",
   "bic": "GENODEF1N02",
   "usageType": "PRIV",
   "balances": [
     {
-      "balanceType": "EXPECTED",
-      "amount": {
+      "spiBalanceType": "EXPECTED",
+      "spiBalanceAmount": {
         "currency": "EUR",
         "amount": "1000"
       }
