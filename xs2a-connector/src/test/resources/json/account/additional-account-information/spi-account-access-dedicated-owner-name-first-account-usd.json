@@ -1,0 +1,20 @@
+{
+  "accounts": [
+    {
+      "iban": "DE89370400440532013000",
+      "currency": "EUR"
+    },
+    {
+      "iban": "DE89370400440532013000",
+      "currency": "USD"
+    }
+  ],
+  "spiAdditionalInformationAccess": {
+    "ownerName": [
+      {
+        "iban": "DE89370400440532013000",
+        "currency": "USD"
+      }
+    ]
+  }
+}

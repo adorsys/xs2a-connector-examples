@@ -1,0 +1,12 @@
+{
+  "resourceId": "11111-999999999",
+  "maskedPan": "493702******0836",
+  "currency": "EUR",
+  "name": "Marion Mueller",
+  "displayName": "mock display name",
+  "product": "Cash24",
+  "cashSpiAccountType": "CASH",
+  "spiAccountStatus": "ENABLED",
+  "usageType": "PRIV",
+  "ownerName": "account owner name"
+}

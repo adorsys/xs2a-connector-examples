@@ -1,0 +1,25 @@
+{
+  "aspspAccountId": "DE89370400440532013000",
+  "resourceId": "11111-999999999",
+  "maskedPan": "493702******0836",
+  "currency": "EUR",
+  "name": "Schmidt",
+  "displayName": "mock display name",
+  "cashSpiAccountType": "CASH",
+  "spiAccountStatus": "ENABLED",
+  "usageType": "PRIV",
+  "creditLimit": {
+    "currency": "EUR",
+    "amount": "10000"
+  },
+  "balances": [
+    {
+      "spiBalanceType": "EXPECTED",
+      "spiBalanceAmount": {
+        "currency": "EUR",
+        "amount": "1000"
+      }
+    }
+  ],
+  "ownerName": "account owner name"
+}
