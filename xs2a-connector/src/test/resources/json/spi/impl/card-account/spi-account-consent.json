@@ -1,0 +1,37 @@
+{
+  "id": "c966f143-f6a2-41db-9036-8abaeeef3af7",
+  "access": {
+    "accounts": [
+      {
+        "resourceId": "11111-999999999",
+        "pan": "4937023494670836",
+        "currency": "EUR"
+      }
+    ],
+    "balances": [
+      {
+        "resourceId": "11111-999999999",
+        "pan": "4937023494670836",
+        "currency": "EUR"
+      }
+    ],
+    "transactions": [
+      {
+        "resourceId": "11111-999999999",
+        "pan": "4937023494670836",
+        "currency": "EUR"
+      }
+    ]
+  },
+  "recurringIndicator": true,
+  "validUntil": "2037-08-06",
+  "frequencyPerDay": "4",
+  "tppInfo": {
+    "authorisationNumber": "fc488759-d8a2-4a51-b797-7d4cf7ac0447"
+  },
+  "psuData": [
+    {
+      "psuId": "anton.bruckner"
+    }
+  ]
+}

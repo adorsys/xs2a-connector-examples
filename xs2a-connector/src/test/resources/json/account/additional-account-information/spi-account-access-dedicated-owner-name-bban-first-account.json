@@ -1,0 +1,14 @@
+{
+  "accounts": [
+    {
+      "bban": "370400440532013000"
+    }
+  ],
+  "spiAdditionalInformationAccess": {
+    "ownerName": [
+      {
+        "bban": "370400440532013000"
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "accounts": [
+    {
+      "pan": "4937023494670836"
+    },
+    {
+      "pan": "5254127692833241"
+    }
+  ],
+  "spiAdditionalInformationAccess": {
+    "ownerName": [
+      {
+        "pan": "4937023494670836"
+      }
+    ]
+  }
+}

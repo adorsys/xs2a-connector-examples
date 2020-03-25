@@ -1,0 +1,13 @@
+{
+  "resourceId": "11111-999999999",
+  "iban": "DE89370400440532013000",
+  "currency": "EUR",
+  "name": "Marion Mueller",
+  "displayName": "mock display name",
+  "product": "Cash24",
+  "cashSpiAccountType": "CASH",
+  "spiAccountStatus": "ENABLED",
+  "linkedAccounts": "HjB0Mit2TAcp2PplJQoEA8",
+  "usageType": "PRIV",
+  "ownerName": "account owner name"
+}
