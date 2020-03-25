@@ -16,13 +16,14 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
+import de.adorsys.aspsp.xs2a.connector.account.IbanAccountReference;
+import de.adorsys.aspsp.xs2a.connector.account.OwnerNameService;
 import de.adorsys.aspsp.xs2a.connector.mock.IbanResolverMockService;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.ledgers.middleware.api.domain.account.AccountDetailsTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
 import de.adorsys.ledgers.rest.client.AccountRestClient;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
-import de.adorsys.psd2.xs2a.core.ais.AccountAccessType;
 import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
 import de.adorsys.psd2.xs2a.core.consent.AisConsentRequestType;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
@@ -59,7 +60,7 @@ public class CardAccountSpiImpl implements CardAccountSpi {
 
     private static final String DEFAULT_ACCEPT_MEDIA_TYPE = MediaType.APPLICATION_JSON_VALUE;
     private static final String WILDCARD_ACCEPT_HEADER = "*/*";
-    private static final String ADDITIONAL_INFORMATION_MOCK = "additional information";
+    private static final String CARD_TRANSACTION_ACCEPTOR = "Müller";
 
     private final AccountRestClient accountRestClient;
     private final LedgersSpiAccountMapper accountMapper;
@@ -67,15 +68,19 @@ public class CardAccountSpiImpl implements CardAccountSpi {
     private final AspspConsentDataService tokenService;
     private final FeignExceptionReader feignExceptionReader;
     private final IbanResolverMockService ibanResolverMockService;
+    private final OwnerNameService ownerNameService;
 
     public CardAccountSpiImpl(AccountRestClient restClient, LedgersSpiAccountMapper accountMapper,
-                              AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService tokenService, FeignExceptionReader feignExceptionReader, IbanResolverMockService ibanResolverMockService) {
+                              AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService tokenService,
+                              FeignExceptionReader feignExceptionReader, IbanResolverMockService ibanResolverMockService,
+                              OwnerNameService ownerNameService) {
         this.accountRestClient = restClient;
         this.accountMapper = accountMapper;
         this.authRequestInterceptor = authRequestInterceptor;
         this.tokenService = tokenService;
         this.feignExceptionReader = feignExceptionReader;
         this.ibanResolverMockService = ibanResolverMockService;
+        this.ownerNameService = ownerNameService;
     }
 
     @Override
@@ -91,12 +96,14 @@ public class CardAccountSpiImpl implements CardAccountSpi {
             List<SpiCardAccountDetails> cardAccountDetailsList = getSpiCardAccountDetails(accountConsent, aspspConsentData);
 
             aspspConsentDataProvider.updateAspspConsentData(tokenService.store(response));
-            cardAccountDetailsList.forEach(sad -> enrichSpiCardAccountDetailsWithOwnerName(sad, accountConsent.getAccess()));
 
-            List<SpiCardAccountDetails> payload = mapToCardAccountList(cardAccountDetailsList);
+            List<SpiCardAccountDetails> cardAccountDetailsListWithMaskedPan = mapToCardAccountList(cardAccountDetailsList);
+            List<SpiCardAccountDetails> cardAccountDetailsListWithOwnerName = cardAccountDetailsListWithMaskedPan.stream()
+                                                                                      .map(accountDetails -> enrichWithOwnerName(accountDetails, accountConsent.getAccess()))
+                                                                                      .collect(Collectors.toList());
 
             return SpiResponse.<List<SpiCardAccountDetails>>builder()
-                           .payload(payload)
+                           .payload(cardAccountDetailsListWithOwnerName)
                            .build();
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
@@ -127,13 +134,13 @@ public class CardAccountSpiImpl implements CardAccountSpi {
                                                                .map(accountMapper::toSpiCardAccountDetails)
                                                                .orElseThrow(() -> FeignExceptionHandler.getException(HttpStatus.NOT_FOUND, RESPONSE_STATUS_200_WITH_EMPTY_BODY));
 
-            cardAccountDetails.setMaskedPan(ibanResolverMockService.getMaskedPanByIban(cardAccountDetails.getAspspAccountId())); // Currently mocked data is used here. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1152
+            cardAccountDetails.setMaskedPan(ibanResolverMockService.getMaskedPanByIban(cardAccountDetails.getAspspAccountId())); // TODO: Remove when ledgers starts supporting card accounts https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1246
 
             aspspConsentDataProvider.updateAspspConsentData(tokenService.store(response));
-            enrichSpiCardAccountDetailsWithOwnerName(cardAccountDetails, accountConsent.getAccess());
+            SpiCardAccountDetails accountDetailsWithOwnerName = enrichWithOwnerName(cardAccountDetails, accountConsent.getAccess());
 
             return SpiResponse.<SpiCardAccountDetails>builder()
-                           .payload(cardAccountDetails)
+                           .payload(accountDetailsWithOwnerName)
                            .build();
 
         } catch (FeignException feignException) {
@@ -308,32 +315,25 @@ public class CardAccountSpiImpl implements CardAccountSpi {
 
     private List<SpiCardAccountDetails> getAccountDetailsFromReferences(List<SpiAccountReference> references,
                                                                         byte[] aspspConsentData) {
+        applyAuthorisation(aspspConsentData);
 
-        try {
-            applyAuthorisation(aspspConsentData);
+        List<AccountDetailsTO> accountDetails = accountRestClient.getListOfAccounts().getBody();
 
-            List<AccountDetailsTO> accountDetails = accountRestClient.getListOfAccounts().getBody();
-
-            if (accountDetails == null) {
-                return Collections.emptyList();
-            }
-
-            return accountDetails.stream()
-                           .filter(account -> filterAccountDetailsByIbanAndCurrency(references, account))
-                           .map(accountMapper::toSpiCardAccountDetails)
-                           .collect(Collectors.toList());
-
-        } finally {
-            authRequestInterceptor.setAccessToken(null);
+        if (accountDetails == null) {
+            return Collections.emptyList();
         }
+
+        return accountDetails.stream()
+                       .filter(account -> filterAccountDetailsByIbanAndCurrency(references, account))
+                       .map(accountMapper::toSpiCardAccountDetails)
+                       .collect(Collectors.toList());
     }
 
     private boolean filterAccountDetailsByIbanAndCurrency(List<SpiAccountReference> references, AccountDetailsTO account) {
         return references.stream()
                        .filter(reference -> Optional.ofNullable(reference.getIban())
-                                                    .orElseGet(() -> ibanResolverMockService.handleIbanByAccountReference(reference)) // Currently mocked data is used here. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1152
+                                                    .orElseGet(() -> ibanResolverMockService.handleIbanByAccountReference(reference)) // TODO: Remove when ledgers starts supporting card accounts https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1246
                                                     .equals(account.getIban()))
-
                        .anyMatch(reference -> reference.getCurrency() == null || reference.getCurrency().equals(account.getCurrency()));
     }
 
@@ -366,12 +366,12 @@ public class CardAccountSpiImpl implements CardAccountSpi {
                                       new SpiAmount(Currency.getInstance("EUR"), new BigDecimal(200)),
                                       new SpiAmount(Currency.getInstance("EUR"), new BigDecimal(200)),
                                       "2",
-                                      "Müller",
+                                      CARD_TRANSACTION_ACCEPTOR,
                                       null,
                                       null,
-                                      "Müller",
-                                      "Müller",
-                                      "Müller",
+                                      CARD_TRANSACTION_ACCEPTOR,
+                                      CARD_TRANSACTION_ACCEPTOR,
+                                      CARD_TRANSACTION_ACCEPTOR,
                                       true,
                                       "");
     }
@@ -387,20 +387,22 @@ public class CardAccountSpiImpl implements CardAccountSpi {
     }
 
     private List<SpiCardAccountDetails> mapToCardAccountList(List<SpiCardAccountDetails> details) {
-        details.forEach(det -> det.setMaskedPan(ibanResolverMockService.getMaskedPanByIban(det.getAspspAccountId()))); // Currently mocked data is used here. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1152
+        details.forEach(det -> det.setMaskedPan(ibanResolverMockService.getMaskedPanByIban(det.getAspspAccountId()))); // TODO: Remove when ledgers starts supporting card accounts https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1246
         return details;
     }
 
-    private void enrichSpiCardAccountDetailsWithOwnerName(SpiCardAccountDetails cardAccountDetails, SpiAccountAccess access) {
-        SpiAdditionalInformationAccess spiAdditionalInformationAccess = access.getSpiAdditionalInformationAccess();
-        if (spiAdditionalInformationAccess != null && spiAdditionalInformationAccess.getOwnerName() != null) {
-            cardAccountDetails.setOwnerName(ADDITIONAL_INFORMATION_MOCK);
-        } else {
-            AccountAccessType allAccountsWithOwnerName = AccountAccessType.ALL_ACCOUNTS_WITH_OWNER_NAME;
-            List<AccountAccessType> accountAccessTypes = Arrays.asList(access.getAvailableAccounts(), access.getAvailableAccountsWithBalance(), access.getAllPsd2());
-            if (accountAccessTypes.contains(allAccountsWithOwnerName)) {
-                cardAccountDetails.setOwnerName(ADDITIONAL_INFORMATION_MOCK);
-            }
+    private SpiCardAccountDetails enrichWithOwnerName(SpiCardAccountDetails spiCardAccountDetails, SpiAccountAccess accountAccess) {
+        Optional<String> ibanOptional = ibanResolverMockService.getIbanByMaskedPan(spiCardAccountDetails.getMaskedPan());
+
+        if (!ibanOptional.isPresent()) {
+            return spiCardAccountDetails;
         }
+
+        IbanAccountReference ibanAccountReference = new IbanAccountReference(ibanOptional.get(), spiCardAccountDetails.getCurrency());
+        if (ownerNameService.shouldContainOwnerName(ibanAccountReference, accountAccess)) {
+            return ownerNameService.enrichCardAccountDetailsWithOwnerName(spiCardAccountDetails);
+        }
+
+        return spiCardAccountDetails;
     }
 }

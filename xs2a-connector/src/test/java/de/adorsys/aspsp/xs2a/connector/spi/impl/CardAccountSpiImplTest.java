@@ -16,6 +16,8 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
+import de.adorsys.aspsp.xs2a.connector.account.IbanAccountReference;
+import de.adorsys.aspsp.xs2a.connector.account.OwnerNameService;
 import de.adorsys.aspsp.xs2a.connector.mock.IbanResolverMockService;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapperImpl;
@@ -33,6 +35,7 @@ import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
+import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import feign.FeignException;
 import feign.Request;
@@ -48,10 +51,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Currency;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -70,6 +70,13 @@ class CardAccountSpiImplTest {
     private final static LocalDate DATE_TO = LocalDate.of(2020, 1, 1);
 
     private static final String RESPONSE_STATUS_200_WITH_EMPTY_BODY = "Response status was 200, but the body was empty!";
+
+    private static final String ACCOUNT_OWNER_NAME = "account owner name";
+    private static final String IBAN_FIRST_ACCOUNT = "DE89370400440532013000";
+    private static final String IBAN_SECOND_ACCOUNT = "DE32760700240271232100";
+    private static final String MASKED_PAN_FIRST_ACCOUNT = "493702******0836";
+    private static final String MASKED_PAN_SECOND_ACCOUNT = "525412******3241";
+    private static final Currency CURRENCY_EUR = Currency.getInstance("EUR");
 
     @InjectMocks
     private CardAccountSpiImpl cardAccountSpi;
@@ -90,6 +97,8 @@ class CardAccountSpiImplTest {
     private FeignExceptionReader feignExceptionReader;
     @Mock
     private IbanResolverMockService ibanResolverMockService;
+    @Mock
+    private OwnerNameService ownerNameService;
 
     private JsonReader jsonReader = new JsonReader();
     private SpiAccountConsent spiAccountConsent;
@@ -98,7 +107,7 @@ class CardAccountSpiImplTest {
 
     @BeforeEach
     void setUp() {
-        spiAccountConsent = jsonReader.getObjectFromFile("json/spi/impl/spi-account-consent.json", SpiAccountConsent.class);
+        spiAccountConsent = jsonReader.getObjectFromFile("json/spi/impl/card-account/spi-account-consent.json", SpiAccountConsent.class);
         accountDetailsTO = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
         accountReference = jsonReader.getObjectFromFile("json/spi/impl/account-reference.json", SpiAccountReference.class);
 
@@ -207,6 +216,8 @@ class CardAccountSpiImplTest {
         AccountDetailsTO accountDetails_2 = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
         accountDetails_2.setCurrency(Currency.getInstance("USD"));
         when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(Arrays.asList(accountDetails_1, accountDetails_2)));
+        SpiAccountReference cardAccountReference = jsonReader.getObjectFromFile("json/spi/impl/card-account/account-reference.json", SpiAccountReference.class);
+        when(ibanResolverMockService.handleIbanByAccountReference(cardAccountReference)).thenReturn(IBAN_FIRST_ACCOUNT);
 
         // When
         SpiResponse<List<SpiCardAccountDetails>> actualResponse = cardAccountSpi.requestCardAccountList(SPI_CONTEXT_DATA, spiAccountConsent, aspspConsentDataProvider);
@@ -262,6 +273,137 @@ class CardAccountSpiImplTest {
     }
 
     @Test
+    void requestCardAccountList_additionalInformationOwnerName_withOwnerName() {
+        // Given
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+
+        AccountDetailsTO accountDetailsFirst = jsonReader.getObjectFromFile("json/spi/impl/card-account/account-details-first.json", AccountDetailsTO.class);
+        AccountDetailsTO accountDetailsSecond = jsonReader.getObjectFromFile("json/spi/impl/card-account/account-details-second.json", AccountDetailsTO.class);
+        SpiCardAccountDetails cardAccountDetailsFirstAccount = jsonReader.getObjectFromFile("json/spi/impl/card-account/spi-card-account-details-first.json", SpiCardAccountDetails.class);
+        when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(Arrays.asList(accountDetailsFirst, accountDetailsSecond)));
+        SpiAccountAccess accountAccess = spiAccountConsent.getAccess();
+        SpiAccountReference cardAccountReference = jsonReader.getObjectFromFile("json/spi/impl/card-account/account-reference.json", SpiAccountReference.class);
+        when(ibanResolverMockService.handleIbanByAccountReference(cardAccountReference)).thenReturn(IBAN_FIRST_ACCOUNT);
+        when(ibanResolverMockService.getMaskedPanByIban(IBAN_FIRST_ACCOUNT)).thenReturn(MASKED_PAN_FIRST_ACCOUNT);
+        when(ibanResolverMockService.getIbanByMaskedPan(MASKED_PAN_FIRST_ACCOUNT)).thenReturn(Optional.of(IBAN_FIRST_ACCOUNT));
+        when(ownerNameService.shouldContainOwnerName(new IbanAccountReference(IBAN_FIRST_ACCOUNT, CURRENCY_EUR), accountAccess)).thenReturn(true);
+        when(ownerNameService.enrichCardAccountDetailsWithOwnerName(cardAccountDetailsFirstAccount))
+                .thenReturn(jsonReader.getObjectFromFile("json/spi/impl/card-account/spi-card-account-details-first-owner-name.json", SpiCardAccountDetails.class));
+
+        // When
+        SpiResponse<List<SpiCardAccountDetails>> actualResponse = cardAccountSpi.requestCardAccountList(SPI_CONTEXT_DATA, spiAccountConsent, aspspConsentDataProvider);
+
+        // Then
+        assertTrue(actualResponse.isSuccessful());
+        List<SpiCardAccountDetails> actualPayload = actualResponse.getPayload();
+        assertNotNull(actualPayload);
+        assertEquals(1, actualPayload.size());
+        assertEquals(ACCOUNT_OWNER_NAME, actualPayload.get(0).getOwnerName());
+        verifyGetListOfAccounts();
+    }
+
+    @Test
+    void requestCardAccountList_additionalInformationOwnerName_withOwnerNameForOneAccounts() {
+        // Given
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+
+        AccountDetailsTO accountDetailsFirst = jsonReader.getObjectFromFile("json/spi/impl/card-account/account-details-first.json", AccountDetailsTO.class);
+        AccountDetailsTO accountDetailsSecond = jsonReader.getObjectFromFile("json/spi/impl/card-account/account-details-second.json", AccountDetailsTO.class);
+        SpiCardAccountDetails cardAccountDetailsFirstAccount = jsonReader.getObjectFromFile("json/spi/impl/card-account/spi-card-account-details-first.json", SpiCardAccountDetails.class);
+        when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(Arrays.asList(accountDetailsFirst, accountDetailsSecond)));
+        SpiAccountConsent accountConsentWithTwoAccounts = jsonReader.getObjectFromFile("json/spi/impl/card-account/spi-account-consent-two-accounts.json", SpiAccountConsent.class);
+        SpiAccountAccess accountAccess = accountConsentWithTwoAccounts.getAccess();
+        SpiAccountReference cardAccountReference = jsonReader.getObjectFromFile("json/spi/impl/card-account/account-reference.json", SpiAccountReference.class);
+        when(ibanResolverMockService.handleIbanByAccountReference(cardAccountReference)).thenReturn(IBAN_FIRST_ACCOUNT);
+        SpiAccountReference cardAccountReferenceSecondAccount = jsonReader.getObjectFromFile("json/spi/impl/card-account/account-reference-second.json", SpiAccountReference.class);
+        when(ibanResolverMockService.handleIbanByAccountReference(cardAccountReferenceSecondAccount)).thenReturn(IBAN_SECOND_ACCOUNT);
+        when(ibanResolverMockService.getMaskedPanByIban(IBAN_FIRST_ACCOUNT)).thenReturn(MASKED_PAN_FIRST_ACCOUNT);
+        when(ibanResolverMockService.getIbanByMaskedPan(MASKED_PAN_FIRST_ACCOUNT)).thenReturn(Optional.of(IBAN_FIRST_ACCOUNT));
+        when(ownerNameService.shouldContainOwnerName(new IbanAccountReference(IBAN_FIRST_ACCOUNT, CURRENCY_EUR), accountAccess)).thenReturn(true);
+        when(ownerNameService.enrichCardAccountDetailsWithOwnerName(cardAccountDetailsFirstAccount))
+                .thenReturn(jsonReader.getObjectFromFile("json/spi/impl/card-account/spi-card-account-details-first-owner-name.json", SpiCardAccountDetails.class));
+
+        // When
+        SpiResponse<List<SpiCardAccountDetails>> actualResponse = cardAccountSpi.requestCardAccountList(SPI_CONTEXT_DATA, accountConsentWithTwoAccounts, aspspConsentDataProvider);
+
+        // Then
+        assertTrue(actualResponse.isSuccessful());
+        List<SpiCardAccountDetails> actualPayload = actualResponse.getPayload();
+        assertNotNull(actualPayload);
+        assertEquals(2, actualPayload.size());
+        assertEquals(ACCOUNT_OWNER_NAME, actualPayload.get(0).getOwnerName());
+        assertNull(actualPayload.get(1).getOwnerName());
+        verifyGetListOfAccounts();
+    }
+
+    @Test
+    void requestCardAccountList_additionalInformationOwnerName_ownerNameForFirstAccount_shouldNotSetOwnerNameForSecond() {
+        // Given
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+
+        AccountDetailsTO accountDetailsFirst = jsonReader.getObjectFromFile("json/spi/impl/card-account/account-details-first.json", AccountDetailsTO.class);
+        AccountDetailsTO accountDetailsSecond = jsonReader.getObjectFromFile("json/spi/impl/card-account/account-details-second.json", AccountDetailsTO.class);
+        when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(Arrays.asList(accountDetailsFirst, accountDetailsSecond)));
+        SpiAccountReference cardAccountReference = jsonReader.getObjectFromFile("json/spi/impl/card-account/account-reference.json", SpiAccountReference.class);
+        when(ibanResolverMockService.handleIbanByAccountReference(cardAccountReference)).thenReturn(IBAN_SECOND_ACCOUNT);
+        when(ibanResolverMockService.getMaskedPanByIban(IBAN_SECOND_ACCOUNT)).thenReturn(MASKED_PAN_SECOND_ACCOUNT);
+        when(ibanResolverMockService.getIbanByMaskedPan(MASKED_PAN_SECOND_ACCOUNT)).thenReturn(Optional.of(IBAN_SECOND_ACCOUNT));
+
+        // When
+        SpiResponse<List<SpiCardAccountDetails>> actualResponse = cardAccountSpi.requestCardAccountList(SPI_CONTEXT_DATA, spiAccountConsent, aspspConsentDataProvider);
+
+        // Then
+        assertTrue(actualResponse.isSuccessful());
+        List<SpiCardAccountDetails> actualPayload = actualResponse.getPayload();
+        assertNotNull(actualPayload);
+        assertEquals(1, actualPayload.size());
+        assertNull(actualPayload.get(0).getOwnerName());
+        verifyGetListOfAccounts();
+        verify(ownerNameService, never()).enrichCardAccountDetailsWithOwnerName(any());
+    }
+
+    @Test
+    void requestCardAccountList_additionalInformationOwnerName_ownerNameForOneAccount_unknownMaskedPan() {
+        // Given
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+
+        AccountDetailsTO accountDetailsFirst = jsonReader.getObjectFromFile("json/spi/impl/card-account/account-details-first.json", AccountDetailsTO.class);
+        AccountDetailsTO accountDetailsSecond = jsonReader.getObjectFromFile("json/spi/impl/card-account/account-details-second.json", AccountDetailsTO.class);
+        when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(Arrays.asList(accountDetailsFirst, accountDetailsSecond)));
+        SpiAccountReference cardAccountReference = jsonReader.getObjectFromFile("json/spi/impl/card-account/account-reference.json", SpiAccountReference.class);
+        when(ibanResolverMockService.handleIbanByAccountReference(cardAccountReference)).thenReturn(IBAN_SECOND_ACCOUNT);
+
+        // When
+        SpiResponse<List<SpiCardAccountDetails>> actualResponse = cardAccountSpi.requestCardAccountList(SPI_CONTEXT_DATA, spiAccountConsent, aspspConsentDataProvider);
+
+        // Then
+        assertTrue(actualResponse.isSuccessful());
+        List<SpiCardAccountDetails> actualPayload = actualResponse.getPayload();
+        assertNotNull(actualPayload);
+        assertEquals(1, actualPayload.size());
+        assertNull(actualPayload.get(0).getOwnerName());
+        verifyGetListOfAccounts();
+        verify(ownerNameService, never()).shouldContainOwnerName(any(), any());
+        verify(ownerNameService, never()).enrichCardAccountDetailsWithOwnerName(any());
+    }
+
+    @Test
     void requestCardAccountDetailForAccount_ok() {
         // Given
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
@@ -285,11 +427,96 @@ class CardAccountSpiImplTest {
         verify(tokenService, times(1)).store(scaResponseTO);
     }
 
+    @Test
+    void requestCardAccountDetailForAccount_withOwnerName() {
+        // Given
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+
+        when(accountRestClient.getAccountDetailsById(RESOURCE_ID)).thenReturn(ResponseEntity.ok(accountDetailsTO));
+
+        SpiAccountAccess accountAccess = spiAccountConsent.getAccess();
+        when(ibanResolverMockService.getMaskedPanByIban(IBAN_FIRST_ACCOUNT)).thenReturn(MASKED_PAN_FIRST_ACCOUNT);
+        when(ibanResolverMockService.getIbanByMaskedPan(MASKED_PAN_FIRST_ACCOUNT)).thenReturn(Optional.of(IBAN_FIRST_ACCOUNT));
+        when(ownerNameService.shouldContainOwnerName(new IbanAccountReference(IBAN_FIRST_ACCOUNT, CURRENCY_EUR), accountAccess)).thenReturn(true);
+        SpiCardAccountDetails cardAccountDetailsFirstAccount = jsonReader.getObjectFromFile("json/spi/impl/card-account/spi-card-account-details-first.json", SpiCardAccountDetails.class);
+        when(ownerNameService.enrichCardAccountDetailsWithOwnerName(cardAccountDetailsFirstAccount))
+                .thenReturn(jsonReader.getObjectFromFile("json/spi/impl/card-account/spi-card-account-details-first-owner-name.json", SpiCardAccountDetails.class));
+
+        // When
+        SpiResponse<SpiCardAccountDetails> actualResponse = cardAccountSpi.requestCardAccountDetailsForAccount(SPI_CONTEXT_DATA, accountReference,
+                                                                                                               spiAccountConsent, aspspConsentDataProvider);
+
+        // Then
+        assertTrue(actualResponse.getErrors().isEmpty());
+        SpiCardAccountDetails actualPayload = actualResponse.getPayload();
+        assertNotNull(actualPayload);
+        assertEquals(ACCOUNT_OWNER_NAME, actualPayload.getOwnerName());
+    }
+
+    @Test
+    void requestCardAccountDetailForAccount_withOwnerName_unknownMaskedPan() {
+        // Given
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+
+        when(accountRestClient.getAccountDetailsById(RESOURCE_ID)).thenReturn(ResponseEntity.ok(accountDetailsTO));
+
+        when(ibanResolverMockService.getMaskedPanByIban(IBAN_FIRST_ACCOUNT)).thenReturn(MASKED_PAN_SECOND_ACCOUNT);
+        when(ibanResolverMockService.getIbanByMaskedPan(MASKED_PAN_SECOND_ACCOUNT)).thenReturn(Optional.empty());
+
+        // When
+        SpiResponse<SpiCardAccountDetails> actualResponse = cardAccountSpi.requestCardAccountDetailsForAccount(SPI_CONTEXT_DATA, accountReference,
+                                                                                                               spiAccountConsent, aspspConsentDataProvider);
+
+        // Then
+        assertTrue(actualResponse.getErrors().isEmpty());
+        SpiCardAccountDetails actualPayload = actualResponse.getPayload();
+        assertNotNull(actualPayload);
+        assertNull(actualPayload.getOwnerName());
+        verify(ownerNameService, never()).shouldContainOwnerName(any(), any());
+        verify(ownerNameService, never()).enrichCardAccountDetailsWithOwnerName(any());
+    }
+
+    @Test
+    void requestCardAccountDetailForAccount_withOwnerName_withoutEnriching() {
+        // Given
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+
+        when(accountRestClient.getAccountDetailsById(RESOURCE_ID)).thenReturn(ResponseEntity.ok(accountDetailsTO));
+
+        SpiAccountAccess accountAccess = spiAccountConsent.getAccess();
+        when(ibanResolverMockService.getMaskedPanByIban(IBAN_FIRST_ACCOUNT)).thenReturn(MASKED_PAN_FIRST_ACCOUNT);
+        when(ibanResolverMockService.getIbanByMaskedPan(MASKED_PAN_FIRST_ACCOUNT)).thenReturn(Optional.of(IBAN_FIRST_ACCOUNT));
+        when(ownerNameService.shouldContainOwnerName(new IbanAccountReference(IBAN_FIRST_ACCOUNT, CURRENCY_EUR), accountAccess)).thenReturn(false);
+
+        // When
+        SpiResponse<SpiCardAccountDetails> actualResponse = cardAccountSpi.requestCardAccountDetailsForAccount(SPI_CONTEXT_DATA, accountReference,
+                                                                                                               spiAccountConsent, aspspConsentDataProvider);
+
+        // Then
+        assertTrue(actualResponse.getErrors().isEmpty());
+        SpiCardAccountDetails actualPayload = actualResponse.getPayload();
+        assertNotNull(actualPayload);
+        assertNull(actualPayload.getOwnerName());
+        verify(ownerNameService, never()).enrichCardAccountDetailsWithOwnerName(any());
+    }
+
     private void verifyGetListOfAccounts() {
         verify(accountRestClient, times(1)).getListOfAccounts();
         verify(tokenService, times(2)).response(ASPSP_CONSENT_DATA.getAspspConsentData());
         verify(authRequestInterceptor, times(2)).setAccessToken("access_token");
-        verify(authRequestInterceptor, times(2)).setAccessToken(null);
+        verify(authRequestInterceptor).setAccessToken(null);
     }
 
     private FeignException getFeignException() {

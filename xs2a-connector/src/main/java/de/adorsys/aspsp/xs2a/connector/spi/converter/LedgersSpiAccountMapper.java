@@ -57,7 +57,7 @@ public abstract class LedgersSpiAccountMapper {
                                SpiAccountType.valueOf(d.getAccountType().name()),
                                SpiUsageType.valueOf(d.getUsageType().name()),
                                d.getDetails(),
-                               MockAccountData.CREDIT_LIMIT, // Currently mocked data is used here. https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1152
+                               MockAccountData.CREDIT_LIMIT, // TODO: Remove when ledgers starts supporting card accounts https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1246
                                toSpiAccountBalancesList(d.getBalances()),
                                null))
                        .orElse(null);
