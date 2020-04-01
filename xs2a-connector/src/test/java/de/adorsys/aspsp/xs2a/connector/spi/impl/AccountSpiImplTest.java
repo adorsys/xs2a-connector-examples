@@ -362,7 +362,7 @@ class AccountSpiImplTest {
         //Given
         SpiAccountConsent spiAccountConsent = buildSpiAccountConsent();
         SpiAccountAccess accountAccess = spiAccountConsent.getAccess();
-        accountAccess.setSpiAdditionalInformationAccess(new SpiAdditionalInformationAccess(Collections.emptyList()));
+        accountAccess.setSpiAdditionalInformationAccess(new SpiAdditionalInformationAccess(Collections.emptyList(), Collections.emptyList()));
 
         List<AccountDetailsTO> accountDetailsTOList = accountAccess.getAccounts().stream()
                                                               .map(account -> buildAccountDetailsTO(account.getIban(), account.getResourceId()))
@@ -396,7 +396,7 @@ class AccountSpiImplTest {
         SpiAccountConsent spiAccountConsent = buildSpiAccountConsent();
         SpiAccountAccess accountAccess = spiAccountConsent.getAccess();
         List<SpiAccountReference> accounts = accountAccess.getAccounts();
-        accountAccess.setSpiAdditionalInformationAccess(new SpiAdditionalInformationAccess(accounts));
+        accountAccess.setSpiAdditionalInformationAccess(new SpiAdditionalInformationAccess(accounts, Collections.emptyList()));
 
         List<AccountDetailsTO> accountDetailsTOList = accounts.stream()
                                                               .map(account -> buildAccountDetailsTO(account.getIban(), account.getResourceId()))
@@ -427,7 +427,7 @@ class AccountSpiImplTest {
         SpiAccountAccess accountAccess = spiAccountConsent.getAccess();
         List<SpiAccountReference> accounts = accountAccess.getAccounts();
         SpiAccountReference spiAccountReference = accounts.get(0);
-        SpiAdditionalInformationAccess spiAdditionalInformationAccess = new SpiAdditionalInformationAccess(Collections.singletonList(spiAccountReference));
+        SpiAdditionalInformationAccess spiAdditionalInformationAccess = new SpiAdditionalInformationAccess(Collections.singletonList(spiAccountReference), Collections.emptyList());
         accountAccess.setSpiAdditionalInformationAccess(spiAdditionalInformationAccess);
 
         List<AccountDetailsTO> accountDetailsTOList = accountAccess.getAccounts().stream()
@@ -530,7 +530,7 @@ class AccountSpiImplTest {
         //Given
         SpiAccountConsent spiAccountConsent = buildSpiAccountConsent();
         SpiAccountAccess accountAccess = spiAccountConsent.getAccess();
-        accountAccess.setSpiAdditionalInformationAccess(new SpiAdditionalInformationAccess(Collections.emptyList()));
+        accountAccess.setSpiAdditionalInformationAccess(new SpiAdditionalInformationAccess(Collections.emptyList(), Collections.emptyList()));
         when(accountRestClient.getAccountDetailsById(RESOURCE_ID)).thenReturn(ResponseEntity.ok(buildAccountDetailsTO(IBAN, RESOURCE_ID)));
         SpiAccountDetails spiAccountDetailsFirstAccount = buildSpiAccountDetails(IBAN, RESOURCE_ID);
         when(ownerNameService.shouldContainOwnerName(new IbanAccountReference(IBAN, CURRENCY_EUR), accountAccess))
@@ -554,7 +554,7 @@ class AccountSpiImplTest {
         SpiAccountConsent spiAccountConsent = buildSpiAccountConsent();
         SpiAccountAccess accountAccess = spiAccountConsent.getAccess();
         List<SpiAccountReference> accounts = accountAccess.getAccounts();
-        SpiAdditionalInformationAccess spiAdditionalInformationAccess = new SpiAdditionalInformationAccess(Collections.singletonList(accounts.get(1)));
+        SpiAdditionalInformationAccess spiAdditionalInformationAccess = new SpiAdditionalInformationAccess(Collections.singletonList(accounts.get(1)), Collections.emptyList());
         accountAccess.setSpiAdditionalInformationAccess(spiAdditionalInformationAccess);
         when(accountRestClient.getAccountDetailsById(RESOURCE_ID)).thenReturn(ResponseEntity.ok(this.accountDetailsTO));
 
