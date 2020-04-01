@@ -33,6 +33,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
@@ -47,6 +48,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.quality.Strictness.LENIENT;
 
 @ExtendWith(MockitoExtension.class)
 class AccountSpiImplTest {
@@ -710,6 +712,18 @@ class AccountSpiImplTest {
         verify(aspspConsentDataProvider, times(1)).loadAspspConsentData();
         verify(tokenService, times(1)).response(BYTES);
         verify(authRequestInterceptor, times(1)).setAccessToken(null);
+    }
+
+    @Test
+    @MockitoSettings(strictness = LENIENT)
+    void processAcceptMediaType() {
+        assertEquals(MediaType.APPLICATION_JSON_VALUE, accountSpi.processAcceptMediaType(""));
+        assertEquals(MediaType.APPLICATION_JSON_VALUE, accountSpi.processAcceptMediaType(null));
+        assertEquals(MediaType.APPLICATION_JSON_VALUE, accountSpi.processAcceptMediaType(MediaType.ALL_VALUE));
+        assertEquals(MediaType.APPLICATION_JSON_VALUE, accountSpi.processAcceptMediaType("application/xml, application/json"));
+
+        assertEquals(MediaType.APPLICATION_JSON_VALUE, accountSpi.processAcceptMediaType(MediaType.APPLICATION_JSON_VALUE));
+        assertEquals(MediaType.APPLICATION_ATOM_XML_VALUE, accountSpi.processAcceptMediaType(MediaType.APPLICATION_ATOM_XML_VALUE));
     }
 
     private FeignException getFeignException() {
