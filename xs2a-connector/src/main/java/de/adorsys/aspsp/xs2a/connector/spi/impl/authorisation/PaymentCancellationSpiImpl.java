@@ -85,7 +85,6 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
         boolean cancellationMandated = payment.getPaymentStatus() != TransactionStatus.RCVD;
         response.setCancellationAuthorisationMandated(cancellationMandated);
         response.setTransactionStatus(payment.getPaymentStatus());
-        //TODO to be fixed after implementation of https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/633
         return SpiResponse.<SpiPaymentCancellationResponse>builder()
                        .payload(response).build();
     }
@@ -97,9 +96,6 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
     public @NotNull SpiResponse<SpiResponse.VoidResponse> cancelPaymentWithoutSca(@NotNull SpiContextData contextData,
                                                                                   @NotNull SpiPayment payment,
                                                                                   @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        // TODO: current implementation of Ledgers doesn't support the payment cancellation without authorisation,
-        // maybe this will be implemented in the future: https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/669
-
         if (payment.getPaymentStatus() == TransactionStatus.RCVD) {
             return SpiResponse.<SpiResponse.VoidResponse>builder()
                            .payload(SpiResponse.voidResponse())
