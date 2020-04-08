@@ -147,7 +147,6 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
                 ResponseEntity<R> selectMethodResponse = getSelectMethodResponse(authenticationMethodId, sca);
                 R authCodeResponse = selectMethodResponse.getBody();
                 if (authCodeResponse != null && authCodeResponse.getBearerToken() == null) {
-                    // TODO: hack. Core banking is supposed to always return a token. @fpo
                     authCodeResponse.setBearerToken(sca.getBearerToken());
                 }
                 return authorisationService.returnScaMethodSelection(aspspConsentDataProvider, authCodeResponse);

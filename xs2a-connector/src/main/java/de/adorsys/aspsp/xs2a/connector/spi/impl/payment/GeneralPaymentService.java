@@ -241,7 +241,6 @@ public class GeneralPaymentService {
         response.setPaymentProduct(productTO);
         response.setPaymentType(paymentType);
         responsePayload.setPaymentId(paymentId);
-//		responsePayload.setAspspAccountId();// TODO ID of the deposit account
         responsePayload.setTransactionStatus(TransactionStatus.valueOf(response.getTransactionStatus().name()));
 
         boolean isMultilevelScaRequired;
@@ -335,9 +334,6 @@ public class GeneralPaymentService {
 
             logger.info("Get payment by ID with type: {} and ID: {}", paymentTypeTO, paymentId);
             logger.debug("Payment body: {}", toString);
-            // Normally the paymentId contained here must match the payment id
-            // String paymentId = sca.getPaymentId(); This could also be used.
-            // TODO: store payment type in sca.
             return Optional.ofNullable(paymentRestClient.getPaymentById(sca.getPaymentId()).getBody());
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
