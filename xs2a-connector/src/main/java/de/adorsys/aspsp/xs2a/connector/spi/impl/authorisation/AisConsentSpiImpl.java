@@ -154,7 +154,6 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
     /*
      * Maybe store the corresponding token in the list of revoked token.
      *
-     * TODO: Implement this functionality
      *
      */
     @Override
@@ -268,7 +267,6 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
     }
 
     ConsentStatus getConsentStatus(SCAConsentResponseTO consentResponse) {
-        //TODO: https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1102 Refactoring connector-examples by using multilevelScaRequired
         if (consentResponse != null
                     && consentResponse.isPartiallyAuthorised()
                     && ScaStatusTO.FINALISED.equals(consentResponse.getScaStatus())) {
