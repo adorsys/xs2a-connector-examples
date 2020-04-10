@@ -1,3 +1,11 @@
 = Release notes v.7.2
 
 == Table of Contents
+
+* Bugfix: Fix multiple accept headers on connector side
+
+== Bugfix: Fix multiple accept headers on connector side
+
+From now on, in case of multiple accept headers for getting transactions list
+(`GET /v1/accounts/{{account_id}}/transactions` , `GET /v1/card-accounts/{{account_id}}/transactions`)
+connector will return `application/json` response type.
