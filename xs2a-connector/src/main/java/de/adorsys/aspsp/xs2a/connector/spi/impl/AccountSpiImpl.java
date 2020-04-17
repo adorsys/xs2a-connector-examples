@@ -36,6 +36,7 @@ import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiAddress;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.AccountSpi;
 import feign.FeignException;
@@ -127,6 +128,26 @@ public class AccountSpiImpl implements AccountSpi {
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
+    }
+
+    @Override
+    public SpiResponse<List<SpiTrustedBeneficiaries>> requestTrustedBeneficiariesList(@NotNull SpiContextData spiContextData, SpiAccountReference accountReference, @NotNull SpiAccountConsent spiAccountConsent, @NotNull SpiAspspConsentDataProvider spiAspspConsentDataProvider) {
+        // TODO: replace with real response from ledgers https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1255
+        logger.info("Retrieving mock trusted beneficiaries list for consent: {}", spiAccountConsent);
+        SpiTrustedBeneficiaries trustedBeneficiaries = new SpiTrustedBeneficiaries(
+                "mocked trusted beneficiaries id",
+                new SpiAccountReference(null, "mocked debtor iban", null, null, null, null, null),
+                new SpiAccountReference(null, "mocked creditor iban", null, null, null, null, null),
+                "mocked creditor agent",
+                "mocked creditor name",
+                "mocked creditor alias",
+                "mocked creditor id",
+                new SpiAddress("mocked street name", "mocked building number", "mocked town name", "mocked post code", "mocked country")
+        );
+
+        return SpiResponse.<List<SpiTrustedBeneficiaries>>builder()
+                       .payload(Collections.singletonList(trustedBeneficiaries))
+                       .build();
     }
 
     @Override
