@@ -51,7 +51,7 @@
     ]
   },
   "piis": {
-    "piisConsentSupported": true
+    "piisConsentSupported": "ASPSP_CONSENT_SUPPORTED"
   },
   "common": {
     "scaRedirectFlow": "REDIRECT",
