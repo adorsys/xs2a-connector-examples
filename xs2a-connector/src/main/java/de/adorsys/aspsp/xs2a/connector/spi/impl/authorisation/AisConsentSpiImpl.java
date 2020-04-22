@@ -451,4 +451,12 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
                                                 || StringUtils.isNotBlank(ref.getPan()));
     }
 
+    @Override
+    public @NotNull SpiResponse<Boolean> requestTrustedBeneficiaryFlag(@NotNull SpiContextData spiContextData, @NotNull SpiAccountConsent accountConsent, @NotNull String authorisationId, @NotNull SpiAspspConsentDataProvider spiAspspConsentDataProvider) {
+        // TODO replace with real response from ledgers https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/issues/1263
+        logger.info("Retrieving mock trusted beneficiaries flag for consent: {}", accountConsent);
+        return SpiResponse.<Boolean>builder()
+                       .payload(true)
+                       .build();
+    }
 }
