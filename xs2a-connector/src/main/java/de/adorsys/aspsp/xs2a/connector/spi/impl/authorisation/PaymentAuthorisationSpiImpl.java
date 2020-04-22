@@ -35,6 +35,7 @@ import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
+import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiPsuAuthorisationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.PaymentAuthorisationSpi;
@@ -152,5 +153,14 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
         }
 
         return super.getScaMethods(sca);
+    }
+
+    @Override
+    public @NotNull SpiResponse<Boolean> requestTrustedBeneficiaryFlag(@NotNull SpiContextData spiContextData, @NotNull SpiPayment payment, @NotNull String authorisationId, @NotNull SpiAspspConsentDataProvider spiAspspConsentDataProvider) {
+        // TODO replace with real response from ledgers https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/issues/1263
+        logger.info("Retrieving mock trusted beneficiaries flag for payment: {}", payment);
+        return SpiResponse.<Boolean>builder()
+                       .payload(true)
+                       .build();
     }
 }
