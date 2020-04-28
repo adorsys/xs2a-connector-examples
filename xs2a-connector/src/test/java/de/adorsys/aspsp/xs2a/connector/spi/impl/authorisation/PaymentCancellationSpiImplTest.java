@@ -6,7 +6,6 @@ import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
-import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCALoginResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
@@ -649,7 +648,7 @@ class PaymentCancellationSpiImplTest {
     private SCAPaymentResponseTO getScaPaymentResponseTO(ScaStatusTO scaStatusTO) {
         SCAPaymentResponseTO scaPaymentResponseTO = new SCAPaymentResponseTO();
         scaPaymentResponseTO.setPaymentId(PAYMENT_ID);
-        scaPaymentResponseTO.setPaymentProduct(PaymentProductTO.SEPA.getValue());
+        scaPaymentResponseTO.setPaymentProduct(PAYMENT_PRODUCT);
         scaPaymentResponseTO.setAuthorisationId(AUTHORISATION_ID);
         scaPaymentResponseTO.setScaStatus(scaStatusTO);
         BearerTokenTO bearerToken = new BearerTokenTO();

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.*;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
-import de.adorsys.ledgers.middleware.api.domain.payment.BulkPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
@@ -68,8 +67,8 @@ class BulkPaymentSpiImplTest {
 
     @Test
     void getPaymentById() {
-        when(paymentService.getPaymentById(eq(payment), eq(spiAspspConsentDataProvider), eq(BulkPaymentTO.class),
-                                           any(), eq(PaymentTypeTO.BULK)))
+        when(paymentService.getPaymentById(eq(payment), eq(spiAspspConsentDataProvider),
+                                           any()))
                 .thenReturn(SpiResponse.<SpiBulkPayment>builder()
                                     .payload(payment)
                                     .build());
@@ -77,8 +76,8 @@ class BulkPaymentSpiImplTest {
         paymentSpi.getPaymentById(SPI_CONTEXT_DATA, JSON_ACCEPT_MEDIA_TYPE, payment, spiAspspConsentDataProvider);
 
         verify(paymentService, times(1)).getPaymentById(eq(payment),
-                                                        eq(spiAspspConsentDataProvider), eq(BulkPaymentTO.class),
-                                                        any(), eq(PaymentTypeTO.BULK));
+                                                        eq(spiAspspConsentDataProvider),
+                                                        any());
     }
 
     @Test

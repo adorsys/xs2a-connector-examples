@@ -16,12 +16,10 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.MultilevelScaService;
-import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
@@ -76,7 +74,6 @@ public class GeneralPaymentService {
     private final AuthRequestInterceptor authRequestInterceptor;
     private final AspspConsentDataService consentDataService;
     private final FeignExceptionReader feignExceptionReader;
-    private final ObjectMapper objectMapper;
     private final String transactionStatusXmlBody;
     private final MultilevelScaService multilevelScaService;
     private final UserMgmtRestClient userMgmtRestClient;
@@ -85,7 +82,6 @@ public class GeneralPaymentService {
                                  AuthRequestInterceptor authRequestInterceptor,
                                  AspspConsentDataService consentDataService,
                                  FeignExceptionReader feignExceptionReader,
-                                 ObjectMapper objectMapper,
                                  @Value("${test-transaction-status-xml-body}") String transactionStatusXmlBody,
                                  MultilevelScaService multilevelScaService,
                                  UserMgmtRestClient userMgmtRestClient) {
@@ -93,7 +89,6 @@ public class GeneralPaymentService {
         this.authRequestInterceptor = authRequestInterceptor;
         this.consentDataService = consentDataService;
         this.feignExceptionReader = feignExceptionReader;
-        this.objectMapper = objectMapper;
         this.transactionStatusXmlBody = transactionStatusXmlBody;
         this.multilevelScaService = multilevelScaService;
         this.userMgmtRestClient = userMgmtRestClient;
@@ -232,13 +227,7 @@ public class GeneralPaymentService {
         SCAPaymentResponseTO response = new SCAPaymentResponseTO();
         response.setPaymentId(paymentId);
         response.setTransactionStatus(TransactionStatusTO.RCVD);
-
-        String paymentProduct = payment.getPaymentProduct();
-        String productTO = PaymentProductTO.getByValue(paymentProduct)
-                                   .map(PaymentProductTO::getValue)
-                                   .orElse(null);
-
-        response.setPaymentProduct(productTO);
+        response.setPaymentProduct(payment.getPaymentProduct());
         response.setPaymentType(paymentType);
         responsePayload.setPaymentId(paymentId);
         responsePayload.setTransactionStatus(TransactionStatus.valueOf(response.getTransactionStatus().name()));
@@ -296,7 +285,7 @@ public class GeneralPaymentService {
         }
     }
 
-    public <P extends SpiPayment, TO> SpiResponse<P> getPaymentById(P payment, SpiAspspConsentDataProvider aspspConsentDataProvider, Class<TO> clazz, Function<TO, P> mapperToSpiPayment, PaymentTypeTO paymentTypeTO) {
+    public <P extends SpiPayment> SpiResponse<P> getPaymentById(P payment, SpiAspspConsentDataProvider aspspConsentDataProvider, Function<PaymentTO, P> mapperToSpiPayment) {
 
         Function<P, SpiResponse<P>> buildSuccessResponse = p -> SpiResponse.<P>builder().payload(p).build();
 
@@ -305,10 +294,8 @@ public class GeneralPaymentService {
         }
 
         Supplier<SpiResponse<P>> buildFailedResponse = () -> SpiResponse.<P>builder().error(new TppMessage(MessageErrorCode.PAYMENT_FAILED_INCORRECT_ID)).build();
-        Function<Object, TO> convertToTransferObject = o -> objectMapper.convertValue(o, clazz);
 
-        return getPaymentFromLedgers(payment.getPaymentId(), payment.toString(), aspspConsentDataProvider.loadAspspConsentData(), paymentTypeTO)
-                       .map(convertToTransferObject)
+        return getPaymentFromLedgers(payment, aspspConsentDataProvider.loadAspspConsentData())
                        .map(mapperToSpiPayment)
                        .map(buildSuccessResponse)
                        .orElseGet(buildFailedResponse);
@@ -327,17 +314,17 @@ public class GeneralPaymentService {
                        .build();
     }
 
-    private Optional<Object> getPaymentFromLedgers(String paymentId, String toString, byte[] aspspConsentData, PaymentTypeTO paymentTypeTO) {
+    private Optional<PaymentTO> getPaymentFromLedgers(SpiPayment payment, byte[] aspspConsentData) {
         try {
             SCAPaymentResponseTO sca = consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
-            logger.info("Get payment by ID with type: {} and ID: {}", paymentTypeTO, paymentId);
-            logger.debug("Payment body: {}", toString);
+            logger.info("Get payment by ID with type: {} and ID: {}", payment.getPaymentType(), payment.getPaymentId());
+            logger.debug("Payment body: {}", payment);
             return Optional.ofNullable(paymentRestClient.getPaymentById(sca.getPaymentId()).getBody());
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
-            logger.error("Get payment by id failed: payment ID {}, devMessage {}", paymentId, devMessage);
+            logger.error("Get payment by id failed: payment ID {}, devMessage {}", payment.getPaymentId(), devMessage);
             return Optional.empty();
         } finally {
             authRequestInterceptor.setAccessToken(null);
