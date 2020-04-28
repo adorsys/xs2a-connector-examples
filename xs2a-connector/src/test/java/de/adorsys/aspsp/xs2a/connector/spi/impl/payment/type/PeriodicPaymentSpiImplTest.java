@@ -5,7 +5,6 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.*;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
-import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
 import de.adorsys.psd2.xs2a.core.pis.FrequencyCode;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
@@ -66,8 +65,8 @@ class PeriodicPaymentSpiImplTest {
 
     @Test
     void getPaymentById() {
-        when(paymentService.getPaymentById(eq(payment), eq(spiAspspConsentDataProvider), eq(PeriodicPaymentTO.class),
-                                           any(), eq(PaymentTypeTO.PERIODIC)))
+        when(paymentService.getPaymentById(eq(payment), eq(spiAspspConsentDataProvider),
+                                           any()))
                 .thenReturn(SpiResponse.<SpiPeriodicPayment>builder()
                                     .payload(new SpiPeriodicPayment(PAYMENT_PRODUCT))
                                     .build());
@@ -75,8 +74,8 @@ class PeriodicPaymentSpiImplTest {
         paymentSpi.getPaymentById(SPI_CONTEXT_DATA, JSON_ACCEPT_MEDIA_TYPE, payment, spiAspspConsentDataProvider);
 
         verify(paymentService, times(1)).getPaymentById(eq(payment),
-                                                        eq(spiAspspConsentDataProvider), eq(PeriodicPaymentTO.class),
-                                                        any(), eq(PaymentTypeTO.PERIODIC));
+                                                        eq(spiAspspConsentDataProvider),
+                                                        any());
     }
 
     @Test

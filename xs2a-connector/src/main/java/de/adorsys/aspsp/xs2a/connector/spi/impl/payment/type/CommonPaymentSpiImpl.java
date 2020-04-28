@@ -16,10 +16,8 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 
-import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
@@ -40,14 +38,10 @@ import java.util.HashSet;
 @Service
 public class CommonPaymentSpiImpl extends AbstractPaymentSpi<SpiPaymentInfo, SpiPaymentInitiationResponse> implements CommonPaymentSpi {
 
-    private GeneralPaymentService generalPaymentService;
-    private LedgersSpiPaymentMapper ledgersSpiPaymentMapper;
     private static final String PSU_MESSAGE = "Mocked PSU message from SPI for this payment";
 
-    public CommonPaymentSpiImpl(GeneralPaymentService generalPaymentService, LedgersSpiPaymentMapper ledgersSpiPaymentMapper) {
+    public CommonPaymentSpiImpl(GeneralPaymentService generalPaymentService) {
         super(generalPaymentService);
-        this.generalPaymentService = generalPaymentService;
-        this.ledgersSpiPaymentMapper = ledgersSpiPaymentMapper;
     }
 
     @Override
@@ -67,13 +61,7 @@ public class CommonPaymentSpiImpl extends AbstractPaymentSpi<SpiPaymentInfo, Spi
 
     @Override
     protected SpiResponse<SpiPaymentInitiationResponse> processEmptyAspspConsentData(@NotNull SpiPaymentInfo payment, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, @NotNull SpiPsuData spiPsuData) {
-        return generalPaymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, payment, aspspConsentDataProvider, new SpiSinglePaymentInitiationResponse(), spiPsuData, new HashSet<>());
-    }
-
-    @NotNull
-    @Override
-    protected SpiPaymentInitiationResponse getToSpiPaymentResponse(SCAPaymentResponseTO response) {
-        return ledgersSpiPaymentMapper.toSpiSingleResponse(response);
+        return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, payment, aspspConsentDataProvider, new SpiSinglePaymentInitiationResponse(), spiPsuData, new HashSet<>());
     }
 
     @Override

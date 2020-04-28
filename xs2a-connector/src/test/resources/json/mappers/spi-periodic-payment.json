@@ -1,0 +1,53 @@
+{
+  "paymentId": "yc7AU-GdRIMjLAzKXjmDU4",
+  "endToEndIdentification": "RI-123456789",
+  "debtorAccount": {
+    "aspspAccountId": "DE52500105173911841934",
+    "resourceId": "DE52500105173911841934",
+    "iban": "DE52500105173911841934",
+    "bban": "Test BBAN",
+    "pan": "1111",
+    "maskedPan": "23456xxxxxx1234",
+    "msisdn": "0172/1111111",
+    "currency": "EUR"
+  },
+  "instructedAmount": {
+    "currency": "EUR",
+    "amount": 1000.0
+  },
+  "creditorAccount": {
+    "aspspAccountId": "DE52500105173911841934",
+    "resourceId": "DE52500105173911841934",
+    "iban": "DE52500105173911841934",
+    "bban": "Test BBAN",
+    "pan": "1111",
+    "maskedPan": "23456xxxxxx1234",
+    "msisdn": "0172/1111111",
+    "currency": "EUR"
+  },
+  "creditorAgent": "BCENECEQ",
+  "creditorName": "Telekom",
+  "creditorAddress": {
+    "streetName": "WBG Straße",
+    "buildingNumber": "56",
+    "townName": "Nürnberg",
+    "postCode": "90543",
+    "country": "DE"
+  },
+  "remittanceInformationUnstructured": "Ref. Number TELEKOM-1222",
+  "paymentStatus": "ACSC",
+  "paymentProduct": "sepa-credit-transfers",
+  "requestedExecutionDate" : "2020-12-12",
+  "requestedExecutionTime": "2020-12-12T12:00:00.000Z",
+  "purposeCode": "BKDF",
+  "remittanceInformationStructured": {
+    "reference": "Ref Number Merchant",
+    "referenceType": "reference type",
+    "referenceIssuer": "reference issuer"
+  },
+  "startDate": "2018-12-12",
+  "endDate": "2018-12-28",
+  "executionRule": "following",
+  "frequency": "DAILY",
+  "dayOfExecution": 1
+}

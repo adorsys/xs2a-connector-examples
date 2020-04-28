@@ -18,9 +18,7 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
-import de.adorsys.ledgers.middleware.api.domain.payment.BulkPaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
@@ -42,12 +40,10 @@ import java.util.stream.Collectors;
 @Component
 public class BulkPaymentSpiImpl extends AbstractPaymentSpi<SpiBulkPayment, SpiBulkPaymentInitiationResponse> implements BulkPaymentSpi {
     private final LedgersSpiPaymentMapper paymentMapper;
-    private final GeneralPaymentService paymentService;
 
     @Autowired
     public BulkPaymentSpiImpl(GeneralPaymentService paymentService, LedgersSpiPaymentMapper paymentMapper) {
         super(paymentService);
-        this.paymentService = paymentService;
         this.paymentMapper = paymentMapper;
     }
 
@@ -56,8 +52,7 @@ public class BulkPaymentSpiImpl extends AbstractPaymentSpi<SpiBulkPayment, SpiBu
                                                                @NotNull String acceptMediaType,
                                                                @NotNull SpiBulkPayment payment,
                                                                @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        return paymentService.getPaymentById(payment, aspspConsentDataProvider, BulkPaymentTO.class,
-                                             paymentMapper::mapToSpiBulkPayment, PaymentTypeTO.BULK);
+        return paymentService.getPaymentById(payment, aspspConsentDataProvider, paymentMapper::mapToSpiBulkPayment);
     }
 
     @Override
@@ -74,11 +69,4 @@ public class BulkPaymentSpiImpl extends AbstractPaymentSpi<SpiBulkPayment, SpiBu
                                                                 .collect(Collectors.toSet());
         return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.BULK, payment, aspspConsentDataProvider, new SpiBulkPaymentInitiationResponse(), spiPsuData, spiAccountReferences);
     }
-
-    @NotNull
-    @Override
-    protected SpiBulkPaymentInitiationResponse getToSpiPaymentResponse(SCAPaymentResponseTO response) {
-        return paymentMapper.toSpiBulkResponse(response);
-    }
-
 }
