@@ -4,7 +4,6 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.core.profile.PaymentType;
@@ -100,23 +99,6 @@ class CommonPaymentSpiImplTest {
         //Then
         assertTrue(response.isSuccessful());
         assertEquals(response.getPayload(), spiSinglePaymentInitiationResponse);
-    }
-
-    @Test
-    void getToSpiPaymentResponse() {
-        //Given
-        SpiSinglePaymentInitiationResponse spiSinglePaymentInitiationResponse = new SpiSinglePaymentInitiationResponse();
-        spiSinglePaymentInitiationResponse.setPaymentId(PAYMENT_ID);
-        SCAPaymentResponseTO scaPaymentResponseTO = new SCAPaymentResponseTO();
-
-        when(ledgersSpiPaymentMapper.toSpiSingleResponse(scaPaymentResponseTO))
-                .thenReturn(spiSinglePaymentInitiationResponse);
-
-        //When
-        SpiPaymentInitiationResponse spiPaymentInitiationResponse = commonPaymentSpi.getToSpiPaymentResponse(scaPaymentResponseTO);
-
-        //Then
-        assertEquals(spiSinglePaymentInitiationResponse, spiPaymentInitiationResponse);
     }
 
     @Test

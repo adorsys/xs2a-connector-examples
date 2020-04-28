@@ -1,12 +1,10 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
-import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
-import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.AuthConfirmationTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
@@ -44,11 +42,11 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class GeneralPaymentServiceTest {
+    private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
     private static final String ANY_MEDIA_TYPE = "*/*";
     private static final String JSON_MEDIA_TYPE = "application/json";
     private static final String XML_MEDIA_TYPE = "application/xml";
@@ -71,8 +69,6 @@ class GeneralPaymentServiceTest {
     @Mock
     private PaymentRestClient paymentRestClient;
     @Mock
-    private ObjectMapper objectMapper;
-    @Mock
     private LedgersSpiPaymentMapper paymentMapper;
     @Mock
     private MultilevelScaService multilevelScaService;
@@ -83,7 +79,7 @@ class GeneralPaymentServiceTest {
 
     @BeforeEach
     void setUp() {
-        generalPaymentService = new GeneralPaymentService(paymentRestClient, authRequestInterceptor, consentDataService, feignExceptionReader, objectMapper, MOCK_XML_BODY, multilevelScaService, userMgmtRestClient);
+        generalPaymentService = new GeneralPaymentService(paymentRestClient, authRequestInterceptor, consentDataService, feignExceptionReader, MOCK_XML_BODY, multilevelScaService, userMgmtRestClient);
     }
 
     @Test
@@ -124,7 +120,7 @@ class GeneralPaymentServiceTest {
         //Given
         SpiPayment initialPayment = getSpiSingle(TransactionStatus.RCVD, "initialPayment");
         //When
-        SpiResponse<SpiPayment> paymentById = generalPaymentService.getPaymentById(initialPayment, null, null, null, null);
+        SpiResponse<SpiPayment> paymentById = generalPaymentService.getPaymentById(initialPayment, null, null);
         //Then
         assertTrue(paymentById.isSuccessful());
         assertEquals(initialPayment, paymentById.getPayload());
@@ -136,7 +132,10 @@ class GeneralPaymentServiceTest {
         SpiPayment initialPayment = getSpiSingle(TransactionStatus.ACSP, "initialPayment");
         SpiPayment paymentAspsp = getSpiSingle(TransactionStatus.ACSP, "paymentAspsp");
 
-        SinglePaymentTO singlePaymentTO = new SinglePaymentTO();
+        PaymentTO paymentTO = new PaymentTO();
+        paymentTO.setPaymentId("myPaymentId");
+        paymentTO.setTransactionStatus(TransactionStatusTO.ACSP);
+
         SCAPaymentResponseTO sca = new SCAPaymentResponseTO();
         sca.setPaymentId(initialPayment.getPaymentId());
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
@@ -144,21 +143,19 @@ class GeneralPaymentServiceTest {
         sca.setBearerToken(bearerTokenTO);
         byte[] aspspConsentData = "".getBytes();
 
-        doReturn(ResponseEntity.ok(paymentAspsp))
-                .when(paymentRestClient).getPaymentById(paymentAspsp.getPaymentId());
+        doReturn(ResponseEntity.ok(paymentTO))
+                .when(paymentRestClient).getPaymentById(paymentTO.getPaymentId());
         when(spiAspspConsentDataProvider.loadAspspConsentData())
                 .thenReturn(aspspConsentData);
         doNothing()
                 .when(authRequestInterceptor).setAccessToken(anyString());
         when(consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class))
                 .thenReturn(sca);
-        doReturn(singlePaymentTO)
-                .when(objectMapper).convertValue(paymentAspsp, SinglePaymentTO.class);
         doReturn(paymentAspsp)
-                .when(paymentMapper).toSpiSinglePayment(singlePaymentTO);
+                .when(paymentMapper).toSpiSinglePayment(paymentTO);
 
         //When
-        SpiResponse<SpiPayment> paymentById = generalPaymentService.getPaymentById(initialPayment, spiAspspConsentDataProvider, SinglePaymentTO.class, paymentMapper::toSpiSinglePayment, PaymentTypeTO.SINGLE);
+        SpiResponse<SpiPayment> paymentById = generalPaymentService.getPaymentById(initialPayment, spiAspspConsentDataProvider, paymentMapper::toSpiSinglePayment);
         //Then
         assertTrue(paymentById.isSuccessful());
         assertEquals(paymentAspsp, paymentById.getPayload());
@@ -356,7 +353,7 @@ class GeneralPaymentServiceTest {
     }
 
     private SpiSinglePayment getSpiSingle(TransactionStatus transactionStatus, String agent) {
-        SpiSinglePayment spiPayment = new SpiSinglePayment(PaymentProductTO.SEPA.getValue());
+        SpiSinglePayment spiPayment = new SpiSinglePayment(PAYMENT_PRODUCT);
         spiPayment.setPaymentId("myPaymentId");
         spiPayment.setCreditorAgent(agent);
         spiPayment.setPaymentStatus(transactionStatus);

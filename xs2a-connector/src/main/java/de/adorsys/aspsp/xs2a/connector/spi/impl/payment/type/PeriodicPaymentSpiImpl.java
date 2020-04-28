@@ -19,8 +19,6 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
-import de.adorsys.ledgers.middleware.api.domain.payment.PeriodicPaymentTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
@@ -42,12 +40,10 @@ import java.util.Set;
 public class PeriodicPaymentSpiImpl extends AbstractPaymentSpi<SpiPeriodicPayment, SpiPeriodicPaymentInitiationResponse> implements PeriodicPaymentSpi {
 
     private final LedgersSpiPaymentMapper paymentMapper;
-    private final GeneralPaymentService paymentService;
 
     @Autowired
     public PeriodicPaymentSpiImpl(GeneralPaymentService paymentService, LedgersSpiPaymentMapper paymentMapper) {
         super(paymentService);
-        this.paymentService = paymentService;
         this.paymentMapper = paymentMapper;
     }
 
@@ -57,8 +53,7 @@ public class PeriodicPaymentSpiImpl extends AbstractPaymentSpi<SpiPeriodicPaymen
                                                                    @NotNull SpiPeriodicPayment payment,
                                                                    @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         payment.setDebtorName(DEBTOR_NAME);
-        return paymentService.getPaymentById(payment, aspspConsentDataProvider, PeriodicPaymentTO.class,
-                                             paymentMapper::mapToSpiPeriodicPayment, PaymentTypeTO.PERIODIC);
+        return paymentService.getPaymentById(payment, aspspConsentDataProvider, paymentMapper::mapToSpiPeriodicPayment);
     }
 
     @Override
@@ -72,12 +67,6 @@ public class PeriodicPaymentSpiImpl extends AbstractPaymentSpi<SpiPeriodicPaymen
                                                                                              @NotNull SpiPsuData spiPsuData) {
         Set<SpiAccountReference> spiAccountReferences = new HashSet<>(Collections.singleton(payment.getDebtorAccount()));
         return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.PERIODIC, payment, aspspConsentDataProvider, new SpiPeriodicPaymentInitiationResponse(), spiPsuData, spiAccountReferences);
-    }
-
-    @NotNull
-    @Override
-    protected SpiPeriodicPaymentInitiationResponse getToSpiPaymentResponse(SCAPaymentResponseTO response) {
-        return paymentMapper.toSpiPeriodicResponse(response);
     }
 
 }

@@ -1,3 +1,9 @@
 = Release notes v. 6.3
 
 == Table of Contents
+
+* Change SinglePaymentTO, PeriodicPaymentTO, BulkPaymentTO to PaymentTO
+
+== Change SinglePaymentTO, PeriodicPaymentTO, BulkPaymentTO to PaymentTO
+
+From now on, all deprecated payments (SinglePaymentTO, PeriodicPaymentTO, BulkPaymentTO) were changed to PaymentTO.

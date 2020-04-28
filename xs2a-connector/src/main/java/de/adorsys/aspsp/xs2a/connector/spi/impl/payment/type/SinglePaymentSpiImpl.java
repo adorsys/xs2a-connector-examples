@@ -19,8 +19,6 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
-import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
@@ -41,12 +39,10 @@ import java.util.Set;
 @Component
 public class SinglePaymentSpiImpl extends AbstractPaymentSpi<SpiSinglePayment, SpiSinglePaymentInitiationResponse> implements SinglePaymentSpi {
     private LedgersSpiPaymentMapper paymentMapper;
-    private GeneralPaymentService paymentService;
 
     @Autowired
     public SinglePaymentSpiImpl(GeneralPaymentService paymentService, LedgersSpiPaymentMapper paymentMapper) {
         super(paymentService);
-        this.paymentService = paymentService;
         this.paymentMapper = paymentMapper;
     }
 
@@ -56,8 +52,7 @@ public class SinglePaymentSpiImpl extends AbstractPaymentSpi<SpiSinglePayment, S
                                                                  @NotNull SpiSinglePayment payment,
                                                                  @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         payment.setDebtorName(DEBTOR_NAME);
-        return paymentService.getPaymentById(payment, aspspConsentDataProvider, SinglePaymentTO.class,
-                                             paymentMapper::toSpiSinglePayment, PaymentTypeTO.SINGLE);
+        return paymentService.getPaymentById(payment, aspspConsentDataProvider, paymentMapper::toSpiSinglePayment);
     }
 
     @Override
@@ -71,11 +66,5 @@ public class SinglePaymentSpiImpl extends AbstractPaymentSpi<SpiSinglePayment, S
                                                                                            @NotNull SpiPsuData spiPsuData) {
         Set<SpiAccountReference> spiAccountReferences = new HashSet<>(Collections.singleton(payment.getDebtorAccount()));
         return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, payment, aspspConsentDataProvider, new SpiSinglePaymentInitiationResponse(), spiPsuData, spiAccountReferences);
-    }
-
-    @NotNull
-    @Override
-    protected SpiSinglePaymentInitiationResponse getToSpiPaymentResponse(SCAPaymentResponseTO response) {
-        return paymentMapper.toSpiSingleResponse(response);
     }
 }
