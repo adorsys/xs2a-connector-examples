@@ -209,7 +209,7 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
                            .payload(new SpiVerifyScaAuthorisationResponse(getConsentStatus(consentResponse)))
                            .build();
         } catch (FeignException feignException) {
-            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            String devMessage = "Wrong auth code";
             logger.error("Verify sca authorisation failed: consent ID {}, devMessage {}", accountConsent.getId(), devMessage);
             return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder()
                            .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
