@@ -156,7 +156,7 @@ public class GeneralPaymentService {
                            .payload(spiPaymentExecutionResponse(consentResponse.getTransactionStatus()))
                            .build();
         } catch (FeignException feignException) {
-            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            String devMessage = "Wrong auth code";
             logger.info("Verify SCA authorisation and execute payment failed: payment ID {}, devMessage {}", spiScaConfirmation.getPaymentId(), devMessage);
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
                            .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
