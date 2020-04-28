@@ -22,7 +22,6 @@ import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.CmsPaymentStatusUpdateService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.internal.PaymentInternalGeneral;
-import de.adorsys.ledgers.middleware.api.domain.payment.PaymentProductTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCALoginResponseTO;
@@ -126,16 +125,7 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
         paymentResponse.setObjectType(SCAPaymentResponseTO.class.getSimpleName());
         paymentResponse.setPaymentId(businessObject.getPaymentId());
         paymentResponse.setPaymentType(PaymentTypeTO.valueOf(paymentTypeString));
-        String paymentProduct = businessObject.getPaymentProduct();
-        if (originalResponse != null && originalResponse.getPaymentProduct() != null) {
-            paymentProduct = originalResponse.getPaymentProduct();
-        } else {
-            throw new IOException("Missing payment product");
-        }
-
-        String unsupportedPaymentProductMessage = String.format("Unsupported payment product %s", paymentProduct);
-        PaymentProductTO productTO = PaymentProductTO.getByValue(paymentProduct).orElseThrow(() -> new IOException(unsupportedPaymentProductMessage));
-        paymentResponse.setPaymentProduct(productTO.getValue());
+        paymentResponse.setPaymentProduct(businessObject.getPaymentProduct());
         paymentResponse.setMultilevelScaRequired(originalResponse.isMultilevelScaRequired());
         return paymentResponse;
     }

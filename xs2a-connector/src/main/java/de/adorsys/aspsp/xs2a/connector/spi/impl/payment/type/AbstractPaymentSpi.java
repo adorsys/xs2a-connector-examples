@@ -2,7 +2,6 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
@@ -26,7 +25,7 @@ public abstract class AbstractPaymentSpi<P extends SpiPayment, R extends SpiPaym
 
     protected static final String DEBTOR_NAME = "Mocked debtor name from ASPSP";
 
-    private final GeneralPaymentService paymentService;
+    protected final GeneralPaymentService paymentService;
 
     /*
      * Initiating a payment you need a valid bearer token if not we just return ok.
@@ -77,9 +76,6 @@ public abstract class AbstractPaymentSpi<P extends SpiPayment, R extends SpiPaym
     protected abstract SpiResponse<R> processEmptyAspspConsentData(@NotNull P payment,
                                                                    @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider,
                                                                    @NotNull SpiPsuData spiPsuData);
-
-    @NotNull
-    protected abstract R getToSpiPaymentResponse(SCAPaymentResponseTO response);
 
     protected  @NotNull SpiResponse<SpiPaymentConfirmationCodeValidationResponse> notifyConfirmationCodeValidation(@NotNull SpiContextData spiContextData, boolean confirmationCodeValidationResult, @NotNull P payment, boolean isCancellation, @NotNull SpiAspspConsentDataProvider spiAspspConsentDataProvider) {
         ScaStatus scaStatus  = confirmationCodeValidationResult ? ScaStatus.FINALISED : ScaStatus.FAILED;

@@ -5,7 +5,6 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.*;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
-import de.adorsys.ledgers.middleware.api.domain.payment.SinglePaymentTO;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
@@ -66,17 +65,14 @@ class SinglePaymentSpiImplTest {
 
     @Test
     void getPaymentById() {
-        when(paymentService.getPaymentById(eq(payment), eq(spiAspspConsentDataProvider), eq(SinglePaymentTO.class),
-                                           any(), eq(PaymentTypeTO.SINGLE)))
+        when(paymentService.getPaymentById(eq(payment), eq(spiAspspConsentDataProvider), any()))
                 .thenReturn(SpiResponse.<SpiSinglePayment>builder()
                                     .payload(new SpiSinglePayment(PAYMENT_PRODUCT))
                                     .build());
 
         paymentSpi.getPaymentById(SPI_CONTEXT_DATA, JSON_ACCEPT_MEDIA_TYPE, payment, spiAspspConsentDataProvider);
 
-        verify(paymentService, times(1)).getPaymentById(eq(payment),
-                                                        eq(spiAspspConsentDataProvider), eq(SinglePaymentTO.class),
-                                                        any(), eq(PaymentTypeTO.SINGLE));
+        verify(paymentService, times(1)).getPaymentById(eq(payment), eq(spiAspspConsentDataProvider), any());
     }
 
     @Test
