@@ -127,7 +127,8 @@ public class OauthProfileServiceWrapper implements AspspProfileService {
                                              existingSetting.getAspspNotificationsSupported(),
                                              existingSetting.isAuthorisationConfirmationRequestMandated(),
                                              existingSetting.isAuthorisationConfirmationCheckByXs2a(),
-                                             existingSetting.isCheckUriComplianceToDomainSupported());
+                                             existingSetting.isCheckUriComplianceToDomainSupported(),
+                                             existingSetting.getTppUriComplianceResponse());
     }
 
     private AisAspspProfileSetting buildCustomAisAspspProfileSetting(AisAspspProfileSetting existingSetting, String redirectUrlSuffix) {
