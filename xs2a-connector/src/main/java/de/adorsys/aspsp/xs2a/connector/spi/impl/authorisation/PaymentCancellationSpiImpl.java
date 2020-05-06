@@ -36,6 +36,7 @@ import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiPsuAuthorisationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentCancellationResponse;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.PaymentCancellationSpi;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
@@ -53,6 +54,7 @@ import java.util.Optional;
 
 @Component
 public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPayment, SCAPaymentResponseTO> implements PaymentCancellationSpi {
+    private static final String ATTEMPT_FAILURE = "SCA_VALIDATION_ATTEMPT_FAILED";
     private static final Logger logger = LoggerFactory.getLogger(PaymentCancellationSpiImpl.class);
 
     private final PaymentRestClient paymentRestClient;
@@ -123,6 +125,7 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
     }
 
     @Override
+    @Deprecated // TODO remove deprecated method in 6.7 https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/issues/1270
     public @NotNull SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisationAndCancelPayment(@NotNull SpiContextData contextData,
                                                                                                  @NotNull SpiScaConfirmation spiScaConfirmation,
                                                                                                  @NotNull SpiPayment payment,
@@ -143,6 +146,40 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Verify sca authorisation and cancel payment failed: payment ID {}, devMessage {}", payment.getPaymentId(), devMessage);
             return SpiResponse.<SpiResponse.VoidResponse>builder()
+                           .error(new TppMessage(MessageErrorCode.PSU_CREDENTIALS_INVALID))
+                           .build();
+        }
+    }
+
+    @Override
+    public @NotNull SpiResponse<SpiPaymentResponse> verifyScaAuthorisationAndCancelPaymentWithResponse(@NotNull SpiContextData contextData,
+                                                                                           @NotNull SpiScaConfirmation spiScaConfirmation,
+                                                                                           @NotNull SpiPayment payment,
+                                                                                           @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        try {
+            SCAPaymentResponseTO sca = getSCAConsentResponse(aspspConsentDataProvider, true);
+            authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
+
+            ResponseEntity<SCAPaymentResponseTO> response = paymentRestClient.authorizeCancelPayment(sca.getPaymentId(), sca.getAuthorisationId(), spiScaConfirmation.getTanNumber());
+            return response.getStatusCode() == HttpStatus.OK
+                           ? SpiResponse.<SpiPaymentResponse>builder()
+                                     .payload(new SpiPaymentResponse(SpiAuthorisationStatus.SUCCESS))
+                                     .build()
+                           : SpiResponse.<SpiPaymentResponse>builder()
+                                     .error(new TppMessage(MessageErrorCode.UNAUTHORIZED_CANCELLATION))
+                                     .build();
+        } catch (FeignException feignException) {
+            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            logger.error("Verify sca authorisation and cancel payment failed: payment ID {}, devMessage {}", payment.getPaymentId(), devMessage);
+
+            String errorCode = feignExceptionReader.getErrorCode(feignException);
+            if (errorCode.equals(ATTEMPT_FAILURE)) {
+                return SpiResponse.<SpiPaymentResponse>builder()
+                               .payload(new SpiPaymentResponse(SpiAuthorisationStatus.ATTEMPT_FAILURE))
+                               .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
+                               .build();
+            }
+            return SpiResponse.<SpiPaymentResponse>builder()
                            .error(new TppMessage(MessageErrorCode.PSU_CREDENTIALS_INVALID))
                            .build();
         }
