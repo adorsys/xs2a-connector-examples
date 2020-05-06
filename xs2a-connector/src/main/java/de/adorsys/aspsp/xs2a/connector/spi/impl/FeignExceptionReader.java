@@ -24,6 +24,18 @@ public class FeignExceptionReader {
                        .orElse(null);
     }
 
+    public String getErrorCode(FeignException feignException) {
+        return Optional.ofNullable(feignException.content())
+                       .map(this::readTree)
+                       .map(this::getCode)
+                       .map(JsonNode::asText)
+                       .orElse("");
+    }
+
+    private JsonNode getCode(JsonNode jsonNode) {
+        return jsonNode.get("errorCode");
+    }
+
     private JsonNode getMessage(JsonNode jsonNode) {
         JsonNode devMessage = jsonNode.get("devMessage");
         if (devMessage == null) {

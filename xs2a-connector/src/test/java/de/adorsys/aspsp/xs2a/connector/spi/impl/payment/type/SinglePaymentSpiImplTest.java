@@ -13,6 +13,7 @@ import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiGetPaymentStatusResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -104,14 +105,14 @@ class SinglePaymentSpiImplTest {
     @Test
     void verifyScaAuthorisationAndExecutePayment() {
         SpiScaConfirmation spiScaConfirmation = new SpiScaConfirmation();
-        when(paymentService.verifyScaAuthorisationAndExecutePayment(spiScaConfirmation, spiAspspConsentDataProvider))
-                .thenReturn(SpiResponse.<SpiPaymentExecutionResponse>builder()
+        when(paymentService.verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(spiScaConfirmation, spiAspspConsentDataProvider))
+                .thenReturn(SpiResponse.<SpiPaymentResponse>builder()
                                     .payload(new SpiPaymentExecutionResponse(TransactionStatus.RCVD))
                                     .build());
 
-        paymentSpi.verifyScaAuthorisationAndExecutePayment(SPI_CONTEXT_DATA, spiScaConfirmation, payment, spiAspspConsentDataProvider);
+        paymentSpi.verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(SPI_CONTEXT_DATA, spiScaConfirmation, payment, spiAspspConsentDataProvider);
 
-        verify(paymentService).verifyScaAuthorisationAndExecutePayment(spiScaConfirmation, spiAspspConsentDataProvider);
+        verify(paymentService).verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(spiScaConfirmation, spiAspspConsentDataProvider);
     }
 
     @Test
