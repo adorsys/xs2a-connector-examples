@@ -21,6 +21,7 @@ import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.*;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentCancellationResponse;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import feign.FeignException;
@@ -210,11 +211,12 @@ class PaymentCancellationSpiImplTest {
         when(paymentRestClient.authorizeCancelPayment(PAYMENT_ID, AUTHORISATION_ID, TAN_NUMBER))
                 .thenReturn(ResponseEntity.ok(scaPaymentResponseTO));
 
-        SpiResponse<SpiResponse.VoidResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPayment(SPI_CONTEXT_DATA, spiScaConfirmation,
-                                                                                                               businessObject, spiAspspConsentDataProvider);
+        SpiPaymentResponse expected = new SpiPaymentResponse(SpiAuthorisationStatus.SUCCESS);
+        SpiResponse<SpiPaymentResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPaymentWithResponse(SPI_CONTEXT_DATA, spiScaConfirmation,
+                                                                                                         businessObject, spiAspspConsentDataProvider);
 
         assertFalse(actual.hasError());
-        assertEquals(SpiResponse.voidResponse(), actual.getPayload());
+        assertEquals(expected, actual.getPayload());
 
         verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
         verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, true);
@@ -232,7 +234,7 @@ class PaymentCancellationSpiImplTest {
         when(paymentRestClient.authorizeCancelPayment(PAYMENT_ID, AUTHORISATION_ID, TAN_NUMBER))
                 .thenReturn(ResponseEntity.badRequest().build());
 
-        SpiResponse<SpiResponse.VoidResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPayment(SPI_CONTEXT_DATA, spiScaConfirmation,
+        SpiResponse<SpiPaymentResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPaymentWithResponse(SPI_CONTEXT_DATA, spiScaConfirmation,
                                                                                                                businessObject, spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());
@@ -251,14 +253,45 @@ class PaymentCancellationSpiImplTest {
         when(consentDataService.response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, true)).thenReturn(scaPaymentResponseTO);
 
         doNothing().when(authRequestInterceptor).setAccessToken(ACCESS_TOKEN);
-        when(paymentRestClient.authorizeCancelPayment(PAYMENT_ID, AUTHORISATION_ID, TAN_NUMBER))
-                .thenThrow(FeignExceptionHandler.getException(HttpStatus.BAD_REQUEST, "message"));
 
-        SpiResponse<SpiResponse.VoidResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPayment(SPI_CONTEXT_DATA, spiScaConfirmation,
+        FeignException feignException = FeignExceptionHandler.getException(HttpStatus.BAD_REQUEST, "message");
+        when(paymentRestClient.authorizeCancelPayment(PAYMENT_ID, AUTHORISATION_ID, TAN_NUMBER))
+                .thenThrow(feignException);
+        when(feignExceptionReader.getErrorCode(feignException)).thenReturn("error code");
+
+        SpiResponse<SpiPaymentResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPaymentWithResponse(SPI_CONTEXT_DATA, spiScaConfirmation,
                                                                                                                businessObject, spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());
         assertEquals(MessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
+
+        verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
+        verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, true);
+        verify(authRequestInterceptor, times(1)).setAccessToken(ACCESS_TOKEN);
+        verify(paymentRestClient, times(1)).authorizeCancelPayment(PAYMENT_ID, AUTHORISATION_ID, TAN_NUMBER);
+    }
+
+    @Test
+    void verifyScaAuthorisationAndCancelPayment_exceptionAttemptFailure() {
+        when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
+        SCAPaymentResponseTO scaPaymentResponseTO = getScaPaymentResponseTO(ScaStatusTO.PSUIDENTIFIED);
+        when(consentDataService.response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, true)).thenReturn(scaPaymentResponseTO);
+
+        doNothing().when(authRequestInterceptor).setAccessToken(ACCESS_TOKEN);
+
+        FeignException feignException = FeignExceptionHandler.getException(HttpStatus.BAD_REQUEST, "message");
+        when(paymentRestClient.authorizeCancelPayment(PAYMENT_ID, AUTHORISATION_ID, TAN_NUMBER))
+                .thenThrow(feignException);
+        when(feignExceptionReader.getErrorCode(feignException)).thenReturn("SCA_VALIDATION_ATTEMPT_FAILED");
+
+        SpiPaymentResponse expected = new SpiPaymentResponse(SpiAuthorisationStatus.ATTEMPT_FAILURE);
+        SpiResponse<SpiPaymentResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPaymentWithResponse(SPI_CONTEXT_DATA, spiScaConfirmation,
+                                                                                                         businessObject, spiAspspConsentDataProvider);
+
+        assertTrue(actual.hasError());
+        assertNotNull(actual.getPayload());
+        assertEquals(MessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
+        assertEquals(expected, actual.getPayload());
 
         verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
         verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, true);
@@ -274,7 +307,7 @@ class PaymentCancellationSpiImplTest {
         scaPaymentResponseTO.setScaMethods(Collections.emptyList());
         when(consentDataService.response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false)).thenReturn(scaPaymentResponseTO);
 
-        when(authorisationService.authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider))
+        when(authorisationService.authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, AUTHORISATION_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider))
                 .thenReturn(SpiResponse.<SpiPsuAuthorisationResponse>builder()
                                     .payload(new SpiPsuAuthorisationResponse(false, SpiAuthorisationStatus.SUCCESS))
                                     .build());
@@ -287,7 +320,7 @@ class PaymentCancellationSpiImplTest {
         when(tokenStorageService.toBytes(any(SCAPaymentResponseTO.class))).thenReturn(responseBytes);
         doNothing().when(spiAspspConsentDataProvider).updateAspspConsentData(responseBytes);
 
-        SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.authorisePsu(SPI_CONTEXT_DATA, PSU_ID_DATA, SECRET,
+        SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.authorisePsu(SPI_CONTEXT_DATA, AUTHORISATION_ID, PSU_ID_DATA, SECRET,
                                                                                         businessObject, spiAspspConsentDataProvider);
 
         assertFalse(actual.hasError());
@@ -295,7 +328,7 @@ class PaymentCancellationSpiImplTest {
 
         verify(spiAspspConsentDataProvider, times(2)).loadAspspConsentData();
         verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false);
-        verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider);
+        verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, AUTHORISATION_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider);
         verify(tokenStorageService, times(1)).fromBytes(CONSENT_DATA_BYTES, SCALoginResponseTO.class);
         verify(tokenStorageService, times(1)).toBytes(any(SCAPaymentResponseTO.class));
         verify(spiAspspConsentDataProvider, times(1)).updateAspspConsentData(responseBytes);
@@ -309,7 +342,7 @@ class PaymentCancellationSpiImplTest {
         scaPaymentResponseTO.setScaMethods(Collections.emptyList());
         when(consentDataService.response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false)).thenReturn(scaPaymentResponseTO);
 
-        when(authorisationService.authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider))
+        when(authorisationService.authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID,  AUTHORISATION_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider))
                 .thenReturn(SpiResponse.<SpiPsuAuthorisationResponse>builder()
                                     .payload(new SpiPsuAuthorisationResponse(false, SpiAuthorisationStatus.SUCCESS))
                                     .build());
@@ -320,7 +353,7 @@ class PaymentCancellationSpiImplTest {
 
         when(tokenStorageService.toBytes(any(SCAPaymentResponseTO.class))).thenThrow(new IOException());
 
-        SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.authorisePsu(SPI_CONTEXT_DATA, PSU_ID_DATA, SECRET,
+        SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.authorisePsu(SPI_CONTEXT_DATA,  AUTHORISATION_ID, PSU_ID_DATA, SECRET,
                                                                                         businessObject, spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());
@@ -328,7 +361,7 @@ class PaymentCancellationSpiImplTest {
 
         verify(spiAspspConsentDataProvider, times(2)).loadAspspConsentData();
         verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false);
-        verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider);
+        verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID,  AUTHORISATION_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider);
         verify(tokenStorageService, times(1)).fromBytes(CONSENT_DATA_BYTES, SCALoginResponseTO.class);
         verify(consentDataService, never()).store(any());
         verify(spiAspspConsentDataProvider, never()).updateAspspConsentData(any());
@@ -341,14 +374,14 @@ class PaymentCancellationSpiImplTest {
         scaPaymentResponseTO.setScaMethods(Collections.emptyList());
         when(consentDataService.response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false)).thenReturn(scaPaymentResponseTO);
 
-        when(authorisationService.authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider))
+        when(authorisationService.authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID,  AUTHORISATION_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider))
                 .thenReturn(SpiResponse.<SpiPsuAuthorisationResponse>builder()
                                     .payload(new SpiPsuAuthorisationResponse(false, SpiAuthorisationStatus.SUCCESS))
                                     .build());
         when(tokenStorageService.fromBytes(CONSENT_DATA_BYTES, SCALoginResponseTO.class))
                 .thenThrow(new IOException());
 
-        SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.authorisePsu(SPI_CONTEXT_DATA, PSU_ID_DATA, SECRET,
+        SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.authorisePsu(SPI_CONTEXT_DATA,  AUTHORISATION_ID, PSU_ID_DATA, SECRET,
                                                                                         businessObject, spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());
@@ -356,7 +389,7 @@ class PaymentCancellationSpiImplTest {
 
         verify(spiAspspConsentDataProvider, times(2)).loadAspspConsentData();
         verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false);
-        verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider);
+        verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID,  AUTHORISATION_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider);
         verify(tokenStorageService, times(1)).fromBytes(CONSENT_DATA_BYTES, SCALoginResponseTO.class);
     }
 
@@ -367,11 +400,11 @@ class PaymentCancellationSpiImplTest {
         scaPaymentResponseTO.setScaMethods(Collections.emptyList());
         when(consentDataService.response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false)).thenReturn(scaPaymentResponseTO);
 
-        when(authorisationService.authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider))
+        when(authorisationService.authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID,  AUTHORISATION_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider))
                 .thenReturn(SpiResponse.<SpiPsuAuthorisationResponse>builder()
                                     .build());
 
-        SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.authorisePsu(SPI_CONTEXT_DATA, PSU_ID_DATA, SECRET,
+        SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.authorisePsu(SPI_CONTEXT_DATA,  AUTHORISATION_ID, PSU_ID_DATA, SECRET,
                                                                                         businessObject, spiAspspConsentDataProvider);
 
         assertFalse(actual.hasError());
@@ -379,7 +412,7 @@ class PaymentCancellationSpiImplTest {
 
         verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
         verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, SCAPaymentResponseTO.class, false);
-        verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider);
+        verify(authorisationService, times(1)).authorisePsuForConsent(PSU_ID_DATA, SECRET, PAYMENT_ID,  AUTHORISATION_ID, OpTypeTO.CANCEL_PAYMENT, spiAspspConsentDataProvider);
     }
 
     @Test
@@ -392,7 +425,7 @@ class PaymentCancellationSpiImplTest {
                 .thenThrow(feignException);
         when(feignExceptionReader.getErrorMessage(feignException)).thenReturn("message");
 
-        SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.authorisePsu(SPI_CONTEXT_DATA, PSU_ID_DATA, SECRET,
+        SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.authorisePsu(SPI_CONTEXT_DATA,  AUTHORISATION_ID, PSU_ID_DATA, SECRET,
                                                                                         businessObject, spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());

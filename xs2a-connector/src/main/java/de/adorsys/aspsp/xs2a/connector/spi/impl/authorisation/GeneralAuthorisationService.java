@@ -54,6 +54,7 @@ import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.SCAMETHOD
 
 @Component
 public class GeneralAuthorisationService {
+    private static final String ATTEMPT_FAILURE = "PSU_AUTH_ATTEMPT_INVALID";
     private static final Logger logger = LoggerFactory.getLogger(GeneralAuthorisationService.class);
     private final UserMgmtRestClient userMgmtRestClient;
     private final AuthRequestInterceptor authRequestInterceptor;
@@ -72,22 +73,7 @@ public class GeneralAuthorisationService {
         this.feignExceptionReader = feignExceptionReader;
     }
 
-    /**
-     * First authorization of the PSU.
-     * <p>
-     * The result of this authorisation must contain an scaStatus with following options:
-     * - {@link ScaStatusTO#EXEMPTED}: There is no SCA needed. The user does not have any SCA method anyway.
-     * - {@link ScaStatusTO#SCAMETHODSELECTED}: The user has receive an authorisation code and must enter it.
-     * - {@link ScaStatusTO#PSUIDENTIFIED}: the user must select an authorisation method to complete authorisation.
-     * <p>
-     * In all three cases, we store the response object for reuse in an {@link AspspConsentData} object.
-     *
-     * @param spiPsuData               identification data for the psu
-     * @param pin                      : pis of the psu
-     * @param aspspConsentDataProvider :Provides access to read/write encrypted data to be stored in the consent management system
-     * @return : the authorisation status
-     */
-
+    @Deprecated // TODO remove deprecated method in 6.7 https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/issues/1270
     public <T extends SCAResponseTO> SpiResponse<SpiPsuAuthorisationResponse> authorisePsuForConsent(@NotNull SpiPsuData spiPsuData, String pin, String consentId, OpTypeTO opType, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         String authorisationId = Ids.id();
         try {
@@ -108,6 +94,55 @@ public class GeneralAuthorisationService {
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Authorise PSU for consent failed: authorisation ID {}, consent ID {}, devMessage {}", authorisationId, consentId, devMessage);
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
+                           .build();
+        }
+    }
+
+    /**
+     * First authorization of the PSU.
+     * <p>
+     * The result of this authorisation must contain an scaStatus with following options:
+     * - {@link ScaStatusTO#EXEMPTED}: There is no SCA needed. The user does not have any SCA method anyway.
+     * - {@link ScaStatusTO#SCAMETHODSELECTED}: The user has receive an authorisation code and must enter it.
+     * - {@link ScaStatusTO#PSUIDENTIFIED}: the user must select an authorisation method to complete authorisation.
+     * <p>
+     * In all three cases, we store the response object for reuse in an {@link AspspConsentData} object.
+     *
+     * @param spiPsuData               identification data for the psu
+     * @param pin                      : pis of the psu
+     * @param aspspConsentDataProvider :Provides access to read/write encrypted data to be stored in the consent management system
+     * @return : the authorisation status
+     */
+
+    public <T extends SCAResponseTO> SpiResponse<SpiPsuAuthorisationResponse> authorisePsuForConsent(@NotNull SpiPsuData spiPsuData, String pin, String consentId, String authorisationId, OpTypeTO opType, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        try {
+            String login = spiPsuData.getPsuId();
+            logger.info("Authorise user with login: {}", login);
+            ResponseEntity<SCALoginResponseTO> response = userMgmtRestClient.authoriseForConsent(login, pin, consentId, authorisationId, opType);
+            SpiAuthorisationStatus status = response != null && response.getBody() != null && response.getBody().getBearerToken() != null
+                                                    ? SpiAuthorisationStatus.SUCCESS
+                                                    : SpiAuthorisationStatus.FAILURE;
+            logger.info("Authorisation status is: {}", status);
+
+            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(Optional.ofNullable(response)
+                                                                                             .map(HttpEntity::getBody)
+                                                                                             .orElseGet(SCALoginResponseTO::new)));
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                           .payload(new SpiPsuAuthorisationResponse(false, status))
+                           .build();
+        } catch (FeignException feignException) {
+            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            logger.error("Authorise PSU for consent failed: authorisation ID {}, consent ID {}, devMessage {}", authorisationId, consentId, devMessage);
+
+            String errorCode = feignExceptionReader.getErrorCode(feignException);
+            if (errorCode.equals(ATTEMPT_FAILURE)) {
+                return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                               .payload(new SpiPsuAuthorisationResponse(false, SpiAuthorisationStatus.ATTEMPT_FAILURE))
+                               .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
+                               .build();
+            }
             return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                            .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
                            .build();
