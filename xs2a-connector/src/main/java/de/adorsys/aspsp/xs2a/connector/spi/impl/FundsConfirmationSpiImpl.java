@@ -53,9 +53,9 @@ public class FundsConfirmationSpiImpl implements FundsConfirmationSpi {
     private final AspspConsentDataService tokenService;
     private final UserMgmtRestClient userMgmtRestClient;
 
-    @Value("${funds-confirmation-user-login:piisUser}")
+    @Value("${xs2a.funds-confirmation-user-login:piisUser}")
     private String fundsConfirmationUserLogin;
-    @Value("${funds-confirmation-user-password:12345}")
+    @Value("${xs2a.funds-confirmation-user-password:12345}")
     private String fundsConfirmationUserPassword;
 
     public FundsConfirmationSpiImpl(AccountRestClient restClient, LedgersSpiAccountMapper accountMapper,

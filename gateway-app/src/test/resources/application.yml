@@ -40,22 +40,22 @@ spring:
       write_dates_as_timestamps: false
       wrap-root-value: true
 
-ledgers.url: http://localhost:8088/
-cms.url: http://localhost:38080
-online-banking.url: http://localhost:8090/api/v1/consents/confirm/{userLogin}/{consentId}/{authorizationId}/{tan}
+xs2a.cms.url: http://localhost:38080
+xs2asandbox.ledgers.url: http://localhost:8088
+xs2asandbox.tppui.online-banking.url: http://localhost:8090/api/v1/consents/confirm/{userLogin}/{consentId}/{authorizationId}/{tan}
 
-consent.cron.expression: 0 0 1 * * ?
-scheduler.pool.size: 30
+xs2a.cms.consent.cron.expression: 0 0 1 * * ?
+xs2a.cms.scheduler.pool.size: 30
 server_key: test123
 # ----------------------------------------------
 
 # number of characters in a json string
-application.ais.transaction.max-length: 1000
+xs2a.application.ais.transaction.max-length: 1000
 
 #LOGGER
 logging.level.org.springframework.web: ERROR
 
-license.url: https://github.com/adorsys/xs2a/blob/master/LICENSE.md
+xs2a.license.url: https://github.com/adorsys/xs2a/blob/master/LICENSE.md
 springfox.documentation.swagger.v2.path: /swagger.json
 
 skip.ssl.certificate.verification: true

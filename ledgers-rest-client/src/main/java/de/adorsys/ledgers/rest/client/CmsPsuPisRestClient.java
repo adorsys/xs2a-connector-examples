@@ -24,7 +24,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@FeignClient(value = "cmsPsuPis", url = "${cms.url}", path = "/psu-api/v1/payment", primary = false, configuration = FeignConfig.class)
+@FeignClient(value = "cmsPsuPis", url = "${xs2a.cms.url}", path = "/psu-api/v1/payment", primary = false, configuration = FeignConfig.class)
 public interface CmsPsuPisRestClient {
     @PutMapping(path = "/authorisation/{authorisation-id}/psu-data")
     ResponseEntity<CreatePisCommonPaymentResponse> updatePsuInPayment(
