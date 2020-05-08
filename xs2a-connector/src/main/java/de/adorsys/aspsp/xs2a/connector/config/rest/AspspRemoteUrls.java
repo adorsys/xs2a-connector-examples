@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class AspspRemoteUrls {
-    @Value("${mockspi.baseurl:http://localhost:28080}")
+    @Value("${xs2a.mockspi.baseurl:http://localhost:28080}")
     private String spiMockBaseUrl;
 
     //Accounts urls

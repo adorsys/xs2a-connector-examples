@@ -89,7 +89,7 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
     private final MultilevelScaService multilevelScaService;
     private final UserMgmtRestClient userMgmtRestClient;
 
-    @Value("${online-banking.url}")
+    @Value("${xs2asandbox.tppui.online-banking.url}")
     private String onlineBankingUrl;
 
     public AisConsentSpiImpl(ConsentRestClient consentRestClient, TokenStorageService tokenStorageService,

@@ -19,5 +19,5 @@ package de.adorsys.ledgers.rest.client;
 import de.adorsys.ledgers.middleware.rest.resource.AccountRestAPI;
 import org.springframework.cloud.openfeign.FeignClient;
 
-@FeignClient(value = "ledgersAccount", url = "${ledgers.url}", path=AccountRestAPI.BASE_PATH, configuration=FeignConfig.class)
+@FeignClient(value = "ledgersAccount", url = "${xs2asandbox.ledgers.url}", path=AccountRestAPI.BASE_PATH, configuration=FeignConfig.class)
 public interface AccountRestClient extends AccountRestAPI {}

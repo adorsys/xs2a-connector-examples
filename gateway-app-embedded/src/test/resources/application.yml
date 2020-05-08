@@ -47,47 +47,21 @@ spring:
       write_dates_as_timestamps: false
       wrap-root-value: true
 
-ledgers.url: http://localhost:8088/
-cms.url: http://localhost:38080
-online-banking.url: http://localhost:8090/api/v1/consents/confirm/{userLogin}/{consentId}/{authorizationId}/{tan}
+xs2a.cms.url: http://localhost:38080
+xs2asandbox.ledgers.url: http://localhost:8088
+xs2asandbox.tppui.online-banking.url: http://localhost:8090/api/v1/consents/confirm/{userLogin}/{consentId}/{authorizationId}/{tan}
 
-stoplist:
-  cron:
-    # the top of every hour of every day
-    expression: 0 0 * * * *
 
-not-confirmed-consent-expiration:
-  cron:
-    # the top of every hour of every day
-    expression: 0 0 * * * *
-
-not-confirmed-payment-expiration:
-  cron:
-    # the top of every hour of every day
-    expression: 0 0 * * * *
-
-used-non-recurring-consent-expiration:
-  cron:
-    # the top of every hour of every day
-    expression: 0 0 * * * *
-
-consent:
-  cron:
-    expression: 0 0 1 * * ?
-
-scheduler:
-  pool:
-    size: 30
 server_key: test123
 
 # ----------------------------------------------
 # number of characters in a json string
-application.ais.transaction.max-length: 1000
+xs2a.application.ais.transaction.max-length: 1000
 
 #LOGGER
 logging.level.org.springframework.web: ERROR
 
-license.url: https://github.com/adorsys/xs2a/blob/master/LICENSE.md
+xs2a.license.url: https://github.com/adorsys/xs2a/blob/master/LICENSE.md
 springfox.documentation.swagger.v2.path: /swagger.json
 
 skip.ssl.certificate.verification: true
@@ -99,6 +73,29 @@ xs2a.swagger.psd2.api.location:
 # ENDPOINTS CORS CONFIGURATION
 # Whether credentials are supported. When not set, credentials are not supported.
 xs2a:
+  cms:
+    stoplist:
+      cron:
+        # the top of every hour of every day
+        expression: 0 0 * * * *
+    not-confirmed-consent-expiration:
+      cron:
+        # the top of every hour of every day
+        expression: 0 0 * * * *
+    not-confirmed-payment-expiration:
+      cron:
+        # the top of every hour of every day
+        expression: 0 0 * * * *
+    used-non-recurring-consent-expiration:
+      cron:
+        # the top of every hour of every day
+        expression: 0 0 * * * *
+    consent:
+      cron:
+        expression: 0 0 1 * * ?
+    scheduler:
+      pool:
+        size: 30
   endpoints:
     cors:
       allow-credentials: false
