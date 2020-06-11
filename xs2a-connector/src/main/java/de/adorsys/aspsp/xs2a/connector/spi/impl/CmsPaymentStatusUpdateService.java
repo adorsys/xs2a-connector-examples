@@ -5,6 +5,7 @@ import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
+import de.adorsys.psd2.xs2a.service.RequestProviderService;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,19 +19,23 @@ import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.*;
 @Service
 public class CmsPaymentStatusUpdateService {
     private static final Logger logger = LoggerFactory.getLogger(CmsPaymentStatusUpdateService.class);
+
     private final CmsPsuPisClient cmsPsuPisClient;
     private final TokenStorageService tokenStorageService;
+    private final RequestProviderService requestProviderService;
 
-    public CmsPaymentStatusUpdateService(CmsPsuPisClient cmsPsuPisClient, TokenStorageService tokenStorageService) {
+    public CmsPaymentStatusUpdateService(CmsPsuPisClient cmsPsuPisClient, TokenStorageService tokenStorageService,
+                                         RequestProviderService requestProviderService) {
         this.cmsPsuPisClient = cmsPsuPisClient;
         this.tokenStorageService = tokenStorageService;
+        this.requestProviderService = requestProviderService;
     }
 
     public void updatePaymentStatus(String paymentId, SpiAspspConsentDataProvider aspspConsentDataProvider) {
         try {
             SCAResponseTO sca = tokenStorageService.fromBytes(aspspConsentDataProvider.loadAspspConsentData());
             TransactionStatus transactionStatus = getTransactionStatus(sca.getScaStatus());
-            cmsPsuPisClient.updatePaymentStatus(paymentId, transactionStatus, "UNDEFINED");
+            cmsPsuPisClient.updatePaymentStatus(paymentId, transactionStatus, requestProviderService.getInstanceId());
         } catch (IOException e) {
             logger.error("Could not extract data from token", e);
         }
