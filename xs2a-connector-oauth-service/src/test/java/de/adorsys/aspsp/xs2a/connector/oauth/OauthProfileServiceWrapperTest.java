@@ -43,6 +43,7 @@ class OauthProfileServiceWrapperTest {
     private static final String ASPSP_SETTINGS_INTEGRATED_JSON_PATH = "json/oauth/aspsp-settings-oauth-integrated.json";
     private static final String ASPSP_SETTINGS_PRESTEP_JSON_PATH = "json/oauth/aspsp-settings-oauth-pre-step.json";
     private static final String OAUTH_TOKEN_VALUE = "some-valid-token";
+    private static final String INSTANCE_ID = "bank1";
 
     private static final String AIS_INTEGRATED_OAUTH_SUFFIX = "?consentId={encrypted-consent-id}&redirectId={redirect-id}";
     private static final String PIS_INTEGRATED_OAUTH_SUFFIX = "?paymentId={encrypted-payment-id}&redirectId={redirect-id}";
@@ -69,9 +70,9 @@ class OauthProfileServiceWrapperTest {
     @Test
     void getAspspSettings_withNullOauthType_shouldNotChangeProfile() {
         // When
-        when(aspspProfileService.getAspspSettings()).thenReturn(realAspspSettings);
+        when(aspspProfileService.getAspspSettings(INSTANCE_ID)).thenReturn(realAspspSettings);
 
-        AspspSettings aspspSettings = oauthProfileServiceWrapper.getAspspSettings();
+        AspspSettings aspspSettings = oauthProfileServiceWrapper.getAspspSettings(INSTANCE_ID);
 
         // Then
         assertEquals(realAspspSettings, aspspSettings);
@@ -80,7 +81,7 @@ class OauthProfileServiceWrapperTest {
     @Test
     void getAspspSettings_withIntegratedOauthType_ais_shouldChangeFlowAndLinks() {
         // Given
-        when(aspspProfileService.getAspspSettings()).thenReturn(realAspspSettings);
+        when(aspspProfileService.getAspspSettings(INSTANCE_ID)).thenReturn(realAspspSettings);
 
         AspspSettings modifiedSettings = jsonReader.getObjectFromFile(ASPSP_SETTINGS_INTEGRATED_AIS_JSON_PATH, AspspSettings.class);
 
@@ -90,7 +91,7 @@ class OauthProfileServiceWrapperTest {
                 .thenReturn(ServiceType.AIS);
 
         // When
-        AspspSettings aspspSettings = oauthProfileServiceWrapper.getAspspSettings();
+        AspspSettings aspspSettings = oauthProfileServiceWrapper.getAspspSettings(INSTANCE_ID);
 
         // Then
         assertEquals(modifiedSettings, aspspSettings);
@@ -99,7 +100,7 @@ class OauthProfileServiceWrapperTest {
     @Test
     void getAspspSettings_withIntegratedOauthType_pis_shouldChangeFlowAndLinks() {
         // Given
-        when(aspspProfileService.getAspspSettings()).thenReturn(realAspspSettings);
+        when(aspspProfileService.getAspspSettings(INSTANCE_ID)).thenReturn(realAspspSettings);
 
         AspspSettings modifiedSettings = jsonReader.getObjectFromFile(ASPSP_SETTINGS_INTEGRATED_PIS_JSON_PATH, AspspSettings.class);
 
@@ -109,7 +110,7 @@ class OauthProfileServiceWrapperTest {
                 .thenReturn(ServiceType.PIS);
 
         // When
-        AspspSettings aspspSettings = oauthProfileServiceWrapper.getAspspSettings();
+        AspspSettings aspspSettings = oauthProfileServiceWrapper.getAspspSettings(INSTANCE_ID);
 
         // Then
         assertEquals(modifiedSettings, aspspSettings);
@@ -118,7 +119,7 @@ class OauthProfileServiceWrapperTest {
     @Test
     void getAspspSettings_withIntegratedOauthType_otherServiceType_shouldChangeFlow() {
         // Given
-        when(aspspProfileService.getAspspSettings()).thenReturn(realAspspSettings);
+        when(aspspProfileService.getAspspSettings(INSTANCE_ID)).thenReturn(realAspspSettings);
 
         AspspSettings modifiedSettings = jsonReader.getObjectFromFile(ASPSP_SETTINGS_INTEGRATED_JSON_PATH, AspspSettings.class);
 
@@ -128,7 +129,7 @@ class OauthProfileServiceWrapperTest {
                 .thenReturn(ServiceType.PIIS);
 
         // When
-        AspspSettings aspspSettings = oauthProfileServiceWrapper.getAspspSettings();
+        AspspSettings aspspSettings = oauthProfileServiceWrapper.getAspspSettings(INSTANCE_ID);
 
         // Then
         assertEquals(modifiedSettings, aspspSettings);
@@ -137,7 +138,7 @@ class OauthProfileServiceWrapperTest {
     @Test
     void getAspspSettings_withPreStepOauthType_pis_shouldChangeFlowAndLinks() {
         // Given
-        when(aspspProfileService.getAspspSettings()).thenReturn(realAspspSettings);
+        when(aspspProfileService.getAspspSettings(INSTANCE_ID)).thenReturn(realAspspSettings);
 
         AspspSettings modifiedSettings = jsonReader.getObjectFromFile(ASPSP_SETTINGS_PRESTEP_JSON_PATH, AspspSettings.class);
 
@@ -147,7 +148,7 @@ class OauthProfileServiceWrapperTest {
                 .thenReturn(OAUTH_TOKEN_VALUE);
 
         // When
-        AspspSettings aspspSettings = oauthProfileServiceWrapper.getAspspSettings();
+        AspspSettings aspspSettings = oauthProfileServiceWrapper.getAspspSettings(INSTANCE_ID);
 
         // Then
         assertEquals(modifiedSettings, aspspSettings);
@@ -157,15 +158,15 @@ class OauthProfileServiceWrapperTest {
     void getScaApproaches() {
         // Given
         List<ScaApproach> expectedScaApproaches = Collections.singletonList(ScaApproach.REDIRECT);
-        when(aspspProfileService.getScaApproaches())
+        when(aspspProfileService.getScaApproaches(INSTANCE_ID))
                 .thenReturn(expectedScaApproaches);
 
         // When
-        List<ScaApproach> actualScaApproaches = oauthProfileServiceWrapper.getScaApproaches();
+        List<ScaApproach> actualScaApproaches = oauthProfileServiceWrapper.getScaApproaches(INSTANCE_ID);
 
         // Then
         assertEquals(expectedScaApproaches, actualScaApproaches);
 
-        verify(aspspProfileService).getScaApproaches();
+        verify(aspspProfileService).getScaApproaches(INSTANCE_ID);
     }
 }

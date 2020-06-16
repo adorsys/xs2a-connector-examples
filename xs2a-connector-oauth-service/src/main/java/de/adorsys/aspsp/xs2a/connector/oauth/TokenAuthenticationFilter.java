@@ -51,6 +51,7 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
     private static final String BEARER_TOKEN_PREFIX = "Bearer ";
     private static final String CONSENT_ENP_ENDING = "consents";
     private static final String FUNDS_CONF_ENP_ENDING = "funds-confirmations";
+    private static final String INSTANCE_ID = "instance-id";
 
     private final RequestPathResolver requestPathResolver;
     private final String oauthModeHeaderName;
@@ -87,7 +88,7 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
 
         Optional<OauthType> oauthTypeOptional = OauthType.getByValue(oauthHeader);
 
-        if (!oauthTypeOptional.isPresent()) {
+        if (oauthTypeOptional.isEmpty()) {
             log.info("Token authentication error: unknown OAuth type {}", oauthHeader);
             tppErrorMessageWriter.writeError(response, buildTppErrorMessage(MessageErrorCode.FORMAT_ERROR));
             return;
@@ -106,7 +107,8 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
     }
 
     private boolean isInvalidOauthRequest(HttpServletRequest request, @NotNull HttpServletResponse response, OauthType oauthType, String bearerToken) throws IOException {
-        if (!aspspProfileService.getScaApproaches().contains(ScaApproach.OAUTH)) {
+        String instanceId = request.getHeader(INSTANCE_ID);
+        if (!aspspProfileService.getScaApproaches(instanceId).contains(ScaApproach.OAUTH)) {
             log.info("Token authentication error: OAUTH SCA approach is not supported in the profile");
             tppErrorMessageWriter.writeError(response, buildTppErrorMessage(MessageErrorCode.FORMAT_ERROR));
             return true;
@@ -114,13 +116,13 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
 
         if (oauthType == OauthType.PRE_STEP && StringUtils.isBlank(bearerToken)) {
             log.info("Token authentication error: token is absent in pre-step OAuth");
-            String oauthConfigurationUrl = aspspProfileService.getAspspSettings().getCommon().getOauthConfigurationUrl();
+            String oauthConfigurationUrl = aspspProfileService.getAspspSettings(instanceId).getCommon().getOauthConfigurationUrl();
             tppErrorMessageWriter.writeError(response, buildTppErrorMessage(UNAUTHORIZED_NO_TOKEN, oauthConfigurationUrl));
             return true;
         }
 
         String requestPath = requestPathResolver.resolveRequestPath(request);
-        boolean tokenRequired = isTokenRequired(oauthType, requestPath);
+        boolean tokenRequired = isTokenRequired(oauthType, requestPath, instanceId);
         if (tokenRequired && isTokenInvalid(bearerToken)) {
             log.info("Token authentication error: token is invalid");
             tppErrorMessageWriter.writeError(response, buildTppErrorMessage(MessageErrorCode.TOKEN_INVALID));
@@ -130,7 +132,7 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
         return false;
     }
 
-    private boolean isTokenRequired(OauthType oauthType, String requestPath) {
+    private boolean isTokenRequired(OauthType oauthType, String requestPath, String instanceId) {
         if (oauthType == OauthType.PRE_STEP) {
             return true;
         }
@@ -139,7 +141,7 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
         if (trimmedRequestPath.endsWith(CONSENT_ENP_ENDING) || trimmedRequestPath.endsWith(FUNDS_CONF_ENP_ENDING)) {
             return false;
         } else {
-            Set<String> supportedProducts = aspspProfileService.getAspspSettings().getPis().getSupportedPaymentTypeAndProductMatrix().values().stream()
+            Set<String> supportedProducts = aspspProfileService.getAspspSettings(instanceId).getPis().getSupportedPaymentTypeAndProductMatrix().values().stream()
                                                     .flatMap(Collection::stream).collect(Collectors.toSet());
             return supportedProducts.stream().noneMatch(trimmedRequestPath::endsWith);
         }

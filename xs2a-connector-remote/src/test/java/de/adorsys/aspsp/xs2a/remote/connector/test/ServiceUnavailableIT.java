@@ -157,7 +157,7 @@ class ServiceUnavailableIT {
 
     //Preparations
     private void makePreparationsProfile(boolean throwException) {
-        givenReturnOrThrowException(aspspProfileService.getScaApproaches(), Collections.singletonList(ScaApproach.EMBEDDED), throwException);
+        givenReturnOrThrowException(aspspProfileService.getScaApproaches(null), Collections.singletonList(ScaApproach.EMBEDDED), throwException);
     }
 
     private void makePreparationsCommon() {

@@ -67,8 +67,8 @@ public class OauthProfileServiceWrapper implements AspspProfileService {
     }
 
     @Override
-    public AspspSettings getAspspSettings() {
-        AspspSettings profileSettings = aspspProfileService.getAspspSettings();
+    public AspspSettings getAspspSettings(String instanceId) {
+        AspspSettings profileSettings = aspspProfileService.getAspspSettings(instanceId);
         OauthType oauthType = oauthDataHolder.getOauthType();
 
         CommonAspspProfileSetting existingCommonSetting = profileSettings.getCommon();
@@ -91,8 +91,13 @@ public class OauthProfileServiceWrapper implements AspspProfileService {
     }
 
     @Override
-    public List<ScaApproach> getScaApproaches() {
-        return aspspProfileService.getScaApproaches();
+    public List<ScaApproach> getScaApproaches(String instanceId) {
+        return aspspProfileService.getScaApproaches(instanceId);
+    }
+
+    @Override
+    public boolean isMultitenancyEnabled() {
+        return aspspProfileService.isMultitenancyEnabled();
     }
 
     private String buildOauthLinkSuffix() {
