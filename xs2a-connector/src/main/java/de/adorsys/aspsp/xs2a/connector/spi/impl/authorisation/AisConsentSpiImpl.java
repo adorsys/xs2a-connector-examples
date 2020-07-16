@@ -143,9 +143,9 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
     }
 
     @Override
-    public SpiResponse<SpiAisConsentStatusResponse> getConsentStatus(@NotNull SpiContextData contextData, @NotNull SpiAccountConsent accountConsent, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        return SpiResponse.<SpiAisConsentStatusResponse>builder()
-                       .payload(new SpiAisConsentStatusResponse(accountConsent.getConsentStatus(), "Mocked PSU message from SPI for this consent"))
+    public SpiResponse<SpiConsentStatusResponse> getConsentStatus(@NotNull SpiContextData contextData, @NotNull SpiAccountConsent accountConsent, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        return SpiResponse.<SpiConsentStatusResponse>builder()
+                       .payload(new SpiConsentStatusResponse(accountConsent.getConsentStatus(), "Mocked PSU message from SPI for this consent"))
                        .build();
     }
 
