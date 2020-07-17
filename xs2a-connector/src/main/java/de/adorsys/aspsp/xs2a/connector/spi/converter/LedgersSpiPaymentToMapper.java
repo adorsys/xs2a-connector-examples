@@ -41,15 +41,6 @@ public class LedgersSpiPaymentToMapper {
     @Autowired
     protected ObjectMapper objectMapper;
 
-    public PaymentTO toCommonPaymentTO(SpiPaymentInfo spiPaymentInfo) {
-        PaymentTO paymentTO = new PaymentTO();
-        paymentTO.setPaymentId(spiPaymentInfo.getPaymentId());
-        paymentTO.setPaymentType(PaymentTypeTO.valueOf(spiPaymentInfo.getPaymentType().name()));
-        paymentTO.setPaymentProduct(spiPaymentInfo.getPaymentProduct());
-
-        return paymentTO;
-    }
-
     public PaymentTO toPaymentTO_Single(SpiPaymentInfo spiPaymentInfo) {
         return Optional.ofNullable(spiPaymentInfo.getPaymentData())
                        .filter(ArrayUtils::isNotEmpty)
