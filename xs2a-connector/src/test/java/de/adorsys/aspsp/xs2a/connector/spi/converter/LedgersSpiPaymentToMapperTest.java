@@ -37,19 +37,6 @@ class LedgersSpiPaymentToMapperTest {
     private LedgersSpiPaymentToMapper ledgersSpiPaymentToMapper;
 
     @Test
-    void toCommonPaymentTO() {
-        // Given
-        PaymentTO expectedResult = jsonReader.getObjectFromFile("json/mappers/payment-to-from-common-payment-Initiation.json", PaymentTO.class);
-        SpiPaymentInfo spiPaymentInfo = jsonReader.getObjectFromFile("json/mappers/common-payment-initiation.json", SpiPaymentInfo.class);
-
-        // When
-        PaymentTO actualResult = ledgersSpiPaymentToMapper.toCommonPaymentTO(spiPaymentInfo);
-
-        // Then
-        assertEquals(expectedResult, actualResult);
-    }
-
-    @Test
     void toPaymentTO_Single() {
         // Given
         PaymentTO expectedResult = jsonReader.getObjectFromFile("json/mappers/payment-to-from-single-payment-Initiation.json", PaymentTO.class);

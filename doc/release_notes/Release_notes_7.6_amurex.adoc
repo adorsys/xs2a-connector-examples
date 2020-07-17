@@ -1,0 +1,14 @@
+= Release notes v.7.6
+
+== Table of Contents
+
+* Pain payment is not mapped in connector to Ledgers paymentTO
+
+== Pain payment is not mapped in connector to Ledgers paymentTO
+
+From now on, the payment products for pain payment are mapped in connector:
+
+- pain.001-sepa-credit-transfers,
+- pain.001-instant-sepa-credit-transfers,
+- pain.001-target-2-payments,
+- pain.001-cross-border-credit-transfers

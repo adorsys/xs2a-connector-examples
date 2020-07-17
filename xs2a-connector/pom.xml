@@ -43,6 +43,17 @@
 			<artifactId>ledgers-utils</artifactId>
 			<version>${ledgers.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>de.adorsys.ledgers</groupId>
+			<artifactId>ledgers-middleware-rest-client</artifactId>
+			<version>${ledgers.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-security</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 		<!-- other dependencies -->
 		<dependency>
 			<groupId>org.mapstruct</groupId>
