@@ -1,0 +1,52 @@
+{
+  "paymentId": "yc7AU-GdRIMjLAzKXjmDU4",
+  "paymentType": "PERIODIC",
+  "paymentProduct": "sepa-credit-transfers",
+  "startDate": "2021-04-03",
+  "executionRule": "following",
+  "frequency": "ANNUAL",
+  "dayOfExecution": 14,
+  "debtorAccount": {
+    "iban": "DE52500105173911841934",
+    "bban": "Test BBAN",
+    "pan": "1111",
+    "maskedPan": "23456xxxxxx1234",
+    "msisdn": "0172/1111111",
+    "currency": "EUR"
+  },
+  "debtorName": "Mueller",
+  "targets": [
+    {
+      "paymentId": "yc7AU-GdRIMjLAzKXjmDU4",
+      "endToEndIdentification": "RI-123456789",
+      "instructedAmount": {
+        "currency": "EUR",
+        "amount": 1000.0
+      },
+      "creditorAccount": {
+        "iban": "DE52500105173911841934",
+        "bban": "Test BBAN",
+        "pan": "1111",
+        "maskedPan": "23456xxxxxx1234",
+        "msisdn": "0172/1111111",
+        "currency": "EUR"
+      },
+      "creditorAgent": "BCENECEQ",
+      "creditorName": "Telekom",
+      "creditorAddress": {
+        "street": "WBG Straße",
+        "buildingNumber": "56",
+        "city": "Nürnberg",
+        "postalCode": "90543",
+        "country": "DE"
+      },
+      "purposeCode": "BKDF",
+      "remittanceInformationUnstructured": "Ref. Number TELEKOM-1222",
+      "remittanceInformationStructured": {
+        "reference": "Ref Number Merchant",
+        "referenceType": "reference type",
+        "referenceIssuer": "reference issuer"
+      }
+    }
+  ]
+}

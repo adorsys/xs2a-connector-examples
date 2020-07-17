@@ -1,0 +1,29 @@
+{
+  "paymentId": "yc7AU-GdRIMjLAzKXjmDU4",
+  "paymentType": "PERIODIC",
+  "paymentProduct": "pain.001-sepa-credit-transfers",
+  "startDate":"2023-03-01",
+  "endDate":"2025-03-01",
+  "executionRule":"preceding",
+  "frequency":"MONTHLY",
+  "dayOfExecution":1,
+  "debtorAccount": {
+    "iban": "DE80760700240271232400"
+  },
+  "debtorName": "PSU Name",
+  "requestedExecutionDate" : "2017-02-15",
+  "targets": [
+    {
+      "endToEndIdentification": "RI-123456789",
+      "instructedAmount": {
+        "currency": "EUR",
+        "amount": 123
+      },
+      "creditorAccount": {
+        "iban": "DE80760700240271232400"
+      },
+      "creditorName": "Merchant123",
+      "remittanceInformationUnstructured": "Ref Number Merchant-123456"
+    }
+  ]
+}

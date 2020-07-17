@@ -57,7 +57,7 @@ public class CommonPaymentSpiImpl extends AbstractPaymentSpi<SpiPaymentInfo, Spi
 
     @Override
     public @NotNull SpiResponse<SpiPaymentResponse> verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(@NotNull SpiContextData contextData, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiPaymentInfo payment, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        return SpiResponse.<SpiPaymentResponse>builder().error(new TppMessage(MessageErrorCode.SERVICE_NOT_SUPPORTED)).build();
+        return paymentService.verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(spiScaConfirmation, aspspConsentDataProvider);
     }
 
     @Override
