@@ -24,7 +24,7 @@ import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CommonPaymentSpiImplTest {
@@ -54,12 +54,14 @@ class CommonPaymentSpiImplTest {
 
     @Test
     void verifyScaAuthorisationAndExecutePayment() {
-        //When
-        SpiResponse<SpiPaymentResponse> response = commonPaymentSpi.verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(SPI_CONTEXT_DATA, new SpiScaConfirmation(), new SpiPaymentInfo(PAYMENT_PRODUCT), spiAspspConsentDataProvider);
+        SpiScaConfirmation spiScaConfirmation = new SpiScaConfirmation();
+        when(generalPaymentService.verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(spiScaConfirmation, spiAspspConsentDataProvider))
+                .thenReturn(buildSpiResponse(new SpiPaymentResponse()));
 
-        //Then
-        assertTrue(response.hasError());
-        assertEquals(MessageErrorCode.SERVICE_NOT_SUPPORTED, response.getErrors().get(0).getErrorCode());
+        SpiResponse<SpiPaymentResponse> response = commonPaymentSpi.verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(SPI_CONTEXT_DATA, spiScaConfirmation, new SpiPaymentInfo(PAYMENT_PRODUCT), spiAspspConsentDataProvider);
+
+        verify(generalPaymentService, times(1)).verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(spiScaConfirmation, spiAspspConsentDataProvider);
+        assertTrue(response.isSuccessful());
     }
 
     @Test

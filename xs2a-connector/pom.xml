@@ -30,6 +30,11 @@
 		</dependency>
 		<dependency>
 			<groupId>de.adorsys.psd2</groupId>
+			<artifactId>xs2a-server-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>de.adorsys.psd2</groupId>
 			<artifactId>xs2a-core-payments</artifactId>
 			<version>${xs2a.version}</version>
 		</dependency>
@@ -37,6 +42,17 @@
 			<groupId>de.adorsys.ledgers</groupId>
 			<artifactId>ledgers-utils</artifactId>
 			<version>${ledgers.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>de.adorsys.ledgers</groupId>
+			<artifactId>ledgers-middleware-rest-client</artifactId>
+			<version>${ledgers.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-security</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<!-- other dependencies -->
 		<dependency>
