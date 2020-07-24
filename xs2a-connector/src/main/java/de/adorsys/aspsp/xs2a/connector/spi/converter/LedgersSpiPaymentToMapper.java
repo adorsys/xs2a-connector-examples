@@ -101,7 +101,9 @@ public class LedgersSpiPaymentToMapper {
                                                               .map(ExecutionRule::toString)
                                                               .orElse(null));
                            paymentTO.setFrequency(mapToFrequencyCodeTO(payment.getFrequency()));
-                           paymentTO.setDayOfExecution(Integer.valueOf(payment.getDayOfExecution().toString()));
+                           paymentTO.setDayOfExecution(Optional.ofNullable(payment.getDayOfExecution())
+                                                               .map(d -> Integer.valueOf(d.toString()))
+                                                               .orElse(null));
                            paymentTO.setDebtorName(payment.getUltimateDebtor());
                            paymentTO.setTargets(Collections.singletonList(mapToPaymentTargetTO(payment, spiPaymentInfo)));
 

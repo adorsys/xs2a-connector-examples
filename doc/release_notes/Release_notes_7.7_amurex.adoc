@@ -1,0 +1,9 @@
+= Release notes v.7.7
+
+== Table of Contents
+
+* Bugfix: NPE during handling periodic payment without `dayOfExecution` field
+
+== Bugfix: NPE during handling periodic payment without `dayOfExecution` field
+
+From now on, periodic payments without `dayOfExecution` field is processed without NPE.
