@@ -57,14 +57,6 @@ public abstract class AbstractPaymentSpi<P extends SpiPayment, R extends SpiPaym
         return paymentService.executePaymentWithoutSca(aspspConsentDataProvider);
     }
 
-    @Deprecated // TODO remove deprecated method in 6.7 https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/issues/1270
-    public @NotNull SpiResponse<SpiPaymentExecutionResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiContextData contextData,
-                                                                                                     @NotNull SpiScaConfirmation spiScaConfirmation,
-                                                                                                     @NotNull P payment,
-                                                                                                     @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        return paymentService.verifyScaAuthorisationAndExecutePayment(spiScaConfirmation, aspspConsentDataProvider);
-    }
-
     public @NotNull SpiResponse<SpiPaymentResponse> verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(@NotNull SpiContextData contextData,
                                                                                             @NotNull SpiScaConfirmation spiScaConfirmation,
                                                                                             @NotNull P payment,

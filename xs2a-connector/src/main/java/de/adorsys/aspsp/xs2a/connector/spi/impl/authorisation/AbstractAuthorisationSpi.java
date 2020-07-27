@@ -46,44 +46,6 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
     private final FeignExceptionReader feignExceptionReader;
     private final TokenStorageService tokenStorageService;
 
-    @Deprecated // TODO remove deprecated method in 6.7 https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/issues/1270
-    public SpiResponse<SpiPsuAuthorisationResponse> authorisePsu(@NotNull SpiContextData contextData,
-                                                                 @NotNull SpiPsuData psuLoginData, String password, T businessObject,
-                                                                 @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        R originalResponse;
-        try {
-            originalResponse = getSCAConsentResponse(aspspConsentDataProvider, false);
-        } catch (FeignException feignException) {
-            String devMessage = feignExceptionReader.getErrorMessage(feignException);
-            log.error("Read aspspConsentData in authorise PSU failed: consent ID {}, devMessage {}", getBusinessObjectId(businessObject), devMessage);
-            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(new TppMessage(PSU_CREDENTIALS_INVALID))
-                           .build();
-        }
-
-        SpiResponse<SpiPsuAuthorisationResponse> authorisePsu = authorisationService.authorisePsuForConsent(
-                psuLoginData, password, getBusinessObjectId(businessObject),
-                getOtpType(), aspspConsentDataProvider);
-
-        if (!authorisePsu.isSuccessful()) {
-            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .payload(new SpiPsuAuthorisationResponse(false, SpiAuthorisationStatus.FAILURE))
-                           .build();
-        }
-
-        R scaBusinessObjectResponse;
-
-        try {
-            scaBusinessObjectResponse = mapToScaResponse(businessObject, aspspConsentDataProvider.loadAspspConsentData(), originalResponse);
-        } catch (IOException e) {
-            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(new TppMessage(FORMAT_ERROR_RESPONSE_TYPE))
-                           .build();
-        }
-
-        return onSuccessfulAuthorisation(businessObject, aspspConsentDataProvider, authorisePsu, scaBusinessObjectResponse);
-    }
-
     public SpiResponse<SpiPsuAuthorisationResponse> authorisePsu(@NotNull SpiContextData contextData,
                                                                  @NotNull String authorisationId,
                                                                  @NotNull SpiPsuData psuLoginData, String password, T businessObject,

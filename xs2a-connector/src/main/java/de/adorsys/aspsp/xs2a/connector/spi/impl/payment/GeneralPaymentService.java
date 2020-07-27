@@ -135,41 +135,6 @@ public class GeneralPaymentService {
         }
     }
 
-    @Deprecated // TODO remove deprecated method in 6.7 https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/issues/1270
-    public SpiResponse<SpiPaymentExecutionResponse> verifyScaAuthorisationAndExecutePayment(@NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        try {
-            SCAPaymentResponseTO sca = consentDataService.response(aspspConsentDataProvider.loadAspspConsentData(), SCAPaymentResponseTO.class);
-            authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
-
-            ResponseEntity<SCAPaymentResponseTO> authorizePaymentResponse = paymentRestClient.authorizePayment(sca.getPaymentId(), sca.getAuthorisationId(), spiScaConfirmation.getTanNumber());
-            SCAPaymentResponseTO consentResponse = authorizePaymentResponse.getBody();
-
-            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(consentResponse));
-
-            String scaStatus = Optional.ofNullable(consentResponse)
-                                       .map(SCAResponseTO::getScaStatus)
-                                       .map(ScaStatusTO::name)
-                                       .orElse(null);
-
-            logger.info("SCA status is: {}", scaStatus);
-            return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .payload(spiPaymentExecutionResponse(consentResponse.getTransactionStatus()))
-                           .build();
-        } catch (FeignException feignException) {
-            String devMessage = "Wrong auth code";
-            logger.info("Verify SCA authorisation and execute payment failed: payment ID {}, devMessage {}", spiScaConfirmation.getPaymentId(), devMessage);
-            return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
-                           .build();
-        } catch (Exception exception) {
-            return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED))
-                           .build();
-        } finally {
-            authRequestInterceptor.setAccessToken(null);
-        }
-    }
-
     public SpiResponse<SpiPaymentResponse> verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(@NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         try {
             SCAPaymentResponseTO sca = consentDataService.response(aspspConsentDataProvider.loadAspspConsentData(), SCAPaymentResponseTO.class);
