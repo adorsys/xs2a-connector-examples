@@ -125,33 +125,6 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
     }
 
     @Override
-    @Deprecated // TODO remove deprecated method in 6.7 https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/issues/1270
-    public @NotNull SpiResponse<SpiResponse.VoidResponse> verifyScaAuthorisationAndCancelPayment(@NotNull SpiContextData contextData,
-                                                                                                 @NotNull SpiScaConfirmation spiScaConfirmation,
-                                                                                                 @NotNull SpiPayment payment,
-                                                                                                 @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        try {
-            SCAPaymentResponseTO sca = getSCAConsentResponse(aspspConsentDataProvider, true);
-            authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
-
-            ResponseEntity<SCAPaymentResponseTO> response = paymentRestClient.authorizeCancelPayment(sca.getPaymentId(), sca.getAuthorisationId(), spiScaConfirmation.getTanNumber());
-            return response.getStatusCode() == HttpStatus.OK
-                           ? SpiResponse.<SpiResponse.VoidResponse>builder()
-                                     .payload(SpiResponse.voidResponse())
-                                     .build()
-                           : SpiResponse.<SpiResponse.VoidResponse>builder()
-                                     .error(new TppMessage(MessageErrorCode.UNAUTHORIZED_CANCELLATION))
-                                     .build();
-        } catch (FeignException feignException) {
-            String devMessage = feignExceptionReader.getErrorMessage(feignException);
-            logger.error("Verify sca authorisation and cancel payment failed: payment ID {}, devMessage {}", payment.getPaymentId(), devMessage);
-            return SpiResponse.<SpiResponse.VoidResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.PSU_CREDENTIALS_INVALID))
-                           .build();
-        }
-    }
-
-    @Override
     public @NotNull SpiResponse<SpiPaymentResponse> verifyScaAuthorisationAndCancelPaymentWithResponse(@NotNull SpiContextData contextData,
                                                                                            @NotNull SpiScaConfirmation spiScaConfirmation,
                                                                                            @NotNull SpiPayment payment,
