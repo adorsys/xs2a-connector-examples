@@ -1,0 +1,17 @@
+{
+  "paymentProduct": "sepa-credit-transfers",
+  "paymentId": "yc7AU-GdRIMjLAzKXjmDU4",
+  "paymentType": "periodic-payments",
+  "status": "RCVD",
+  "paymentData": "ewogICJlbmRUb0VuZElkZW50aWZpY2F0aW9uIjogIlJJLTEyMzQ1Njc4OTAiLAogICJkZWJ0b3JBY2NvdW50IjogewogICAgImN1cnJlbmN5IjogIkVVUiIsCiAgICAiaWJhbiI6ICJMVTI4MDAxOTQwMDY0NDc1MDAwMCIKICB9LAogICJpbnN0cnVjdGVkQW1vdW50IjogewogICAgImFtb3VudCI6IDExMywKICAgICJjdXJyZW5jeSI6ICJFVVIiCiAgfSwKICAiY3JlZGl0b3JBY2NvdW50IjogewogICAgImN1cnJlbmN5IjogIkVVUiIsCiAgICAiaWJhbiI6ICJERTg5MzcwNDAwNDQwNTMyMDEzMDAwIgogIH0sCiAgImNyZWRpdG9yQWdlbnQiOiAiQUFBQURFQkJYWFgiLAogICJjcmVkaXRvck5hbWUiOiAiVGVsZWtvbSIsCiAgImNyZWRpdG9yQWRkcmVzcyI6IHsKICAgICJidWlsZGluZ051bWJlciI6ICI1NiIsCiAgICAidG93bk5hbWUiOiAiTsO8cm5iZXJnIiwKICAgICJjb3VudHJ5IjogIkRFIiwKICAgICJwb3N0Q29kZSI6ICI5MDU0MyIsCiAgICAic3RyZWV0TmFtZSI6ICJXQkcgU3RyYcOfZSIKICB9LAogICJyZW1pdHRhbmNlSW5mb3JtYXRpb25VbnN0cnVjdHVyZWQiOiAiUmVmLiBOdW1iZXIgVEVMRUtPTS0xMjIyIiwKICAic3RhcnREYXRlIjogIjIwMjAtMDEtMDEiLAogICJlbmREYXRlIjogIjIwMjAtMDItMDEiLAogICJleGVjdXRpb25SdWxlIjogInByZWNlZGluZyIsCiAgImZyZXF1ZW5jeSI6ICJBbm51YWwiCn0K",
+  "psuDataList": [
+    {
+      "psuId": "max.musterman",
+      "psuIpAddress": "1.1.1.1"
+    }
+  ],
+  "statusChangeTimestamp": null,
+
+  "creationTimestamp": "2020-01-08T16:10:07.247Z",
+  "paymentStatus": "RCVD"
+}

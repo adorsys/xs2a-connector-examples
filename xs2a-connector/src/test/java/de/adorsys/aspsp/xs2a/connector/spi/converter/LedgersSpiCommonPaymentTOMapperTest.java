@@ -115,6 +115,17 @@ class LedgersSpiCommonPaymentTOMapperTest {
     }
 
     @Test
+    void mapToPaymentTO_periodicPayment_dayOfExecutionIsNull() {
+        SpiPaymentInfo spiPaymentInfo = jsonReader.getObjectFromFile("json/spi/converter/spi-periodic-payment-day-of-execution-is-null.json", SpiPaymentInfo.class);
+        when(standardPaymentProductsResolverConnector.isRawPaymentProduct(PAYMENT_PRODUCT)).thenReturn(false);
+
+        PaymentTO actual = mapper.mapToPaymentTO(PaymentType.PERIODIC, spiPaymentInfo);
+
+        PaymentTO expected = jsonReader.getObjectFromFile("json/spi/converter/payment-periodic-response-day-of-execution-is-null.json", PaymentTO.class);
+        assertEquals(expected, actual);
+    }
+
+    @Test
     void mapToPaymentTO_bulkPayment() {
         SpiPaymentInfo spiPaymentInfo = jsonReader.getObjectFromFile("json/spi/converter/spi-bulk-payment.json", SpiPaymentInfo.class);
         when(standardPaymentProductsResolverConnector.isRawPaymentProduct(PAYMENT_PRODUCT)).thenReturn(false);
