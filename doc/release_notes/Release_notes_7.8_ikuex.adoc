@@ -1,0 +1,10 @@
+= Release notes v.7.8
+
+== Table of Contents
+
+* Support multilevel for PIIS consents
+
+== Support multilevel for PIIS consents
+
+From now on, on initiate PIIS Consent there is an additional call to Ledgers
+that returns correct `multilevelScaRequired` parameter based on PSU and account references.
