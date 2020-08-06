@@ -16,6 +16,8 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
+import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
+import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.profile.AccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
@@ -25,12 +27,15 @@ import de.adorsys.psd2.xs2a.spi.domain.consent.SpiInitiatePiisConsentResponse;
 import de.adorsys.psd2.xs2a.spi.domain.piis.SpiPiisConsent;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.PiisConsentSpi;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class PiisConsentSpiImpl implements PiisConsentSpi {
@@ -42,7 +47,16 @@ public class PiisConsentSpiImpl implements PiisConsentSpi {
         SpiInitiatePiisConsentResponse spiInitiatePiisConsentResponse = new SpiInitiatePiisConsentResponse();
         SpiAccountReference spiAccountReference = new SpiAccountReference(null, account.getIban(), account.getBban(), account.getPan(), account.getMaskedPan(), account.getMsisdn(), account.getCurrency());
         spiInitiatePiisConsentResponse.setSpiAccountReference(spiAccountReference);
-        boolean multilevelScaRequired = multilevelScaService.isMultilevelScaRequired(contextData.getPsuData(), Collections.singleton(spiAccountReference));
+        boolean multilevelScaRequired;
+        try {
+            multilevelScaRequired = multilevelScaService.isMultilevelScaRequired(contextData.getPsuData(), Collections.singleton(spiAccountReference));
+        } catch (FeignException e) {
+            log.error("Error during REST call for consent initiation to ledgers for account multilevel checking, PSU ID: {}", contextData.getPsuData().getPsuId());
+            return SpiResponse.<SpiInitiatePiisConsentResponse>builder()
+                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR_UNKNOWN_ACCOUNT))
+                           .build();
+        }
+
         spiInitiatePiisConsentResponse.setMultilevelScaRequired(multilevelScaRequired);
         return SpiResponse.<SpiInitiatePiisConsentResponse>builder().payload(spiInitiatePiisConsentResponse).build();
     }
