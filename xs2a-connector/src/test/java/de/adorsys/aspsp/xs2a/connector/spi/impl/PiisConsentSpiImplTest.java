@@ -20,10 +20,8 @@ import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
-import de.adorsys.psd2.xs2a.core.profile.AccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
-import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiInitiatePiisConsentResponse;
 import de.adorsys.psd2.xs2a.spi.domain.piis.SpiPiisConsent;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
@@ -58,9 +56,7 @@ public class PiisConsentSpiImplTest {
     @Test
     void initiatePiisConsent_insufficientPermissionException() {
         //Given
-        AccountReference account = spiPiisConsent.getAccount();
-        SpiAccountReference spiAccountReference = new SpiAccountReference(null, account.getIban(), account.getBban(), account.getPan(), account.getMaskedPan(), account.getMsisdn(), account.getCurrency());
-        when(multilevelScaService.isMultilevelScaRequired(SPI_CONTEXT_DATA.getPsuData(), Collections.singleton(spiAccountReference))).thenThrow(getFeignException());
+        when(multilevelScaService.isMultilevelScaRequired(SPI_CONTEXT_DATA.getPsuData(), Collections.singleton(spiPiisConsent.getAccount()))).thenThrow(getFeignException());
         //When
         SpiResponse<SpiInitiatePiisConsentResponse> spiInitiatePiisConsentResponseSpiResponse = piisConsentSpi.initiatePiisConsent(SPI_CONTEXT_DATA, spiPiisConsent, spiAspspConsentDataProvider);
         //Then

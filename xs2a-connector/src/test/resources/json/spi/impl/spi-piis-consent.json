@@ -5,7 +5,9 @@
         "iban": "DE89370400440532013000",
         "currency": "EUR"
   },
-  "psuData": {
+  "psuData": [
+    {
       "psuId": "anton.bruckner"
     }
+  ]
 }
