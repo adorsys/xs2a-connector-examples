@@ -229,7 +229,7 @@ Test:DOCKER_test_image_build:
   stage: "Test"
   script:
     - docker build -t "adorsys/xs2a-connector-examples:test" gateway-app
-    - docker build -t "adorsys/xs2a-connector-embedded-:test" gateway-app-embedded
+    - docker build -t "adorsys/xs2a-connector-embedded:test" gateway-app-embedded
 
 Test:Sonarcube:
   stage: "Test"
