@@ -281,7 +281,7 @@ Notify Slack channel (develop):
   script:
     - apk update && apk add jq curl
     - sleep 60
-    - scripts/notifications/./webhook_slack.sh xs2a cms aspspprofile ledgers 
+    - scripts/notifications/./webhook_slack.sh xs2a cms aspspprofile ledgers
 
 ##########
 # master #
@@ -352,4 +352,4 @@ Notify Slack channel (Integ):
   script:
     - apk update && apk add jq curl
     - sleep 60
-    - scripts/notifications/./webhook_slack.sh xs2a cms aspspprofile ledgers 
+    - scripts/notifications/./webhook_slack.sh xs2a cms aspspprofile ledgers
