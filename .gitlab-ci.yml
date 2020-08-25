@@ -16,7 +16,7 @@ stages:
   - "Test"       # run tests and code quality checks
   - "Package"    # dockerize jar and push to docker registry
   - "Deployment" # push to openshift registry (snapshot Deploymentment) or release registry
-  - "Notification" # Notify to specific channel about applications versions 
+  - "Notification" # Notify to specific channel about applications versions
 
 # ------------------------------------------------------------------
 # variables
@@ -191,8 +191,6 @@ Build:XS2A_connector_Java11:
 
 Test:Javadoc Java11:
   stage: "Test"
-  except:
-    - schedules
   script:
     - jabba use "system@1.11"
     - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
@@ -206,8 +204,6 @@ Test:Javadoc Java11:
 
 Test:UI_Tests_Java11:
   stage: "Test"
-  except:
-    - schedules
   script:
     - jabba use "system@1.11"
     - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
@@ -221,8 +217,6 @@ Test:UI_Tests_Java11:
 
 Test:IT_Java11:
   stage: "Test"
-  except:
-    - schedules
   script:
     - jabba use "system@1.11"
     - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
@@ -233,8 +227,6 @@ Test:IT_Java11:
 
 Test:DOCKER_test_image_build:
   stage: "Test"
-  except:
-    - schedules
   script:
     - docker build -t "adorsys/xs2a-connector-examples:test" gateway-app
     - docker build -t "adorsys/xs2a-connector-embedded-:test" gateway-app-embedded
