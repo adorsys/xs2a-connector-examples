@@ -3,8 +3,7 @@ name: Support-6x XS2A-connector CI
 on: 
   push:
     branches:
-      - support-6x
-      - KOA_add_github_actions
+      - support-6.x
 
 env:
   SONAR_PRJ_KEY: adorsys_xs2a-connector-examples
