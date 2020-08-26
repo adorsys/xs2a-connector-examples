@@ -34,6 +34,7 @@ import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
+import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAvailableScaMethodsResponse;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiCheckConfirmationCodeRequest;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiConsentConfirmationCodeValidationResponse;
@@ -143,6 +144,13 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent,
         consentResponse.setConsentId(businessObject.getId());
         consentResponse.setMultilevelScaRequired(originalResponse.isMultilevelScaRequired());
         return consentResponse;
+    }
+
+    @Override
+    protected SpiResponse<SpiAvailableScaMethodsResponse> getForZeroScaMethods(ScaStatusTO status) {
+        return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
+                       .payload(new SpiAvailableScaMethodsResponse(Collections.emptyList()))
+                       .build();
     }
 
     @Override
