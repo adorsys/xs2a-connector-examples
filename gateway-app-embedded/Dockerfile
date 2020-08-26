@@ -1,6 +1,6 @@
 FROM adorsys/java:8
 
-MAINTAINER https://github.com/adorsys/xs2a-connector-examples
+LABEL maintainer="https://github.com/adorsys/xs2a-connector-examples"
 
 ENV SERVER_PORT 8089
 ENV JAVA_OPTS -Xmx1024m
@@ -15,5 +15,5 @@ USER 1001
 COPY ./target/gateway-app-embedded.jar /opt/gateway-app-embedded/gateway-app-embedded.jar
 
 EXPOSE 8089
-
+# hadolint ignore=DL3025
 CMD exec $JAVA_HOME/bin/java $JAVA_OPTS -jar /opt/gateway-app-embedded/gateway-app-embedded.jar

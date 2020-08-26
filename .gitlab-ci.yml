@@ -16,7 +16,7 @@ stages:
   - "Test"       # run tests and code quality checks
   - "Package"    # dockerize jar and push to docker registry
   - "Deployment" # push to openshift registry (snapshot Deploymentment) or release registry
-  - "Notification" # Notify to specific channel about applications versions 
+  - "Notification" # Notify to specific channel about applications versions
 
 # ------------------------------------------------------------------
 # variables
@@ -208,6 +208,7 @@ Test Docker Image:
   stage: "Test"
   script:
     - docker build -t "adorsys/xs2a-connector-examples:test" gateway-app
+    - docker build -t "adorsys/xs2a-connector-embedded:test" gateway-app-embedded
 
 Test:Sonarcube:
   stage: "Test"
@@ -275,4 +276,3 @@ Push to DockerHub (Release):
   variables:
     DOCKER_TAG: $CI_COMMIT_TAG
   <<: *build_dockerhub_image
-
