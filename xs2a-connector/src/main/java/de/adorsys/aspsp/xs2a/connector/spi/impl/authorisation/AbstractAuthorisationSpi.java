@@ -129,7 +129,7 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
         }
     }
 
-    SpiResponse<SpiAvailableScaMethodsResponse> getForZeroScaMethods(ScaStatusTO status) {
+    protected SpiResponse<SpiAvailableScaMethodsResponse> getForZeroScaMethods(ScaStatusTO status) {
         log.error("Process mismatch. Current SCA Status is {}", status);
         return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
                        .error(new TppMessage(SCA_METHOD_UNKNOWN_PROCESS_MISMATCH))
