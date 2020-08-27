@@ -4,7 +4,6 @@ import de.adorsys.aspsp.xs2a.connector.mock.MockAccountData;
 import de.adorsys.ledgers.middleware.api.domain.account.*;
 import de.adorsys.ledgers.middleware.api.domain.payment.AmountTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.RemittanceInformationStructuredTO;
-import de.adorsys.psd2.xs2a.core.pis.Remittance;
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
@@ -90,7 +89,7 @@ public abstract class LedgersSpiAccountMapper {
                                t.getUltimateDebtor(),
                                t.getRemittanceInformationUnstructured(),
                                MockAccountData.REMITTANCE_UNSTRUCTURED_ARRAY,
-                               mapToRemittance(t.getRemittanceInformationStructured()),
+                               mapToRemittanceString(t.getRemittanceInformationStructured()),
                                MockAccountData.REMITTANCE_STRUCTURED_ARRAY,
                                t.getPurposeCode(),
                                t.getBankTransactionCode(),
@@ -173,5 +172,9 @@ public abstract class LedgersSpiAccountMapper {
 
     public abstract AccountReferenceTO mapToAccountReferenceTO(SpiAccountReference spiAccountReference);
 
-    public abstract Remittance mapToRemittance(RemittanceInformationStructuredTO remittanceInformationStructuredTO);
+    public String mapToRemittanceString(RemittanceInformationStructuredTO remittanceInformationStructuredTO) {
+        return Optional.ofNullable(remittanceInformationStructuredTO)
+                .map(RemittanceInformationStructuredTO::getReference)
+                .orElse(null);
+    }
 }

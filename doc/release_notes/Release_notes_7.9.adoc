@@ -1,3 +1,14 @@
 = Release notes v.7.9
 
 == Table of Contents
+
+* Changed types of remittance information structured properties in SpiTransaction and SpiSinglePayment
+
+==  Changed types of remittance information structured properties in SpiTransaction and SpiSinglePayment
+
+In accordance with the changes to OpenAPI file 1.3.6 2020-08-14.yaml, types of `remittanceInformationStructured`
+and `remittanceInformationStructuredArray` properties in `de.adorsys.psd2.xs2a.spi.domain.account.SpiTransaction` and
+'de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment' were changed:
+
+- from `Remittance` to `String` for `remittanceInformationStructured`
+- from `List<Remittance>` to `List<String>` for `remittanceInformationStructuredArray`
