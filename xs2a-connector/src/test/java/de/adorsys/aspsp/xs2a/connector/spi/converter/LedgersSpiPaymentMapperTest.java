@@ -8,7 +8,6 @@ import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
-import de.adorsys.psd2.xs2a.spi.domain.payment.SpiRemittance;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -71,9 +70,9 @@ class LedgersSpiPaymentMapperTest {
         //Given
         RemittanceInformationStructuredTO remittanceInformationStructuredTO = jsonReader.getObjectFromFile("json/mappers/remittance.json", RemittanceInformationStructuredTO.class);
         //When
-        SpiRemittance actual = ledgersSpiPaymentMapper.mapToSpiRemittance(remittanceInformationStructuredTO);
+        String actual = ledgersSpiPaymentMapper.mapToRemittanceString(remittanceInformationStructuredTO);
         //Then
-        SpiRemittance expected = jsonReader.getObjectFromFile("json/mappers/remittance.json", SpiRemittance.class);
+        String expected = "Ref Number Merchant";
         assertEquals(expected, actual);
     }
 
