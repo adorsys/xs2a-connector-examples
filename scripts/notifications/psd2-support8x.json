@@ -5,7 +5,7 @@
 			"type": "section",
 			"text": {
 				"type": "mrkdwn",
-				"text": "Develop env: <https://openshift.adorsys.de/console/project/adorsys-psd2-develop/overview|Link to openshift env> :psd2:"
+				"text": "Support8x env: <https://openshift.adorsys.de/console/project/adorsys-psd2-support8x/overview|Link to openshift env> :psd2:"
 			}
 		},
 		{

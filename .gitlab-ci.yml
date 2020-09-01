@@ -43,13 +43,7 @@ variables: &variables
   # Private Openshift Images #
   ############################
 
-  DEV_NAMESPACE: adorsys-psd2-develop
-  DEMO_NAMESPACE: adorsys-psd2-demo
-  INTEG_NAMESPACE: adorsys-psd2-integ
-
-  OPENSHIFT_DEV_NAMESPACE: adorsys-psd2-develop
-  OPENSHIFT_DEMO_NAMESPACE: adorsys-psd2-demo
-  OPENSHIFT_INTEG_NAMESPACE: adorsys-psd2-integ
+  OPENSHIFT_NAMESPACE_SUPPORT8X: adorsys-psd2-support8x
 
 # ------------------------------------------------------------------
 # reusable yaml anchors
@@ -247,54 +241,41 @@ Test:Sonarcube:
     - develop
 
 ###########
-# develop #
+# Support 8.x #
 ###########
 
-Push to DockerHub (develop):
+Push to DockerHub (support-8.x):
   stage: "Package"
   only:
-    - develop
+    - support-8.x
   variables:
-    DOCKER_TAG: develop
+    DOCKER_TAG: support8x
   <<: *build_dockerhub_image
 
-Deploy Openshift (develop):
+Deploy Openshift (support-8.x):
   stage: "Deployment"
   only:
-    - develop
+    - support-8.x
   variables:
     <<: *variables
-    DOCKER_TAG: develop
-    OPENSHIFT_NAMESPACE: "${DEV_NAMESPACE}"
+    DOCKER_TAG: support8x
+    OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_SUPPORT8X}"
   <<: *deploy_openshift
 
-Notify Slack channel (develop):
+Notify Slack channel (support):
   image: "bash:4"
   stage: "Notification"
   cache: {}
   only:
     - develop
   variables:
-    HELM_RELEASE: dev-psd2
-    ENV_JSON_FILE: scripts/notifications/psd2-dev.json
-    SLACK_CHANNEL: ${SLACK_PSD2_DEVELOP_CHANNEL}
+    HELM_RELEASE: support8x-psd2
+    ENV_JSON_FILE: scripts/notifications/psd2-support8x.json
+    SLACK_CHANNEL: ${SLACK_PSD2_SUPPORT_CHANNEL}
   script:
     - apk update && apk add jq curl
     - sleep 60
     - scripts/notifications/./webhook_slack.sh xs2a cms aspspprofile ledgers
-
-##########
-# master #
-##########
-
-Push to DockerHub (master):
-  stage: "Package"
-  only:
-    - master
-  variables:
-    DOCKER_TAG: latest
-  <<: *build_dockerhub_image
-
 ###########
 # release #
 ###########
@@ -306,50 +287,3 @@ Push to DockerHub (Release):
   variables:
     DOCKER_TAG: $CI_COMMIT_TAG
   <<: *build_dockerhub_image
-
-Push to DockerHub (Embedded Release):
-  stage: "Package"
-  only:
-    - tags
-  variables:
-    DOCKER_TAG: $CI_COMMIT_TAG
-  <<: *build_dockerhub_image_embedded
-
-###########
-# nightly #
-###########
-
-Push to DockerHub (Nightly):
-  stage: "Package"
-  only:
-    variables:
-      - $NIGHTLY == "true"
-  variables:
-    DOCKER_TAG: nightly
-  <<: *build_dockerhub_image
-
-Deploy Openshift (Nightly):
-  stage: "Deployment"
-  only:
-    variables:
-      - $NIGHTLY == "true"
-  variables:
-    <<: *variables
-    DOCKER_TAG: nightly
-    OPENSHIFT_NAMESPACE: "${INTEG_NAMESPACE}"
-  <<: *deploy_openshift
-
-Notify Slack channel (Integ):
-  image: "bash:4"
-  stage: "Notification"
-  cache: {}
-  only:
-    - schedules
-  variables:
-    HELM_RELEASE: integ-psd2
-    ENV_JSON_FILE: scripts/notifications/psd2-integ.json
-    SLACK_CHANNEL: ${SLACK_PSD2_INTEG_CHANNEL}
-  script:
-    - apk update && apk add jq curl
-    - sleep 60
-    - scripts/notifications/./webhook_slack.sh xs2a cms aspspprofile ledgers
