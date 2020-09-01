@@ -1,4 +1,4 @@
-name: Release XS2A-connector CI
+name: Release support-8x XS2A-connector CI
 
 on: 
   push:

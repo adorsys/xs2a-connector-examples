@@ -1,9 +1,9 @@
-name: Develop XS2A-connector CI
+name: Support-8x XS2A-connector CI
 
 on: 
   push:
     branches:
-      - develop
+      - support-8.x
 
 env:
   SONAR_PRJ_KEY: adorsys_xs2a-connector-examples
