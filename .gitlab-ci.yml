@@ -267,7 +267,7 @@ Notify Slack channel (support):
   stage: "Notification"
   cache: {}
   only:
-    - develop
+    - support-8.x
   variables:
     HELM_RELEASE: support8x-psd2
     ENV_JSON_FILE: scripts/notifications/psd2-support8x.json
