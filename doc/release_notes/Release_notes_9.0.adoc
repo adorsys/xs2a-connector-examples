@@ -1,3 +1,9 @@
 = Release notes v.9.0
 
 == Table of Contents
+
+* Passed ScaStatus EXEMPTED for user without SCA method from bank
+
+== Passed ScaStatus EXEMPTED for user without SCA method from bank
+
+From now on, EXEMPTED sca status passed from bank through spi
