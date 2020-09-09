@@ -102,7 +102,10 @@ public class GeneralAuthorisationService {
                                                                                              .map(HttpEntity::getBody)
                                                                                              .orElseGet(SCALoginResponseTO::new)));
             return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .payload(new SpiPsuAuthorisationResponse(false, status))
+                           .payload(new SpiPsuAuthorisationResponse(ScaStatusTO.EXEMPTED == Optional.ofNullable(response)
+                                                                                                    .map(HttpEntity::getBody)
+                                                                                                    .map(SCAResponseTO::getScaStatus)
+                                                                                                    .orElse(null), status))
                            .build();
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
