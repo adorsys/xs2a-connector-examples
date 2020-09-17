@@ -1,0 +1,9 @@
+= Release notes v.8.1
+
+== Table of Contents
+
+* Adjusted OAuth flow
+
+== Adjusted OAuth flow
+
+The usage of  header `X-OAUTH-PREFERRED` was removed.
