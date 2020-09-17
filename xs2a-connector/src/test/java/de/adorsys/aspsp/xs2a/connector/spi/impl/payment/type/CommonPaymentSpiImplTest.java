@@ -70,6 +70,7 @@ class CommonPaymentSpiImplTest {
         SpiPaymentInfo spiPaymentInfo = new SpiPaymentInfo(PAYMENT_PRODUCT);
         SpiSinglePaymentInitiationResponse spiSinglePaymentInitiationResponse = new SpiSinglePaymentInitiationResponse();
         spiSinglePaymentInitiationResponse.setPaymentId(PAYMENT_ID);
+        spiPaymentInfo.setPaymentType(PaymentType.SINGLE);
 
         when(generalPaymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, spiPaymentInfo, spiAspspConsentDataProvider, new SpiSinglePaymentInitiationResponse(), SPI_CONTEXT_DATA.getPsuData(), new HashSet<>()))
                 .thenReturn(buildSpiResponse(spiSinglePaymentInitiationResponse));
@@ -88,6 +89,7 @@ class CommonPaymentSpiImplTest {
         SpiPaymentInfo spiPaymentInfo = new SpiPaymentInfo(PAYMENT_PRODUCT);
         SpiSinglePaymentInitiationResponse spiSinglePaymentInitiationResponse = new SpiSinglePaymentInitiationResponse();
         spiSinglePaymentInitiationResponse.setPaymentId(PAYMENT_ID);
+        spiPaymentInfo.setPaymentType(PaymentType.SINGLE);
 
         when(generalPaymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, spiPaymentInfo, spiAspspConsentDataProvider, new SpiSinglePaymentInitiationResponse(), SPI_CONTEXT_DATA.getPsuData(), new HashSet<>()))
                 .thenReturn(buildSpiResponse(spiSinglePaymentInitiationResponse));
