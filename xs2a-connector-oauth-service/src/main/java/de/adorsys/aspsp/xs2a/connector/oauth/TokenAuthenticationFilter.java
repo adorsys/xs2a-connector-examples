@@ -25,6 +25,7 @@ import de.adorsys.psd2.xs2a.web.Xs2aEndpointChecker;
 import de.adorsys.psd2.xs2a.web.error.TppErrorMessageWriter;
 import de.adorsys.psd2.xs2a.web.filter.AbstractXs2aFilter;
 import de.adorsys.psd2.xs2a.web.filter.TppErrorMessage;
+import de.adorsys.psd2.xs2a.web.request.RequestPathResolver;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -36,8 +37,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static de.adorsys.psd2.xs2a.core.domain.MessageCategory.ERROR;
 import static de.adorsys.psd2.xs2a.core.error.MessageErrorCode.UNAUTHORIZED_NO_TOKEN;
@@ -47,51 +48,74 @@ import static de.adorsys.psd2.xs2a.core.error.MessageErrorCode.UNAUTHORIZED_NO_T
 public class TokenAuthenticationFilter extends AbstractXs2aFilter {
     private static final String BEARER_TOKEN_PREFIX = "Bearer ";
     private static final String INSTANCE_ID = "instance-id";
+    private static final String CONSENT_ENP_ENDING = "consents";
+    private static final String FUNDS_CONF_ENP_ENDING = "funds-confirmations";
 
     private final TokenValidationService tokenValidationService;
     private final AspspProfileService aspspProfileService;
     private final TppErrorMessageWriter tppErrorMessageWriter;
+    private final OauthDataHolder oauthDataHolder;
+    private final RequestPathResolver requestPathResolver;
 
     public TokenAuthenticationFilter(TokenValidationService tokenValidationService,
                                      Xs2aEndpointChecker xs2aEndpointChecker,
                                      AspspProfileService aspspProfileService,
-                                     TppErrorMessageWriter tppErrorMessageWriter) {
+                                     TppErrorMessageWriter tppErrorMessageWriter,
+                                     OauthDataHolder oauthDataHolder, RequestPathResolver requestPathResolver) {
         super(tppErrorMessageWriter, xs2aEndpointChecker);
         this.tokenValidationService = tokenValidationService;
         this.aspspProfileService = aspspProfileService;
         this.tppErrorMessageWriter = tppErrorMessageWriter;
+        this.oauthDataHolder = oauthDataHolder;
+        this.requestPathResolver = requestPathResolver;
     }
 
     @Override
-    protected void doFilterInternalCustom(HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain chain) throws IOException, ServletException {
-        if (isInvalidOauthRequest(request, response)) {
-            return;
-        }
-
-        chain.doFilter(request, response);
-    }
-
-    private boolean isInvalidOauthRequest(HttpServletRequest request, @NotNull HttpServletResponse response) throws IOException {
-        String bearerToken = getBearerToken(request);
+    protected void doFilterInternalCustom(HttpServletRequest request, @NotNull HttpServletResponse response,
+                                          @NotNull FilterChain chain) throws IOException, ServletException {
         String instanceId = request.getHeader(INSTANCE_ID);
-
         List<ScaApproach> scaApproaches = aspspProfileService.getScaApproaches(instanceId);
         AspspSettings aspspSettings = aspspProfileService.getAspspSettings(instanceId);
         ScaRedirectFlow scaRedirectFlow = aspspSettings.getCommon().getScaRedirectFlow();
 
-        if (isTokenRequired(scaApproaches, scaRedirectFlow) && StringUtils.isBlank(bearerToken)) {
+        if (!isOAuthRequest(scaApproaches, scaRedirectFlow)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        String bearerToken = getBearerToken(request);
+        if (isInvalidOauthRequest(request, response, bearerToken, instanceId, aspspSettings)) {
+            return;
+        }
+        oauthDataHolder.setToken(bearerToken);
+
+        chain.doFilter(request, response);
+    }
+
+    private boolean isInvalidOauthRequest(HttpServletRequest request, @NotNull HttpServletResponse response,
+                                          String bearerToken, String instanceId, AspspSettings aspspSettings) throws IOException {
+        ScaRedirectFlow scaRedirectFlow = aspspSettings.getCommon().getScaRedirectFlow();
+        String requestPath = requestPathResolver.resolveRequestPath(request);
+
+        boolean tokenRequired = isTokenRequired(scaRedirectFlow, requestPath, instanceId);
+        if (tokenRequired && StringUtils.isBlank(bearerToken)) {
             log.info("Token authentication error: token is absent in redirect OAuth pre-step.");
             String oauthConfigurationUrl = aspspSettings.getCommon().getOauthConfigurationUrl();
             tppErrorMessageWriter.writeError(response, buildTppErrorMessage(UNAUTHORIZED_NO_TOKEN, oauthConfigurationUrl));
             return true;
         }
 
-        if (isTokenRequired(scaApproaches, scaRedirectFlow) && isTokenInvalid(bearerToken)) {
+        if (tokenRequired && isTokenInvalid(bearerToken)) {
             log.info("Token authentication error: token is invalid");
             tppErrorMessageWriter.writeError(response, buildTppErrorMessage(MessageErrorCode.TOKEN_INVALID));
             return true;
         }
         return false;
+    }
+
+    private boolean isOAuthRequest(List<ScaApproach> scaApproaches, ScaRedirectFlow scaRedirectFlow) {
+        return scaApproaches.contains(ScaApproach.REDIRECT)
+                       && EnumSet.of(ScaRedirectFlow.OAUTH_PRE_STEP, ScaRedirectFlow.OAUTH).contains(scaRedirectFlow);
     }
 
     private String getBearerToken(HttpServletRequest request) {
@@ -110,8 +134,29 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
         return new TppErrorMessage(ERROR, messageErrorCode, params);
     }
 
-    private boolean isTokenRequired(List<ScaApproach> scaApproaches, ScaRedirectFlow scaRedirectFlow) {
-        return scaApproaches.contains(ScaApproach.REDIRECT) &&
-                       ScaRedirectFlow.OAUTH_PRE_STEP == scaRedirectFlow;
+    private boolean isTokenRequired(ScaRedirectFlow oauthType, String requestPath, String instanceId) {
+        if (oauthType == ScaRedirectFlow.OAUTH_PRE_STEP) {
+            return true;
+        }
+
+        String trimmedRequestPath = trimEndingSlash(requestPath);
+        if (trimmedRequestPath.endsWith(CONSENT_ENP_ENDING) || trimmedRequestPath.endsWith(FUNDS_CONF_ENP_ENDING)) {
+            return false;
+        } else {
+            Set<String> supportedProducts = aspspProfileService.getAspspSettings(instanceId).getPis().getSupportedPaymentTypeAndProductMatrix().values().stream()
+                                                    .flatMap(Collection::stream).collect(Collectors.toSet());
+            return supportedProducts.stream().noneMatch(trimmedRequestPath::endsWith);
+        }
     }
+
+    private String trimEndingSlash(String input) {
+        String result = input;
+
+        while (StringUtils.endsWith(result, "/")) {
+            result = StringUtils.removeEnd(result, "/");
+        }
+
+        return result;
+    }
+
 }
