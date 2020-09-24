@@ -21,6 +21,7 @@ import de.adorsys.psd2.aspsp.profile.service.AspspProfileService;
 import de.adorsys.psd2.xs2a.core.profile.ScaApproach;
 import de.adorsys.psd2.xs2a.core.tpp.TppInfo;
 import de.adorsys.psd2.xs2a.service.TppService;
+import de.adorsys.psd2.xs2a.web.request.RequestPathResolver;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -76,6 +77,8 @@ class ServiceUnavailableIT {
     private WebApplicationContext webApplicationContext;
     @MockBean
     private AspspProfileService aspspProfileService;
+    @MockBean
+    private RequestPathResolver requestPathResolver;
     @MockBean
     private TppService tppService;
     @Autowired
