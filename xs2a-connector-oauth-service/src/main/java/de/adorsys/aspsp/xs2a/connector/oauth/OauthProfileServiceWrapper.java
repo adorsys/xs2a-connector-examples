@@ -129,6 +129,7 @@ public class OauthProfileServiceWrapper implements AspspProfileService {
                                              existingSetting.isAisPisSessionsSupported(),
                                              existingSetting.isSigningBasketSupported(),
                                              existingSetting.getSigningBasketMaxEntries(),
+                                             existingSetting.getNotConfirmedSigningBasketExpirationTimeMs(),
                                              existingSetting.isCheckTppRolesFromCertificateSupported(),
                                              existingSetting.getAspspNotificationsSupported(),
                                              existingSetting.isAuthorisationConfirmationRequestMandated(),
