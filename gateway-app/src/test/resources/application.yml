@@ -49,9 +49,6 @@ scheduler.pool.size: 30
 server_key: test123
 # ----------------------------------------------
 
-# number of characters in a json string
-application.ais.transaction.max-length: 1000
-
 #LOGGER
 logging.level.org.springframework.web: ERROR
 

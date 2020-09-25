@@ -43,10 +43,6 @@ ledgers.url: http://localhost:8088
 cms.url: http://localhost:38080
 online-banking.url: http://localhost:8090/api/v1/consents/confirm/{userLogin}/{consentId}/{authorizationId}/{tan}
 
-# ----------------------------------------------
-# number of characters in a json string
-application.ais.transaction.max-length: 1000
-
 #LOGGER
 logging.level.org.springframework.web: ERROR
 
