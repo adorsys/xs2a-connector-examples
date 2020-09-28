@@ -3,7 +3,13 @@
 == Table of Contents
 
 * Passed ScaStatus EXEMPTED for user without SCA method from bank
+* Changed PaymentSpi#verifyScaAuthorisationAndExecutePaymentWithPaymentResponse response type
 
 == Passed ScaStatus EXEMPTED for user without SCA method from bank
 
-From now on, EXEMPTED sca status passed from bank through spi
+From now on, EXEMPTED sca status passed from bank through spi.
+
+== Changed PaymentSpi#verifyScaAuthorisationAndExecutePaymentWithPaymentResponse response type
+
+From now on, PaymentSpi#verifyScaAuthorisationAndExecutePaymentWithPaymentResponse responses `SpiResponse<SpiPaymentExecutionResponse>`.
+This response includes transaction status and spi authorisation status simultaneously.
