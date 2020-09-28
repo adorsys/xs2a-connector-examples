@@ -3,7 +3,13 @@
 == Table of Contents
 
 * Adjusted OAuth flow
+* Changed PaymentSpi#verifyScaAuthorisationAndExecutePaymentWithPaymentResponse response type
 
 == Adjusted OAuth flow
 
 The usage of  header `X-OAUTH-PREFERRED` was removed.
+
+== Changed PaymentSpi#verifyScaAuthorisationAndExecutePaymentWithPaymentResponse response type
+
+From now on, PaymentSpi#verifyScaAuthorisationAndExecutePaymentWithPaymentResponse responses `SpiResponse<SpiPaymentExecutionResponse>`.
+This response includes transaction status and spi authorisation status simultaneously.
