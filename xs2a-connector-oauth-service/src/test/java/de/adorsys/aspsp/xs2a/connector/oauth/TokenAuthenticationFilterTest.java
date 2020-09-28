@@ -84,7 +84,7 @@ class TokenAuthenticationFilterTest {
 
     @BeforeEach
     void setUp() {
-        AspspSettings aspspSettings = new AspspSettings(null, null, null, commonAspspProfileSetting);
+        AspspSettings aspspSettings = new AspspSettings(null, null, null, null, commonAspspProfileSetting);
         tokenAuthenticationFilter = new TokenAuthenticationFilter(tokenValidationService, xs2aEndpointChecker,
                                                                   aspspProfileService, tppErrorMessageWriter,
                                                                   oauthDataHolder, requestPathResolver);

@@ -75,7 +75,7 @@ public class OauthProfileServiceWrapper implements AspspProfileService {
         if (scaRedirectFlow == ScaRedirectFlow.OAUTH) {
             String customOauthLink = existingCommonSetting.getOauthConfigurationUrl() + buildOauthLinkSuffix();
             CommonAspspProfileSetting customCommonSettings = buildCustomCommonSetting(existingCommonSetting, ScaRedirectFlow.OAUTH, customOauthLink);
-            return new AspspSettings(profileSettings.getAis(), profileSettings.getPis(), profileSettings.getPiis(), customCommonSettings);
+            return new AspspSettings(profileSettings.getAis(), profileSettings.getPis(), profileSettings.getPiis(), profileSettings.getSb(), customCommonSettings);
         } else if (scaRedirectFlow == ScaRedirectFlow.OAUTH_PRE_STEP) {
             CommonAspspProfileSetting customCommonSetting = buildCustomCommonSetting(existingCommonSetting,
                                                                                      ScaRedirectFlow.OAUTH_PRE_STEP,
@@ -84,7 +84,7 @@ public class OauthProfileServiceWrapper implements AspspProfileService {
             AisAspspProfileSetting customAisSetting = buildCustomAisAspspProfileSetting(profileSettings.getAis(), aisSuffixWithToken);
             String pisSuffixWithToken = pisPreStepOauthSuffix + StringUtils.defaultString(oauthDataHolder.getToken());
             PisAspspProfileSetting customPisSetting = buildCustomPisAspspProfileSetting(profileSettings.getPis(), pisSuffixWithToken);
-            return new AspspSettings(customAisSetting, customPisSetting, profileSettings.getPiis(), customCommonSetting);
+            return new AspspSettings(customAisSetting, customPisSetting, profileSettings.getPiis(), profileSettings.getSb(), customCommonSetting);
         }
 
         return profileSettings;
@@ -127,9 +127,6 @@ public class OauthProfileServiceWrapper implements AspspProfileService {
                                              existingSetting.getSupportedAccountReferenceFields(),
                                              existingSetting.getMulticurrencyAccountLevelSupported(),
                                              existingSetting.isAisPisSessionsSupported(),
-                                             existingSetting.isSigningBasketSupported(),
-                                             existingSetting.getSigningBasketMaxEntries(),
-                                             existingSetting.getNotConfirmedSigningBasketExpirationTimeMs(),
                                              existingSetting.isCheckTppRolesFromCertificateSupported(),
                                              existingSetting.getAspspNotificationsSupported(),
                                              existingSetting.isAuthorisationConfirmationRequestMandated(),
