@@ -42,17 +42,6 @@ class CommonPaymentSpiImplTest {
     @Mock
     private LedgersSpiPaymentMapper ledgersSpiPaymentMapper;
 
-    @Test
-    void executePaymentWithoutSca() {
-        //When
-        SpiResponse<SpiPaymentExecutionResponse> response = commonPaymentSpi.executePaymentWithoutSca(SPI_CONTEXT_DATA, new SpiPaymentInfo(PAYMENT_PRODUCT), spiAspspConsentDataProvider);
-
-        //Then
-        assertTrue(response.hasError());
-        assertEquals(MessageErrorCode.SERVICE_NOT_SUPPORTED, response.getErrors().get(0).getErrorCode());
-    }
-
-    @Test
     void verifyScaAuthorisationAndExecutePayment() {
         SpiScaConfirmation spiScaConfirmation = new SpiScaConfirmation();
         when(generalPaymentService.verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(spiScaConfirmation, spiAspspConsentDataProvider))
