@@ -57,7 +57,7 @@ public abstract class AbstractPaymentSpi<P extends SpiPayment, R extends SpiPaym
         return paymentService.executePaymentWithoutSca(aspspConsentDataProvider);
     }
 
-    public @NotNull SpiResponse<SpiPaymentResponse> verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(@NotNull SpiContextData contextData,
+    public @NotNull SpiResponse<SpiPaymentExecutionResponse> verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(@NotNull SpiContextData contextData,
                                                                                             @NotNull SpiScaConfirmation spiScaConfirmation,
                                                                                             @NotNull P payment,
                                                                                             @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
