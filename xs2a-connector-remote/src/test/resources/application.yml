@@ -36,9 +36,6 @@ xs2asandbox.tppui.online-banking.url: http://localhost:8090/api/v1/consents/conf
 
 # ----------------------------------------------
 
-# number of characters in a json string
-xs2a.application.ais.transaction.max-length: 1000
-
 #LOGGER
 logging.level.org.springframework.web: ERROR
 

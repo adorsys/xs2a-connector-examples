@@ -51,10 +51,6 @@ xs2a.cms.url: http://localhost:38080
 xs2asandbox.ledgers.url: http://localhost:8088
 xs2asandbox.tppui.online-banking.url: http://localhost:8090/api/v1/consents/confirm/{userLogin}/{consentId}/{authorizationId}/{tan}
 
-# ----------------------------------------------
-# number of characters in a json string
-xs2a.application.ais.transaction.max-length: 1000
-
 #LOGGER
 logging.level.org.springframework.web: ERROR
 
