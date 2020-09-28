@@ -21,7 +21,7 @@ import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.*;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentCancellationResponse;
-import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentResponse;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import feign.FeignException;
@@ -211,9 +211,9 @@ class PaymentCancellationSpiImplTest {
         when(paymentRestClient.authorizeCancelPayment(PAYMENT_ID, AUTHORISATION_ID, TAN_NUMBER))
                 .thenReturn(ResponseEntity.ok(scaPaymentResponseTO));
 
-        SpiPaymentResponse expected = new SpiPaymentResponse(SpiAuthorisationStatus.SUCCESS);
-        SpiResponse<SpiPaymentResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPaymentWithResponse(SPI_CONTEXT_DATA, spiScaConfirmation,
-                                                                                                         businessObject, spiAspspConsentDataProvider);
+        SpiPaymentExecutionResponse expected = new SpiPaymentExecutionResponse(SpiAuthorisationStatus.SUCCESS);
+        SpiResponse<SpiPaymentExecutionResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPaymentWithResponse(SPI_CONTEXT_DATA, spiScaConfirmation,
+                                                                                                                              businessObject, spiAspspConsentDataProvider);
 
         assertFalse(actual.hasError());
         assertEquals(expected, actual.getPayload());
@@ -234,7 +234,7 @@ class PaymentCancellationSpiImplTest {
         when(paymentRestClient.authorizeCancelPayment(PAYMENT_ID, AUTHORISATION_ID, TAN_NUMBER))
                 .thenReturn(ResponseEntity.badRequest().build());
 
-        SpiResponse<SpiPaymentResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPaymentWithResponse(SPI_CONTEXT_DATA, spiScaConfirmation,
+        SpiResponse<SpiPaymentExecutionResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPaymentWithResponse(SPI_CONTEXT_DATA, spiScaConfirmation,
                                                                                                                businessObject, spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());
@@ -259,7 +259,7 @@ class PaymentCancellationSpiImplTest {
                 .thenThrow(feignException);
         when(feignExceptionReader.getErrorCode(feignException)).thenReturn("error code");
 
-        SpiResponse<SpiPaymentResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPaymentWithResponse(SPI_CONTEXT_DATA, spiScaConfirmation,
+        SpiResponse<SpiPaymentExecutionResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPaymentWithResponse(SPI_CONTEXT_DATA, spiScaConfirmation,
                                                                                                                businessObject, spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());
@@ -284,8 +284,8 @@ class PaymentCancellationSpiImplTest {
                 .thenThrow(feignException);
         when(feignExceptionReader.getErrorCode(feignException)).thenReturn("SCA_VALIDATION_ATTEMPT_FAILED");
 
-        SpiPaymentResponse expected = new SpiPaymentResponse(SpiAuthorisationStatus.ATTEMPT_FAILURE);
-        SpiResponse<SpiPaymentResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPaymentWithResponse(SPI_CONTEXT_DATA, spiScaConfirmation,
+        SpiPaymentExecutionResponse expected = new SpiPaymentExecutionResponse(SpiAuthorisationStatus.ATTEMPT_FAILURE);
+        SpiResponse<SpiPaymentExecutionResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPaymentWithResponse(SPI_CONTEXT_DATA, spiScaConfirmation,
                                                                                                          businessObject, spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());

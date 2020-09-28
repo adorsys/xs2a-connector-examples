@@ -135,7 +135,7 @@ public class GeneralPaymentService {
         }
     }
 
-    public SpiResponse<SpiPaymentResponse> verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(@NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+    public SpiResponse<SpiPaymentExecutionResponse> verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(@NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         try {
             SCAPaymentResponseTO sca = consentDataService.response(aspspConsentDataProvider.loadAspspConsentData(), SCAPaymentResponseTO.class);
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
@@ -151,7 +151,7 @@ public class GeneralPaymentService {
                                        .orElse(null);
 
             logger.info("SCA status is: {}", scaStatus);
-            return SpiResponse.<SpiPaymentResponse>builder()
+            return SpiResponse.<SpiPaymentExecutionResponse>builder()
                            .payload(spiPaymentExecutionResponse(consentResponse.getTransactionStatus()))
                            .build();
         } catch (FeignException feignException) {
@@ -160,17 +160,17 @@ public class GeneralPaymentService {
 
             String errorCode = feignExceptionReader.getErrorCode(feignException);
             if (errorCode.equals(ATTEMPT_FAILURE)) {
-                return SpiResponse.<SpiPaymentResponse>builder()
-                               .payload(new SpiPaymentResponse(SpiAuthorisationStatus.ATTEMPT_FAILURE))
+                return SpiResponse.<SpiPaymentExecutionResponse>builder()
+                               .payload(new SpiPaymentExecutionResponse(SpiAuthorisationStatus.ATTEMPT_FAILURE))
                                .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
                                .build();
             }
 
-            return SpiResponse.<SpiPaymentResponse>builder()
+            return SpiResponse.<SpiPaymentExecutionResponse>builder()
                            .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
                            .build();
         } catch (Exception exception) {
-            return SpiResponse.<SpiPaymentResponse>builder()
+            return SpiResponse.<SpiPaymentExecutionResponse>builder()
                            .error(new TppMessage(MessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED))
                            .build();
         } finally {
