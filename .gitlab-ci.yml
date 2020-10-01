@@ -258,6 +258,14 @@ Push to DockerHub (develop):
     DOCKER_TAG: develop
   <<: *build_dockerhub_image
 
+Push to DockerHub (develop Embedded):
+  stage: "Package"
+  only:
+    - develop
+  variables:
+    DOCKER_TAG: develop
+  <<: *build_dockerhub_image_embedded
+
 Deploy Openshift (develop):
   stage: "Deployment"
   only:
