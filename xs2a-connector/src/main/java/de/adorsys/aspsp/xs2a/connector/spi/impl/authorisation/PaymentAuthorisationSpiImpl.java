@@ -20,6 +20,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaLoginMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.CmsPaymentStatusUpdateService;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.internal.PaymentInternalGeneral;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
@@ -39,6 +40,7 @@ import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiPsuAuthorisationResponse
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.PaymentAuthorisationSpi;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
+import feign.FeignException;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +51,9 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
+import static de.adorsys.psd2.xs2a.core.error.MessageErrorCode.FORMAT_ERROR;
+import static de.adorsys.psd2.xs2a.core.error.MessageErrorCode.PRODUCT_UNKNOWN;
 
 @Component
 public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPayment, SCAPaymentResponseTO> implements PaymentAuthorisationSpi {
@@ -95,6 +100,18 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
             cmsPaymentStatusUpdateService.updatePaymentStatus(businessObject.getPaymentId(), aspspConsentDataProvider);
         }
         return response;
+    }
+
+    @Override
+    protected SpiResponse<SpiPsuAuthorisationResponse> getSpiPsuAuthorisationResponseSpiResponseWithError(FeignException feignException, String devMessage, String errorCode) {
+        if (errorCode.equals("REQUEST_VALIDATION_FAILURE")) {
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, PRODUCT_UNKNOWN, devMessage))
+                           .build();
+        }
+        return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                       .error(FeignExceptionHandler.getFailureMessage(feignException, FORMAT_ERROR))
+                       .build();
     }
 
     @Override

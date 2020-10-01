@@ -239,10 +239,9 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
                 scaResponseTO = initiateBusinessObject(businessObject, aspspConsentDataProvider.loadAspspConsentData());
             } catch (FeignException feignException) {
                 String devMessage = feignExceptionReader.getErrorMessage(feignException);
+                String errorCode = feignExceptionReader.getErrorCode(feignException);
                 log.info("Processing of successful authorisation failed: devMessage '{}'", devMessage);
-                return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                               .error(FeignExceptionHandler.getFailureMessage(feignException, FORMAT_ERROR))
-                               .build();
+                return getSpiPsuAuthorisationResponseSpiResponseWithError(feignException, devMessage, errorCode);
             }
 
             if (scaResponseTO == null) {
@@ -258,6 +257,12 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
 
         return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                        .payload(authorisePsu.getPayload())
+                       .build();
+    }
+
+    protected SpiResponse<SpiPsuAuthorisationResponse> getSpiPsuAuthorisationResponseSpiResponseWithError(FeignException feignException, String devMessage, String errorCode) {
+        return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                       .error(FeignExceptionHandler.getFailureMessage(feignException, FORMAT_ERROR))
                        .build();
     }
 
