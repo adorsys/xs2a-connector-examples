@@ -303,6 +303,14 @@ Push to DockerHub (master):
     DOCKER_TAG: latest
   <<: *build_dockerhub_image
 
+Push to DockerHub (master Embedded):
+  stage: "Package"
+  only:
+    - master
+  variables:
+    DOCKER_TAG: latest
+  <<: *build_dockerhub_image_embedded
+
 ###########
 # release #
 ###########
