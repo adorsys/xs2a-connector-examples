@@ -212,6 +212,7 @@ class PaymentAuthorisationSpiImplTest {
                 .thenReturn(scaLoginResponseTO);
 
         when(paymentInternalGeneral.initiatePaymentInternal(businessObject, CONSENT_DATA_BYTES)).thenThrow(buildFeignException());
+        when(feignExceptionReader.getErrorCode(any())).thenReturn("REQUEST_VALIDATION_FAILURE");
 
         SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.authorisePsu(SPI_CONTEXT_DATA, AUTHORISATION_ID, PSU_ID_DATA_1, SECRET,
                                                                                         businessObject, spiAspspConsentDataProvider);
