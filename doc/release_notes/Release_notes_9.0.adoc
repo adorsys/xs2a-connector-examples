@@ -4,6 +4,7 @@
 
 * Passed ScaStatus EXEMPTED for user without SCA method from bank
 * Changed PaymentSpi#verifyScaAuthorisationAndExecutePaymentWithPaymentResponse response type
+* Changed error code for case of not supported payment type in bank
 
 == Passed ScaStatus EXEMPTED for user without SCA method from bank
 
@@ -13,3 +14,8 @@ From now on, EXEMPTED sca status passed from bank through spi.
 
 From now on, PaymentSpi#verifyScaAuthorisationAndExecutePaymentWithPaymentResponse responses `SpiResponse<SpiPaymentExecutionResponse>`.
 This response includes transaction status and spi authorisation status simultaneously.
+
+== Changed error code for case of not supported payment type in bank
+
+From now on, for payment in case of not supported payment type in a bank, connector will return `PRODUCT_UNKNOWN` error
+with text from the bank.
