@@ -201,7 +201,7 @@ public class AccountSpiImpl implements AccountSpi {
         if (BookingStatus.INFORMATION == spiTransactionReportParameters.getBookingStatus()) {
             logger.info("Retrieving mock standing order report for account: {}", accountReference.getResourceId());
             SpiTransactionReport transactionReport = new SpiTransactionReport(null, createStandingOrderReportMock(), null,
-                                                                              processAcceptMediaType(spiTransactionReportParameters.getAcceptMediaType()), null);
+                                                                              processAcceptMediaType(spiTransactionReportParameters.getAcceptMediaType()), null, null);
             return SpiResponse.<SpiTransactionReport>builder()
                            .payload(transactionReport)
                            .build();
@@ -233,7 +233,7 @@ public class AccountSpiImpl implements AccountSpi {
                                                                      accountConsent, aspspConsentDataProvider);
 
             SpiTransactionReport transactionReport = new SpiTransactionReport("downloadId", transactions, balances,
-                                                                              processAcceptMediaType(acceptMediaType), null);
+                                                                              processAcceptMediaType(acceptMediaType), null, null);
             logger.info("Finally found {} transactions.", transactionReport.getTransactions().size());
 
             aspspConsentDataProvider.updateAspspConsentData(tokenService.store(response));
