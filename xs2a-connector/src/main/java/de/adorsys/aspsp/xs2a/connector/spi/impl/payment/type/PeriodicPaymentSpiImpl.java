@@ -52,7 +52,6 @@ public class PeriodicPaymentSpiImpl extends AbstractPaymentSpi<SpiPeriodicPaymen
                                                                    @NotNull String acceptMediaType,
                                                                    @NotNull SpiPeriodicPayment payment,
                                                                    @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        payment.setDebtorName(DEBTOR_NAME);
         return paymentService.getPaymentById(payment, aspspConsentDataProvider, paymentMapper::mapToSpiPeriodicPayment);
     }
 

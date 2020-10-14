@@ -84,6 +84,7 @@ public abstract class LedgersSpiPaymentMapper {
         spiPayment.setPaymentStatus(Optional.ofNullable(paymentTO.getTransactionStatus()).map(TransactionStatusTO::name).map(TransactionStatus::valueOf).orElse(null));
         spiPayment.setRequestedExecutionDate(paymentTO.getRequestedExecutionDate());
         spiPayment.setRequestedExecutionTime(toDateTime(paymentTO.getRequestedExecutionDate(), paymentTO.getRequestedExecutionTime()));
+        spiPayment.setDebtorName(paymentTO.getDebtorName());
     }
 
     private void fillCommonPartFromPaymentTargetTO(PaymentTargetTO paymentTargetTO, SpiSinglePayment spiPayment) {
