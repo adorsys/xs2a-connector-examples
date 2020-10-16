@@ -40,5 +40,6 @@
   "requestedExecutionDate" : "2020-12-12",
   "requestedExecutionTime": "2020-12-12T12:00:00.000Z",
   "purposeCode": "BKDF",
-  "remittanceInformationStructured": "Ref Number Merchant"
+  "remittanceInformationStructured": "Ref Number Merchant",
+  "debtorName": "Mueller"
 }
