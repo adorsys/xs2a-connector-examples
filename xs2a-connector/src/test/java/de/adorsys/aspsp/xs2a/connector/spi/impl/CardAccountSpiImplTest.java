@@ -552,7 +552,7 @@ class CardAccountSpiImplTest {
     }
 
     private SpiTransactionReportParameters buildSpiTransactionReportParameters(String mediaType) {
-        return new SpiTransactionReportParameters(mediaType, true, DATE_FROM, DATE_TO, BookingStatus.BOOKED, null, null);
+        return new SpiTransactionReportParameters(mediaType, true, DATE_FROM, DATE_TO, BookingStatus.BOOKED, null, null, null, null);
     }
 
 }
