@@ -200,8 +200,9 @@ public class AccountSpiImpl implements AccountSpi {
         // TODO Remove it https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1100
         if (BookingStatus.INFORMATION == spiTransactionReportParameters.getBookingStatus()) {
             logger.info("Retrieving mock standing order report for account: {}", accountReference.getResourceId());
+            SpiTransactionLinks spiTransactionLinks = buildSpiTransactionLinks();
             SpiTransactionReport transactionReport = new SpiTransactionReport(null, createStandingOrderReportMock(), null,
-                                                                              processAcceptMediaType(spiTransactionReportParameters.getAcceptMediaType()), null, null);
+                                                                              processAcceptMediaType(spiTransactionReportParameters.getAcceptMediaType()), null, spiTransactionLinks);
             return SpiResponse.<SpiTransactionReport>builder()
                            .payload(transactionReport)
                            .build();
@@ -231,9 +232,9 @@ public class AccountSpiImpl implements AccountSpi {
                                                         .map(accountMapper::toSpiTransactions).orElseGet(ArrayList::new);
             List<SpiAccountBalance> balances = getSpiAccountBalances(contextData, withBalance, accountReference,
                                                                      accountConsent, aspspConsentDataProvider);
-
+            SpiTransactionLinks spiTransactionLinks = buildSpiTransactionLinks();
             SpiTransactionReport transactionReport = new SpiTransactionReport("downloadId", transactions, balances,
-                                                                              processAcceptMediaType(acceptMediaType), null, null);
+                                                                              processAcceptMediaType(acceptMediaType), null, spiTransactionLinks);
             logger.info("Finally found {} transactions.", transactionReport.getTransactions().size());
 
             aspspConsentDataProvider.updateAspspConsentData(tokenService.store(response));
@@ -506,5 +507,14 @@ public class AccountSpiImpl implements AccountSpi {
         }
 
         return spiAccountDetails;
+    }
+
+    private SpiTransactionLinks buildSpiTransactionLinks() {
+        return new SpiTransactionLinks(
+                "http://localhost:8089/v1/accounts/account-id/transactions?pageIndex=0&itemsPerPage=20",
+                "http://localhost:8089/v1/accounts/account-id/transactions?pageIndex=3&itemsPerPage=20",
+                "http://localhost:8089/v1/accounts/account-id/transactions?pageIndex=1&itemsPerPage=20",
+                "http://localhost:8089/v1/accounts/account-id/transactions?pageIndex=7&itemsPerPage=20"
+        );
     }
 }
