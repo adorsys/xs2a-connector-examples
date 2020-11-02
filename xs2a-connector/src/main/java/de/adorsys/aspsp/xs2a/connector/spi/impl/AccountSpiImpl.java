@@ -21,7 +21,7 @@ import de.adorsys.aspsp.xs2a.connector.account.OwnerNameService;
 import de.adorsys.aspsp.xs2a.connector.mock.IbanResolverMockService;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.ledgers.middleware.api.domain.account.AccountDetailsTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
 import de.adorsys.ledgers.rest.client.AccountRestClient;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
@@ -73,7 +73,7 @@ public class AccountSpiImpl implements AccountSpi {
     private final AccountRestClient accountRestClient;
     private final LedgersSpiAccountMapper accountMapper;
     private final AuthRequestInterceptor authRequestInterceptor;
-    private final AspspConsentDataService tokenService;
+    private final AspspConsentDataService consentDataService;
     private final FeignExceptionReader feignExceptionReader;
     private final IbanResolverMockService ibanResolverMockService;
     private final OwnerNameService ownerNameService;
@@ -82,13 +82,13 @@ public class AccountSpiImpl implements AccountSpi {
     private String transactionList;
 
     public AccountSpiImpl(AccountRestClient restClient, LedgersSpiAccountMapper accountMapper,
-                          AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService tokenService,
+                          AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService consentDataService,
                           FeignExceptionReader feignExceptionReader, IbanResolverMockService ibanResolverMockService,
                           OwnerNameService ownerNameService) {
         this.accountRestClient = restClient;
         this.accountMapper = accountMapper;
         this.authRequestInterceptor = authRequestInterceptor;
-        this.tokenService = tokenService;
+        this.consentDataService = consentDataService;
         this.feignExceptionReader = feignExceptionReader;
         this.ibanResolverMockService = ibanResolverMockService;
         this.ownerNameService = ownerNameService;
@@ -102,13 +102,13 @@ public class AccountSpiImpl implements AccountSpi {
         byte[] aspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
 
         try {
-            SCAResponseTO response = applyAuthorisation(aspspConsentData);
+            GlobalScaResponseTO response = applyAuthorisation(aspspConsentData);
 
             logger.info("Requested account list for consent with ID: {} and withBalance: {}", accountConsent.getId(),
                         withBalance);
             List<SpiAccountDetails> accountDetailsList = getSpiAccountDetails(withBalance, accountConsent);
 
-            aspspConsentDataProvider.updateAspspConsentData(tokenService.store(response));
+            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
 
             List<SpiAccountDetails> accountDetailsListWithOwnerName = accountDetailsList.stream()
                                                                               .map(accountDetail -> enrichWithOwnerName(accountDetail, accountConsent.getAccess()))
@@ -159,7 +159,7 @@ public class AccountSpiImpl implements AccountSpi {
         byte[] aspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
 
         try {
-            SCAResponseTO response = applyAuthorisation(aspspConsentData);
+            GlobalScaResponseTO response = applyAuthorisation(aspspConsentData);
 
             logger.info("Requested details for account, ACCOUNT-ID: {}, withBalance: {}",
                         accountReference.getResourceId(), withBalance);
@@ -174,7 +174,7 @@ public class AccountSpiImpl implements AccountSpi {
             }
             logger.info("The responded account RESOURCE-ID: {}", accountDetailsWithOwnerName.getResourceId());
 
-            aspspConsentDataProvider.updateAspspConsentData(tokenService.store(response));
+            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
 
             return SpiResponse.<SpiAccountDetails>builder()
                            .payload(accountDetailsWithOwnerName)
@@ -223,7 +223,7 @@ public class AccountSpiImpl implements AccountSpi {
         Boolean deltaList = spiTransactionReportParameters.getDeltaList();
 
         try {
-            SCAResponseTO response = applyAuthorisation(aspspConsentData);
+            GlobalScaResponseTO response = applyAuthorisation(aspspConsentData);
 
             logger.info("Requested transactions for account: {}, dates from: {}, to: {}, withBalance: {}, entryReferenceFrom: {}, deltaList: {}",
                         accountReference.getResourceId(), dateFrom, dateTo, withBalance, entryReferenceFrom, deltaList);
@@ -237,7 +237,7 @@ public class AccountSpiImpl implements AccountSpi {
                                                                               processAcceptMediaType(acceptMediaType), null, spiTransactionLinks);
             logger.info("Finally found {} transactions.", transactionReport.getTransactions().size());
 
-            aspspConsentDataProvider.updateAspspConsentData(tokenService.store(response));
+            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
 
             return SpiResponse.<SpiTransactionReport>builder()
                            .payload(transactionReport)
@@ -268,7 +268,7 @@ public class AccountSpiImpl implements AccountSpi {
         byte[] aspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
 
         try {
-            SCAResponseTO response = applyAuthorisation(aspspConsentData);
+            GlobalScaResponseTO response = applyAuthorisation(aspspConsentData);
 
             logger.info("Requested transaction with TRANSACTION-ID: {} for ACCOUNT-ID: {}", transactionId,
                         accountReference.getResourceId());
@@ -279,7 +279,7 @@ public class AccountSpiImpl implements AccountSpi {
                                                  .orElseThrow(() -> FeignExceptionHandler.getException(HttpStatus.NOT_FOUND, RESPONSE_STATUS_200_WITH_EMPTY_BODY));
             logger.info("Found transaction with TRANSACTION-ID: {}", transaction.getTransactionId());
 
-            aspspConsentDataProvider.updateAspspConsentData(tokenService.store(response));
+            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
 
             return SpiResponse.<SpiTransaction>builder()
                            .payload(transaction)
@@ -303,7 +303,7 @@ public class AccountSpiImpl implements AccountSpi {
         byte[] aspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
 
         try {
-            SCAResponseTO response = applyAuthorisation(aspspConsentData);
+            GlobalScaResponseTO response = applyAuthorisation(aspspConsentData);
 
             logger.info("Requested Balances for ACCOUNT-ID: {}", accountReference.getResourceId());
             List<SpiAccountBalance> accountBalances = Optional
@@ -312,7 +312,7 @@ public class AccountSpiImpl implements AccountSpi {
                                                               .orElseThrow(() -> FeignExceptionHandler.getException(HttpStatus.NOT_FOUND, RESPONSE_STATUS_200_WITH_EMPTY_BODY));
             logger.info("Found Balances: {}", accountBalances.size());
 
-            aspspConsentDataProvider.updateAspspConsentData(tokenService.store(response));
+            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
 
             return SpiResponse.<List<SpiAccountBalance>>builder()
                            .payload(accountBalances)
@@ -337,7 +337,7 @@ public class AccountSpiImpl implements AccountSpi {
         byte[] aspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
 
         try {
-            SCAResponseTO response = applyAuthorisation(aspspConsentData);
+            GlobalScaResponseTO response = applyAuthorisation(aspspConsentData);
 
             logger.info("Requested downloading list of transactions by download ID: {}", downloadId);
 
@@ -345,7 +345,7 @@ public class AccountSpiImpl implements AccountSpi {
 
             SpiTransactionsDownloadResponse transactionsDownloadResponse = new SpiTransactionsDownloadResponse(stream, "transactions.json", transactionList.getBytes().length);
 
-            aspspConsentDataProvider.updateAspspConsentData(tokenService.store(response));
+            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
 
             return SpiResponse.<SpiTransactionsDownloadResponse>builder()
                            .payload(transactionsDownloadResponse)
@@ -458,8 +458,8 @@ public class AccountSpiImpl implements AccountSpi {
         return isConsentGlobal || isConsentForAvailableAccountsWithBalances;
     }
 
-    private SCAResponseTO applyAuthorisation(byte[] aspspConsentData) {
-        SCAResponseTO sca = tokenService.response(aspspConsentData);
+    private GlobalScaResponseTO applyAuthorisation(byte[] aspspConsentData) {
+        GlobalScaResponseTO sca = consentDataService.response(aspspConsentData);
         authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
         return sca;
     }

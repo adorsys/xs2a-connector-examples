@@ -16,49 +16,52 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
-import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaResponseMapper;
+import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.SCALoginResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
 @Service
+@RequiredArgsConstructor
 public class AspspConsentDataService {
 
-    @Autowired
-    private TokenStorageService tokenStorageService;
+    private final ObjectMapper objectMapper;
+    private final ScaResponseMapper scaResponseMapper;
+    private final LoginAttemptAspspConsentDataService loginAttemptAspspConsentDataService;
 
     /**
      * Default storage, makes sure there is a bearer token in the response object.
      */
-    public byte[] store(SCAResponseTO response) {
+    public byte[] store(GlobalScaResponseTO response) {
         return store(response, true);
     }
 
-    public byte[] store(SCAResponseTO response, boolean checkCredentials) {
+    public byte[] store(GlobalScaResponseTO response, boolean checkCredentials) {
         if (checkCredentials && response.getBearerToken() == null) {
             throw new IllegalStateException("Missing credentials, response must contain a bearer token by default.");
         }
         try {
-            return tokenStorageService.toBytes(response);
+            return objectMapper.writeValueAsBytes(response);
         } catch (IOException e) {
             throw FeignExceptionHandler.getException(HttpStatus.UNAUTHORIZED, e.getMessage());
         }
     }
 
-    public <T extends SCAResponseTO> T response(byte[] aspspConsentData, Class<T> klass) {
-        return response(aspspConsentData, klass, true);
-    }
-
-    public SCAResponseTO response(byte[] aspspConsentData) {
+    public GlobalScaResponseTO response(byte[] aspspConsentData) {
         return response(aspspConsentData, true);
     }
 
-    public SCAResponseTO response(byte[] aspspConsentData, boolean checkCredentials) {
+    public GlobalScaResponseTO response(byte[] aspspConsentData, boolean checkCredentials) {
         try {
-            SCAResponseTO sca = tokenStorageService.fromBytes(aspspConsentData);
+            GlobalScaResponseTO sca = fromBytes(aspspConsentData);
             checkBearerTokenPresent(checkCredentials, sca);
             return sca;
         } catch (IOException e) {
@@ -66,19 +69,40 @@ public class AspspConsentDataService {
         }
     }
 
-    public <T extends SCAResponseTO> T response(byte[] aspspConsentData, Class<T> klass, boolean checkCredentials) {
-        try {
-            T sca = tokenStorageService.fromBytes(aspspConsentData, klass);
-            checkBearerTokenPresent(checkCredentials, sca);
-            return sca;
-        } catch (IOException e) {
-            throw FeignExceptionHandler.getException(HttpStatus.UNAUTHORIZED, e.getMessage());
-        }
+    public LoginAttemptAspspConsentDataService getLoginAttemptAspspConsentDataService() {
+        return loginAttemptAspspConsentDataService;
     }
 
-    private <T extends SCAResponseTO> void checkBearerTokenPresent(boolean checkCredentials, T sca) {
+    private void checkBearerTokenPresent(boolean checkCredentials, GlobalScaResponseTO sca) {
         if (checkCredentials && sca.getBearerToken() == null) {
             throw FeignExceptionHandler.getException(HttpStatus.UNAUTHORIZED, "Missing credentials. Expecting a bearer token in the consent data object.");
+        }
+    }
+
+    private String readType(byte[] tokenBytes) throws IOException {
+        JsonNode jsonNode = objectMapper.readTree(tokenBytes);
+        JsonNode objectType = jsonNode.get("objectType");
+        if (objectType == null) {
+            return null;
+        }
+        return objectType.textValue();
+    }
+
+    private GlobalScaResponseTO fromBytes(byte[] tokenBytes) throws IOException {
+        String type = readType(tokenBytes);
+        if (type == null || GlobalScaResponseTO.class.getSimpleName().equals(type)) {
+            return objectMapper.readValue(tokenBytes, GlobalScaResponseTO.class);
+        } else if (SCAConsentResponseTO.class.getSimpleName().equals(type)) {
+            SCAConsentResponseTO scaConsentResponseTO = objectMapper.readValue(tokenBytes, SCAConsentResponseTO.class);
+            return scaResponseMapper.toGlobalScaResponse(scaConsentResponseTO);
+        } else if (SCALoginResponseTO.class.getSimpleName().equals(type)) {
+            SCALoginResponseTO scaLoginResponseTO = objectMapper.readValue(tokenBytes, SCALoginResponseTO.class);
+            return scaResponseMapper.toGlobalScaResponse(scaLoginResponseTO);
+        } else if (SCAPaymentResponseTO.class.getSimpleName().equals(type)) {
+            SCAPaymentResponseTO scaPaymentResponseTO = objectMapper.readValue(tokenBytes, SCAPaymentResponseTO.class);
+            return scaResponseMapper.toGlobalScaResponse(scaPaymentResponseTO);
+        } else {
+            return null;
         }
     }
 }

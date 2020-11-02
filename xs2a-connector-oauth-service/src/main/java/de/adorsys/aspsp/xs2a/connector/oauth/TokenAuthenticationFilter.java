@@ -16,6 +16,7 @@
 
 package de.adorsys.aspsp.xs2a.connector.oauth;
 
+import de.adorsys.ledgers.keycloak.client.api.KeycloakTokenService;
 import de.adorsys.psd2.aspsp.profile.domain.AspspSettings;
 import de.adorsys.psd2.aspsp.profile.service.AspspProfileService;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
@@ -51,19 +52,19 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
     private static final String CONSENT_ENP_ENDING = "consents";
     private static final String FUNDS_CONF_ENP_ENDING = "funds-confirmations";
 
-    private final TokenValidationService tokenValidationService;
+    private final KeycloakTokenService keycloakTokenService;
     private final AspspProfileService aspspProfileService;
     private final TppErrorMessageWriter tppErrorMessageWriter;
     private final OauthDataHolder oauthDataHolder;
     private final RequestPathResolver requestPathResolver;
 
-    public TokenAuthenticationFilter(TokenValidationService tokenValidationService,
-                                     Xs2aEndpointChecker xs2aEndpointChecker,
+    public TokenAuthenticationFilter(Xs2aEndpointChecker xs2aEndpointChecker,
+                                     KeycloakTokenService keycloakTokenService,
                                      AspspProfileService aspspProfileService,
-                                     TppErrorMessageWriter tppErrorMessageWriter,
-                                     OauthDataHolder oauthDataHolder, RequestPathResolver requestPathResolver) {
+                                     OauthDataHolder oauthDataHolder, RequestPathResolver requestPathResolver,
+                                     TppErrorMessageWriter tppErrorMessageWriter) {
         super(tppErrorMessageWriter, xs2aEndpointChecker);
-        this.tokenValidationService = tokenValidationService;
+        this.keycloakTokenService = keycloakTokenService;
         this.aspspProfileService = aspspProfileService;
         this.tppErrorMessageWriter = tppErrorMessageWriter;
         this.oauthDataHolder = oauthDataHolder;
@@ -127,7 +128,7 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
     }
 
     private boolean isTokenInvalid(String bearerToken) {
-        return tokenValidationService.validate(bearerToken) == null;
+        return keycloakTokenService.validate(bearerToken) == null;
     }
 
     private TppErrorMessage buildTppErrorMessage(MessageErrorCode messageErrorCode, Object... params) {
@@ -151,11 +152,9 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
 
     private String trimEndingSlash(String input) {
         String result = input;
-
         while (StringUtils.endsWith(result, "/")) {
             result = StringUtils.removeEnd(result, "/");
         }
-
         return result;
     }
 

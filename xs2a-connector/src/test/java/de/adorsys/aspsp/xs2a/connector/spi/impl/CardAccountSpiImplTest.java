@@ -24,8 +24,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapperImpl
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.middleware.api.domain.account.AccountDetailsTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.um.AccessTokenTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.rest.client.AccountRestClient;
@@ -94,7 +93,7 @@ class CardAccountSpiImplTest {
     @Mock
     private SpiAspspConsentDataProvider aspspConsentDataProvider;
     @Mock
-    private SCAResponseTO scaResponseTO;
+    private GlobalScaResponseTO scaResponseTO;
     @Mock
     private FeignExceptionReader feignExceptionReader;
     @Mock
@@ -113,7 +112,7 @@ class CardAccountSpiImplTest {
         accountDetailsTO = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
         accountReference = jsonReader.getObjectFromFile("json/spi/impl/account-reference.json", SpiAccountReference.class);
 
-        SCAConsentResponseTO sca = new SCAConsentResponseTO();
+        GlobalScaResponseTO sca = new GlobalScaResponseTO();
         BearerTokenTO token = new BearerTokenTO();
         token.setExpires_in(100);
         token.setAccessTokenObject(new AccessTokenTO());

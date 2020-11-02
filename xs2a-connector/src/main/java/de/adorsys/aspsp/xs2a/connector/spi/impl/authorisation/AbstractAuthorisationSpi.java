@@ -1,17 +1,14 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
+import de.adorsys.ledgers.keycloak.client.api.KeycloakTokenService;
+import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
-import de.adorsys.ledgers.middleware.api.service.TokenStorageService;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
+import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
 import de.adorsys.psd2.xs2a.core.authorisation.AuthenticationObject;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
@@ -26,78 +23,132 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.io.IOException;
 import java.util.*;
 
 import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.*;
-import static de.adorsys.psd2.xs2a.core.error.MessageErrorCode.*;
 
 @Slf4j
 @RequiredArgsConstructor
-public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
+public abstract class AbstractAuthorisationSpi<T> {
+
     private static final String DECOUPLED_PSU_MESSAGE = "Please check your app to continue...";
+    private static final String LOGIN_AMOUNT_ATTEMPTS_REMAINING_MESSAGE = "You have %s attempts to enter valid credentials";
 
     private final AuthRequestInterceptor authRequestInterceptor;
     private final AspspConsentDataService consentDataService;
     private final GeneralAuthorisationService authorisationService;
     private final ScaMethodConverter scaMethodConverter;
     private final FeignExceptionReader feignExceptionReader;
-    private final TokenStorageService tokenStorageService;
+    private final KeycloakTokenService keycloakTokenService;
+    private final RedirectScaRestClient redirectScaRestClient;
+
+    protected ResponseEntity<GlobalScaResponseTO> getSelectMethodResponse(@NotNull String authenticationMethodId, GlobalScaResponseTO sca) {
+        ResponseEntity<GlobalScaResponseTO> scaResponse = redirectScaRestClient.selectMethod(sca.getAuthorisationId(), authenticationMethodId);
+
+        return scaResponse.getStatusCode() == HttpStatus.OK
+                       ? ResponseEntity.ok(scaResponse.getBody())
+                       : ResponseEntity.badRequest().build();
+    }
+
+    protected GlobalScaResponseTO getScaObjectResponse(SpiAspspConsentDataProvider aspspConsentDataProvider, boolean checkCredentials) {
+        byte[] aspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
+        return consentDataService.response(aspspConsentData, checkCredentials);
+    }
+
+    protected abstract String getBusinessObjectId(T businessObject);
+
+    protected abstract OpTypeTO getOpType();
+
+    protected abstract TppMessage getAuthorisePsuFailureMessage(T businessObject);
+
+    protected abstract GlobalScaResponseTO initiateBusinessObject(T businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, String authorisationId);
+
+    protected abstract boolean isFirstInitiationOfMultilevelSca(T businessObject, GlobalScaResponseTO scaBusinessObjectResponse);
+
+    protected abstract GlobalScaResponseTO executeBusinessObject(T businessObject);
+
+    protected String generatePsuMessage(@NotNull SpiContextData contextData, @NotNull String authorisationId,
+                                        @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider,
+                                        SpiResponse<SpiAuthorizationCodeResult> response) {
+        return DECOUPLED_PSU_MESSAGE;
+    }
+
+    protected boolean validateStatuses(T businessObject, GlobalScaResponseTO sca) {
+        return false;
+    }
 
     public SpiResponse<SpiPsuAuthorisationResponse> authorisePsu(@NotNull SpiContextData contextData,
                                                                  @NotNull String authorisationId,
                                                                  @NotNull SpiPsuData psuLoginData, String password, T businessObject,
                                                                  @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        R originalResponse;
         try {
-            originalResponse = getSCAConsentResponse(aspspConsentDataProvider, false);
+            BearerTokenTO loginToken = keycloakTokenService.login(contextData.getPsuData().getPsuId(), password);
+            authRequestInterceptor.setAccessToken(loginToken.getAccess_token());
+
         } catch (FeignException feignException) {
-            String devMessage = feignExceptionReader.getErrorMessage(feignException);
-            log.error("Read aspspConsentData in authorise PSU failed: consent ID {}, devMessage {}", getBusinessObjectId(businessObject), devMessage);
-            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(new TppMessage(PSU_CREDENTIALS_INVALID))
-                           .build();
+            return handleLoginFailureError(businessObject, aspspConsentDataProvider, feignException);
         }
 
-        SpiResponse<SpiPsuAuthorisationResponse> authorisePsu = authorisationService.authorisePsuForConsent(
-                psuLoginData, password, getBusinessObjectId(businessObject),
-                authorisationId, getOtpType(), aspspConsentDataProvider);
+        GlobalScaResponseTO scaResponseTO;
+        try {
+            scaResponseTO = initiateBusinessObject(businessObject, aspspConsentDataProvider, authorisationId);
 
-        if (!authorisePsu.isSuccessful()) {
-            SpiPsuAuthorisationResponse spiResponse = authorisePsu.getPayload();
-            if (spiResponse != null && spiResponse.getSpiAuthorisationStatus() == SpiAuthorisationStatus.ATTEMPT_FAILURE) {
-                return authorisePsu;
-            }
+        } catch (FeignException feignException) {
+            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            log.info("Initiate business object error: business object ID: {}, devMessage: {}", getBusinessObjectId(businessObject), devMessage);
             return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                            .payload(new SpiPsuAuthorisationResponse(false, SpiAuthorisationStatus.FAILURE))
                            .build();
         }
 
-        R scaBusinessObjectResponse;
+        if (scaResponseTO.getScaStatus() == EXEMPTED && isFirstInitiationOfMultilevelSca(businessObject, scaResponseTO)) {
 
-        try {
-            scaBusinessObjectResponse = mapToScaResponse(businessObject, aspspConsentDataProvider.loadAspspConsentData(), originalResponse);
-        } catch (IOException e) {
-            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(new TppMessage(FORMAT_ERROR_RESPONSE_TYPE))
-                           .build();
+            try {
+                authRequestInterceptor.setAccessToken(scaResponseTO.getBearerToken().getAccess_token());
+                GlobalScaResponseTO executionResponse = executeBusinessObject(businessObject);
+
+                if (executionResponse == null) {
+                    executionResponse = scaResponseTO;
+                }
+
+                executionResponse.setBearerToken(scaResponseTO.getBearerToken());
+                executionResponse.setScaStatus(scaResponseTO.getScaStatus());
+
+                aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(executionResponse));
+
+                String scaStatusName = scaResponseTO.getScaStatus().name();
+                log.info("SCA status is: {}", scaStatusName);
+
+                return SpiResponse.<SpiPsuAuthorisationResponse>builder().payload(new SpiPsuAuthorisationResponse(true, SpiAuthorisationStatus.SUCCESS)).build();
+
+            } catch (FeignException feignException) {
+                String devMessage = feignExceptionReader.getErrorMessage(feignException);
+                log.info("Processing of successful authorisation failed: devMessage '{}'", devMessage);
+                return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                               .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR))
+                               .build();
+            }
         }
 
-        return onSuccessfulAuthorisation(businessObject, aspspConsentDataProvider, authorisePsu, scaBusinessObjectResponse);
+        log.info("Authorising user with login: {}", psuLoginData.getPsuId());
+
+        return authorisationService.authorisePsuInternal(getBusinessObjectId(businessObject),
+                                                         authorisationId, getOpType(), scaResponseTO, aspspConsentDataProvider);
     }
 
     /**
-     * This call must follow an init consent request, therefore we are expecting the
-     * {@link AspspConsentData} object to contain a {@link SCAConsentResponseTO}
+     * This call must follow an init business object request, therefore we are expecting the
+     * {@link AspspConsentData} object to contain a {@link GlobalScaResponseTO}
      * response.
      */
     public SpiResponse<SpiAvailableScaMethodsResponse> requestAvailableScaMethods(@NotNull SpiContextData contextData,
                                                                                   T businessObject,
                                                                                   @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         try {
-            R sca = getSCAConsentResponse(aspspConsentDataProvider, true);
+            GlobalScaResponseTO sca = getScaObjectResponse(aspspConsentDataProvider, true);
 
             if (validateStatuses(businessObject, sca)) {
                 return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
@@ -105,38 +156,43 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
                                .build();
             }
 
-            Optional<List<ScaUserDataTO>> scaMethods = getScaMethods(sca);
-            if (scaMethods.isPresent()) {
-                // Validate the access token
-                BearerTokenTO bearerTokenTO = authorisationService.validateToken(sca.getBearerToken().getAccess_token());
-                sca.setBearerToken(bearerTokenTO);
+            authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
-                // Return contained sca methods.
-                List<AuthenticationObject> authenticationObjects = scaMethodConverter.toAuthenticationObjectList(scaMethods.get());
-                aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(sca));
+            if (sca.getScaStatus() == EXEMPTED) {
+                return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
+                               .payload(new SpiAvailableScaMethodsResponse(true, Collections.emptyList()))
+                               .build();
+            }
+
+            ResponseEntity<GlobalScaResponseTO> availableMethodsResponse = redirectScaRestClient.getSCA(sca.getAuthorisationId());
+
+            List<ScaUserDataTO> scaMethods = availableMethodsResponse != null ?
+                                                     Optional.ofNullable(availableMethodsResponse.getBody())
+                                                             .map(GlobalScaResponseTO::getScaMethods)
+                                                             .orElse(Collections.emptyList()) : Collections.emptyList();
+
+            if (!scaMethods.isEmpty()) {
+                List<AuthenticationObject> authenticationObjects = scaMethodConverter.toAuthenticationObjectList(scaMethods);
+
                 return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
                                .payload(new SpiAvailableScaMethodsResponse(authenticationObjects))
                                .build();
-            } else {
-                return getForZeroScaMethods(sca.getScaStatus());
             }
+
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
-            log.error("Read available sca methods failed: consent ID {}, devMessage {}", getBusinessObjectId(businessObject), devMessage);
+            log.error("Request available SCA methods failed: business object ID: {}, devMessage: {}", getBusinessObjectId(businessObject), devMessage);
             return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, FORMAT_ERROR_SCA_METHODS))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR_SCA_METHODS))
                            .build();
         }
-    }
 
-    protected SpiResponse<SpiAvailableScaMethodsResponse> getForZeroScaMethods(ScaStatusTO status) {
-        log.error("Process mismatch. Current SCA Status is {}", status);
         return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
-                       .error(new TppMessage(SCA_METHOD_UNKNOWN_PROCESS_MISMATCH))
+                       .error(new TppMessage(MessageErrorCode.SCA_METHOD_UNKNOWN_PROCESS_MISMATCH))
                        .build();
     }
 
-    protected Optional<List<ScaUserDataTO>> getScaMethods(R sca) {
+    protected Optional<List<ScaUserDataTO>> getScaMethods(GlobalScaResponseTO sca) {
         return Optional.ofNullable(sca.getScaMethods());
     }
 
@@ -144,20 +200,20 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
                                                                                      @NotNull String authenticationMethodId,
                                                                                      @NotNull T businessObject,
                                                                                      @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        R sca = getSCAConsentResponse(aspspConsentDataProvider, true);
+        GlobalScaResponseTO sca = getScaObjectResponse(aspspConsentDataProvider, true);
         if (EnumSet.of(PSUIDENTIFIED, PSUAUTHENTICATED).contains(sca.getScaStatus())) {
             try {
                 authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
-                ResponseEntity<R> selectMethodResponse = getSelectMethodResponse(authenticationMethodId, sca);
-                R authCodeResponse = selectMethodResponse.getBody();
+                ResponseEntity<GlobalScaResponseTO> selectMethodResponse = getSelectMethodResponse(authenticationMethodId, sca);
+                GlobalScaResponseTO authCodeResponse = selectMethodResponse.getBody();
                 if (authCodeResponse != null && authCodeResponse.getBearerToken() == null) {
                     authCodeResponse.setBearerToken(sca.getBearerToken());
                 }
-                return authorisationService.returnScaMethodSelection(aspspConsentDataProvider, authCodeResponse);
+                return authorisationService.returnScaMethodSelection(aspspConsentDataProvider, authCodeResponse, authenticationMethodId);
             } catch (FeignException feignException) {
                 String devMessage = feignExceptionReader.getErrorMessage(feignException);
-                log.error("Request authorisation code failed: consent ID {}, devMessage {}", getBusinessObjectId(businessObject), devMessage);
+                log.error("Request authorisation code failed: business object ID: {}, devMessage: {}", getBusinessObjectId(businessObject), devMessage);
                 TppMessage errorMessage = new TppMessage(getMessageErrorCodeByStatus(feignException.status()));
                 return SpiResponse.<SpiAuthorizationCodeResult>builder()
                                .error(errorMessage)
@@ -166,7 +222,7 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
                 authRequestInterceptor.setAccessToken(null);
             }
         } else {
-            return authorisationService.getResponseIfScaSelected(aspspConsentDataProvider, sca);
+            return authorisationService.getResponseIfScaSelected(aspspConsentDataProvider, sca, authenticationMethodId);
         }
     }
 
@@ -177,7 +233,7 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
                                                                                         @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         if (authenticationMethodId == null) {
             return SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder()
-                           .error(new TppMessage(SERVICE_NOT_SUPPORTED))
+                           .error(new TppMessage(MessageErrorCode.SERVICE_NOT_SUPPORTED))
                            .build();
         }
 
@@ -193,89 +249,46 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
 
     }
 
-    protected abstract ResponseEntity<R> getSelectMethodResponse(@NotNull String authenticationMethodId, R sca);
+    private SpiResponse<SpiPsuAuthorisationResponse> handleLoginFailureError(T businessObject,
+                                                                             @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider,
+                                                                             FeignException feignException) {
+        String devMessage = feignExceptionReader.getErrorMessage(feignException);
+        log.info("Login to IDP in authorise PSU failed: business object ID: {}, devMessage: {}", getBusinessObjectId(businessObject), devMessage);
 
-    protected abstract R getSCAConsentResponse(@NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, boolean checkCredentials);
+        byte[] aspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
+        LoginAttemptAspspConsentDataService loginAttemptAspspConsentDataService = consentDataService.getLoginAttemptAspspConsentDataService();
+        LoginAttemptResponse loginAttemptResponse = loginAttemptAspspConsentDataService.response(aspspConsentData);
+        if (loginAttemptResponse == null) {
+            loginAttemptResponse = new LoginAttemptResponse();
+        }
 
-    protected abstract String getBusinessObjectId(T businessObject);
-
-    protected abstract OpTypeTO getOtpType();
-
-    protected abstract TppMessage getAuthorisePsuFailureMessage(T businessObject);
-
-    protected abstract SCAResponseTO initiateBusinessObject(T businessObject, byte[] aspspConsentData);
-
-    protected abstract R mapToScaResponse(T businessObject, byte[] aspspConsentData, R originalResponse) throws IOException;
-
-    protected String generatePsuMessage(@NotNull SpiContextData contextData, @NotNull String authorisationId,
-                                        @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider,
-                                        SpiResponse<SpiAuthorizationCodeResult> response) {
-        return DECOUPLED_PSU_MESSAGE;
-    }
-
-
-    protected boolean validateStatuses(T businessObject, R sca) {
-        return false;
-    }
-
-    protected abstract boolean isFirstInitiationOfMultilevelSca(T businessObject, R scaBusinessObjectResponse);
-
-    protected SpiResponse<SpiPsuAuthorisationResponse> onSuccessfulAuthorisation(T businessObject,
-                                                                                 @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider,
-                                                                                 SpiResponse<SpiPsuAuthorisationResponse> authorisePsu,
-                                                                                 R scaBusinessObjectResponse) {
-        try {
-            aspspConsentDataProvider.updateAspspConsentData(tokenStorageService.toBytes(scaBusinessObjectResponse));
-        } catch (IOException e) {
+        int remainingLoginAttempts = loginAttemptAspspConsentDataService.getRemainingLoginAttempts(loginAttemptResponse.getLoginFailedCount());
+        loginAttemptResponse.incrementLoginFailedCount();
+        aspspConsentDataProvider.updateAspspConsentData(loginAttemptAspspConsentDataService.store(loginAttemptResponse));
+        if (remainingLoginAttempts > 0) {
+            devMessage = String.format(LOGIN_AMOUNT_ATTEMPTS_REMAINING_MESSAGE, remainingLoginAttempts);
+            log.info(devMessage);
             return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(new TppMessage(TOKEN_UNKNOWN))
+                           .payload(new SpiPsuAuthorisationResponse(false, SpiAuthorisationStatus.ATTEMPT_FAILURE))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
                            .build();
         }
-
-        if (EnumSet.of(EXEMPTED, PSUAUTHENTICATED, PSUIDENTIFIED).contains(scaBusinessObjectResponse.getScaStatus())
-                    && isFirstInitiationOfMultilevelSca(businessObject, scaBusinessObjectResponse)) {
-            SCAResponseTO scaResponseTO;
-            try {
-                scaResponseTO = initiateBusinessObject(businessObject, aspspConsentDataProvider.loadAspspConsentData());
-            } catch (FeignException feignException) {
-                String devMessage = feignExceptionReader.getErrorMessage(feignException);
-                String errorCode = feignExceptionReader.getErrorCode(feignException);
-                log.info("Processing of successful authorisation failed: devMessage '{}'", devMessage);
-                return getSpiPsuAuthorisationResponseSpiResponseWithError(feignException, devMessage, errorCode);
-            }
-
-            if (scaResponseTO == null) {
-                return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                               .error(getAuthorisePsuFailureMessage(businessObject))
-                               .build();
-            }
-            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(scaResponseTO));
-
-            String scaStatusName = scaResponseTO.getScaStatus().name();
-            log.info("SCA status is: {}", scaStatusName);
-        }
-
         return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                       .payload(authorisePsu.getPayload())
-                       .build();
-    }
-
-    protected SpiResponse<SpiPsuAuthorisationResponse> getSpiPsuAuthorisationResponseSpiResponseWithError(FeignException feignException, String devMessage, String errorCode) {
-        return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                       .error(FeignExceptionHandler.getFailureMessage(feignException, FORMAT_ERROR))
+                       .payload(new SpiPsuAuthorisationResponse(false, SpiAuthorisationStatus.FAILURE))
                        .build();
     }
 
     private MessageErrorCode getMessageErrorCodeByStatus(int status) {
         if (status == 501) {
-            return SCA_METHOD_UNKNOWN;
+            return MessageErrorCode.SCA_METHOD_UNKNOWN;
         }
         if (Arrays.asList(400, 401, 403).contains(status)) {
-            return FORMAT_ERROR;
+            return MessageErrorCode.FORMAT_ERROR;
         }
         if (status == 404) {
-            return PSU_CREDENTIALS_INVALID;
+            return MessageErrorCode.PSU_CREDENTIALS_INVALID;
         }
-        return INTERNAL_SERVER_ERROR;
+        return MessageErrorCode.INTERNAL_SERVER_ERROR;
     }
+
 }

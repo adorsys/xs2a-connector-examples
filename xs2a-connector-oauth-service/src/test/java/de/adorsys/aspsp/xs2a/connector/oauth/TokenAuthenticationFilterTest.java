@@ -16,6 +16,7 @@
 
 package de.adorsys.aspsp.xs2a.connector.oauth;
 
+import de.adorsys.ledgers.keycloak.client.api.KeycloakTokenService;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.psd2.aspsp.profile.domain.AspspSettings;
 import de.adorsys.psd2.aspsp.profile.domain.common.CommonAspspProfileSetting;
@@ -57,7 +58,7 @@ class TokenAuthenticationFilterTest {
     private static final String INSTANCE_ID = "bank1";
 
     @Mock
-    private TokenValidationService tokenValidationService;
+    private KeycloakTokenService keycloakTokenService;
     @Mock
     private HttpServletRequest httpServletRequest;
     @Mock
@@ -85,9 +86,9 @@ class TokenAuthenticationFilterTest {
     @BeforeEach
     void setUp() {
         AspspSettings aspspSettings = new AspspSettings(null, null, null, null, commonAspspProfileSetting);
-        tokenAuthenticationFilter = new TokenAuthenticationFilter(tokenValidationService, xs2aEndpointChecker,
-                                                                  aspspProfileService, tppErrorMessageWriter,
-                                                                  oauthDataHolder, requestPathResolver);
+        tokenAuthenticationFilter = new TokenAuthenticationFilter(xs2aEndpointChecker, keycloakTokenService,
+                                                                  aspspProfileService,oauthDataHolder, requestPathResolver,
+                                                                  tppErrorMessageWriter);
 
         when(xs2aEndpointChecker.isXs2aEndpoint(httpServletRequest)).thenReturn(true);
         when(aspspProfileService.getAspspSettings(INSTANCE_ID)).thenReturn(aspspSettings);
@@ -102,13 +103,13 @@ class TokenAuthenticationFilterTest {
         when(aspspProfileService.getScaApproaches(INSTANCE_ID)).thenReturn(Collections.singletonList(ScaApproach.REDIRECT));
         when(commonAspspProfileSetting.getScaRedirectFlow()).thenReturn(ScaRedirectFlow.OAUTH_PRE_STEP);
 
-        when(tokenValidationService.validate(BEARER_TOKEN_VALUE)).thenReturn(new BearerTokenTO());
+        when(keycloakTokenService.validate(BEARER_TOKEN_VALUE)).thenReturn(new BearerTokenTO());
 
         // When
         tokenAuthenticationFilter.doFilter(httpServletRequest, httpServletResponse, filterChain);
 
         // Then
-        verify(tokenValidationService).validate(BEARER_TOKEN_VALUE);
+        verify(keycloakTokenService).validate(BEARER_TOKEN_VALUE);
         verify(filterChain).doFilter(httpServletRequest, httpServletResponse);
         verify(oauthDataHolder).setToken(BEARER_TOKEN_VALUE);
 
@@ -132,7 +133,7 @@ class TokenAuthenticationFilterTest {
         verify(filterChain).doFilter(httpServletRequest, httpServletResponse);
         verify(oauthDataHolder).setToken(BEARER_TOKEN_VALUE);
 
-        verify(tokenValidationService, never()).validate(BEARER_TOKEN_VALUE);
+        verify(keycloakTokenService, never()).validate(BEARER_TOKEN_VALUE);
         verify(httpServletResponse, never()).setStatus(ArgumentMatchers.anyInt());
     }
 
@@ -154,7 +155,7 @@ class TokenAuthenticationFilterTest {
         verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), tppErrorMessageArgumentCaptor.capture());
 
         verify(filterChain, never()).doFilter(httpServletRequest, httpServletResponse);
-        verify(tokenValidationService, never()).validate(BEARER_TOKEN_VALUE);
+        verify(keycloakTokenService, never()).validate(BEARER_TOKEN_VALUE);
         verify(oauthDataHolder, never()).setToken(anyString());
 
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.UNAUTHORIZED_NO_TOKEN, IDP_CONFIGURATION_LINK);
@@ -178,7 +179,7 @@ class TokenAuthenticationFilterTest {
         verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), tppErrorMessageArgumentCaptor.capture());
 
         verify(filterChain, never()).doFilter(httpServletRequest, httpServletResponse);
-        verify(tokenValidationService, never()).validate(BEARER_TOKEN_VALUE);
+        verify(keycloakTokenService, never()).validate(BEARER_TOKEN_VALUE);
         verify(oauthDataHolder, never()).setToken(anyString());
 
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.UNAUTHORIZED_NO_TOKEN, IDP_CONFIGURATION_LINK);
@@ -203,7 +204,7 @@ class TokenAuthenticationFilterTest {
 
         verify(oauthDataHolder, never()).setToken(anyString());
         verify(filterChain, never()).doFilter(httpServletRequest, httpServletResponse);
-        verify(tokenValidationService, never()).validate(BEARER_TOKEN_VALUE);
+        verify(keycloakTokenService, never()).validate(BEARER_TOKEN_VALUE);
 
         TppErrorMessage tppErrorMessage = new TppErrorMessage(MessageCategory.ERROR, MessageErrorCode.UNAUTHORIZED_NO_TOKEN, IDP_CONFIGURATION_LINK);
         assertEquals(tppErrorMessage, tppErrorMessageArgumentCaptor.getValue());
@@ -217,7 +218,7 @@ class TokenAuthenticationFilterTest {
 
         when(aspspProfileService.getScaApproaches(INSTANCE_ID)).thenReturn(Collections.singletonList(ScaApproach.REDIRECT));
         when(commonAspspProfileSetting.getScaRedirectFlow()).thenReturn(ScaRedirectFlow.OAUTH_PRE_STEP);
-        when(tokenValidationService.validate(BEARER_TOKEN_VALUE)).thenReturn(null);
+        when(keycloakTokenService.validate(BEARER_TOKEN_VALUE)).thenReturn(null);
 
         // When
         tokenAuthenticationFilter.doFilter(httpServletRequest, httpServletResponse, filterChain);
@@ -225,7 +226,7 @@ class TokenAuthenticationFilterTest {
         // Then
         verify(tppErrorMessageWriter).writeError(eq(httpServletResponse), tppErrorMessageArgumentCaptor.capture());
 
-        verify(tokenValidationService).validate(BEARER_TOKEN_VALUE);
+        verify(keycloakTokenService).validate(BEARER_TOKEN_VALUE);
 
         verify(oauthDataHolder, never()).setToken(anyString());
         verify(filterChain, never()).doFilter(httpServletRequest, httpServletResponse);

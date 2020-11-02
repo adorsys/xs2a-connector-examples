@@ -18,6 +18,13 @@ server:
   max-http-header-size: 65000
   port: 8089
 
+keycloak:
+  auth-server-url: http://localhost:8080/auth
+  realm: ledgers
+  resource: ledgers-client
+  public-client: true
+  principal-attribute: preferred_username
+
 # Swagger configuration location.
 # Empty string, mean the default setting from xs2a-impl will be used.
 xs2a.swagger.psd2.api.location: /psd2-api-1.2-Update-2018-08-18-non-oauth.yaml
