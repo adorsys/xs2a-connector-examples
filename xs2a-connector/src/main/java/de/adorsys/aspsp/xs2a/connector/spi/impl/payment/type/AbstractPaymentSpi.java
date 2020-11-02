@@ -20,8 +20,6 @@ import org.jetbrains.annotations.NotNull;
 @RequiredArgsConstructor
 public abstract class AbstractPaymentSpi<P extends SpiPayment, R extends SpiPaymentInitiationResponse> {
 
-    protected static final String DEBTOR_NAME = "Mocked debtor name from ASPSP";
-
     protected final GeneralPaymentService paymentService;
 
     /*
@@ -58,24 +56,20 @@ public abstract class AbstractPaymentSpi<P extends SpiPayment, R extends SpiPaym
     }
 
     public @NotNull SpiResponse<SpiPaymentExecutionResponse> verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(@NotNull SpiContextData contextData,
-                                                                                            @NotNull SpiScaConfirmation spiScaConfirmation,
-                                                                                            @NotNull P payment,
-                                                                                            @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+                                                                                                               @NotNull SpiScaConfirmation spiScaConfirmation,
+                                                                                                               @NotNull P payment,
+                                                                                                               @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         return paymentService.verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(spiScaConfirmation, aspspConsentDataProvider);
     }
 
     public @NotNull SpiResponse<SpiPaymentConfirmationCodeValidationResponse> checkConfirmationCode(@NotNull SpiContextData contextData,
-                                                                                           @NotNull SpiCheckConfirmationCodeRequest spiCheckConfirmationCodeRequest,
-                                                                                           @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+                                                                                                    @NotNull SpiCheckConfirmationCodeRequest spiCheckConfirmationCodeRequest,
+                                                                                                    @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         return paymentService.checkConfirmationCode(spiCheckConfirmationCodeRequest, aspspConsentDataProvider);
     }
 
-    protected abstract SpiResponse<R> processEmptyAspspConsentData(@NotNull P payment,
-                                                                   @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider,
-                                                                   @NotNull SpiPsuData spiPsuData);
-
-    protected  @NotNull SpiResponse<SpiPaymentConfirmationCodeValidationResponse> notifyConfirmationCodeValidation(@NotNull SpiContextData spiContextData, boolean confirmationCodeValidationResult, @NotNull P payment, boolean isCancellation, @NotNull SpiAspspConsentDataProvider spiAspspConsentDataProvider) {
-        ScaStatus scaStatus  = confirmationCodeValidationResult ? ScaStatus.FINALISED : ScaStatus.FAILED;
+    protected @NotNull SpiResponse<SpiPaymentConfirmationCodeValidationResponse> notifyConfirmationCodeValidation(@NotNull SpiContextData spiContextData, boolean confirmationCodeValidationResult, @NotNull P payment, boolean isCancellation, @NotNull SpiAspspConsentDataProvider spiAspspConsentDataProvider) {
+        ScaStatus scaStatus = confirmationCodeValidationResult ? ScaStatus.FINALISED : ScaStatus.FAILED;
         TransactionStatus transactionStatus = isCancellation
                                                       ? confirmationCodeValidationResult ? TransactionStatus.CANC : payment.getPaymentStatus()
                                                       : confirmationCodeValidationResult ? TransactionStatus.ACSP : TransactionStatus.RJCT;
@@ -86,4 +80,8 @@ public abstract class AbstractPaymentSpi<P extends SpiPayment, R extends SpiPaym
                        .payload(response)
                        .build();
     }
+
+    protected abstract SpiResponse<R> processEmptyAspspConsentData(@NotNull P payment,
+                                                                   @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider,
+                                                                   @NotNull SpiPsuData spiPsuData);
 }

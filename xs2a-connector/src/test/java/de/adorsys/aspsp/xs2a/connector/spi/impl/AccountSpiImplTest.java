@@ -7,11 +7,9 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapperImpl
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.middleware.api.domain.account.AccountDetailsTO;
-import de.adorsys.ledgers.middleware.api.domain.account.AccountIdentifierTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.account.AdditionalAccountInformationTO;
 import de.adorsys.ledgers.middleware.api.domain.account.TransactionTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.um.AccessTokenTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.rest.client.AccountRestClient;
@@ -59,7 +57,6 @@ class AccountSpiImplTest {
     private static final AspspConsentData ASPSP_CONSENT_DATA = new AspspConsentData(BYTES, CONSENT_ID);
     private static final String RESOURCE_ID = "11111-999999999";
     private static final String RESOURCE_ID_SECOND_ACCOUNT = "11111-999999998";
-    private static final String RESOURCE_ID_THIRD_ACCOUNT = "33333-999999999";
 
     private final static LocalDate DATE_FROM = LocalDate.of(2019, 1, 1);
     private final static LocalDate DATE_TO = LocalDate.of(2020, 1, 1);
@@ -87,7 +84,7 @@ class AccountSpiImplTest {
     @Mock
     private SpiAspspConsentDataProvider aspspConsentDataProvider;
     @Mock
-    private SCAResponseTO scaResponseTO;
+    private GlobalScaResponseTO scaResponseTO;
     @Mock
     private FeignExceptionReader feignExceptionReader;
     @Mock
@@ -110,7 +107,7 @@ class AccountSpiImplTest {
         accountReference = jsonReader.getObjectFromFile("json/spi/impl/account-reference.json", SpiAccountReference.class);
         transactionTO = jsonReader.getObjectFromFile("json/mappers/transaction-to.json", TransactionTO.class);
 
-        SCAConsentResponseTO sca = new SCAConsentResponseTO();
+        GlobalScaResponseTO sca = new GlobalScaResponseTO();
         BearerTokenTO token = new BearerTokenTO();
         token.setExpires_in(100);
         token.setAccessTokenObject(new AccessTokenTO());

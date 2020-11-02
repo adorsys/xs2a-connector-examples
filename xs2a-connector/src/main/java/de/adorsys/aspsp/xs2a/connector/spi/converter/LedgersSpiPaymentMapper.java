@@ -3,17 +3,20 @@ package de.adorsys.aspsp.xs2a.connector.spi.converter;
 import de.adorsys.ledgers.middleware.api.domain.general.AddressTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.*;
 import de.adorsys.psd2.xs2a.core.pis.*;
-import de.adorsys.psd2.xs2a.spi.domain.payment.*;
-import org.mapstruct.Mapper;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiAddress;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import org.mapstruct.factory.Mappers;
+import org.springframework.stereotype.Component;
 
 import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Mapper(componentModel = "spring")
-public abstract class LedgersSpiPaymentMapper {
+@Component
+public class LedgersSpiPaymentMapper {
 
     private final LedgersSpiAccountMapper accountMapper = Mappers.getMapper(LedgersSpiAccountMapper.class);
 

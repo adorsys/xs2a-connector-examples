@@ -1,21 +1,26 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
+import de.adorsys.aspsp.xs2a.connector.cms.CmsPsuPisClient;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
+import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaResponseMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.AuthConfirmationTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
+import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
 import de.adorsys.ledgers.rest.client.UserMgmtRestClient;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
+import de.adorsys.psd2.xs2a.service.RequestProviderService;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiCheckConfirmationCodeRequest;
@@ -34,7 +39,9 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
@@ -74,12 +81,21 @@ class GeneralPaymentServiceTest {
     private MultilevelScaService multilevelScaService;
     @Mock
     private UserMgmtRestClient userMgmtRestClient;
+    @Mock
+    private RedirectScaRestClient redirectScaRestClient;
+    @Mock
+    private CmsPsuPisClient cmsPsuPisClient;
+    @Mock
+    private RequestProviderService requestProviderService;
+
+    @Spy
+    private ScaResponseMapper scaResponseMapper = Mappers.getMapper(ScaResponseMapper.class);
 
     private GeneralPaymentService generalPaymentService;
 
     @BeforeEach
     void setUp() {
-        generalPaymentService = new GeneralPaymentService(paymentRestClient, authRequestInterceptor, consentDataService, feignExceptionReader, MOCK_XML_BODY, multilevelScaService, userMgmtRestClient);
+        generalPaymentService = new GeneralPaymentService(paymentRestClient, authRequestInterceptor, consentDataService, feignExceptionReader, MOCK_XML_BODY, multilevelScaService, userMgmtRestClient, redirectScaRestClient, scaResponseMapper, cmsPsuPisClient, requestProviderService);
     }
 
     @Test
@@ -136,8 +152,8 @@ class GeneralPaymentServiceTest {
         paymentTO.setPaymentId("myPaymentId");
         paymentTO.setTransactionStatus(TransactionStatusTO.ACSP);
 
-        SCAPaymentResponseTO sca = new SCAPaymentResponseTO();
-        sca.setPaymentId(initialPayment.getPaymentId());
+        GlobalScaResponseTO sca = new GlobalScaResponseTO();
+        sca.setOperationObjectId(initialPayment.getPaymentId());
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("accessToken");
         sca.setBearerToken(bearerTokenTO);
@@ -149,7 +165,7 @@ class GeneralPaymentServiceTest {
                 .thenReturn(aspspConsentData);
         doNothing()
                 .when(authRequestInterceptor).setAccessToken(anyString());
-        when(consentDataService.response(aspspConsentData, SCAPaymentResponseTO.class))
+        when(consentDataService.response(aspspConsentData))
                 .thenReturn(sca);
         doReturn(paymentAspsp)
                 .when(paymentMapper).toSpiSinglePayment(paymentTO);
@@ -167,8 +183,8 @@ class GeneralPaymentServiceTest {
         SpiCheckConfirmationCodeRequest spiCheckConfirmationCodeRequest = new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID);
         when(spiAspspConsentDataProvider.loadAspspConsentData())
                 .thenReturn(ASPSP_CONSENT_DATA);
-        SCAPaymentResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
-        when(consentDataService.response(ASPSP_CONSENT_DATA, SCAPaymentResponseTO.class))
+        GlobalScaResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
+        when(consentDataService.response(ASPSP_CONSENT_DATA))
                 .thenReturn(scaPaymentResponse);
         AuthConfirmationTO authConfirmationTO = new AuthConfirmationTO()
                                                         .success(true)
@@ -192,8 +208,8 @@ class GeneralPaymentServiceTest {
         SpiCheckConfirmationCodeRequest spiCheckConfirmationCodeRequest = new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID);
         when(spiAspspConsentDataProvider.loadAspspConsentData())
                 .thenReturn(ASPSP_CONSENT_DATA);
-        SCAPaymentResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
-        when(consentDataService.response(ASPSP_CONSENT_DATA, SCAPaymentResponseTO.class))
+        GlobalScaResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
+        when(consentDataService.response(ASPSP_CONSENT_DATA))
                 .thenReturn(scaPaymentResponse);
         AuthConfirmationTO authConfirmationTO = new AuthConfirmationTO()
                                                         .success(true)
@@ -217,8 +233,8 @@ class GeneralPaymentServiceTest {
         SpiCheckConfirmationCodeRequest spiCheckConfirmationCodeRequest = new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID);
         when(spiAspspConsentDataProvider.loadAspspConsentData())
                 .thenReturn(ASPSP_CONSENT_DATA);
-        SCAPaymentResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
-        when(consentDataService.response(ASPSP_CONSENT_DATA, SCAPaymentResponseTO.class))
+        GlobalScaResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
+        when(consentDataService.response(ASPSP_CONSENT_DATA))
                 .thenReturn(scaPaymentResponse);
         when(userMgmtRestClient.verifyAuthConfirmationCode(AUTHORISATION_ID, CONFIRMATION_CODE))
                 .thenReturn(ResponseEntity.ok().build());
@@ -239,8 +255,8 @@ class GeneralPaymentServiceTest {
         SpiCheckConfirmationCodeRequest spiCheckConfirmationCodeRequest = new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID);
         when(spiAspspConsentDataProvider.loadAspspConsentData())
                 .thenReturn(ASPSP_CONSENT_DATA);
-        SCAPaymentResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
-        when(consentDataService.response(ASPSP_CONSENT_DATA, SCAPaymentResponseTO.class))
+        GlobalScaResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
+        when(consentDataService.response(ASPSP_CONSENT_DATA))
                 .thenReturn(scaPaymentResponse);
         AuthConfirmationTO authConfirmationTO = new AuthConfirmationTO()
                                                         .success(false);
@@ -263,8 +279,8 @@ class GeneralPaymentServiceTest {
         SpiCheckConfirmationCodeRequest spiCheckConfirmationCodeRequest = new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID);
         when(spiAspspConsentDataProvider.loadAspspConsentData())
                 .thenReturn(ASPSP_CONSENT_DATA);
-        SCAPaymentResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
-        when(consentDataService.response(ASPSP_CONSENT_DATA, SCAPaymentResponseTO.class))
+        GlobalScaResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
+        when(consentDataService.response(ASPSP_CONSENT_DATA))
                 .thenReturn(scaPaymentResponse);
         AuthConfirmationTO authConfirmationTO = new AuthConfirmationTO()
                                                         .success(true)
@@ -288,8 +304,8 @@ class GeneralPaymentServiceTest {
         SpiCheckConfirmationCodeRequest spiCheckConfirmationCodeRequest = new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID);
         when(spiAspspConsentDataProvider.loadAspspConsentData())
                 .thenReturn(ASPSP_CONSENT_DATA);
-        SCAPaymentResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
-        when(consentDataService.response(ASPSP_CONSENT_DATA, SCAPaymentResponseTO.class))
+        GlobalScaResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
+        when(consentDataService.response(ASPSP_CONSENT_DATA))
                 .thenReturn(scaPaymentResponse);
         AuthConfirmationTO authConfirmationTO = new AuthConfirmationTO()
                                                         .success(true);
@@ -312,8 +328,8 @@ class GeneralPaymentServiceTest {
         SpiCheckConfirmationCodeRequest spiCheckConfirmationCodeRequest = new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID);
         when(spiAspspConsentDataProvider.loadAspspConsentData())
                 .thenReturn(ASPSP_CONSENT_DATA);
-        SCAPaymentResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
-        when(consentDataService.response(ASPSP_CONSENT_DATA, SCAPaymentResponseTO.class))
+        GlobalScaResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
+        when(consentDataService.response(ASPSP_CONSENT_DATA))
                 .thenReturn(scaPaymentResponse);
         FeignException feignException = buildFeignException();
         when(userMgmtRestClient.verifyAuthConfirmationCode(AUTHORISATION_ID, CONFIRMATION_CODE))
@@ -352,11 +368,10 @@ class GeneralPaymentServiceTest {
 
     @Test
     void firstCallInstantiatingPayment_Success() {
-        SCAPaymentResponseTO response = new SCAPaymentResponseTO();
-        response.setPaymentId("myPaymentId");
-        response.setTransactionStatus(TransactionStatusTO.RCVD);
-        response.setPaymentProduct("sepa-credit-transfers");
-        response.setPaymentType(PaymentTypeTO.SINGLE);
+        GlobalScaResponseTO response = new GlobalScaResponseTO();
+        response.setOperationObjectId("myPaymentId");
+        response.setOpType(OpTypeTO.PAYMENT);
+        response.setMultilevelScaRequired(true);
 
         SpiPayment initialPayment = getSpiSingle(TransactionStatus.RCVD, "initialPayment");
 
@@ -398,8 +413,8 @@ class GeneralPaymentServiceTest {
     }
 
     @NotNull
-    private SCAPaymentResponseTO buildScaPaymentResponseTO() {
-        SCAPaymentResponseTO sca = new SCAPaymentResponseTO();
+    private GlobalScaResponseTO buildScaPaymentResponseTO() {
+        GlobalScaResponseTO sca = new GlobalScaResponseTO();
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("accessToken");
         sca.setBearerToken(bearerTokenTO);

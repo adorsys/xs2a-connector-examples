@@ -80,5 +80,11 @@
             <version>${xs2a.version}</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>de.adorsys.ledgers</groupId>
+            <artifactId>keycloak-client</artifactId>
+            <version>${ledgers.version}</version>
+        </dependency>
     </dependencies>
 </project>
