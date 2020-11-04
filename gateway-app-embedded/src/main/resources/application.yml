@@ -29,6 +29,22 @@ application:
     masterPassword: 12345
     encryptorAlgorithm: testAlgorithm
 
+springdoc:
+  api-docs:
+    enabled: false
+
+keycloak:
+  auth-server-url: http://localhost:8080/auth
+  realm: ledgers
+  resource: ledgers-client
+  public-client: false
+  principal-attribute: preferred_username
+  credentials:
+    secret: a61a81cd-7178-40d8-8386-ed02791e6592 #Here should be personal generated secret for client (swap public to 'private?' generate secret, swap to public again)
+
+xs2a.funds-confirmation-user-login: admin
+xs2a.funds-confirmation-user-password: 12345
+
 spring:
   application.name: ledgers-xs2a-gateway
   jackson:
@@ -62,6 +78,8 @@ skip.ssl.certificate.verification: true
 # ENDPOINTS CORS CONFIGURATION
 # Whether credentials are supported. When not set, credentials are not supported.
 xs2a:
+  sca:
+    login.failed.max: 3
   endpoints:
     cors:
       allow-credentials: false
