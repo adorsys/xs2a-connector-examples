@@ -2,9 +2,14 @@
 
 == Table of Contents
 
+* Moved to new version of Ledgers
 * Passed ScaStatus EXEMPTED for user without SCA method from bank
 * Changed PaymentSpi#verifyScaAuthorisationAndExecutePaymentWithPaymentResponse response type
 * Changed error code for case of not supported payment type in bank
+
+== Moved to new version of Ledgers
+
+From now on, connector-examples uses Ledgers version 4.0.1 which works with Keycloak IDP.
 
 == Passed ScaStatus EXEMPTED for user without SCA method from bank
 
