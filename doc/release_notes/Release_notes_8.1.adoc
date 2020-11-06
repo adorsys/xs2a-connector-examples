@@ -1,0 +1,21 @@
+= Release notes v.8.1
+
+== Table of Contents
+
+* Adjusted OAuth flow
+* Changed PaymentSpi#verifyScaAuthorisationAndExecutePaymentWithPaymentResponse response type
+* Changed error code for case of not supported payment type in bank
+
+== Adjusted OAuth flow
+
+The usage of  header `X-OAUTH-PREFERRED` was removed.
+
+== Changed PaymentSpi#verifyScaAuthorisationAndExecutePaymentWithPaymentResponse response type
+
+From now on, PaymentSpi#verifyScaAuthorisationAndExecutePaymentWithPaymentResponse responses `SpiResponse<SpiPaymentExecutionResponse>`.
+This response includes transaction status and spi authorisation status simultaneously.
+
+== Changed error code for case of not supported payment type in bank
+
+From now on, for payment in case of not supported payment type in a bank, connector will return `PRODUCT_UNKNOWN` error
+with text from the bank.
