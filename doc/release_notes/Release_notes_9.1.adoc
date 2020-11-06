@@ -1,0 +1,15 @@
+= Release notes v.9.1
+
+== Table of Contents
+
+* Added new cms properties to the embedded connector
+
+== Added new cms properties to the embedded connector
+
+From now on, embedded connector contains properties for CMS:
+
+----
+cms:
+defaultPageIndex: 1
+defaultItemsPerPage: 20
+----
