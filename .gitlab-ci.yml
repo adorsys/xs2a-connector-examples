@@ -43,8 +43,8 @@ variables: &variables
   # Private Openshift Images #
   ############################
 
- OPENSHIFT_NAMESPACE_ADORSYS_XS2A_DEV: "adorsys-xs2a-dev"
- OPENSHIFT_NAMESPACE_ADORSYS_XS2A_INTEG: "adorsys-xs2a-integ"
+  OPENSHIFT_NAMESPACE_ADORSYS_XS2A_DEV: "adorsys-xs2a-dev"
+  OPENSHIFT_NAMESPACE_ADORSYS_XS2A_INTEG: "adorsys-xs2a-integ"
 
 # ------------------------------------------------------------------
 # reusable yaml anchors
@@ -384,3 +384,4 @@ Notify Slack channel (Integ):
     - apk update && apk add jq curl
     - sleep 60
     - scripts/notifications/./webhook_slack.sh xs2a cms aspspprofile ledgers
+
