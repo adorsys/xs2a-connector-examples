@@ -43,13 +43,8 @@ variables: &variables
   # Private Openshift Images #
   ############################
 
-  DEV_NAMESPACE: adorsys-psd2-develop
-  DEMO_NAMESPACE: adorsys-psd2-demo
-  INTEG_NAMESPACE: adorsys-psd2-integ
-
-  OPENSHIFT_DEV_NAMESPACE: adorsys-psd2-develop
-  OPENSHIFT_DEMO_NAMESPACE: adorsys-psd2-demo
-  OPENSHIFT_INTEG_NAMESPACE: adorsys-psd2-integ
+  OPENSHIFT_NAMESPACE_ADORSYS_XS2A_DEV: "adorsys-xs2a-dev"
+  OPENSHIFT_NAMESPACE_ADORSYS_XS2A_INTEG: "adorsys-xs2a-integ"
 
 # ------------------------------------------------------------------
 # reusable yaml anchors
@@ -78,6 +73,14 @@ variables: &variables
       --dest-creds=openshift:${OPENSHIFT_TOKEN}
       "docker://docker.io/adorsys/xs2a-connector-examples:${DOCKER_TAG}"
       "docker://${OPENSHIFT_REGISTRY}/${OPENSHIFT_NAMESPACE}/xs2a-connector-examples:latest"
+
+.deploy_openshift_embedded: &deploy_openshift_embedded
+  script:
+    - >-
+      skopeo copy
+      --dest-creds=openshift:${OPENSHIFT_TOKEN}
+      "docker://docker.io/adorsys/xs2a-connector-embedded:${DOCKER_TAG}"
+      "docker://${OPENSHIFT_REGISTRY}/${OPENSHIFT_NAMESPACE}/xs2a-connector-embedded:latest"
 
 # ------------------------------------------------------------------
 # jobs
@@ -273,8 +276,18 @@ Deploy Openshift (develop):
   variables:
     <<: *variables
     DOCKER_TAG: develop
-    OPENSHIFT_NAMESPACE: "${DEV_NAMESPACE}"
+    OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_DEV}"
   <<: *deploy_openshift
+
+Deploy Openshift (develop Embedded ):
+  stage: "Deployment"
+  only:
+    - develop
+  variables:
+    <<: *variables
+    DOCKER_TAG: develop
+    OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_DEV}"
+  <<: *deploy_openshift_embedded
 
 Notify Slack channel (develop):
   image: "bash:4"
@@ -335,15 +348,6 @@ Push to DockerHub (Embedded Release):
 # nightly #
 ###########
 
-Push to DockerHub (Nightly):
-  stage: "Package"
-  only:
-    variables:
-      - $NIGHTLY == "true"
-  variables:
-    DOCKER_TAG: nightly
-  <<: *build_dockerhub_image
-
 Deploy Openshift (Nightly):
   stage: "Deployment"
   only:
@@ -351,9 +355,20 @@ Deploy Openshift (Nightly):
       - $NIGHTLY == "true"
   variables:
     <<: *variables
-    DOCKER_TAG: nightly
-    OPENSHIFT_NAMESPACE: "${INTEG_NAMESPACE}"
+    DOCKER_TAG: develop
+    OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_INTEG}"
   <<: *deploy_openshift
+
+Deploy Openshift (Nightly Embedded):
+  stage: "Deployment"
+  only:
+    variables:
+      - $NIGHTLY == "true"
+  variables:
+    <<: *variables
+    DOCKER_TAG: develop
+    OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_INTEG}"
+  <<: *deploy_openshift_embedded
 
 Notify Slack channel (Integ):
   image: "bash:4"
@@ -369,3 +384,4 @@ Notify Slack channel (Integ):
     - apk update && apk add jq curl
     - sleep 60
     - scripts/notifications/./webhook_slack.sh xs2a cms aspspprofile ledgers
+
