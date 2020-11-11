@@ -2,10 +2,7 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaLoginMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.CmsPaymentStatusUpdateService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.internal.PaymentInternalGeneral;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCALoginResponseTO;
@@ -212,7 +209,7 @@ class PaymentAuthorisationSpiImplTest {
                 .thenReturn(scaLoginResponseTO);
 
         when(paymentInternalGeneral.initiatePaymentInternal(businessObject, CONSENT_DATA_BYTES)).thenThrow(buildFeignException());
-        when(feignExceptionReader.getErrorCode(any())).thenReturn("REQUEST_VALIDATION_FAILURE");
+        when(feignExceptionReader.getLedgersErrorCode(any())).thenReturn(LedgersErrorCode.REQUEST_VALIDATION_FAILURE);
 
         SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.authorisePsu(SPI_CONTEXT_DATA, AUTHORISATION_ID, PSU_ID_DATA_1, SECRET,
                                                                                         businessObject, spiAspspConsentDataProvider);

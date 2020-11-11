@@ -18,10 +18,7 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaLoginMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.CmsPaymentStatusUpdateService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.internal.PaymentInternalGeneral;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
@@ -51,9 +48,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
-import static de.adorsys.psd2.xs2a.core.error.MessageErrorCode.FORMAT_ERROR;
-import static de.adorsys.psd2.xs2a.core.error.MessageErrorCode.PRODUCT_UNKNOWN;
 
 @Component
 public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPayment, SCAPaymentResponseTO> implements PaymentAuthorisationSpi {
@@ -103,14 +97,18 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
     }
 
     @Override
-    protected SpiResponse<SpiPsuAuthorisationResponse> getSpiPsuAuthorisationResponseSpiResponseWithError(FeignException feignException, String devMessage, String errorCode) {
-        if (errorCode.equals("REQUEST_VALIDATION_FAILURE")) {
+    protected SpiResponse<SpiPsuAuthorisationResponse> getSpiPsuAuthorisationResponseSpiResponseWithError(FeignException feignException, String devMessage, LedgersErrorCode errorCode) {
+        if (LedgersErrorCode.REQUEST_VALIDATION_FAILURE.equals(errorCode)) {
             return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, PRODUCT_UNKNOWN, devMessage))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PRODUCT_UNKNOWN, devMessage))
+                           .build();
+        } else if (LedgersErrorCode.INSUFFICIENT_FUNDS.equals(errorCode)) {
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED, devMessage))
                            .build();
         }
         return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                       .error(FeignExceptionHandler.getFailureMessage(feignException, FORMAT_ERROR))
+                       .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR))
                        .build();
     }
 

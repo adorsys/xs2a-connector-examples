@@ -4,6 +4,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.LedgersErrorCode;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
@@ -239,7 +240,7 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
                 scaResponseTO = initiateBusinessObject(businessObject, aspspConsentDataProvider.loadAspspConsentData());
             } catch (FeignException feignException) {
                 String devMessage = feignExceptionReader.getErrorMessage(feignException);
-                String errorCode = feignExceptionReader.getErrorCode(feignException);
+                LedgersErrorCode errorCode = feignExceptionReader.getLedgersErrorCode(feignException);
                 log.info("Processing of successful authorisation failed: devMessage '{}'", devMessage);
                 return getSpiPsuAuthorisationResponseSpiResponseWithError(feignException, devMessage, errorCode);
             }
@@ -260,7 +261,7 @@ public abstract class AbstractAuthorisationSpi<T, R extends SCAResponseTO> {
                        .build();
     }
 
-    protected SpiResponse<SpiPsuAuthorisationResponse> getSpiPsuAuthorisationResponseSpiResponseWithError(FeignException feignException, String devMessage, String errorCode) {
+    protected SpiResponse<SpiPsuAuthorisationResponse> getSpiPsuAuthorisationResponseSpiResponseWithError(FeignException feignException, String devMessage, LedgersErrorCode errorCode) {
         return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                        .error(FeignExceptionHandler.getFailureMessage(feignException, FORMAT_ERROR))
                        .build();

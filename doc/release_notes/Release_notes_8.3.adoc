@@ -2,3 +2,9 @@
 
 == Table of Contents
 
+* Changed error when balance of account is not enough for payment execution
+
+== Changed error when balance of account is not enough for payment execution
+
+From now on, in case of insufficient funds error from ledgers, spi will return `FORMAT_ERROR_PAYMENT_NOT_EXECUTED` with
+message from ledgers.

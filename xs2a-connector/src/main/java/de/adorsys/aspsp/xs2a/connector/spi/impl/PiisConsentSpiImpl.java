@@ -58,7 +58,6 @@ import java.util.Collections;
 public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent, SCAConsentResponseTO> implements PiisConsentSpi {
     // TODO REPLACE WITH PIIS FLOW WHEN LEDGERS STARTS TO SUPPORT PIIS CONSENT https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/issues/1323
     private static final String SCA_STATUS_LOG = "SCA status is {}";
-    private static final String ATTEMPT_FAILURE = "SCA_VALIDATION_ATTEMPT_FAILED";
 
     private final ConsentRestClient consentRestClient;
     private final TokenStorageService tokenStorageService;
@@ -189,8 +188,8 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent,
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             log.error("Verify sca authorisation failed: consent ID {}, devMessage {}", spiPiisConsent.getId(), devMessage);
 
-            String errorCode = feignExceptionReader.getErrorCode(feignException);
-            if (errorCode.equals(ATTEMPT_FAILURE)) {
+            LedgersErrorCode errorCode = feignExceptionReader.getLedgersErrorCode(feignException);
+            if (LedgersErrorCode.SCA_VALIDATION_ATTEMPT_FAILED.equals(errorCode)) {
                 return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder()
                                .payload(new SpiVerifyScaAuthorisationResponse(spiPiisConsent.getConsentStatus(), SpiAuthorisationStatus.ATTEMPT_FAILURE))
                                .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))

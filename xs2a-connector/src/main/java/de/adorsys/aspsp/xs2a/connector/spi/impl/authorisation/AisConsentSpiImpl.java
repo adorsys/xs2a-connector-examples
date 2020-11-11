@@ -20,10 +20,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.AisConsentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaLoginMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.MultilevelScaService;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
 import de.adorsys.ledgers.middleware.api.domain.sca.*;
 import de.adorsys.ledgers.middleware.api.domain.um.AisConsentTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
@@ -67,14 +64,12 @@ import static java.lang.String.format;
 
 @Component
 public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsent, SCAConsentResponseTO> implements AisConsentSpi {
-    private static final String ATTEMPT_FAILURE = "SCA_VALIDATION_ATTEMPT_FAILED";
     private static final Logger logger = LoggerFactory.getLogger(AisConsentSpiImpl.class);
     private static final String USER_LOGIN = "{userLogin}";
     private static final String CONSENT_ID = "{consentId}";
     private static final String AUTH_ID = "{authorizationId}";
     private static final String TAN = "{tan}";
     private static final String DECOUPLED_USR_MSG = "Please check your app to continue... %s";
-
     private static final String SCA_STATUS_LOG = "SCA status is {}";
 
     private final ConsentRestClient consentRestClient;
@@ -210,8 +205,8 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Verify sca authorisation failed: consent ID {}, devMessage {}", accountConsent.getId(), devMessage);
 
-            String errorCode = feignExceptionReader.getErrorCode(feignException);
-            if (errorCode.equals(ATTEMPT_FAILURE)) {
+            LedgersErrorCode errorCode = feignExceptionReader.getLedgersErrorCode(feignException);
+            if (LedgersErrorCode.SCA_VALIDATION_ATTEMPT_FAILED.equals(errorCode)) {
                 return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder()
                                .payload(new SpiVerifyScaAuthorisationResponse(accountConsent.getConsentStatus(), SpiAuthorisationStatus.ATTEMPT_FAILURE))
                                .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
