@@ -21,6 +21,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.LedgersErrorCode;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCALoginResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
@@ -53,7 +54,6 @@ import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.SCAMETHOD
 
 @Component
 public class GeneralAuthorisationService {
-    private static final String ATTEMPT_FAILURE = "PSU_AUTH_ATTEMPT_INVALID";
     private static final Logger logger = LoggerFactory.getLogger(GeneralAuthorisationService.class);
     private final UserMgmtRestClient userMgmtRestClient;
     private final AuthRequestInterceptor authRequestInterceptor;
@@ -111,8 +111,8 @@ public class GeneralAuthorisationService {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Authorise PSU for consent failed: authorisation ID {}, consent ID {}, devMessage {}", authorisationId, consentId, devMessage);
 
-            String errorCode = feignExceptionReader.getErrorCode(feignException);
-            if (errorCode.equals(ATTEMPT_FAILURE)) {
+            LedgersErrorCode errorCode = feignExceptionReader.getLedgersErrorCode(feignException);
+            if (LedgersErrorCode.PSU_AUTH_ATTEMPT_INVALID.equals(errorCode)) {
                 return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                                .payload(new SpiPsuAuthorisationResponse(false, SpiAuthorisationStatus.ATTEMPT_FAILURE))
                                .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))

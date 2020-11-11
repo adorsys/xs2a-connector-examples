@@ -4,10 +4,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.AisConsentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaLoginMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.MultilevelScaService;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.middleware.api.domain.account.AccountDetailsTO;
@@ -635,7 +632,7 @@ class AisConsentSpiImplTest {
         FeignException feignException = FeignExceptionHandler.getException(HttpStatus.UNAUTHORIZED, "message");
         when(consentDataService.response(CONSENT_DATA_BYTES, SCAConsentResponseTO.class))
                 .thenThrow(feignException);
-        when(feignExceptionReader.getErrorCode(feignException)).thenReturn("error code");
+        when(feignExceptionReader.getLedgersErrorCode(feignException)).thenReturn(LedgersErrorCode.INSUFFICIENT_FUNDS);
 
         SpiScaConfirmation spiScaConfirmation = new SpiScaConfirmation();
         spiScaConfirmation.setTanNumber("tan");
@@ -664,7 +661,7 @@ class AisConsentSpiImplTest {
         FeignException feignException = FeignExceptionHandler.getException(HttpStatus.UNAUTHORIZED, "message");
         when(consentDataService.response(CONSENT_DATA_BYTES, SCAConsentResponseTO.class))
                 .thenThrow(feignException);
-        when(feignExceptionReader.getErrorCode(feignException)).thenReturn("SCA_VALIDATION_ATTEMPT_FAILED");
+        when(feignExceptionReader.getLedgersErrorCode(feignException)).thenReturn(LedgersErrorCode.SCA_VALIDATION_ATTEMPT_FAILED);
 
         SpiScaConfirmation spiScaConfirmation = new SpiScaConfirmation();
         spiScaConfirmation.setTanNumber("tan");

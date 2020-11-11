@@ -5,6 +5,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.LedgersErrorCode;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCALoginResponseTO;
@@ -257,7 +258,7 @@ class PaymentCancellationSpiImplTest {
         FeignException feignException = FeignExceptionHandler.getException(HttpStatus.BAD_REQUEST, "message");
         when(paymentRestClient.authorizeCancelPayment(PAYMENT_ID, AUTHORISATION_ID, TAN_NUMBER))
                 .thenThrow(feignException);
-        when(feignExceptionReader.getErrorCode(feignException)).thenReturn("error code");
+        when(feignExceptionReader.getLedgersErrorCode(feignException)).thenReturn(LedgersErrorCode.INSUFFICIENT_FUNDS);
 
         SpiResponse<SpiPaymentExecutionResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPaymentWithResponse(SPI_CONTEXT_DATA, spiScaConfirmation,
                                                                                                                businessObject, spiAspspConsentDataProvider);
@@ -282,7 +283,7 @@ class PaymentCancellationSpiImplTest {
         FeignException feignException = FeignExceptionHandler.getException(HttpStatus.BAD_REQUEST, "message");
         when(paymentRestClient.authorizeCancelPayment(PAYMENT_ID, AUTHORISATION_ID, TAN_NUMBER))
                 .thenThrow(feignException);
-        when(feignExceptionReader.getErrorCode(feignException)).thenReturn("SCA_VALIDATION_ATTEMPT_FAILED");
+        when(feignExceptionReader.getLedgersErrorCode(feignException)).thenReturn(LedgersErrorCode.SCA_VALIDATION_ATTEMPT_FAILED);
 
         SpiPaymentExecutionResponse expected = new SpiPaymentExecutionResponse(SpiAuthorisationStatus.ATTEMPT_FAILURE);
         SpiResponse<SpiPaymentExecutionResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPaymentWithResponse(SPI_CONTEXT_DATA, spiScaConfirmation,
