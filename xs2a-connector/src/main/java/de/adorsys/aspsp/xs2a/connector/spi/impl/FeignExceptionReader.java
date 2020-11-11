@@ -24,12 +24,17 @@ public class FeignExceptionReader {
                        .orElse(null);
     }
 
-    public String getErrorCode(FeignException feignException) {
+    public LedgersErrorCode getLedgersErrorCode(FeignException feignException) {
+        return LedgersErrorCode.getFromString(getErrorCode(feignException))
+                       .orElse(null);
+    }
+
+    private String getErrorCode(FeignException feignException) {
         return Optional.ofNullable(feignException.content())
                        .map(this::readTree)
                        .map(this::getCode)
                        .map(JsonNode::asText)
-                       .orElse("");
+                       .orElse(null);
     }
 
     private JsonNode getCode(JsonNode jsonNode) {

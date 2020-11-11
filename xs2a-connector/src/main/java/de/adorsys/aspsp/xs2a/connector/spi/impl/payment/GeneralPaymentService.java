@@ -18,10 +18,7 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl.payment;
 
 import de.adorsys.aspsp.xs2a.connector.cms.CmsPsuPisClient;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaResponseMapper;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.MultilevelScaService;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
@@ -71,7 +68,6 @@ public class GeneralPaymentService {
     private static final Logger logger = LoggerFactory.getLogger(GeneralPaymentService.class);
     private static final String XML_MEDIA_TYPE = "application/xml";
     private static final String PSU_MESSAGE = "Mocked PSU message from SPI for this payment";
-    private static final String ATTEMPT_FAILURE = "SCA_VALIDATION_ATTEMPT_FAILED";
     private static final String DEBTOR_NAME = "Mocked debtor name from ASPSP";
 
     private final PaymentRestClient paymentRestClient;
@@ -240,8 +236,8 @@ public class GeneralPaymentService {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.info("Verify SCA authorisation and execute payment failed: payment ID: {}, devMessage: {}", spiScaConfirmation.getPaymentId(), devMessage);
 
-            String errorCode = feignExceptionReader.getErrorCode(feignException);
-            if (errorCode.equals(ATTEMPT_FAILURE)) {
+            LedgersErrorCode errorCode = feignExceptionReader.getLedgersErrorCode(feignException);
+            if (LedgersErrorCode.SCA_VALIDATION_ATTEMPT_FAILED.equals(errorCode)) {
                 return SpiResponse.<SpiPaymentExecutionResponse>builder()
                                .payload(new SpiPaymentExecutionResponse(SpiAuthorisationStatus.ATTEMPT_FAILURE))
                                .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
