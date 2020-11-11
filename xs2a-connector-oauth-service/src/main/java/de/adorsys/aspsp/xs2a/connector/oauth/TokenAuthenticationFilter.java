@@ -50,7 +50,8 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
     private static final String BEARER_TOKEN_PREFIX = "Bearer ";
     private static final String INSTANCE_ID = "instance-id";
     private static final String CONSENT_ENP_ENDING = "consents";
-    private static final String FUNDS_CONF_ENP_ENDING = "funds-confirmations";
+    private static final String FUNDS_CONF_V1_ENP_ENDING = "funds-confirmations";
+    private static final String FUNDS_CONF_V2_ENP_ENDING = "confirmation-of-funds";
 
     private final KeycloakTokenService keycloakTokenService;
     private final AspspProfileService aspspProfileService;
@@ -141,7 +142,9 @@ public class TokenAuthenticationFilter extends AbstractXs2aFilter {
         }
 
         String trimmedRequestPath = trimEndingSlash(requestPath);
-        if (trimmedRequestPath.endsWith(CONSENT_ENP_ENDING) || trimmedRequestPath.endsWith(FUNDS_CONF_ENP_ENDING)) {
+        if (trimmedRequestPath.endsWith(CONSENT_ENP_ENDING)
+                    || trimmedRequestPath.endsWith(FUNDS_CONF_V1_ENP_ENDING)
+                    || trimmedRequestPath.endsWith(FUNDS_CONF_V2_ENP_ENDING)) {
             return false;
         } else {
             Set<String> supportedProducts = aspspProfileService.getAspspSettings(instanceId).getPis().getSupportedPaymentTypeAndProductMatrix().values().stream()
