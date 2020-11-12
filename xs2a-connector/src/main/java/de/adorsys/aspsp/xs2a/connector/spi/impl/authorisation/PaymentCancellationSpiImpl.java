@@ -21,6 +21,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaResponseMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.LedgersErrorCode;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.ledgers.keycloak.client.api.KeycloakTokenService;
 import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
@@ -55,7 +56,6 @@ import java.util.Optional;
 
 @Component
 public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPayment> implements PaymentCancellationSpi {
-    private static final String ATTEMPT_FAILURE = "SCA_VALIDATION_ATTEMPT_FAILED";
     private static final Logger logger = LoggerFactory.getLogger(PaymentCancellationSpiImpl.class);
 
     private final PaymentRestClient paymentRestClient;
@@ -185,8 +185,8 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Verify SCA authorisation and cancel payment failed: payment ID: {}, devMessage: {}", payment.getPaymentId(), devMessage);
 
-            String errorCode = feignExceptionReader.getErrorCode(feignException);
-            if (errorCode.equals(ATTEMPT_FAILURE)) {
+            LedgersErrorCode errorCode = feignExceptionReader.getLedgersErrorCode(feignException);
+            if (LedgersErrorCode.SCA_VALIDATION_ATTEMPT_FAILED.equals(errorCode)) {
                 return SpiResponse.<SpiPaymentExecutionResponse>builder()
                                .payload(new SpiPaymentExecutionResponse(SpiAuthorisationStatus.ATTEMPT_FAILURE))
                                .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))

@@ -97,11 +97,7 @@ public abstract class AbstractAuthorisationSpi<T> {
             scaResponseTO = initiateBusinessObject(businessObject, aspspConsentDataProvider, authorisationId);
 
         } catch (FeignException feignException) {
-            String devMessage = feignExceptionReader.getErrorMessage(feignException);
-            log.info("Initiate business object error: business object ID: {}, devMessage: {}", getBusinessObjectId(businessObject), devMessage);
-            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .payload(new SpiPsuAuthorisationResponse(false, SpiAuthorisationStatus.FAILURE))
-                           .build();
+            return resolveErrorResponse(businessObject, feignException);
         }
 
         if (scaResponseTO.getScaStatus() == EXEMPTED && isFirstInitiationOfMultilevelSca(businessObject, scaResponseTO)) {
@@ -137,6 +133,14 @@ public abstract class AbstractAuthorisationSpi<T> {
 
         return authorisationService.authorisePsuInternal(getBusinessObjectId(businessObject),
                                                          authorisationId, getOpType(), scaResponseTO, aspspConsentDataProvider);
+    }
+
+    protected SpiResponse<SpiPsuAuthorisationResponse> resolveErrorResponse(T businessObject, FeignException feignException) {
+        String devMessage = feignExceptionReader.getErrorMessage(feignException);
+        log.info("Initiate business object error: business object ID: {}, devMessage: {}", getBusinessObjectId(businessObject), devMessage);
+        return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                       .payload(new SpiPsuAuthorisationResponse(false, SpiAuthorisationStatus.FAILURE))
+                       .build();
     }
 
     /**

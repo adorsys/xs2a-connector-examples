@@ -21,7 +21,9 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiCommonPaymentTOMa
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaResponseMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.LedgersErrorCode;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.ledgers.keycloak.client.api.KeycloakTokenService;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
@@ -40,10 +42,13 @@ import de.adorsys.psd2.xs2a.core.profile.PaymentType;
 import de.adorsys.psd2.xs2a.service.RequestProviderService;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
+import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
+import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiPsuAuthorisationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentInfo;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.PaymentAuthorisationSpi;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
+import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -66,6 +71,7 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
     private final PaymentRestClient paymentRestClient;
     private final CmsPsuPisClient cmsPsuPisClient;
     private final RequestProviderService requestProviderService;
+    private final FeignExceptionReader feignExceptionReader;
 
     public PaymentAuthorisationSpiImpl(GeneralAuthorisationService authorisationService,
                                        ScaMethodConverter scaMethodConverter,
@@ -87,6 +93,7 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
         this.paymentRestClient = paymentRestClient;
         this.cmsPsuPisClient = cmsPsuPisClient;
         this.requestProviderService = requestProviderService;
+        this.feignExceptionReader = feignExceptionReader;
     }
 
     @Override
@@ -149,6 +156,28 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
         logger.info("Retrieving mock trusted beneficiaries flag for payment: {}", payment);
         return SpiResponse.<Boolean>builder()
                        .payload(true)
+                       .build();
+    }
+
+    @Override
+    protected SpiResponse<SpiPsuAuthorisationResponse> resolveErrorResponse(SpiPayment businessObject, FeignException feignException) {
+        String devMessage = feignExceptionReader.getErrorMessage(feignException);
+        LedgersErrorCode errorCode = feignExceptionReader.getLedgersErrorCode(feignException);
+        if (LedgersErrorCode.INSUFFICIENT_FUNDS.equals(errorCode)) {
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED, devMessage))
+                           .build();
+        }
+
+        if (LedgersErrorCode.REQUEST_VALIDATION_FAILURE.equals(errorCode)) {
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PRODUCT_UNKNOWN, devMessage))
+                           .build();
+        }
+
+        log.info("Initiate business object error: business object ID: {}, devMessage: {}", getBusinessObjectId(businessObject), devMessage);
+        return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                       .payload(new SpiPsuAuthorisationResponse(false, SpiAuthorisationStatus.FAILURE))
                        .build();
     }
 }
