@@ -43,6 +43,9 @@ variables: &variables
   # Private Openshift Images #
   ############################
 
+  # temporary env
+  OPENSHIFT_NAMESPACE_ADORSYS_MODELBANK_KEYCLOAK_DEV: "adorsys-modelbank-keycloak-dev"
+
   OPENSHIFT_NAMESPACE_ADORSYS_XS2A_DEV: "adorsys-xs2a-dev"
   OPENSHIFT_NAMESPACE_ADORSYS_XS2A_INTEG: "adorsys-xs2a-integ"
 
@@ -277,6 +280,16 @@ Deploy Openshift (develop):
     <<: *variables
     DOCKER_TAG: develop
     OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_DEV}"
+  <<: *deploy_openshift
+
+Deploy Openshift (modelbank keycloak dev):
+  stage: "Deployment"
+  only:
+    - develop
+  variables:
+    <<: *variables
+    DOCKER_TAG: develop
+    OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_MODELBANK_KEYCLOAK_DEV}"
   <<: *deploy_openshift
 
 Deploy Openshift (develop Embedded ):
