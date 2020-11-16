@@ -84,8 +84,10 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
                                        LedgersSpiCommonPaymentTOMapper ledgersSpiCommonPaymentTOMapper,
                                        AspspConsentDataService aspspConsentDataService,
                                        ScaResponseMapper scaResponseMapper,
-                                       PaymentRestClient paymentRestClient, CmsPsuPisClient cmsPsuPisClient, RequestProviderService requestProviderService) {
-        super(authRequestInterceptor, consentDataService, authorisationService, scaMethodConverter, feignExceptionReader, keycloakTokenService, redirectScaRestClient);
+                                       PaymentRestClient paymentRestClient, CmsPsuPisClient cmsPsuPisClient,
+                                       RequestProviderService requestProviderService) {
+        super(authRequestInterceptor, consentDataService, authorisationService, scaMethodConverter, feignExceptionReader,
+              keycloakTokenService, redirectScaRestClient);
         this.paymentService = paymentService;
         this.ledgersSpiCommonPaymentTOMapper = ledgersSpiCommonPaymentTOMapper;
         this.aspspConsentDataService = aspspConsentDataService;

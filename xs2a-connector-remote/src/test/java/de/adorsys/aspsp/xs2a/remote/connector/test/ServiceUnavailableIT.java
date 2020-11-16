@@ -16,9 +16,11 @@
 
 package de.adorsys.aspsp.xs2a.remote.connector.test;
 
+import de.adorsys.aspsp.xs2a.connector.oauth.OauthProfileServiceWrapper;
 import de.adorsys.aspsp.xs2a.connector.oauth.TokenAuthenticationFilter;
 import de.adorsys.psd2.aspsp.profile.service.AspspProfileService;
 import de.adorsys.psd2.xs2a.core.profile.ScaApproach;
+import de.adorsys.psd2.xs2a.core.profile.ScaRedirectFlow;
 import de.adorsys.psd2.xs2a.core.tpp.TppInfo;
 import de.adorsys.psd2.xs2a.service.TppService;
 import de.adorsys.psd2.xs2a.web.request.RequestPathResolver;
@@ -56,6 +58,7 @@ import java.util.function.Supplier;
 
 import static org.apache.commons.io.IOUtils.resourceToString;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -81,6 +84,9 @@ class ServiceUnavailableIT {
     private RequestPathResolver requestPathResolver;
     @MockBean
     private TppService tppService;
+    @MockBean
+    private OauthProfileServiceWrapper oauthProfileServiceWrapper;
+
     @Autowired
     private TokenAuthenticationFilter tokenAuthenticationFilter;
     private Supplier<ResourceAccessException> resourceAccessExceptionSupplier = () -> new ResourceAccessException("");
@@ -112,6 +118,7 @@ class ServiceUnavailableIT {
     @Test
     @ResourceAvailable(profile = false)
     void aspsp_profile_not_accessible_in_token_authentification_filter() throws Exception {
+        given(oauthProfileServiceWrapper.getScaRedirectFlow()).willReturn(ScaRedirectFlow.REDIRECT);
         MockMvc mockMvc = buildMockMvcWithFilters(tokenAuthenticationFilter);
         create_consent_service_unavailable_test(mockMvc);
     }

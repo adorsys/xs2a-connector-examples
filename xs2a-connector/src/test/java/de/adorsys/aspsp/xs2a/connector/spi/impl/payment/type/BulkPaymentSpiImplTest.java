@@ -5,8 +5,9 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.AddressMapperImpl;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ChallengeDataMapperImpl;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapperImpl;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation.confirmation.PaymentAuthConfirmationCodeService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.PaymentSpi;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.PaymentSpiImpl;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
@@ -69,7 +70,8 @@ class BulkPaymentSpiImplTest {
         paymentService = mock(GeneralPaymentService.class);
         spiAspspConsentDataProvider = mock(SpiAspspConsentDataProvider.class);
 
-        bulkPaymentSpi = new BulkPaymentSpiImpl(paymentService, spiPaymentMapper);
+        bulkPaymentSpi = new BulkPaymentSpiImpl(paymentService, spiPaymentMapper, mock(AspspConsentDataService.class),
+                                                mock(PaymentAuthConfirmationCodeService.class));
     }
 
     @Test
