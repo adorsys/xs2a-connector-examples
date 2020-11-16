@@ -2,6 +2,8 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.*;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation.confirmation.PaymentAuthConfirmationCodeService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
@@ -60,7 +62,7 @@ class PeriodicPaymentSpiImplTest {
 
         paymentService = mock(GeneralPaymentService.class);
         spiAspspConsentDataProvider = mock(SpiAspspConsentDataProvider.class);
-        paymentSpi = new PeriodicPaymentSpiImpl(paymentService, spiPaymentMapper);
+        paymentSpi = new PeriodicPaymentSpiImpl(paymentService, spiPaymentMapper, mock(AspspConsentDataService.class), mock(PaymentAuthConfirmationCodeService.class));
     }
 
     @Test
