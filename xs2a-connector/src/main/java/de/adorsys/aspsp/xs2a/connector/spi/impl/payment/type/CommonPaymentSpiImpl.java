@@ -16,6 +16,8 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 
+import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation.confirmation.PaymentAuthConfirmationCodeService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
@@ -28,6 +30,7 @@ import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.CommonPaymentSpi;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
@@ -38,18 +41,15 @@ public class CommonPaymentSpiImpl extends AbstractPaymentSpi<SpiPaymentInfo, Spi
 
     private static final String PSU_MESSAGE = "Mocked PSU message from SPI for this payment";
 
-    public CommonPaymentSpiImpl(GeneralPaymentService generalPaymentService) {
-        super(generalPaymentService);
+    @Autowired
+    public CommonPaymentSpiImpl(GeneralPaymentService generalPaymentService, AspspConsentDataService consentDataService,
+                                PaymentAuthConfirmationCodeService paymentAuthConfirmationCodeService) {
+        super(generalPaymentService, consentDataService, paymentAuthConfirmationCodeService);
     }
 
     @Override
     public @NotNull SpiResponse<SpiPaymentExecutionResponse> verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(@NotNull SpiContextData contextData, @NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiPaymentInfo payment, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         return paymentService.verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(spiScaConfirmation, aspspConsentDataProvider);
-    }
-
-    @Override
-    public @NotNull SpiResponse<SpiPaymentConfirmationCodeValidationResponse> notifyConfirmationCodeValidation(@NotNull SpiContextData spiContextData, boolean confirmationCodeValidationResult, @NotNull SpiPaymentInfo payment, boolean isCancellation, @NotNull SpiAspspConsentDataProvider spiAspspConsentDataProvider) {
-        return super.notifyConfirmationCodeValidation(spiContextData, confirmationCodeValidationResult, payment, isCancellation, spiAspspConsentDataProvider);
     }
 
     @Override

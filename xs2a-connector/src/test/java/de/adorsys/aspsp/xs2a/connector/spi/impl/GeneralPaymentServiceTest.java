@@ -8,25 +8,20 @@ import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.AuthConfirmationTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
-import de.adorsys.ledgers.rest.client.UserMgmtRestClient;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
-import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
 import de.adorsys.psd2.xs2a.service.RequestProviderService;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
-import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiCheckConfirmationCodeRequest;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiGetPaymentStatusResponse;
-import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentConfirmationCodeValidationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
@@ -35,7 +30,6 @@ import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,10 +37,10 @@ import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import java.util.Collections;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -54,16 +48,12 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class GeneralPaymentServiceTest {
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
-    private static final String ANY_MEDIA_TYPE = "*/*";
-    private static final String JSON_MEDIA_TYPE = "application/json";
-    private static final String XML_MEDIA_TYPE = "application/xml";
+    private static final String ANY_MEDIA_TYPE = MediaType.ALL_VALUE;
+    private static final String JSON_MEDIA_TYPE = MediaType.APPLICATION_JSON_VALUE;
+    private static final String XML_MEDIA_TYPE = MediaType.APPLICATION_XML_VALUE;
     private static final String PSU_MESSAGE = "Mocked PSU message from SPI for this payment";
-    private static final String MOCK_XML_BODY = "<Document xmlns=\"urn:iso:std:iso:20022:tech:xsd:pain.002.001.03\"><CstmrPmtStsRpt><GrpHdr><MsgId>4572457256725689726906</MsgId><CreDtTm>2017-02-14T20:24:56.021Z</CreDtTm><DbtrAgt><FinInstnId><BIC>ABCDDEFF</BIC></FinInstnId></DbtrAgt><CdtrAgt><FinInstnId><BIC>DCBADEFF</BIC></FinInstnId></CdtrAgt></GrpHdr><OrgnlGrpInfAndSts><OrgnlMsgId>MIPI-123456789RI-123456789</OrgnlMsgId><OrgnlMsgNmId>pain.001.001.03</OrgnlMsgNmId><OrgnlCreDtTm>2017-02-14T20:23:34.000Z</OrgnlCreDtTm><OrgnlNbOfTxs>1</OrgnlNbOfTxs><OrgnlCtrlSum>123</OrgnlCtrlSum><GrpSts>ACCT</GrpSts></OrgnlGrpInfAndSts><OrgnlPmtInfAndSts><OrgnlPmtInfId>BIPI-123456789RI-123456789</OrgnlPmtInfId><OrgnlNbOfTxs>1</OrgnlNbOfTxs><OrgnlCtrlSum>123</OrgnlCtrlSum><PmtInfSts>ACCT</PmtInfSts></OrgnlPmtInfAndSts></CstmrPmtStsRpt></Document>";
-    private static final byte[] ASPSP_CONSENT_DATA = "".getBytes();
-    private static final String CONFIRMATION_CODE = "confirmation code";
-    private static final String AUTHORISATION_ID = "authorisation id";
 
-    private JsonReader jsonReader = new JsonReader();
+    private final JsonReader jsonReader = new JsonReader();
 
     @Mock
     private SpiAspspConsentDataProvider spiAspspConsentDataProvider;
@@ -80,8 +70,6 @@ class GeneralPaymentServiceTest {
     @Mock
     private MultilevelScaService multilevelScaService;
     @Mock
-    private UserMgmtRestClient userMgmtRestClient;
-    @Mock
     private RedirectScaRestClient redirectScaRestClient;
     @Mock
     private CmsPsuPisClient cmsPsuPisClient;
@@ -92,16 +80,21 @@ class GeneralPaymentServiceTest {
     private ScaResponseMapper scaResponseMapper = Mappers.getMapper(ScaResponseMapper.class);
 
     private GeneralPaymentService generalPaymentService;
+    private String paymentBodyXml;
 
     @BeforeEach
     void setUp() {
-        generalPaymentService = new GeneralPaymentService(paymentRestClient, authRequestInterceptor, consentDataService, feignExceptionReader, MOCK_XML_BODY, multilevelScaService, userMgmtRestClient, redirectScaRestClient, scaResponseMapper, cmsPsuPisClient, requestProviderService);
+        paymentBodyXml = jsonReader.getStringFromFile("xml/payment-body.xml");
+        generalPaymentService = new GeneralPaymentService(paymentRestClient, authRequestInterceptor, consentDataService,
+                                                          feignExceptionReader, paymentBodyXml, multilevelScaService,
+                                                          redirectScaRestClient, scaResponseMapper,
+                                                          cmsPsuPisClient, requestProviderService);
     }
 
     @Test
     void getPaymentStatusById_withXmlMediaType_shouldReturnMockResponse() {
         // Given
-        byte[] xmlBody = MOCK_XML_BODY.getBytes();
+        byte[] xmlBody = paymentBodyXml.getBytes();
         byte[] aspspConsentData = "".getBytes();
         SpiGetPaymentStatusResponse expectedResponse = new SpiGetPaymentStatusResponse(TransactionStatus.ACSP, null, XML_MEDIA_TYPE, xmlBody, PSU_MESSAGE);
 
@@ -178,176 +171,6 @@ class GeneralPaymentServiceTest {
     }
 
     @Test
-    void checkConfirmationCode() {
-        //Given
-        SpiCheckConfirmationCodeRequest spiCheckConfirmationCodeRequest = new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID);
-        when(spiAspspConsentDataProvider.loadAspspConsentData())
-                .thenReturn(ASPSP_CONSENT_DATA);
-        GlobalScaResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
-        when(consentDataService.response(ASPSP_CONSENT_DATA))
-                .thenReturn(scaPaymentResponse);
-        AuthConfirmationTO authConfirmationTO = new AuthConfirmationTO()
-                                                        .success(true)
-                                                        .transactionStatus(TransactionStatusTO.ACTC);
-        when(userMgmtRestClient.verifyAuthConfirmationCode(AUTHORISATION_ID, CONFIRMATION_CODE))
-                .thenReturn(ResponseEntity.ok(authConfirmationTO));
-
-        // When
-        SpiResponse<SpiPaymentConfirmationCodeValidationResponse> confirmationCodeResponse = generalPaymentService.checkConfirmationCode(spiCheckConfirmationCodeRequest, spiAspspConsentDataProvider);
-
-        // Then
-        assertTrue(confirmationCodeResponse.isSuccessful());
-        SpiPaymentConfirmationCodeValidationResponse confirmationCodePayload = confirmationCodeResponse.getPayload();
-        assertEquals(ScaStatus.FINALISED, confirmationCodePayload.getScaStatus());
-        assertEquals(TransactionStatus.ACTC, confirmationCodePayload.getTransactionStatus());
-    }
-
-    @Test
-    void checkConfirmationCode_cancelledTransactionFromLedgers_shouldReturnFinalised() {
-        //Given
-        SpiCheckConfirmationCodeRequest spiCheckConfirmationCodeRequest = new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID);
-        when(spiAspspConsentDataProvider.loadAspspConsentData())
-                .thenReturn(ASPSP_CONSENT_DATA);
-        GlobalScaResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
-        when(consentDataService.response(ASPSP_CONSENT_DATA))
-                .thenReturn(scaPaymentResponse);
-        AuthConfirmationTO authConfirmationTO = new AuthConfirmationTO()
-                                                        .success(true)
-                                                        .transactionStatus(TransactionStatusTO.CANC);
-        when(userMgmtRestClient.verifyAuthConfirmationCode(AUTHORISATION_ID, CONFIRMATION_CODE))
-                .thenReturn(ResponseEntity.ok(authConfirmationTO));
-
-        // When
-        SpiResponse<SpiPaymentConfirmationCodeValidationResponse> confirmationCodeResponse = generalPaymentService.checkConfirmationCode(spiCheckConfirmationCodeRequest, spiAspspConsentDataProvider);
-
-        // Then
-        assertTrue(confirmationCodeResponse.isSuccessful());
-        SpiPaymentConfirmationCodeValidationResponse confirmationCodePayload = confirmationCodeResponse.getPayload();
-        assertEquals(ScaStatus.FINALISED, confirmationCodePayload.getScaStatus());
-        assertEquals(TransactionStatus.CANC, confirmationCodePayload.getTransactionStatus());
-    }
-
-    @Test
-    void checkConfirmationCode_noResponseBodyFromLedgers_shouldReturnFailed() {
-        //Given
-        SpiCheckConfirmationCodeRequest spiCheckConfirmationCodeRequest = new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID);
-        when(spiAspspConsentDataProvider.loadAspspConsentData())
-                .thenReturn(ASPSP_CONSENT_DATA);
-        GlobalScaResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
-        when(consentDataService.response(ASPSP_CONSENT_DATA))
-                .thenReturn(scaPaymentResponse);
-        when(userMgmtRestClient.verifyAuthConfirmationCode(AUTHORISATION_ID, CONFIRMATION_CODE))
-                .thenReturn(ResponseEntity.ok().build());
-
-        // When
-        SpiResponse<SpiPaymentConfirmationCodeValidationResponse> confirmationCodeResponse = generalPaymentService.checkConfirmationCode(spiCheckConfirmationCodeRequest, spiAspspConsentDataProvider);
-
-        // Then
-        assertTrue(confirmationCodeResponse.isSuccessful());
-        SpiPaymentConfirmationCodeValidationResponse confirmationCodePayload = confirmationCodeResponse.getPayload();
-        assertEquals(ScaStatus.FAILED, confirmationCodePayload.getScaStatus());
-        assertEquals(TransactionStatus.RJCT, confirmationCodePayload.getTransactionStatus());
-    }
-
-    @Test
-    void checkConfirmationCode_notSuccessful_shouldReturnFailed() {
-        //Given
-        SpiCheckConfirmationCodeRequest spiCheckConfirmationCodeRequest = new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID);
-        when(spiAspspConsentDataProvider.loadAspspConsentData())
-                .thenReturn(ASPSP_CONSENT_DATA);
-        GlobalScaResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
-        when(consentDataService.response(ASPSP_CONSENT_DATA))
-                .thenReturn(scaPaymentResponse);
-        AuthConfirmationTO authConfirmationTO = new AuthConfirmationTO()
-                                                        .success(false);
-        when(userMgmtRestClient.verifyAuthConfirmationCode(AUTHORISATION_ID, CONFIRMATION_CODE))
-                .thenReturn(ResponseEntity.ok(authConfirmationTO));
-
-        // When
-        SpiResponse<SpiPaymentConfirmationCodeValidationResponse> confirmationCodeResponse = generalPaymentService.checkConfirmationCode(spiCheckConfirmationCodeRequest, spiAspspConsentDataProvider);
-
-        // Then
-        assertTrue(confirmationCodeResponse.isSuccessful());
-        SpiPaymentConfirmationCodeValidationResponse confirmationCodePayload = confirmationCodeResponse.getPayload();
-        assertEquals(ScaStatus.FAILED, confirmationCodePayload.getScaStatus());
-        assertEquals(TransactionStatus.RJCT, confirmationCodePayload.getTransactionStatus());
-    }
-
-    @Test
-    void checkConfirmationCode_partiallyAuthorised() {
-        //Given
-        SpiCheckConfirmationCodeRequest spiCheckConfirmationCodeRequest = new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID);
-        when(spiAspspConsentDataProvider.loadAspspConsentData())
-                .thenReturn(ASPSP_CONSENT_DATA);
-        GlobalScaResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
-        when(consentDataService.response(ASPSP_CONSENT_DATA))
-                .thenReturn(scaPaymentResponse);
-        AuthConfirmationTO authConfirmationTO = new AuthConfirmationTO()
-                                                        .success(true)
-                                                        .partiallyAuthorised(true);
-        when(userMgmtRestClient.verifyAuthConfirmationCode(AUTHORISATION_ID, CONFIRMATION_CODE))
-                .thenReturn(ResponseEntity.ok(authConfirmationTO));
-
-        // When
-        SpiResponse<SpiPaymentConfirmationCodeValidationResponse> confirmationCodeResponse = generalPaymentService.checkConfirmationCode(spiCheckConfirmationCodeRequest, spiAspspConsentDataProvider);
-
-        // Then
-        assertTrue(confirmationCodeResponse.isSuccessful());
-        SpiPaymentConfirmationCodeValidationResponse confirmationCodePayload = confirmationCodeResponse.getPayload();
-        assertEquals(ScaStatus.FINALISED, confirmationCodePayload.getScaStatus());
-        assertEquals(TransactionStatus.PATC, confirmationCodePayload.getTransactionStatus());
-    }
-
-    @Test
-    void checkConfirmationCode_noTransactionStatusFromLedgers_shouldReturnFailed() {
-        //Given
-        SpiCheckConfirmationCodeRequest spiCheckConfirmationCodeRequest = new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID);
-        when(spiAspspConsentDataProvider.loadAspspConsentData())
-                .thenReturn(ASPSP_CONSENT_DATA);
-        GlobalScaResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
-        when(consentDataService.response(ASPSP_CONSENT_DATA))
-                .thenReturn(scaPaymentResponse);
-        AuthConfirmationTO authConfirmationTO = new AuthConfirmationTO()
-                                                        .success(true);
-        when(userMgmtRestClient.verifyAuthConfirmationCode(AUTHORISATION_ID, CONFIRMATION_CODE))
-                .thenReturn(ResponseEntity.ok(authConfirmationTO));
-
-        // When
-        SpiResponse<SpiPaymentConfirmationCodeValidationResponse> confirmationCodeResponse = generalPaymentService.checkConfirmationCode(spiCheckConfirmationCodeRequest, spiAspspConsentDataProvider);
-
-        // Then
-        assertTrue(confirmationCodeResponse.isSuccessful());
-        SpiPaymentConfirmationCodeValidationResponse confirmationCodePayload = confirmationCodeResponse.getPayload();
-        assertEquals(ScaStatus.FAILED, confirmationCodePayload.getScaStatus());
-        assertEquals(TransactionStatus.RJCT, confirmationCodePayload.getTransactionStatus());
-    }
-
-    @Test
-    void checkConfirmationCode_feignException_shouldReturnSpiError() {
-        //Given
-        SpiCheckConfirmationCodeRequest spiCheckConfirmationCodeRequest = new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID);
-        when(spiAspspConsentDataProvider.loadAspspConsentData())
-                .thenReturn(ASPSP_CONSENT_DATA);
-        GlobalScaResponseTO scaPaymentResponse = buildScaPaymentResponseTO();
-        when(consentDataService.response(ASPSP_CONSENT_DATA))
-                .thenReturn(scaPaymentResponse);
-        FeignException feignException = buildFeignException();
-        when(userMgmtRestClient.verifyAuthConfirmationCode(AUTHORISATION_ID, CONFIRMATION_CODE))
-                .thenThrow(feignException);
-        String errorMessage = "some dev error message";
-        when(feignExceptionReader.getErrorMessage(feignException)).thenReturn(errorMessage);
-
-        // When
-        SpiResponse<SpiPaymentConfirmationCodeValidationResponse> confirmationCodeResponse = generalPaymentService.checkConfirmationCode(spiCheckConfirmationCodeRequest, spiAspspConsentDataProvider);
-
-        // Then
-        assertTrue(confirmationCodeResponse.hasError());
-        List<TppMessage> actualErrors = confirmationCodeResponse.getErrors();
-        TppMessage expectedError = new TppMessage(MessageErrorCode.PSU_CREDENTIALS_INVALID, errorMessage);
-        assertTrue(actualErrors.contains(expectedError));
-    }
-
-    @Test
     void firstCallInstantiatingPayment_LedgersError() {
         SpiPayment initialPayment = getSpiSingle(TransactionStatus.RCVD, "initialPayment");
 
@@ -410,14 +233,5 @@ class GeneralPaymentServiceTest {
                        .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
                        .headers(Collections.emptyMap())
                        .build();
-    }
-
-    @NotNull
-    private GlobalScaResponseTO buildScaPaymentResponseTO() {
-        GlobalScaResponseTO sca = new GlobalScaResponseTO();
-        BearerTokenTO bearerTokenTO = new BearerTokenTO();
-        bearerTokenTO.setAccess_token("accessToken");
-        sca.setBearerToken(bearerTokenTO);
-        return sca;
     }
 }

@@ -1,0 +1,73 @@
+{
+  "ais": {
+    "consentTypes": {
+      "bankOfferedConsentSupported": false,
+      "globalConsentSupported": true,
+      "availableAccountsConsentSupported": false,
+      "accountAccessFrequencyPerDay": 14,
+      "notConfirmedConsentExpirationTimeMs": 854000,
+      "maxConsentValidityDays": 0
+    },
+    "redirectLinkToOnlineBanking": {
+      "aisRedirectUrlToAspsp": "ais-oba-link"
+    },
+    "transactionParameters": {
+      "availableBookingStatuses": [
+        "booked",
+        "pending"
+      ],
+      "transactionsWithoutBalancesSupported": true,
+      "supportedTransactionApplicationTypes": [
+        "application/xml"
+      ]
+    },
+    "deltaReportSettings": {
+      "entryReferenceFromSupported": false,
+      "deltaListSupported": false
+    },
+    "scaRequirementsForOneTimeConsents": {
+      "scaByOneTimeAvailableAccountsConsentRequired": true
+    }
+  },
+  "pis": {
+    "supportedPaymentTypeAndProductMatrix": {
+      "payments": [
+        "sepa-credit-transfers"
+      ]
+    },
+    "maxTransactionValidityDays": 0,
+    "notConfirmedPaymentExpirationTimeMs": 86400000,
+    "paymentCancellationAuthorisationMandated": false,
+    "redirectLinkToOnlineBanking": {
+      "pisRedirectUrlToAspsp": "pis-oba-link",
+      "pisPaymentCancellationRedirectUrlToAspsp": "pis-cancellation-oba-link",
+      "paymentCancellationRedirectUrlExpirationTimeMs": 600000
+    }
+  },
+  "piis": {
+    "piisConsentSupported": "ASPSP_CONSENT_SUPPORTED",
+    "redirectLinkToOnlineBanking": {
+      "piisRedirectUrlToAspsp": "piis-oba-link"
+    }
+  },
+  "sb": {
+    "signingBasketSupported": false
+  },
+  "common": {
+    "scaRedirectFlow": "REDIRECT",
+    "oauthConfigurationUrl": "oauth-configuration-url",
+    "startAuthorisationMode": "AUTO",
+    "tppSignatureRequired": false,
+    "psuInInitialRequestMandated": false,
+    "redirectUrlExpirationTimeMs": 600000,
+    "authorisationExpirationTimeMs": 86400000,
+    "forceXs2aBaseLinksUrl": false,
+    "xs2aBaseLinksUrl": "http://myhost.com.ua/",
+    "supportedAccountReferenceFields": [
+      "IBAN",
+      "BBAN"
+    ],
+    "multicurrencyAccountLevelSupported": "SUBACCOUNT",
+    "aisPisSessionsSupported": false
+  }
+}

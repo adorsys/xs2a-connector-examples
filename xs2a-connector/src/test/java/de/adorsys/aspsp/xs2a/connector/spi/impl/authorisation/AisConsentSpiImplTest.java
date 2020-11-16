@@ -4,6 +4,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.AisConsentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation.confirmation.ConsentAuthConfirmationCodeService;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.keycloak.client.api.KeycloakTokenService;
@@ -13,12 +14,14 @@ import de.adorsys.ledgers.middleware.api.domain.um.AisConsentTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaMethodTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
-import de.adorsys.ledgers.rest.client.*;
+import de.adorsys.ledgers.rest.client.AccountRestClient;
+import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
+import de.adorsys.ledgers.rest.client.ConsentRestClient;
+import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
 import de.adorsys.psd2.xs2a.core.consent.ConsentStatus;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.sca.ChallengeData;
-import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountConsent;
@@ -26,7 +29,6 @@ import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountDetails;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.*;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
-import de.adorsys.psd2.xs2a.spi.domain.consent.SpiConsentConfirmationCodeValidationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiInitiateAisConsentResponse;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiVerifyScaAuthorisationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
@@ -34,7 +36,6 @@ import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
@@ -109,7 +110,7 @@ class AisConsentSpiImplTest {
     @Mock
     private KeycloakTokenService keycloakTokenService;
     @Mock
-    private UserMgmtRestClient userMgmtRestClient;
+    private ConsentAuthConfirmationCodeService authConfirmationCodeService;
 
     @Test
     void initiateAisConsent_WithInitialAspspConsentData() {
@@ -836,113 +837,25 @@ class AisConsentSpiImplTest {
     }
 
     @Test
-    void checkConfirmationCode_success() {
-        GlobalScaResponseTO scaConsentResponseTO = buildSCAConsentResponseTO(ScaStatusTO.FINALISED);
-        BearerTokenTO bearerTokenTO = new BearerTokenTO();
-        bearerTokenTO.setAccess_token(ACCESS_TOKEN);
-        scaConsentResponseTO.setBearerToken(bearerTokenTO);
+    void checkConfirmationCode() {
+        SpiCheckConfirmationCodeRequest request = new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID);
+        spi.checkConfirmationCode(SPI_CONTEXT_DATA, request, spiAspspConsentDataProvider);
 
-        when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
-        when(consentDataService.response(CONSENT_DATA_BYTES)).thenReturn(scaConsentResponseTO);
-        authRequestInterceptor.setAccessToken(ACCESS_TOKEN);
-
-        AuthConfirmationTO authConfirmationTO = new AuthConfirmationTO();
-        authConfirmationTO.setSuccess(true);
-        when(userMgmtRestClient.verifyAuthConfirmationCode(AUTHORISATION_ID, CONFIRMATION_CODE))
-                .thenReturn(ResponseEntity.ok(authConfirmationTO));
-
-        SpiResponse<SpiConsentConfirmationCodeValidationResponse> actual = spi.checkConfirmationCode(SPI_CONTEXT_DATA,
-                                                                                                     new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID),
-                                                                                                     spiAspspConsentDataProvider);
-        assertFalse(actual.hasError());
-        assertEquals(ScaStatus.FINALISED, actual.getPayload().getScaStatus());
-        assertEquals(ConsentStatus.VALID, actual.getPayload().getConsentStatus());
-
-        verify(userMgmtRestClient).verifyAuthConfirmationCode(AUTHORISATION_ID, CONFIRMATION_CODE);
-        verify(authRequestInterceptor).setAccessToken(null);
+        verify(authConfirmationCodeService, times(1)).checkConfirmationCode(request, spiAspspConsentDataProvider);
     }
 
     @Test
-    void checkConfirmationCode_notSuccess() {
-        GlobalScaResponseTO scaConsentResponseTO = buildSCAConsentResponseTO(ScaStatusTO.FINALISED);
-        BearerTokenTO bearerTokenTO = new BearerTokenTO();
-        bearerTokenTO.setAccess_token(ACCESS_TOKEN);
-        scaConsentResponseTO.setBearerToken(bearerTokenTO);
+    void checkConfirmationCodeInternally() {
+        spi.checkConfirmationCodeInternally(AUTHORISATION_ID, CONFIRMATION_CODE, CONFIRMATION_CODE, spiAspspConsentDataProvider);
 
-        when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
-        when(consentDataService.response(CONSENT_DATA_BYTES)).thenReturn(scaConsentResponseTO);
-        authRequestInterceptor.setAccessToken(ACCESS_TOKEN);
-
-        AuthConfirmationTO authConfirmationTO = new AuthConfirmationTO();
-        authConfirmationTO.setSuccess(false);
-        when(userMgmtRestClient.verifyAuthConfirmationCode(AUTHORISATION_ID, CONFIRMATION_CODE))
-                .thenReturn(ResponseEntity.ok(authConfirmationTO));
-
-        SpiResponse<SpiConsentConfirmationCodeValidationResponse> actual = spi.checkConfirmationCode(SPI_CONTEXT_DATA,
-                                                                                                     new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID),
-                                                                                                     spiAspspConsentDataProvider);
-        assertFalse(actual.hasError());
-        assertEquals(ScaStatus.FAILED, actual.getPayload().getScaStatus());
-        assertEquals(ConsentStatus.REJECTED, actual.getPayload().getConsentStatus());
-
-        verify(userMgmtRestClient).verifyAuthConfirmationCode(AUTHORISATION_ID, CONFIRMATION_CODE);
-        verify(authRequestInterceptor).setAccessToken(null);
+        verify(authConfirmationCodeService, times(1)).checkConfirmationCodeInternally(AUTHORISATION_ID, CONFIRMATION_CODE, CONFIRMATION_CODE, spiAspspConsentDataProvider);
     }
 
     @Test
-    void checkConfirmationCode_partiallyAuthorised() {
-        GlobalScaResponseTO scaConsentResponseTO = buildSCAConsentResponseTO(ScaStatusTO.FINALISED);
-        BearerTokenTO bearerTokenTO = new BearerTokenTO();
-        bearerTokenTO.setAccess_token(ACCESS_TOKEN);
-        scaConsentResponseTO.setBearerToken(bearerTokenTO);
+    void notifyConfirmationCodeValidation() {
+        spi.notifyConfirmationCodeValidation(SPI_CONTEXT_DATA, true, null, spiAspspConsentDataProvider);
 
-        when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
-        when(consentDataService.response(CONSENT_DATA_BYTES)).thenReturn(scaConsentResponseTO);
-        authRequestInterceptor.setAccessToken(ACCESS_TOKEN);
-
-        AuthConfirmationTO authConfirmationTO = new AuthConfirmationTO();
-        authConfirmationTO.setSuccess(true);
-        authConfirmationTO.setPartiallyAuthorised(true);
-        when(userMgmtRestClient.verifyAuthConfirmationCode(AUTHORISATION_ID, CONFIRMATION_CODE))
-                .thenReturn(ResponseEntity.ok(authConfirmationTO));
-
-        SpiResponse<SpiConsentConfirmationCodeValidationResponse> actual = spi.checkConfirmationCode(SPI_CONTEXT_DATA,
-                                                                                                     new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID),
-                                                                                                     spiAspspConsentDataProvider);
-        assertFalse(actual.hasError());
-        assertEquals(ScaStatus.FINALISED, actual.getPayload().getScaStatus());
-        assertEquals(ConsentStatus.PARTIALLY_AUTHORISED, actual.getPayload().getConsentStatus());
-
-        verify(userMgmtRestClient).verifyAuthConfirmationCode(AUTHORISATION_ID, CONFIRMATION_CODE);
-        verify(authRequestInterceptor).setAccessToken(null);
-    }
-
-    @Test
-    void checkConfirmationCode_feignError() {
-        GlobalScaResponseTO scaConsentResponseTO = buildSCAConsentResponseTO(ScaStatusTO.FINALISED);
-        BearerTokenTO bearerTokenTO = new BearerTokenTO();
-        bearerTokenTO.setAccess_token(ACCESS_TOKEN);
-        scaConsentResponseTO.setBearerToken(bearerTokenTO);
-
-        when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
-        when(consentDataService.response(CONSENT_DATA_BYTES)).thenReturn(scaConsentResponseTO);
-        authRequestInterceptor.setAccessToken(ACCESS_TOKEN);
-
-        AuthConfirmationTO authConfirmationTO = new AuthConfirmationTO();
-        authConfirmationTO.setSuccess(true);
-        authConfirmationTO.setPartiallyAuthorised(true);
-        when(userMgmtRestClient.verifyAuthConfirmationCode(AUTHORISATION_ID, CONFIRMATION_CODE))
-                .thenThrow(getFeignException());
-
-        SpiResponse<SpiConsentConfirmationCodeValidationResponse> actual = spi.checkConfirmationCode(SPI_CONTEXT_DATA,
-                                                                                                     new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID),
-                                                                                                     spiAspspConsentDataProvider);
-        assertFalse(actual.getErrors().isEmpty());
-        assertNull(actual.getPayload());
-        assertTrue(actual.getErrors().contains(new TppMessage(MessageErrorCode.PSU_CREDENTIALS_INVALID)));
-
-        verify(userMgmtRestClient).verifyAuthConfirmationCode(AUTHORISATION_ID, CONFIRMATION_CODE);
-        verify(authRequestInterceptor).setAccessToken(null);
+        verify(authConfirmationCodeService, times(1)).completeAuthConfirmation(true, spiAspspConsentDataProvider);
     }
 
     private Response buildErrorResponse() {
