@@ -25,10 +25,9 @@ import de.adorsys.psd2.aspsp.profile.domain.pis.PisRedirectLinkSetting;
 import de.adorsys.psd2.aspsp.profile.service.AspspProfileService;
 import de.adorsys.psd2.xs2a.core.profile.ScaApproach;
 import de.adorsys.psd2.xs2a.core.profile.ScaRedirectFlow;
+import de.adorsys.psd2.xs2a.service.RequestProviderService;
 import de.adorsys.psd2.xs2a.service.discovery.ServiceTypeDiscoveryService;
-import de.adorsys.psd2.xs2a.core.mapper.ServiceType;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -45,25 +44,21 @@ public class OauthProfileServiceWrapper implements AspspProfileService {
     private final OauthDataHolder oauthDataHolder;
     private final ServiceTypeDiscoveryService serviceTypeDiscoveryService;
 
-    private final String aisIntegratedOauthSuffix;
-    private final String pisIntegratedOauthSuffix;
-    private final String aisPreStepOauthSuffix;
-    private final String pisPreStepOauthSuffix;
+    private final RequestProviderService requestProviderService;
+    private final OAuthConfiguration oAuthConfiguration;
+
 
     public OauthProfileServiceWrapper(AspspProfileService aspspProfileService,
                                       OauthDataHolder oauthDataHolder,
                                       ServiceTypeDiscoveryService serviceTypeDiscoveryService,
-                                      @Value("${oauth.integrated.ais.suffix:?consentId={encrypted-consent-id}&redirectId={redirect-id}}") String aisIntegratedOauthSuffix,
-                                      @Value("${oauth.integrated.pis.suffix:?paymentId={encrypted-payment-id}&redirectId={redirect-id}}") String pisIntegratedOauthSuffix,
-                                      @Value("${oauth.pre-step.ais.suffix:&token=}") String aisPreStepOauthSuffix,
-                                      @Value("${oauth.pre-step.pis.suffix:&token=}") String pisPreStepOauthSuffix) {
+                                      RequestProviderService requestProviderService,
+                                      OAuthConfiguration oAuthConfiguration
+    ) {
         this.aspspProfileService = aspspProfileService;
         this.oauthDataHolder = oauthDataHolder;
         this.serviceTypeDiscoveryService = serviceTypeDiscoveryService;
-        this.aisIntegratedOauthSuffix = aisIntegratedOauthSuffix;
-        this.pisIntegratedOauthSuffix = pisIntegratedOauthSuffix;
-        this.aisPreStepOauthSuffix = aisPreStepOauthSuffix;
-        this.pisPreStepOauthSuffix = pisPreStepOauthSuffix;
+        this.requestProviderService = requestProviderService;
+        this.oAuthConfiguration = oAuthConfiguration;
     }
 
     @Override
@@ -73,21 +68,41 @@ public class OauthProfileServiceWrapper implements AspspProfileService {
 
         CommonAspspProfileSetting existingCommonSetting = profileSettings.getCommon();
         if (scaRedirectFlow == ScaRedirectFlow.OAUTH) {
-            String customOauthLink = existingCommonSetting.getOauthConfigurationUrl() + buildOauthLinkSuffix();
+            String customOauthLink = existingCommonSetting.getOauthConfigurationUrl() + oAuthConfiguration.getIntegratedOauthSuffix(serviceTypeDiscoveryService.getServiceType());
             CommonAspspProfileSetting customCommonSettings = buildCustomCommonSetting(existingCommonSetting, ScaRedirectFlow.OAUTH, customOauthLink);
             return new AspspSettings(profileSettings.getAis(), profileSettings.getPis(), profileSettings.getPiis(), customCommonSettings);
         } else if (scaRedirectFlow == ScaRedirectFlow.OAUTH_PRE_STEP) {
             CommonAspspProfileSetting customCommonSetting = buildCustomCommonSetting(existingCommonSetting,
                                                                                      ScaRedirectFlow.OAUTH_PRE_STEP,
                                                                                      existingCommonSetting.getOauthConfigurationUrl());
-            String aisSuffixWithToken = aisPreStepOauthSuffix + StringUtils.defaultString(oauthDataHolder.getToken());
+            String aisSuffixWithToken = oAuthConfiguration.getAisPreStepOauthSuffix() + StringUtils.defaultString(oauthDataHolder.getToken());
             AisAspspProfileSetting customAisSetting = buildCustomAisAspspProfileSetting(profileSettings.getAis(), aisSuffixWithToken);
-            String pisSuffixWithToken = pisPreStepOauthSuffix + StringUtils.defaultString(oauthDataHolder.getToken());
+            String pisSuffixWithToken = oAuthConfiguration.getPisPreStepOauthSuffix() + StringUtils.defaultString(oauthDataHolder.getToken());
             PisAspspProfileSetting customPisSetting = buildCustomPisAspspProfileSetting(profileSettings.getPis(), pisSuffixWithToken);
             return new AspspSettings(customAisSetting, customPisSetting, profileSettings.getPiis(), customCommonSetting);
         }
 
         return profileSettings;
+    }
+
+    /**
+     * Reads the variant of redirect approach to be used.
+     *
+     * @return the variant of redirect approach to be used.
+     */
+    public ScaRedirectFlow getScaRedirectFlow() {
+        return aspspProfileService.getAspspSettings(requestProviderService.getInstanceId())
+                       .getCommon()
+                       .getScaRedirectFlow();
+    }
+
+    /**
+     * Reads list of sca approaches from ASPSP profile service
+     *
+     * @return List of Available SCA approaches for tpp
+     */
+    public List<ScaApproach> getScaApproaches() {
+        return aspspProfileService.getScaApproaches(requestProviderService.getInstanceId());
     }
 
     @Override
@@ -98,18 +113,6 @@ public class OauthProfileServiceWrapper implements AspspProfileService {
     @Override
     public boolean isMultitenancyEnabled() {
         return aspspProfileService.isMultitenancyEnabled();
-    }
-
-    private String buildOauthLinkSuffix() {
-        ServiceType serviceType = serviceTypeDiscoveryService.getServiceType();
-
-        if (serviceType == ServiceType.AIS) {
-            return aisIntegratedOauthSuffix;
-        } else if (serviceType == ServiceType.PIS) {
-            return pisIntegratedOauthSuffix;
-        }
-
-        return "";
     }
 
     private CommonAspspProfileSetting buildCustomCommonSetting(CommonAspspProfileSetting existingSetting,
