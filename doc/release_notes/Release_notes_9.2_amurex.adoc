@@ -1,9 +1,0 @@
-= Release notes v.9.2
-
-== Table of Contents
-
-* Added Confirmation Code step to OAuth Integrated flow
-
-== Added Confirmation Code step to OAuth Integrated flow
-
-From now on, Confirmation Code step is supported in OAuth Integrated flow.
