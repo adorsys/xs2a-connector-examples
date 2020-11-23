@@ -36,6 +36,7 @@ import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiPsuAuthorisationResponse
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -62,9 +63,15 @@ public class GeneralAuthorisationService {
         aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(scaResponse));
         authRequestInterceptor.setAccessToken(scaResponse.getBearerToken().getAccess_token());
 
-        StartScaOprTO startScaOprTO = new StartScaOprTO(businessObjectId, operationType);
-        startScaOprTO.setAuthorisationId(authorisationId);
+        //todo: change obtaining encryptedId
+        String encryptedConsentId = "";
+        try {
+            encryptedConsentId = (String) FieldUtils.readField(aspspConsentDataProvider, "encryptedConsentId", true);
+        } catch (IllegalAccessException e) {
+            logger.error("could not read encrypted consent id");
+        }
 
+        StartScaOprTO startScaOprTO = new StartScaOprTO(businessObjectId, encryptedConsentId, authorisationId, operationType);
         ResponseEntity<GlobalScaResponseTO> startScaResponse = redirectScaRestClient.startSca(startScaOprTO);
 
         GlobalScaResponseTO startScaResponseBody = startScaResponse.getBody();
