@@ -28,6 +28,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.ledgers.keycloak.client.api.KeycloakTokenService;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
@@ -53,6 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -73,7 +75,7 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
     private final RequestProviderService requestProviderService;
     private final FeignExceptionReader feignExceptionReader;
 
-    public PaymentAuthorisationSpiImpl(GeneralAuthorisationService authorisationService,
+    public PaymentAuthorisationSpiImpl(GeneralAuthorisationService authorisationService, //NOSONAR
                                        ScaMethodConverter scaMethodConverter,
                                        AuthRequestInterceptor authRequestInterceptor,
                                        AspspConsentDataService consentDataService,
@@ -134,10 +136,24 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
 
     @Override
     protected GlobalScaResponseTO executeBusinessObject(SpiPayment businessObject) {
-        SCAPaymentResponseTO paymentExecutionResponse = paymentRestClient.executePayment(businessObject.getPaymentId()).getBody();
-        cmsPsuPisClient.updatePaymentStatus(businessObject.getPaymentId(), TransactionStatus.valueOf(paymentExecutionResponse.getTransactionStatus().name()), requestProviderService.getInstanceId());
+        try {
+            ResponseEntity<SCAPaymentResponseTO> paymentExecutionResponse = paymentRestClient.executePayment(businessObject.getPaymentId());
+            if (paymentExecutionResponse == null || paymentExecutionResponse.getBody() == null) {
+                logger.error("Payment execution response is NULL");
+                return null;
+            }
+            SCAPaymentResponseTO paymentResponseTO = paymentExecutionResponse.getBody();
+            cmsPsuPisClient.updatePaymentStatus(businessObject.getPaymentId(),
+                                                getTransactionStatus(paymentResponseTO.getTransactionStatus()), //NOSONAR
+                                                requestProviderService.getInstanceId());
 
-        return scaResponseMapper.toGlobalScaResponse(paymentExecutionResponse);
+            return scaResponseMapper.toGlobalScaResponse(paymentResponseTO);
+
+        } catch (FeignException feignException) {
+            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            logger.error("Execute payment error: {}", devMessage);
+            return null;
+        }
     }
 
     @Override
@@ -181,5 +197,11 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
         return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                        .payload(new SpiPsuAuthorisationResponse(false, SpiAuthorisationStatus.FAILURE))
                        .build();
+    }
+
+    private TransactionStatus getTransactionStatus(TransactionStatusTO transactionStatusTO) {
+        return Optional.ofNullable(transactionStatusTO)
+                       .map(ts -> TransactionStatus.valueOf(ts.name()))
+                       .orElse(null);
     }
 }

@@ -22,6 +22,7 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaResponseMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation.confirmation.ConsentAuthConfirmationCodeService;
+import de.adorsys.aspsp.xs2a.connector.spi.util.AspspConsentDataExtractor;
 import de.adorsys.ledgers.keycloak.client.api.KeycloakTokenService;
 import de.adorsys.ledgers.middleware.api.domain.sca.*;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
@@ -45,7 +46,6 @@ import de.adorsys.psd2.xs2a.spi.service.AisConsentSpi;
 import feign.FeignException;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +88,7 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
     private String onlineBankingUrl;
 
     @Autowired
-    public AisConsentSpiImpl(AuthRequestInterceptor authRequestInterceptor,
+    public AisConsentSpiImpl(AuthRequestInterceptor authRequestInterceptor, //NOSONAR
                              AspspConsentDataService consentDataService, GeneralAuthorisationService authorisationService,
                              ScaMethodConverter scaMethodConverter, FeignExceptionReader feignExceptionReader,
                              AccountRestClient accountRestClient, LedgersSpiAccountMapper accountMapper, MultilevelScaService multilevelScaService, RedirectScaRestClient redirectScaRestClient,
@@ -133,8 +133,10 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
                            .build();
         }
 
-        logger.info(SCA_STATUS_LOG, globalScaResponse.getScaStatus());
-        aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(globalScaResponse));
+        if (globalScaResponse != null) {
+            logger.info(SCA_STATUS_LOG, globalScaResponse.getScaStatus());
+            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(globalScaResponse));
+        }
 
         return SpiResponse.<SpiInitiateAisConsentResponse>builder()
                        .payload(new SpiInitiateAisConsentResponse(accountConsent.getAccess(), false, ""))
@@ -189,11 +191,18 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
             ResponseEntity<GlobalScaResponseTO> authorizeConsentResponse = redirectScaRestClient.validateScaCode(sca.getAuthorisationId(), spiScaConfirmation.getTanNumber());
+            if (authorizeConsentResponse == null || authorizeConsentResponse.getBody() == null) {
+                logger.error("Validate SCA code response is NULL");
+                return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder()
+                               .error(new TppMessage(MessageErrorCode.FORMAT_ERROR))
+                               .build();
+            }
+
             GlobalScaResponseTO authorizeConsentResponseBody = authorizeConsentResponse.getBody();
 
             String scaStatusName = sca.getScaStatus().name();
             logger.info(SCA_STATUS_LOG, scaStatusName);
-            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(authorizeConsentResponseBody, !authorizeConsentResponseBody.isPartiallyAuthorised()));
+            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(authorizeConsentResponseBody, !authorizeConsentResponseBody.isPartiallyAuthorised())); //NOSONAR
 
             // TODO use real sca status from Ledgers for resolving consent status https://git.adorsys.de/adorsys/xs2a/ledgers/issues/206
             return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder()
@@ -226,12 +235,7 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
                                         SpiResponse<SpiAuthorizationCodeResult> response) {
         List<String> challengeDataParts = Arrays.asList(response.getPayload().getChallengeData().getAdditionalInformation().split(" "));
         int indexOfTan = challengeDataParts.indexOf("is") + 1;
-        String encryptedConsentId = "";
-        try {
-            encryptedConsentId = (String) FieldUtils.readField(aspspConsentDataProvider, "encryptedConsentId", true);
-        } catch (IllegalAccessException e) {
-            logger.error("could not read encrypted consent id");
-        }
+        String encryptedConsentId = AspspConsentDataExtractor.extractEncryptedConsentId(aspspConsentDataProvider);
         String url = onlineBankingUrl.replace(USER_LOGIN, contextData.getPsuData().getPsuId())
                              .replace(CONSENT_ID, encryptedConsentId)
                              .replace(AUTH_ID, authorisationId)
@@ -317,6 +321,7 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
         return authConfirmationCodeService.checkConfirmationCodeInternally(authorisationId, confirmationCode, scaAuthenticationData, aspspConsentDataProvider);
     }
 
+    @SuppressWarnings("PMD.CyclomaticComplexity") //refactoring if-blocks
     private GlobalScaResponseTO initiateConsentInternal(SpiAccountConsent accountConsent, String authorisationId) {
         try {
 
@@ -338,22 +343,29 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
                 }
             }
 
-            ResponseEntity<SCAConsentResponseTO> consentResponseEntity = consentRestClient.initiateAisConsent(accountConsent.getId(), aisConsentMapper.mapToAisConsent(accountConsent));
-            SCAConsentResponseTO consentResponse = consentResponseEntity.getBody();
+            ResponseEntity<SCAConsentResponseTO> initiateAisConsentResponse = consentRestClient.initiateAisConsent(accountConsent.getId(), aisConsentMapper.mapToAisConsent(accountConsent));
 
-            authRequestInterceptor.setAccessToken(consentResponse.getBearerToken().getAccess_token());
-            consentResponse.setAuthorisationId(authorisationId);
+            if (initiateAisConsentResponse != null && initiateAisConsentResponse.getBody() != null) {
+                SCAConsentResponseTO consentResponse = initiateAisConsentResponse.getBody();
 
-            // EXEMPTED here means that we should not start SCA in ledgers.
-            if (consentResponse.getScaStatus() == ScaStatusTO.EXEMPTED) {
-                return scaResponseMapper.toGlobalScaResponse(consentResponse);
+                authRequestInterceptor.setAccessToken(consentResponse.getBearerToken().getAccess_token()); //NOSONAR
+
+                consentResponse.setAuthorisationId(authorisationId);
+
+                // EXEMPTED here means that we should not start SCA in ledgers.
+                if (consentResponse.getScaStatus() == ScaStatusTO.EXEMPTED) {
+                    return scaResponseMapper.toGlobalScaResponse(consentResponse);
+                }
+
+                StartScaOprTO startScaOprTO = new StartScaOprTO(accountConsent.getId(), OpTypeTO.CONSENT);
+                startScaOprTO.setAuthorisationId(authorisationId);
+
+                ResponseEntity<GlobalScaResponseTO> consentScaResponse = redirectScaRestClient.startSca(startScaOprTO);
+                return consentScaResponse.getBody();
+            } else {
+                logger.error("Initiate AIS consent response or bearer token is NULL");
+                return null;
             }
-
-            StartScaOprTO startScaOprTO = new StartScaOprTO(accountConsent.getId(), OpTypeTO.CONSENT);
-            startScaOprTO.setAuthorisationId(authorisationId);
-
-            ResponseEntity<GlobalScaResponseTO> consentScaResponse = redirectScaRestClient.startSca(startScaOprTO);
-            return consentScaResponse.getBody();
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }

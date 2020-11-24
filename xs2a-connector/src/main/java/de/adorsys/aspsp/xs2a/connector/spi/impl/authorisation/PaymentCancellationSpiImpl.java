@@ -66,7 +66,7 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
     private final ScaResponseMapper scaResponseMapper;
     private final GeneralPaymentService paymentService;
 
-    public PaymentCancellationSpiImpl(PaymentRestClient ledgersRestClient,
+    public PaymentCancellationSpiImpl(PaymentRestClient ledgersRestClient, //NOSONAR
                                       ScaMethodConverter scaMethodConverter,
                                       AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService consentDataService,
                                       GeneralAuthorisationService authorisationService,
@@ -165,14 +165,19 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
 
             ResponseEntity<GlobalScaResponseTO> authorizeCancelPaymentResponse = redirectScaRestClient.validateScaCode(sca.getAuthorisationId(), spiScaConfirmation.getTanNumber());
 
-            if (authorizeCancelPaymentResponse.getStatusCode() == HttpStatus.OK) {
-                String authCancellationBearerToken = authorizeCancelPaymentResponse.getBody().getBearerToken().getAccess_token();
-                authRequestInterceptor.setAccessToken(authCancellationBearerToken);
+            if (authorizeCancelPaymentResponse != null &&
+                        authorizeCancelPaymentResponse.getBody() != null &&
+                        authorizeCancelPaymentResponse.getStatusCode() == HttpStatus.OK) {
+
+                GlobalScaResponseTO authorizeCancelPayment = authorizeCancelPaymentResponse.getBody();
+                if (authorizeCancelPayment.getBearerToken() != null) { //NOSONAR
+                    String authCancellationBearerToken = authorizeCancelPayment.getBearerToken().getAccess_token();
+                    authRequestInterceptor.setAccessToken(authCancellationBearerToken);
+                }
 
                 paymentRestClient.executeCancelPayment(sca.getOperationObjectId());
 
                 aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(authorizeCancelPaymentResponse.getBody()));
-                authRequestInterceptor.setAccessToken(authCancellationBearerToken);
 
                 return SpiResponse.<SpiPaymentExecutionResponse>builder()
                                .payload(new SpiPaymentExecutionResponse(SpiAuthorisationStatus.SUCCESS))
@@ -196,6 +201,8 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
                            .error(new TppMessage(MessageErrorCode.PSU_CREDENTIALS_INVALID))
                            .build();
+        } finally {
+            authRequestInterceptor.setAccessToken(null);
         }
     }
 
@@ -241,9 +248,7 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
         authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
         ResponseEntity<GlobalScaResponseTO> cancelScaResponse = redirectScaRestClient.getSCA(sca.getAuthorisationId());
 
-        return Optional.ofNullable(
-                cancelScaResponse.getBody().getScaMethods()
-        );
+        return Optional.ofNullable(cancelScaResponse.getBody()).map(GlobalScaResponseTO::getScaMethods);
     }
 
     @Override

@@ -43,6 +43,8 @@ import de.adorsys.psd2.xs2a.spi.service.PiisConsentSpi;
 import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -53,6 +55,8 @@ import java.util.Collections;
 @Slf4j
 @Component
 public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent> implements PiisConsentSpi {
+    private static final Logger logger = LoggerFactory.getLogger(PiisConsentSpiImpl.class);
+
     // TODO REPLACE WITH PIIS FLOW WHEN LEDGERS STARTS TO SUPPORT PIIS CONSENT https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/issues/1323
     private static final String SCA_STATUS_LOG = "SCA status is {}";
 
@@ -67,7 +71,7 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent>
     private final ConsentAuthConfirmationCodeService authConfirmationCodeService;
 
     @Autowired
-    public PiisConsentSpiImpl(AuthRequestInterceptor authRequestInterceptor,
+    public PiisConsentSpiImpl(AuthRequestInterceptor authRequestInterceptor, //NOSONAR
                               AspspConsentDataService consentDataService, GeneralAuthorisationService authorisationService,
                               ScaMethodConverter scaMethodConverter, FeignExceptionReader feignExceptionReader,
                               MultilevelScaService multilevelScaService,
@@ -132,10 +136,16 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent>
             mockedConsent.setTppInfo(tppInfo);
             mockedConsent.setId(piisConsent.getId());
 
-            ResponseEntity<SCAConsentResponseTO> consentResponseEntity = consentRestClient.initiateAisConsent(piisConsent.getId(), aisConsentMapper.mapToAisConsent(mockedConsent));
-            SCAConsentResponseTO consentResponse = consentResponseEntity.getBody();
+            ResponseEntity<SCAConsentResponseTO> initiateConsentResponse = consentRestClient.initiateAisConsent(piisConsent.getId(), aisConsentMapper.mapToAisConsent(mockedConsent));
+            if (initiateConsentResponse == null || initiateConsentResponse.getBody() == null) {
+                logger.error("Initiate PIIS consent response or bearer token is NULL");
+                return null;
+            }
 
-            authRequestInterceptor.setAccessToken(consentResponse.getBearerToken().getAccess_token());
+            SCAConsentResponseTO consentResponse = initiateConsentResponse.getBody();
+            if (consentResponse.getBearerToken() != null) { //NOSONAR
+                authRequestInterceptor.setAccessToken(consentResponse.getBearerToken().getAccess_token());
+            }
             consentResponse.setAuthorisationId(authorisationId);
 
             // EXEMPTED here means that we should not start SCA in ledgers.
@@ -179,11 +189,18 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent>
             authRequestInterceptor.setAccessToken(sca.getBearerToken().getAccess_token());
 
             ResponseEntity<GlobalScaResponseTO> authorizeConsentResponse = redirectScaRestClient.validateScaCode(sca.getAuthorisationId(), spiScaConfirmation.getTanNumber());
+            if (authorizeConsentResponse == null || authorizeConsentResponse.getBody() == null) {
+                logger.error("Validate SCA code response is NULL");
+                return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder()
+                               .error(new TppMessage(MessageErrorCode.FORMAT_ERROR))
+                               .build();
+            }
+
             GlobalScaResponseTO globalScaResponse = authorizeConsentResponse.getBody();
 
             String scaStatusName = sca.getScaStatus().name();
             log.info(SCA_STATUS_LOG, scaStatusName);
-            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(globalScaResponse, !globalScaResponse.isPartiallyAuthorised()));
+            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(globalScaResponse, !globalScaResponse.isPartiallyAuthorised())); //NOSONAR
 
             // TODO use real sca status from Ledgers for resolving consent status https://git.adorsys.de/adorsys/xs2a/ledgers/issues/206
             return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder()

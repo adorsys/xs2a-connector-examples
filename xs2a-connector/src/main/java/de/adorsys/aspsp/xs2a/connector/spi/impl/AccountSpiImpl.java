@@ -53,6 +53,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -340,10 +341,7 @@ public class AccountSpiImpl implements AccountSpi {
             GlobalScaResponseTO response = applyAuthorisation(aspspConsentData);
 
             logger.info("Requested downloading list of transactions by download ID: {}", downloadId);
-
-            InputStream stream = new ByteArrayInputStream(transactionList.getBytes());
-
-            SpiTransactionsDownloadResponse transactionsDownloadResponse = new SpiTransactionsDownloadResponse(stream, "transactions.json", transactionList.getBytes().length);
+            SpiTransactionsDownloadResponse transactionsDownloadResponse = getSpiTransactionsDownloadResponse(transactionList);
 
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
 
@@ -358,6 +356,15 @@ public class AccountSpiImpl implements AccountSpi {
                            .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
+        }
+    }
+
+    private SpiTransactionsDownloadResponse getSpiTransactionsDownloadResponse(String transactionList) {
+        try (InputStream stream = new ByteArrayInputStream(transactionList.getBytes())) {
+            return new SpiTransactionsDownloadResponse(stream, "transactions.json", transactionList.getBytes().length);
+        } catch (IOException e) {
+            logger.error("It is not possible to prepare mock transaction list details");
+            return null;
         }
     }
 

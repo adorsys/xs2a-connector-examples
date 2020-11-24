@@ -80,7 +80,7 @@ public class GeneralPaymentService {
     private final CmsPsuPisClient cmsPsuPisClient;
     private final RequestProviderService requestProviderService;
 
-    public GeneralPaymentService(PaymentRestClient ledgersRestClient,
+    public GeneralPaymentService(PaymentRestClient ledgersRestClient, //NOSONAR
                                  AuthRequestInterceptor authRequestInterceptor,
                                  AspspConsentDataService consentDataService,
                                  FeignExceptionReader feignExceptionReader,
@@ -186,6 +186,7 @@ public class GeneralPaymentService {
         }
     }
 
+    @SuppressWarnings("PMD.CyclomaticComplexity") //refactoring if-blocks
     public SpiResponse<SpiPaymentExecutionResponse> verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(@NotNull SpiScaConfirmation spiScaConfirmation, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         try {
             GlobalScaResponseTO sca = consentDataService.response(aspspConsentDataProvider.loadAspspConsentData());
@@ -193,18 +194,26 @@ public class GeneralPaymentService {
 
             ResponseEntity<GlobalScaResponseTO> paymentAuthorisationValidationResponse = redirectScaRestClient.validateScaCode(sca.getAuthorisationId(), spiScaConfirmation.getTanNumber());
 
-            if (paymentAuthorisationValidationResponse.getStatusCode() == HttpStatus.OK) {
+            if (paymentAuthorisationValidationResponse != null &&
+                        paymentAuthorisationValidationResponse.getBody() != null &&
+                        paymentAuthorisationValidationResponse.getStatusCode() == HttpStatus.OK) {
                 GlobalScaResponseTO paymentAuthorisationValidationResponseBody = paymentAuthorisationValidationResponse.getBody();
-                String authorisationBearerToken = paymentAuthorisationValidationResponseBody.getBearerToken().getAccess_token();
 
-                authRequestInterceptor.setAccessToken(authorisationBearerToken);
+                if (paymentAuthorisationValidationResponseBody.getBearerToken() != null) {
+                    String authorisationBearerToken = paymentAuthorisationValidationResponseBody.getBearerToken().getAccess_token();
+                    authRequestInterceptor.setAccessToken(authorisationBearerToken);
+                }
 
                 ResponseEntity<SCAPaymentResponseTO> scaPaymentResponseTOResponse = paymentRestClient.executePayment(sca.getOperationObjectId());
 
-                if (scaPaymentResponseTOResponse.getStatusCode() == HttpStatus.ACCEPTED) {
+                if (scaPaymentResponseTOResponse != null &&
+                            scaPaymentResponseTOResponse.getBody() != null &&
+                            scaPaymentResponseTOResponse.getStatusCode() == HttpStatus.ACCEPTED) {
                     SCAPaymentResponseTO paymentExecutionResponse = scaPaymentResponseTOResponse.getBody();
 
-                    cmsPsuPisClient.updatePaymentStatus(paymentExecutionResponse.getPaymentId(), TransactionStatus.valueOf(paymentExecutionResponse.getTransactionStatus().name()), requestProviderService.getInstanceId());
+                    cmsPsuPisClient.updatePaymentStatus(paymentExecutionResponse.getPaymentId(), //NOSONAR
+                                                        getTransactionStatus(paymentExecutionResponse.getTransactionStatus()),
+                                                        requestProviderService.getInstanceId());
                 }
 
                 aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(paymentAuthorisationValidationResponseBody));
@@ -215,8 +224,6 @@ public class GeneralPaymentService {
                                            .orElse(null);
 
                 logger.info("SCA status is: {}", scaStatus);
-
-                authRequestInterceptor.setAccessToken(authorisationBearerToken);
 
                 ResponseEntity<TransactionStatusTO> paymentStatusResponse = paymentRestClient.getPaymentStatusById(sca.getOperationObjectId());
 
@@ -265,7 +272,8 @@ public class GeneralPaymentService {
             logger.info("Getting payment transaction status by payment id {}", response.getOperationObjectId());
             TransactionStatusTO transactionStatusTO = paymentRestClient.getPaymentStatusById(response.getOperationObjectId()).getBody();
 
-            if (ScaStatusTO.EXEMPTED.equals(scaStatus) || ScaStatusTO.FINALISED.equals(scaStatus)) {
+            if (transactionStatusTO != null &&
+                        (ScaStatusTO.EXEMPTED.equals(scaStatus) || ScaStatusTO.FINALISED.equals(scaStatus))) {
                 // Success
 
                 logger.info("SCA status is: {}", scaStatusName);
@@ -348,5 +356,11 @@ public class GeneralPaymentService {
 
     private SpiPaymentExecutionResponse spiPaymentExecutionResponse(TransactionStatusTO transactionStatus) {
         return new SpiPaymentExecutionResponse(TransactionStatus.valueOf(transactionStatus.name()));
+    }
+
+    private TransactionStatus getTransactionStatus(TransactionStatusTO transactionStatusTO) {
+        return Optional.ofNullable(transactionStatusTO)
+                       .map(ts -> TransactionStatus.valueOf(ts.name()))
+                       .orElse(null);
     }
 }

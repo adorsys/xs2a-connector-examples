@@ -39,17 +39,16 @@ public class ServiceInstanceIdEventListener implements PreInsertEventListener {
 
         if (object instanceof InstanceDependableEntity) {
             InstanceDependableEntity entity = (InstanceDependableEntity) object;
-            if (StringUtils.isNotBlank(entity.getInstanceId())) {
-                return false;
+            if (StringUtils.isEmpty(entity.getInstanceId())) {
+
+                String[] propertyNames = event.getPersister()
+                                                 .getEntityMetamodel()
+                                                 .getPropertyNames();
+                Object[] currentState = event.getState();
+
+                int serviceInstanceIdPropertyIndex = ArrayUtils.indexOf(propertyNames, SERVICE_INSTANCE_ID_PROPERTY);
+                doUpdateServiceInstanceIdProperty(entity, currentState, serviceInstanceIdPropertyIndex);
             }
-
-            String[] propertyNames = event.getPersister()
-                                         .getEntityMetamodel()
-                                         .getPropertyNames();
-            Object[] currentState = event.getState();
-
-            int serviceInstanceIdPropertyIndex = ArrayUtils.indexOf(propertyNames, SERVICE_INSTANCE_ID_PROPERTY);
-            doUpdateServiceInstanceIdProperty(entity, currentState, serviceInstanceIdPropertyIndex);
         }
         return false;
     }

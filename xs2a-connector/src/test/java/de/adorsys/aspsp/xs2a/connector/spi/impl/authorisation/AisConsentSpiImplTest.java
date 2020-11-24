@@ -29,6 +29,7 @@ import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountDetails;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.*;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
+import de.adorsys.psd2.xs2a.spi.domain.consent.SpiConsentConfirmationCodeValidationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiInitiateAisConsentResponse;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiVerifyScaAuthorisationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
@@ -839,6 +840,10 @@ class AisConsentSpiImplTest {
     @Test
     void checkConfirmationCode() {
         SpiCheckConfirmationCodeRequest request = new SpiCheckConfirmationCodeRequest(CONFIRMATION_CODE, AUTHORISATION_ID);
+        when(authConfirmationCodeService.checkConfirmationCode(request, spiAspspConsentDataProvider))
+                .thenReturn(SpiResponse.<SpiConsentConfirmationCodeValidationResponse>builder().build());
+
+
         spi.checkConfirmationCode(SPI_CONTEXT_DATA, request, spiAspspConsentDataProvider);
 
         verify(authConfirmationCodeService, times(1)).checkConfirmationCode(request, spiAspspConsentDataProvider);
@@ -853,7 +858,10 @@ class AisConsentSpiImplTest {
 
     @Test
     void notifyConfirmationCodeValidation() {
-        spi.notifyConfirmationCodeValidation(SPI_CONTEXT_DATA, true, null, spiAspspConsentDataProvider);
+        when(authConfirmationCodeService.completeAuthConfirmation(true, spiAspspConsentDataProvider))
+                .thenReturn(SpiResponse.<SpiConsentConfirmationCodeValidationResponse>builder().build());
+
+        spi.notifyConfirmationCodeValidation(SPI_CONTEXT_DATA, true, new SpiAccountConsent(), spiAspspConsentDataProvider);
 
         verify(authConfirmationCodeService, times(1)).completeAuthConfirmation(true, spiAspspConsentDataProvider);
     }

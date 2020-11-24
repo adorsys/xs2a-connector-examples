@@ -19,8 +19,14 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-//[Source: (byte[])"{"operationObjectId":"12345","loginFailedCount":1,"objectType":"LoginAttemptResponse"}"; line: 1, column: 2]
-//{"operationObjectId":"12345"}
+/**
+ * Example:
+ * {
+ * "operationObjectId":"12345",
+ * "loginFailedCount":1,
+ * "objectType":"LoginAttemptResponse"
+ * }"
+ */
 @Data
 @NoArgsConstructor
 public class LoginAttemptResponse {

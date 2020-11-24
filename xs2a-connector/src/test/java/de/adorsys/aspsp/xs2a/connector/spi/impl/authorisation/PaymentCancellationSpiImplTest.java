@@ -227,7 +227,7 @@ class PaymentCancellationSpiImplTest {
 
         verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
         verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES);
-        verify(authRequestInterceptor, times(3)).setAccessToken(ACCESS_TOKEN);
+        verify(authRequestInterceptor, times(2)).setAccessToken(ACCESS_TOKEN);
     }
 
     @Test

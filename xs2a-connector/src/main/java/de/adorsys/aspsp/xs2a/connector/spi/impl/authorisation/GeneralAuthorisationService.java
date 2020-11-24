@@ -22,7 +22,10 @@ import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.LedgersErrorCode;
-import de.adorsys.ledgers.middleware.api.domain.sca.*;
+import de.adorsys.aspsp.xs2a.connector.spi.util.AspspConsentDataExtractor;
+import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.StartScaOprTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
@@ -36,7 +39,6 @@ import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiPsuAuthorisationResponse
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -58,29 +60,31 @@ public class GeneralAuthorisationService {
     private final RedirectScaRestClient redirectScaRestClient;
     private final ScaMethodConverter scaMethodConverter;
 
-    public SpiResponse<SpiPsuAuthorisationResponse> authorisePsuInternal(String businessObjectId, String authorisationId, OpTypeTO operationType, GlobalScaResponseTO scaResponse, SpiAspspConsentDataProvider aspspConsentDataProvider) {
+    public SpiResponse<SpiPsuAuthorisationResponse> authorisePsuInternal(String businessObjectId, String authorisationId,
+                                                                         OpTypeTO operationType, GlobalScaResponseTO scaResponse,
+                                                                         SpiAspspConsentDataProvider aspspConsentDataProvider) {
 
         aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(scaResponse));
         authRequestInterceptor.setAccessToken(scaResponse.getBearerToken().getAccess_token());
 
-        //todo: change obtaining encryptedId
-        String encryptedConsentId = "";
-        try {
-            encryptedConsentId = (String) FieldUtils.readField(aspspConsentDataProvider, "encryptedConsentId", true);
-        } catch (IllegalAccessException e) {
-            logger.error("could not read encrypted consent id");
-        }
-
+        String encryptedConsentId = AspspConsentDataExtractor.extractEncryptedConsentId(aspspConsentDataProvider);
         StartScaOprTO startScaOprTO = new StartScaOprTO(businessObjectId, encryptedConsentId, authorisationId, operationType);
         ResponseEntity<GlobalScaResponseTO> startScaResponse = redirectScaRestClient.startSca(startScaOprTO);
 
+        if (startScaResponse == null || startScaResponse.getBody() == null) {
+            logger.error("Start SCA response is NULL");
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR))
+                           .build();
+        }
+
         GlobalScaResponseTO startScaResponseBody = startScaResponse.getBody();
-        startScaResponseBody.setBearerToken(scaResponse.getBearerToken());
+        startScaResponseBody.setBearerToken(scaResponse.getBearerToken()); //NOSONAR
 
         aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(startScaResponseBody));
 
         try {
-            SpiAuthorisationStatus status = startScaResponse.getBody().getBearerToken().getAccess_token() != null
+            SpiAuthorisationStatus status = startScaResponseBody.getBearerToken().getAccess_token() != null
                                                     ? SpiAuthorisationStatus.SUCCESS
                                                     : SpiAuthorisationStatus.FAILURE;
             logger.info("Authorisation status is: {}", status);
