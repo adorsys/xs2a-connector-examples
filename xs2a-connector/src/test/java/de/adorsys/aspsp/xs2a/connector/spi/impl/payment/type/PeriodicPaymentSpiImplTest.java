@@ -1,13 +1,10 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import de.adorsys.aspsp.xs2a.connector.spi.converter.AddressMapperImpl;
-import de.adorsys.aspsp.xs2a.connector.spi.converter.ChallengeDataMapperImpl;
-import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapperImpl;
+import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation.confirmation.PaymentAuthConfirmationCodeService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.*;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.psd2.xs2a.core.pis.FrequencyCode;
@@ -22,13 +19,14 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionRespo
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPeriodicPaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -39,9 +37,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {LedgersSpiPaymentMapper.class, AddressMapperImpl.class, ChallengeDataMapperImpl.class, LedgersSpiAccountMapperImpl.class, ObjectMapper.class, PaymentSpiImpl.class, Xs2aPaymentMapperImpl.class})
-@Disabled("Due to refactoring SCA")
+@ExtendWith({MockitoExtension.class})
 class PeriodicPaymentSpiImplTest {
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
     private static final SpiContextData SPI_CONTEXT_DATA = TestSpiDataProvider.getSpiContextData();
@@ -50,12 +46,19 @@ class PeriodicPaymentSpiImplTest {
     private static final String JSON_ACCEPT_MEDIA_TYPE = "application/json";
     private static final String PSU_MESSAGE = "Mocked PSU message from SPI for this payment";
 
+    @InjectMocks
     private PeriodicPaymentSpiImpl periodicPaymentSpi;
+    @Mock
     private GeneralPaymentService paymentService;
-
-    @Autowired
-    private LedgersSpiPaymentMapper spiPaymentMapper;
+    @Mock
     private SpiAspspConsentDataProvider spiAspspConsentDataProvider;
+    @Mock
+    private AspspConsentDataService aspspConsentDataService;
+    @Mock
+    private PaymentAuthConfirmationCodeService paymentAuthConfirmationCodeService;
+
+    @Spy
+    private LedgersSpiPaymentMapper paymentMapper = new LedgersSpiPaymentMapper(Mappers.getMapper(LedgersSpiAccountMapper.class));
     private SpiPeriodicPayment payment;
 
     @BeforeEach
@@ -64,11 +67,6 @@ class PeriodicPaymentSpiImplTest {
         payment.setPaymentId(PAYMENT_ID);
         payment.setPaymentStatus(TransactionStatus.RCVD);
         payment.setFrequency(FrequencyCode.MONTHLY);
-
-        paymentService = mock(GeneralPaymentService.class);
-        spiAspspConsentDataProvider = mock(SpiAspspConsentDataProvider.class);
-        periodicPaymentSpi = new PeriodicPaymentSpiImpl(paymentService, spiPaymentMapper,
-                                                        mock(AspspConsentDataService.class), mock(PaymentAuthConfirmationCodeService.class));
     }
 
     @Test
@@ -130,7 +128,6 @@ class PeriodicPaymentSpiImplTest {
         ArgumentCaptor<SpiPeriodicPaymentInitiationResponse> spiPeriodicPaymentInitiationResponseCaptor
                 = ArgumentCaptor.forClass(SpiPeriodicPaymentInitiationResponse.class);
 
-        when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(new byte[]{});
         Set<SpiAccountReference> spiAccountReferences = new HashSet<>(Collections.singleton(payment.getDebtorAccount()));
         when(paymentService.firstCallInstantiatingPayment(eq(PaymentTypeTO.PERIODIC), eq(payment),
                                                           eq(spiAspspConsentDataProvider), spiPeriodicPaymentInitiationResponseCaptor.capture(), eq(SPI_CONTEXT_DATA.getPsuData()), eq(spiAccountReferences)))
