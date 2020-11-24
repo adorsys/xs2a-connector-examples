@@ -9,7 +9,6 @@ import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,14 +28,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ContextConfiguration(classes = {LedgersSpiPaymentMapper.class, LedgersSpiAccountMapperImpl.class})
 class LedgersSpiPaymentMapperTest {
 
-    private static final String REFERENCE = "Ref Number Merchant";
-
     @Autowired
     private LedgersSpiPaymentMapper ledgersSpiPaymentMapper;
     private static final JsonReader jsonReader = new JsonReader();
 
     @Test
-    @Disabled("Due to refactoring SCA")
     void toSpiSinglePayment() {
         //Given
         PaymentTO paymentTO = jsonReader.getObjectFromFile("json/mappers/payment-to-spi-single-payment.json", PaymentTO.class);
@@ -48,7 +44,6 @@ class LedgersSpiPaymentMapperTest {
     }
 
     @Test
-    @Disabled("Due to refactoring SCA")
     void mapToSpiPeriodicPayment() {
         //Given
         PaymentTO paymentTO = jsonReader.getObjectFromFile("json/mappers/payment-to-spi-periodic-payment.json", PaymentTO.class);
@@ -60,7 +55,6 @@ class LedgersSpiPaymentMapperTest {
     }
 
     @Test
-    @Disabled("Due to refactoring SCA")
     void mapToSpiBulkPayment() {
         //Given
         PaymentTO paymentTO = jsonReader.getObjectFromFile("json/mappers/payment-to-spi-bulk-payment.json", PaymentTO.class);

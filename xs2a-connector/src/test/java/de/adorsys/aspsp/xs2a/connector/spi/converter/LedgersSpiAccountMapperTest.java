@@ -10,7 +10,6 @@ import de.adorsys.psd2.xs2a.spi.domain.account.SpiTransaction;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +57,6 @@ class LedgersSpiAccountMapperTest {
     }
 
     @Test
-    @Disabled("Due to refactoring SCA")
     void toSpiTransactionWithRealData() {
         TransactionTO inputData = jsonReader.getObjectFromFile("json/mappers/transaction-to.json", TransactionTO.class);
         SpiTransaction actualResult = ledgersSpiAccountMapper.toSpiTransaction(inputData);

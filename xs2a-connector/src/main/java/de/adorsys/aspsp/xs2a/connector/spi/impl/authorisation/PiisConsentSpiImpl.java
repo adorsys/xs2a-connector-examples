@@ -43,8 +43,6 @@ import de.adorsys.psd2.xs2a.spi.service.PiisConsentSpi;
 import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,7 +53,6 @@ import java.util.Collections;
 @Slf4j
 @Component
 public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent> implements PiisConsentSpi {
-    private static final Logger logger = LoggerFactory.getLogger(PiisConsentSpiImpl.class);
 
     // TODO REPLACE WITH PIIS FLOW WHEN LEDGERS STARTS TO SUPPORT PIIS CONSENT https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/issues/1323
     private static final String SCA_STATUS_LOG = "SCA status is {}";
@@ -138,7 +135,7 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent>
 
             ResponseEntity<SCAConsentResponseTO> initiateConsentResponse = consentRestClient.initiateAisConsent(piisConsent.getId(), aisConsentMapper.mapToAisConsent(mockedConsent));
             if (initiateConsentResponse == null || initiateConsentResponse.getBody() == null) {
-                logger.error("Initiate PIIS consent response or bearer token is NULL");
+                log.error("Initiate PIIS consent response or bearer token is NULL");
                 return null;
             }
 
@@ -190,7 +187,7 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent>
 
             ResponseEntity<GlobalScaResponseTO> authorizeConsentResponse = redirectScaRestClient.validateScaCode(sca.getAuthorisationId(), spiScaConfirmation.getTanNumber());
             if (authorizeConsentResponse == null || authorizeConsentResponse.getBody() == null) {
-                logger.error("Validate SCA code response is NULL");
+                log.error("Validate SCA code response is NULL");
                 return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder()
                                .error(new TppMessage(MessageErrorCode.FORMAT_ERROR))
                                .build();

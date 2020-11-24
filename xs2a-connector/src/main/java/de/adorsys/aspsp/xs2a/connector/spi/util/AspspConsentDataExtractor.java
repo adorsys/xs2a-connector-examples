@@ -31,7 +31,7 @@ public class AspspConsentDataExtractor {
     public static String extractEncryptedConsentId(SpiAspspConsentDataProvider aspspConsentDataProvider) {
         try {
             return (String) FieldUtils.readField(aspspConsentDataProvider, "encryptedConsentId", true);
-        } catch (IllegalAccessException e) {
+        } catch (Exception e) {
             logger.error("could not read encrypted consent id");
             return "";
         }
