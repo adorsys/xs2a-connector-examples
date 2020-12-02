@@ -2,4 +2,8 @@
 
 == Table of Contents
 
+* Updated xs2a version to 9.3
 
+== Updated xs2a version to 9.3
+
+From now on, connector uses xs2a version 9.3
