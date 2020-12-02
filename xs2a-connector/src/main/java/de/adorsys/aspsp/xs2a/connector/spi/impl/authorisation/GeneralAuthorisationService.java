@@ -69,40 +69,30 @@ public class GeneralAuthorisationService {
 
         String encryptedConsentId = AspspConsentDataExtractor.extractEncryptedConsentId(aspspConsentDataProvider);
         StartScaOprTO startScaOprTO = new StartScaOprTO(businessObjectId, encryptedConsentId, authorisationId, operationType);
-        ResponseEntity<GlobalScaResponseTO> startScaResponse = redirectScaRestClient.startSca(startScaOprTO);
-
-        if (startScaResponse == null || startScaResponse.getBody() == null) {
-            logger.error("Start SCA response is NULL");
-            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR))
-                           .build();
-        }
-
-        GlobalScaResponseTO startScaResponseBody = startScaResponse.getBody();
-        startScaResponseBody.setBearerToken(scaResponse.getBearerToken()); //NOSONAR
-
-        aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(startScaResponseBody));
 
         try {
+            ResponseEntity<GlobalScaResponseTO> startScaResponse = redirectScaRestClient.startSca(startScaOprTO);
+
+            if (startScaResponse == null || startScaResponse.getBody() == null) {
+                logger.error("Start SCA response is NULL");
+                return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                               .error(new TppMessage(MessageErrorCode.FORMAT_ERROR))
+                               .build();
+            }
+
+            GlobalScaResponseTO startScaResponseBody = startScaResponse.getBody();
+            startScaResponseBody.setBearerToken(scaResponse.getBearerToken()); //NOSONAR
+
+            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(startScaResponseBody));
+
             SpiAuthorisationStatus status = startScaResponseBody.getBearerToken().getAccess_token() != null
                                                     ? SpiAuthorisationStatus.SUCCESS
                                                     : SpiAuthorisationStatus.FAILURE;
             logger.info("Authorisation status is: {}", status);
 
-            SpiResponse<SpiPsuAuthorisationResponse> response = SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                                                                        .payload(new SpiPsuAuthorisationResponse(false, status))
-                                                                        .build();
-            if (!response.isSuccessful()) {
-                SpiPsuAuthorisationResponse spiResponse = response.getPayload();
-                if (spiResponse != null && spiResponse.getSpiAuthorisationStatus() == SpiAuthorisationStatus.ATTEMPT_FAILURE) {
-                    return response;
-                }
-                return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                               .payload(new SpiPsuAuthorisationResponse(response.getPayload().isScaExempted(), SpiAuthorisationStatus.FAILURE))
-                               .build();
-            }
-
-            return response;
+            return SpiResponse.<SpiPsuAuthorisationResponse>builder()
+                           .payload(new SpiPsuAuthorisationResponse(false, status))
+                           .build();
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Authorise PSU internal failed: authorisation ID {}, business object ID: {}, devMessage: {}", authorisationId, businessObjectId, devMessage);

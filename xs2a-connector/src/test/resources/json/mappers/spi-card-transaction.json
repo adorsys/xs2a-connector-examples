@@ -1,0 +1,44 @@
+{
+  "cardTransactionId": "1234567",
+  "terminalId": "terminalId",
+  "transactionDate": "2018-01-01",
+  "acceptorTransactionDateTime": "2020-03-03T10:00Z",
+  "bookingDate": "2017-01-01",
+  "transactionAmount": {
+    "currency": "EUR",
+    "amount": "1.06"
+  },
+  "originalAmount": {
+    "currency": "EUR",
+    "amount": "1.06"
+  },
+  "markupFee": {
+    "currency": "EUR",
+    "amount": "1.06"
+  },
+  "currencyExchange": [
+    {
+      "sourceCurrency": "EUR",
+      "exchangeRate": "12",
+      "unitCurrency": "UAH",
+      "targetCurrency": "USD",
+      "quotationDate": "2019-05-28",
+      "contractIdentification": "contractIdentification"
+    }
+  ],
+  "markupFeePercentage": "markupFeePercentage",
+  "cardAcceptorId": "12345",
+  "cardAcceptorAddress": {
+    "streetName": "street",
+    "buildingNumber": "buildNum",
+    "townName": "town",
+    "postCode": "post",
+    "country": "EU"
+  },
+  "cardAcceptorPhone": "+61-(02)9999999999-9999",
+  "merchantCategoryCode": "merchantCategoryCode",
+  "maskedPAN": "493702******0836",
+  "transactionDetails": "transactionDetails",
+  "invoiced": false,
+  "proprietaryBankTransactionCode": "DE52500105173911841934"
+}

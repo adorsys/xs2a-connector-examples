@@ -31,6 +31,7 @@ import de.adorsys.ledgers.rest.client.AccountRestClient;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
+import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
@@ -426,6 +427,24 @@ class CardAccountSpiImplTest {
         verifyApplyAuthorisationUsedAndInterceptorWithNull();
         verify(accountRestClient, times(1)).getAccountDetailsById(RESOURCE_ID);
         verify(tokenService, times(1)).store(scaResponseTO);
+    }
+
+    @Test
+    void requestCardAccountDetailForAccount_feignException() {
+        // Given
+        FeignException feignException = getFeignException();
+
+        when(accountRestClient.getAccountDetailsById(RESOURCE_ID)).thenThrow(feignException);
+        when(feignExceptionReader.getErrorMessage(feignException)).thenReturn("dev message");
+
+        // When
+        SpiResponse<SpiCardAccountDetails> actualResponse = cardAccountSpi.requestCardAccountDetailsForAccount(SPI_CONTEXT_DATA, accountReference,
+                                                                                                               spiAccountConsent, aspspConsentDataProvider);
+        // Then
+        assertTrue(actualResponse.hasError());
+        assertEquals(MessageErrorCode.CONSENT_UNKNOWN_400, actualResponse.getErrors().get(0).getErrorCode());
+
+        verify(authRequestInterceptor, times(1)).setAccessToken(null);
     }
 
     @Test

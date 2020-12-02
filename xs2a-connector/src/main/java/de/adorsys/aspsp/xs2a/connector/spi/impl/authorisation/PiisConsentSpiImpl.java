@@ -201,7 +201,7 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent>
 
             // TODO use real sca status from Ledgers for resolving consent status https://git.adorsys.de/adorsys/xs2a/ledgers/issues/206
             return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder()
-                           .payload(new SpiVerifyScaAuthorisationResponse(getConsentStatus(globalScaResponse)))
+                           .payload(new SpiVerifyScaAuthorisationResponse(mapToConsentStatus(globalScaResponse)))
                            .build();
 
         } catch (FeignException feignException) {
@@ -222,15 +222,6 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent>
         } finally {
             authRequestInterceptor.setAccessToken(null);
         }
-    }
-
-    private ConsentStatus getConsentStatus(GlobalScaResponseTO globalScaResponse) {
-        if (globalScaResponse != null
-                    && globalScaResponse.isPartiallyAuthorised()
-                    && ScaStatusTO.FINALISED.equals(globalScaResponse.getScaStatus())) {
-            return ConsentStatus.PARTIALLY_AUTHORISED;
-        }
-        return ConsentStatus.VALID;
     }
 
     @Override
@@ -292,6 +283,15 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent>
     public boolean checkConfirmationCodeInternally(String authorisationId, String confirmationCode, String scaAuthenticationData,
                                                    @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         return authConfirmationCodeService.checkConfirmationCodeInternally(authorisationId, confirmationCode, scaAuthenticationData, aspspConsentDataProvider);
+    }
+
+    ConsentStatus mapToConsentStatus(GlobalScaResponseTO globalScaResponse) {
+        if (globalScaResponse != null
+                    && globalScaResponse.isPartiallyAuthorised()
+                    && ScaStatusTO.FINALISED.equals(globalScaResponse.getScaStatus())) {
+            return ConsentStatus.PARTIALLY_AUTHORISED;
+        }
+        return ConsentStatus.VALID;
     }
 
 }

@@ -283,8 +283,6 @@ public class GeneralPaymentService {
                                .payload(spiPaymentExecutionResponse(transactionStatusTO))
                                .build();
             }
-
-            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
                            .error(new TppMessage(MessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED, transactionStatusTO, scaStatusName))
                            .build();
