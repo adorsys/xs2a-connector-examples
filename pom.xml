@@ -126,7 +126,7 @@
 		<sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
 		<sonar.language>java</sonar.language>
 		<sonar.coverage.exclusions>**/*Entity.java,**/*TO.java,**/*BO.java,**/*PO.java,**/*Application.java,**/*Exception.java,
-			**/*Config.java,pom.xml,/ledgers-rest-client/**/*,/gateway-app-embedded/**/*</sonar.coverage.exclusions>
+			**/*Config.java,**/*Configuration.java,pom.xml,/ledgers-rest-client/**/*,/gateway-app-embedded/**/*</sonar.coverage.exclusions>
 		<skipITs>false</skipITs>
 		<skipTests>false</skipTests>
 	</properties>

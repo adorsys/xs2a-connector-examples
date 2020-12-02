@@ -22,6 +22,7 @@ import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
+import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.core.profile.PaymentType;
 import de.adorsys.psd2.xs2a.core.tpp.TppInfo;
 import de.adorsys.psd2.xs2a.service.RequestProviderService;
@@ -32,6 +33,8 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentInfo;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import feign.FeignException;
+import feign.Request;
+import feign.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,6 +57,7 @@ class PaymentAuthorisationSpiImplTest {
 
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
     private final static String PSU_ID = "anton.brueckner";
+    private final static String INSTANCE_ID = "test-instance-id";
     private static final SpiPsuData PSU_ID_DATA_1 = SpiPsuData.builder()
                                                             .psuId(PSU_ID)
                                                             .psuIdType("2")
@@ -115,8 +119,8 @@ class PaymentAuthorisationSpiImplTest {
     private GeneralPaymentService generalPaymentService;
     @Mock
     private RedirectScaRestClient redirectScaRestClient;
-    @Mock
-    private ScaResponseMapper scaResponseMapper;
+    @Spy
+    private ScaResponseMapper scaResponseMapper = Mappers.getMapper(ScaResponseMapper.class);
     @Mock
     private LedgersSpiCommonPaymentTOMapper ledgersSpiCommonPaymentTOMapper;
     @Mock
@@ -390,6 +394,99 @@ class PaymentAuthorisationSpiImplTest {
         assertEquals(MessageErrorCode.SERVICE_NOT_SUPPORTED, actual.getErrors().get(0).getErrorCode());
     }
 
+    @Test
+    void initiateBusinessObject_TransactionStatusPATC() {
+        businessObject.setStatus(TransactionStatus.PATC);
+        GlobalScaResponseTO globalScaResponseTO = new GlobalScaResponseTO();
+
+        when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
+        when(consentDataService.response(CONSENT_DATA_BYTES)).thenReturn(globalScaResponseTO);
+
+        GlobalScaResponseTO actual = authorisationSpi.initiateBusinessObject(businessObject, spiAspspConsentDataProvider, AUTHORISATION_ID);
+
+        assertEquals(globalScaResponseTO, actual);
+
+        verify(generalPaymentService, never()).initiatePaymentInLedgers(any(), any(), any());
+    }
+
+    @Test
+    void executeBusinessObject_success() {
+        SCAPaymentResponseTO scaPaymentResponseTO = new SCAPaymentResponseTO();
+        scaPaymentResponseTO.setTransactionStatus(TransactionStatusTO.ACCC);
+
+        when(paymentRestClient.executePayment(businessObject.getPaymentId())).thenReturn(ResponseEntity.ok(scaPaymentResponseTO));
+
+        when(requestProviderService.getInstanceId()).thenReturn(INSTANCE_ID);
+
+        GlobalScaResponseTO actual = authorisationSpi.executeBusinessObject(businessObject);
+        assertNotNull(actual);
+
+        verify(cmsPsuPisClient, times(1)).updatePaymentStatus(businessObject.getPaymentId(), TransactionStatus.ACCC, INSTANCE_ID);
+    }
+
+    @Test
+    void executeBusinessObject_executePaymentResponseIsNull() {
+        when(paymentRestClient.executePayment(businessObject.getPaymentId())).thenReturn(ResponseEntity.ok(null));
+
+        GlobalScaResponseTO actual = authorisationSpi.executeBusinessObject(businessObject);
+        assertNull(actual);
+
+        verify(requestProviderService, never()).getInstanceId();
+        verify(cmsPsuPisClient, never()).updatePaymentStatus(any(), any(), any());
+    }
+
+    @Test
+    void executeBusinessObject_feignException() {
+        when(paymentRestClient.executePayment(businessObject.getPaymentId()))
+                .thenThrow(getFeignException());
+
+        GlobalScaResponseTO actual = authorisationSpi.executeBusinessObject(businessObject);
+        assertNull(actual);
+
+        verify(requestProviderService, never()).getInstanceId();
+        verify(cmsPsuPisClient, never()).updatePaymentStatus(any(), any(), any());
+    }
+
+    @Test
+    void resolveErrorResponse_insufficientFunds() {
+        FeignException feignException = getFeignException();
+
+        when(feignExceptionReader.getErrorMessage(feignException)).thenReturn("dev message");
+        when(feignExceptionReader.getLedgersErrorCode(feignException)).thenReturn(LedgersErrorCode.INSUFFICIENT_FUNDS);
+
+        SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.resolveErrorResponse(businessObject, feignException);
+
+        assertTrue(actual.hasError());
+        assertEquals(MessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED, actual.getErrors().get(0).getErrorCode());
+    }
+
+    @Test
+    void resolveErrorResponse_requestValidationFailure() {
+        FeignException feignException = getFeignException();
+
+        when(feignExceptionReader.getErrorMessage(feignException)).thenReturn("dev message");
+        when(feignExceptionReader.getLedgersErrorCode(feignException)).thenReturn(LedgersErrorCode.REQUEST_VALIDATION_FAILURE);
+
+        SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.resolveErrorResponse(businessObject, feignException);
+
+        assertTrue(actual.hasError());
+        assertEquals(MessageErrorCode.PRODUCT_UNKNOWN, actual.getErrors().get(0).getErrorCode());
+    }
+
+    @Test
+    void resolveErrorResponse_otherErrors() {
+        FeignException feignException = getFeignException();
+
+        when(feignExceptionReader.getErrorMessage(feignException)).thenReturn("dev message");
+        when(feignExceptionReader.getLedgersErrorCode(feignException)).thenReturn(LedgersErrorCode.PSU_AUTH_ATTEMPT_INVALID);
+
+        SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.resolveErrorResponse(businessObject, feignException);
+
+        assertTrue(actual.isSuccessful());
+        assertFalse(actual.getPayload().isScaExempted());
+        assertEquals(SpiAuthorisationStatus.FAILURE, actual.getPayload().getSpiAuthorisationStatus());
+    }
+
     private GlobalScaResponseTO getGlobalScaResponseTO(ScaStatusTO scaStatusTO) {
         GlobalScaResponseTO scaPaymentResponseTO = new GlobalScaResponseTO();
         scaPaymentResponseTO.setOperationObjectId(PAYMENT_ID);
@@ -458,5 +555,18 @@ class PaymentAuthorisationSpiImplTest {
         BearerTokenTO bearerToken = new BearerTokenTO();
         bearerToken.setAccess_token(ACCESS_TOKEN);
         return bearerToken;
+    }
+
+    private FeignException getFeignException() {
+        return FeignException.errorStatus("User doesn't have access to the requested account",
+                                          buildErrorResponseForbidden());
+    }
+
+    private Response buildErrorResponseForbidden() {
+        return Response.builder()
+                       .status(403)
+                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
+                       .headers(Collections.emptyMap())
+                       .build();
     }
 }

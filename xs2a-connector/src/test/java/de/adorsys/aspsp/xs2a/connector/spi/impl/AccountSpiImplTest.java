@@ -723,6 +723,16 @@ class AccountSpiImplTest {
         assertEquals(MediaType.APPLICATION_ATOM_XML_VALUE, accountSpi.processAcceptMediaType(MediaType.APPLICATION_ATOM_XML_VALUE));
     }
 
+    @Test
+    @MockitoSettings(strictness = LENIENT)
+    void requestTrustedBeneficiariesList() {
+        SpiResponse<List<SpiTrustedBeneficiaries>> actual = accountSpi.requestTrustedBeneficiariesList(SPI_CONTEXT_DATA, accountReference, spiAccountConsent, aspspConsentDataProvider);
+
+        assertTrue(actual.isSuccessful());
+        assertNotNull(actual.getPayload());
+        assertEquals(1, actual.getPayload().size());
+    }
+
     private FeignException getFeignException() {
         return FeignException.errorStatus(RESPONSE_STATUS_200_WITH_EMPTY_BODY,
                                           buildErrorResponse());
