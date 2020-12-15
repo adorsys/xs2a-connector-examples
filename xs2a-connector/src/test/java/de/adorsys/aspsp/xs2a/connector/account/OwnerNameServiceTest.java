@@ -45,7 +45,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class OwnerNameServiceTest {
     private static final String RESOURCE_ID = "11111-999999999";
-    private static final String PAN = "4937023494670836";
     private static final String ACCOUNT_OWNER_NAME = "account owner name";
     private static final String ACCOUNT_OWNER_NAME_2 = "different account owner name";
     private static final String IBAN_FIRST_ACCOUNT = "DE89370400440532013000";
@@ -59,7 +58,7 @@ class OwnerNameServiceTest {
     @InjectMocks
     private OwnerNameService ownerNameService;
 
-    private JsonReader jsonReader = new JsonReader();
+    private final JsonReader jsonReader = new JsonReader();
 
     @Test
     void shouldContainOwnerName_dedicatedAccessWithAllAccountsOwnerName_shouldReturnTrue() {
@@ -316,10 +315,5 @@ class OwnerNameServiceTest {
         AdditionalAccountInformationTO additionalAccountInformationTO = new AdditionalAccountInformationTO();
         additionalAccountInformationTO.setAccountOwnerName(ownerName);
         return additionalAccountInformationTO;
-    }
-
-    @NotNull
-    private SpiAccountReference buildSpiAccountReferenceForCardAccount() {
-        return new SpiAccountReference(null, null, null, PAN, null, null, null);
     }
 }

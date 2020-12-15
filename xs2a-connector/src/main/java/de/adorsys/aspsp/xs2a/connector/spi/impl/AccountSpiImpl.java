@@ -136,8 +136,8 @@ public class AccountSpiImpl implements AccountSpi {
         logger.info("Retrieving mock trusted beneficiaries list for consent: {}", spiAccountConsent);
         SpiTrustedBeneficiaries trustedBeneficiaries = new SpiTrustedBeneficiaries(
                 "mocked trusted beneficiaries id",
-                new SpiAccountReference(null, "mocked debtor iban", null, null, null, null, null),
-                new SpiAccountReference(null, "mocked creditor iban", null, null, null, null, null),
+                new SpiAccountReference(null, "mocked debtor iban", null, null, null, null, null, null),
+                new SpiAccountReference(null, "mocked creditor iban", null, null, null, null, null, null),
                 "mocked creditor agent",
                 "mocked creditor name",
                 "mocked creditor alias",
@@ -480,7 +480,7 @@ public class AccountSpiImpl implements AccountSpi {
                                                                                    PisExecutionRule.PRECEDING, null,
                                                                                    FrequencyCode.MONTHLYVARIABLE, null, null, PisDayOfExecution._24, null);
         SpiAccountReference spiAccountReference = new SpiAccountReference("11111-11118", "10023-999999999", "DE52500105173911841934",
-                                                                          "52500105173911841934", "AEYPM5403H", "PM5403H****", null, Currency.getInstance("EUR"));
+                                                                          "52500105173911841934", "AEYPM5403H", "PM5403H****", null, Currency.getInstance("EUR"), null);
         SpiAdditionalInformationStructured additionalInformationStructured = new SpiAdditionalInformationStructured(standingOrderDetails);
         return Collections.singletonList(new SpiTransaction(null, null, null, null, null,
                                                             null, null, null, null, null,
