@@ -1,3 +1,9 @@
 = Release notes v.8.5
 
 == Table of Contents
+
+* Added build information on a swagger page
+
+== Added build information on swagger page
+
+From now on, product version and build number are displayed on a swagger page.
