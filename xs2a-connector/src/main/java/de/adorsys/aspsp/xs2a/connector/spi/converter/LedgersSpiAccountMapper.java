@@ -134,7 +134,8 @@ public abstract class LedgersSpiAccountMapper {
                                r.getPan(),
                                r.getMaskedPan(),
                                r.getMsisdn(),
-                               r.getCurrency()))
+                               r.getCurrency(),
+                               null))
                        .orElse(null);
     } //Full manual mapping here, no extra tests necessary
 
