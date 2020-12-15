@@ -182,7 +182,7 @@ class FundsConfirmationSpiImplTest {
 
     private SpiFundsConfirmationRequest getSpiFundsConfirmationRequest() {
         SpiFundsConfirmationRequest request = new SpiFundsConfirmationRequest();
-        SpiAccountReference accountReference = new SpiAccountReference(RESOURCE_ID, IBAN, null, null, null, null, CURRENCY_EUR);
+        SpiAccountReference accountReference = new SpiAccountReference(RESOURCE_ID, IBAN, null, null, null, null, CURRENCY_EUR, null);
         request.setPsuAccount(accountReference);
         request.setCardNumber(CARD_NUMBER);
         request.setInstructedAmount(new SpiAmount(CURRENCY_EUR, BigDecimal.TEN));

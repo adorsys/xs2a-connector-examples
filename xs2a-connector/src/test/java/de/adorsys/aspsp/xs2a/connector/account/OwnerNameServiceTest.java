@@ -320,6 +320,6 @@ class OwnerNameServiceTest {
 
     @NotNull
     private SpiAccountReference buildSpiAccountReferenceForCardAccount() {
-        return new SpiAccountReference(null, null, null, PAN, null, null, null);
+        return new SpiAccountReference(null, null, null, PAN, null, null, null, null);
     }
 }

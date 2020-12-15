@@ -27,7 +27,7 @@ class PaymentSpiImplTest {
 
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
     private static final SpiContextData SPI_CONTEXT_DATA = TestSpiDataProvider.getSpiContextData();
-    private static final SpiAccountReference DEBTOR_ACCOUNT = new SpiAccountReference(null, "mocked debtor iban", null, null, null, null, null);
+    private static final SpiAccountReference DEBTOR_ACCOUNT = new SpiAccountReference(null, "mocked debtor iban", null, null, null, null, null, null);
 
     @InjectMocks
     private PaymentSpiImpl paymentSpi;
