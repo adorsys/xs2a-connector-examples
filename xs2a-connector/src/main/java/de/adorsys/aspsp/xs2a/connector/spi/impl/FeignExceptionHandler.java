@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.client.ResourceAccessException;
 
 import java.net.ConnectException;
+import java.nio.charset.Charset;
 import java.util.Collections;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -57,7 +58,7 @@ public class FeignExceptionHandler {
     static Response error(HttpStatus httpStatus) {
         return Response.builder()
                        .status(httpStatus.value())
-                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
+                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null, Charset.defaultCharset(), null))
                        .headers(Collections.emptyMap())
                        .build();
     }
