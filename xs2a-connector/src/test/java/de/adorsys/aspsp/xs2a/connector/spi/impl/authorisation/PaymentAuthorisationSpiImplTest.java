@@ -47,6 +47,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 
+import java.nio.charset.Charset;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -565,7 +566,7 @@ class PaymentAuthorisationSpiImplTest {
     private Response buildErrorResponseForbidden() {
         return Response.builder()
                        .status(403)
-                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
+                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null, Charset.defaultCharset(), null))
                        .headers(Collections.emptyMap())
                        .build();
     }

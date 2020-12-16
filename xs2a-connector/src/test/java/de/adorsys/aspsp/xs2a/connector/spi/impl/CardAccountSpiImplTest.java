@@ -51,6 +51,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
+import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -558,7 +559,7 @@ class CardAccountSpiImplTest {
     private Response buildErrorResponse() {
         return Response.builder()
                        .status(404)
-                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
+                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null, Charset.defaultCharset(), null))
                        .headers(Collections.emptyMap())
                        .build();
     }

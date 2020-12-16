@@ -37,6 +37,7 @@ import org.springframework.http.ResponseEntity;
 
 import javax.validation.constraints.NotNull;
 import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
@@ -741,7 +742,7 @@ class AccountSpiImplTest {
     private Response buildErrorResponse() {
         return Response.builder()
                        .status(404)
-                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
+                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null, Charset.defaultCharset(), null))
                        .headers(Collections.emptyMap())
                        .build();
     }

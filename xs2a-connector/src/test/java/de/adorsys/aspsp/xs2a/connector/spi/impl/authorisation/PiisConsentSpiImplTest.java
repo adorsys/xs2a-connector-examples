@@ -62,6 +62,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.UUID;
@@ -521,7 +522,7 @@ class PiisConsentSpiImplTest {
     private Response buildErrorResponseForbidden() {
         return Response.builder()
                        .status(403)
-                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
+                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null, Charset.defaultCharset(), null))
                        .headers(Collections.emptyMap())
                        .build();
     }

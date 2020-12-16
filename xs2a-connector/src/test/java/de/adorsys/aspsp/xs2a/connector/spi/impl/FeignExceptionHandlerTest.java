@@ -36,15 +36,15 @@ class FeignExceptionHandlerTest {
     void getException() {
         FeignException feignException = FeignExceptionHandler.getException(HttpStatus.BAD_REQUEST, "message1");
         assertEquals(HttpStatus.BAD_REQUEST.value(), feignException.status());
-        assertEquals("status 400 reading message1", feignException.getMessage());
+        assertEquals("[400] during [GET] to [] [message1]: []", feignException.getMessage());
 
         feignException = FeignExceptionHandler.getException(HttpStatus.NOT_FOUND, "message2");
         assertEquals(HttpStatus.NOT_FOUND.value(), feignException.status());
-        assertEquals("status 404 reading message2", feignException.getMessage());
+        assertEquals("[404] during [GET] to [] [message2]: []", feignException.getMessage());
 
         feignException = FeignExceptionHandler.getException(HttpStatus.UNAUTHORIZED, "message3");
         assertEquals(HttpStatus.UNAUTHORIZED.value(), feignException.status());
-        assertEquals("status 401 reading message3", feignException.getMessage());
+        assertEquals("[401] during [GET] to [] [message3]: []", feignException.getMessage());
     }
 
     @Test

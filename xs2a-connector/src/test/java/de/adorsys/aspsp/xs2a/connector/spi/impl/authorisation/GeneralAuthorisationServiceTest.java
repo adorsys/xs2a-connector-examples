@@ -49,6 +49,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -251,7 +252,7 @@ class GeneralAuthorisationServiceTest {
     private Response buildErrorResponseForbidden() {
         return Response.builder()
                        .status(403)
-                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
+                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null, Charset.defaultCharset(), null))
                        .headers(Collections.emptyMap())
                        .build();
     }

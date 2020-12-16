@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
@@ -77,7 +78,7 @@ class FeignExceptionReaderTest {
     private Response buildErrorResponse(String body) {
         return Response.builder()
                        .status(HttpStatus.BAD_REQUEST.value())
-                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null))
+                       .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null, Charset.defaultCharset(), null))
                        .headers(Collections.emptyMap())
                        .body(body, StandardCharsets.UTF_8)
                        .build();
