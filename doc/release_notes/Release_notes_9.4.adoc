@@ -3,7 +3,17 @@
 == Table of Contents
 
 * Added build information on a swagger page
+* Updated xs2a version to 9.4
+* Updated ledgers version to 4.3
 
 == Added build information on swagger page
 
 From now on, product version and build number are displayed on a swagger page.
+
+== Updated xs2a version to 9.4
+
+From now on, connector uses xs2a version 9.4
+
+== Updated ledgers version to 4.3
+
+From now on, connector uses ledgers version 4.3
