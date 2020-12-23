@@ -256,6 +256,10 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
     }
 
     @Override
+    protected void updateStatusInCms(String businessObjectId, SpiAspspConsentDataProvider aspspConsentDataProvider) {
+    }
+
+    @Override
     protected OpTypeTO getOpType() {
         return OpTypeTO.CONSENT;
     }

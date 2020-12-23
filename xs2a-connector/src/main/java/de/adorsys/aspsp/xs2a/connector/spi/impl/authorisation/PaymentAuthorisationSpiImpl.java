@@ -32,6 +32,7 @@ import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
@@ -58,8 +59,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+
+import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.*;
 
 @Component
 @Slf4j
@@ -144,7 +148,7 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
             }
             SCAPaymentResponseTO paymentResponseTO = paymentExecutionResponse.getBody();
             cmsPsuPisClient.updatePaymentStatus(businessObject.getPaymentId(),
-                                                getTransactionStatus(paymentResponseTO.getTransactionStatus()), //NOSONAR
+                                                mapTransactionStatus(paymentResponseTO.getTransactionStatus()), //NOSONAR
                                                 requestProviderService.getInstanceId());
 
             return scaResponseMapper.toGlobalScaResponse(paymentResponseTO);
@@ -154,6 +158,14 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
             logger.error("Execute payment error: {}", devMessage);
             return null;
         }
+    }
+
+    @Override
+    protected void updateStatusInCms(String paymentId, SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        GlobalScaResponseTO globalScaResponseTO = aspspConsentDataService.response(aspspConsentDataProvider.loadAspspConsentData());
+        TransactionStatus transactionStatus = getTransactionStatus(globalScaResponseTO.getScaStatus());
+
+        cmsPsuPisClient.updatePaymentStatus(paymentId, transactionStatus, requestProviderService.getInstanceId());
     }
 
     @Override
@@ -199,9 +211,20 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
                        .build();
     }
 
-    private TransactionStatus getTransactionStatus(TransactionStatusTO transactionStatusTO) {
+    private TransactionStatus mapTransactionStatus(TransactionStatusTO transactionStatusTO) {
         return Optional.ofNullable(transactionStatusTO)
                        .map(ts -> TransactionStatus.valueOf(ts.name()))
                        .orElse(null);
     }
+
+    private TransactionStatus getTransactionStatus(ScaStatusTO scaStatus) {
+        if (EnumSet.of(PSUIDENTIFIED, EXEMPTED).contains(scaStatus)) {
+            return TransactionStatus.ACCP;
+        } else if (scaStatus == PSUAUTHENTICATED) {
+            return TransactionStatus.ACTC;
+        } else {
+            return TransactionStatus.RCVD;
+        }
+    }
+
 }

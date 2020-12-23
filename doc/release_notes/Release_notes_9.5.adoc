@@ -2,3 +2,8 @@
 
 == Table of Contents
 
+* Fixed payment statuses updating during multilevel SCA
+
+== Fixed payment statuses updating during multilevel SCA
+
+From now on, connector-examples serves correct payment statuses during authentication for users with multilevel SCA.

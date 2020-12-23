@@ -151,6 +151,11 @@ class PaymentAuthorisationSpiImplTest {
         GlobalScaResponseTO scaPaymentResponseTO = getGlobalScaResponseTO(ScaStatusTO.PSUIDENTIFIED);
         scaPaymentResponseTO.setScaMethods(Collections.emptyList());
 
+        when(consentDataService.response(CONSENT_DATA_BYTES))
+                .thenReturn(scaPaymentResponseTO);
+        when(spiAspspConsentDataProvider.loadAspspConsentData())
+                .thenReturn(CONSENT_DATA_BYTES);
+
         when(authorisationService.authorisePsuInternal(PAYMENT_ID, AUTHORISATION_ID, OpTypeTO.PAYMENT, scaPaymentResponseTO, spiAspspConsentDataProvider))
                 .thenReturn(SpiResponse.<SpiPsuAuthorisationResponse>builder()
                                     .payload(new SpiPsuAuthorisationResponse(false, SpiAuthorisationStatus.SUCCESS))
