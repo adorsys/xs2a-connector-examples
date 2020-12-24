@@ -165,27 +165,6 @@ public class LedgersSpiPaymentToMapper {
         return paymentTargetTO;
     }
 
-    private PaymentTargetTO mapToPaymentTargetTO(PaymentInitiationBulkElementJson payment, SpiPaymentInfo spiPaymentInfo) {
-        if (payment == null) {
-            return null;
-        }
-
-        PaymentTargetTO paymentTargetTO = new PaymentTargetTO();
-
-        paymentTargetTO.setPaymentId(spiPaymentInfo.getPaymentId());
-        paymentTargetTO.setEndToEndIdentification(payment.getEndToEndIdentification());
-        paymentTargetTO.setInstructedAmount(mapToAmountTO(payment.getInstructedAmount()));
-        paymentTargetTO.setCreditorAccount(mapToAccountReferenceTO(payment.getCreditorAccount()));
-        paymentTargetTO.setCreditorAgent(payment.getCreditorAgent());
-        paymentTargetTO.setCreditorName(payment.getCreditorName());
-        paymentTargetTO.setCreditorAddress(mapToAddressTO(payment.getCreditorAddress()));
-        paymentTargetTO.setPurposeCode(mapToPurposeCodeTO(payment.getPurposeCode()));
-        paymentTargetTO.setRemittanceInformationUnstructured(payment.getRemittanceInformationUnstructured());
-        paymentTargetTO.setRemittanceInformationStructured(mapToRemittanceInformationStructuredTO(payment.getRemittanceInformationStructured()));
-
-        return paymentTargetTO;
-    }
-
     private PaymentTargetTO mapToPaymentTargetTO(PaymentInitiationJson payment, SpiPaymentInfo spiPaymentInfo) {
         if (payment == null) {
             return null;
