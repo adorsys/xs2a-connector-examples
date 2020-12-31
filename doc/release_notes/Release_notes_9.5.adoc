@@ -3,7 +3,12 @@
 == Table of Contents
 
 * Fixed payment statuses updating during multilevel SCA
+* Updated xs2a version
 
 == Fixed payment statuses updating during multilevel SCA
 
 From now on, connector-examples serves correct payment statuses during authentication for users with multilevel SCA.
+
+== Updated xs2a version
+
+From now on,  xs2a-connector-examples uses xs2a version 9.5
