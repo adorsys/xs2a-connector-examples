@@ -876,7 +876,7 @@ class AisConsentSpiImplTest {
     }
 
     private List<SpiAccountReference> createAccountReferenceList() {
-        return Collections.singletonList(new SpiAccountReference(null, "DE371234599997", null, null, null, null, null, null));
+        return Collections.singletonList(SpiAccountReference.builder().iban("DE371234599997").build());
     }
 
     private GlobalScaResponseTO buildSCAConsentResponseTO(ScaStatusTO scaStatusTO) {
