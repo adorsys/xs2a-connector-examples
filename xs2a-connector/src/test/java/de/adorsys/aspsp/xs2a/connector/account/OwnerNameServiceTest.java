@@ -317,9 +317,4 @@ class OwnerNameServiceTest {
         additionalAccountInformationTO.setAccountOwnerName(ownerName);
         return additionalAccountInformationTO;
     }
-
-    @NotNull
-    private SpiAccountReference buildSpiAccountReferenceForCardAccount() {
-        return new SpiAccountReference(null, null, null, PAN, null, null, null, null);
-    }
 }

@@ -137,8 +137,8 @@ public class AccountSpiImpl implements AccountSpi {
         logger.info("Retrieving mock trusted beneficiaries list for consent: {}", spiAccountConsent);
         SpiTrustedBeneficiaries trustedBeneficiaries = new SpiTrustedBeneficiaries(
                 "mocked trusted beneficiaries id",
-                new SpiAccountReference(null, "mocked debtor iban", null, null, null, null, null, null),
-                new SpiAccountReference(null, "mocked creditor iban", null, null, null, null, null, null),
+                SpiAccountReference.builder().iban("mocked debtor iban").build(),
+                SpiAccountReference.builder().iban("mocked creditor iban").build(),
                 "mocked creditor agent",
                 "mocked creditor name",
                 "mocked creditor alias",
