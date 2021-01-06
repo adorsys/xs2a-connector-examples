@@ -20,5 +20,6 @@
         "amount": "1000"
       }
     }
-  ]
+  ],
+  "debitAccounting": false
 }
