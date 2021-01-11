@@ -96,7 +96,8 @@ public abstract class LedgersSpiAccountMapper {
                                t.getProprietaryBankTransactionCode(),
                                MockAccountData.ADDITIONAL_INFORMATION,
                                null, // TODO Map proper field https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1100
-                               accountBalanceTOToSpiAccountBalance(t.getBalanceAfterTransaction())))
+                               accountBalanceTOToSpiAccountBalance(t.getBalanceAfterTransaction()),
+                               MockAccountData.BATCH_INDICATOR, MockAccountData.BATCH_NUMBER_OF_TRANSACTIONS, MockAccountData.ENTRY_DETAILS))
                        .orElse(null);
     }  //Full manual mapping here, no extra tests necessary
 
