@@ -58,7 +58,8 @@ public abstract class LedgersSpiAccountMapper {
                                d.getDetails(),
                                MockAccountData.CREDIT_LIMIT, // TODO: Remove when ledgers starts supporting card accounts https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1246
                                toSpiAccountBalancesList(d.getBalances()),
-                               null))
+                               null,
+                               MockAccountData.DEBIT_ACCOUNTING))
                        .orElse(null);
     } //Full manual mapping here, no extra tests necessary
 

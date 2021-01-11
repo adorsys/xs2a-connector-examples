@@ -50,6 +50,7 @@ public class MockAccountData {
     public static final boolean BATCH_INDICATOR = false;
     public static final int BATCH_NUMBER_OF_TRANSACTIONS = 14;
     public static final List<SpiEntryDetails> ENTRY_DETAILS = Collections.singletonList(buildSpiEntryDetails());
+    public static final boolean DEBIT_ACCOUNTING = false;
 
     private MockAccountData() {
     }
