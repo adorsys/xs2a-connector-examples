@@ -494,7 +494,8 @@ public class AccountSpiImpl implements AccountSpi {
                                                             "John Miles", spiAccountReference, null, null,
                                                             null, null, null, null, null, null,
                                                             null, null, null, "PMNT-ICDT-STDO",
-                                                            null, null, additionalInformationStructured, buildSpiAccountBalance()));
+                                                            null, null, additionalInformationStructured, buildSpiAccountBalance(),
+                                                            null, null, null));
     }
 
     private SpiAccountBalance buildSpiAccountBalance() {
