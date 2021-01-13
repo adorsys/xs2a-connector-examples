@@ -207,7 +207,7 @@ public class LedgersSpiPaymentToMapper {
                        .orElse(null);
     }
 
-    private AmountTO mapToAmountTO(Amount amount) {
+    private AmountTO mapToAmountTO(Xs2aAmount amount) {
         if (amount == null) {
             return null;
         }
