@@ -1,3 +1,9 @@
 = Release notes v.8.7
 
 == Table of Contents
+
+* Updated xs2a version to 8.7
+
+== Updated xs2a version to 8.7
+
+From now on, xs2a-connector-examples uses xs2a version 8.7
