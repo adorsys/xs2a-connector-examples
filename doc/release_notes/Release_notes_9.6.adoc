@@ -1,3 +1,9 @@
 = Release notes v.9.6
 
 == Table of Contents
+
+* Updated xs2a version
+
+== Updated xs2a version
+
+From now on, xs2a-connector-examples uses xs2a version 9.6
