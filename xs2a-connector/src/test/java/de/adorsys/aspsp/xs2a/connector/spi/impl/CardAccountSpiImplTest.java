@@ -121,7 +121,7 @@ class CardAccountSpiImplTest {
         token.setRefresh_token("refresh_token");
         token.setAccess_token("access_token");
         sca.setBearerToken(token);
-        when(tokenService.response(ASPSP_CONSENT_DATA.getAspspConsentData())).thenReturn(sca);
+        when(tokenService.response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes())).thenReturn(sca);
         when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
     }
 
@@ -144,7 +144,7 @@ class CardAccountSpiImplTest {
         // Then
         verify(accountRestClient, times(1)).getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO);
         verify(accountRestClient, times(1)).getBalances(RESOURCE_ID);
-        verify(tokenService, times(2)).response(ASPSP_CONSENT_DATA.getAspspConsentData());
+        verify(tokenService, times(2)).response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes());
         verify(authRequestInterceptor, times(2)).setAccessToken("access_token");
         verify(authRequestInterceptor, times(2)).setAccessToken(null);
 
@@ -170,7 +170,7 @@ class CardAccountSpiImplTest {
         // Then
         verify(accountRestClient, times(1)).getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO);
         verify(accountRestClient, times(1)).getBalances(RESOURCE_ID);
-        verify(tokenService, times(2)).response(ASPSP_CONSENT_DATA.getAspspConsentData());
+        verify(tokenService, times(2)).response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes());
         verify(authRequestInterceptor, times(2)).setAccessToken("access_token");
         verify(authRequestInterceptor, times(2)).setAccessToken(null);
 
@@ -547,7 +547,7 @@ class CardAccountSpiImplTest {
 
     private void verifyGetListOfAccounts() {
         verify(accountRestClient, times(1)).getListOfAccounts();
-        verify(tokenService, times(2)).response(ASPSP_CONSENT_DATA.getAspspConsentData());
+        verify(tokenService, times(2)).response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes());
         verify(authRequestInterceptor, times(2)).setAccessToken("access_token");
         verify(authRequestInterceptor).setAccessToken(null);
     }

@@ -485,7 +485,7 @@ public class AccountSpiImpl implements AccountSpi {
         SpiStandingOrderDetails standingOrderDetails = new SpiStandingOrderDetails(LocalDate.of(2021, Month.JANUARY, 4),
                                                                                    LocalDate.of(2021, Month.MARCH, 12),
                                                                                    PisExecutionRule.PRECEDING, null,
-                                                                                   FrequencyCode.MONTHLYVARIABLE, null, null, PisDayOfExecution._24, null);
+                                                                                   FrequencyCode.MONTHLYVARIABLE, null, null, PisDayOfExecution.DAY_24, null);
         SpiAccountReference spiAccountReference = new SpiAccountReference("11111-11118", "10023-999999999", "DE52500105173911841934",
                                                                           "52500105173911841934", "AEYPM5403H", "PM5403H****", null, Currency.getInstance("EUR"), null);
         SpiAdditionalInformationStructured additionalInformationStructured = new SpiAdditionalInformationStructured(standingOrderDetails);
