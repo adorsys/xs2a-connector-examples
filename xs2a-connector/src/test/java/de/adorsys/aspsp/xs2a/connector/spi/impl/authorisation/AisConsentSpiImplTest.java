@@ -132,7 +132,7 @@ class AisConsentSpiImplTest {
         assertTrue(actualResponse.getErrors().isEmpty());
         assertNotNull(actualResponse.getPayload());
         verify(consentRestClient, times((1))).startSCA(spiAccountConsent.getId(), aisConsentMapper.mapToAisConsent(spiAccountConsent));
-        verify(consentDataService).response(ASPSP_CONSENT_DATA.getAspspConsentData());
+        verify(consentDataService).response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes());
         verify(authRequestInterceptor).setAccessToken(null);
     }
 
@@ -165,7 +165,7 @@ class AisConsentSpiImplTest {
         assertTrue(actualResponse.getErrors().isEmpty());
         assertNotNull(actualResponse.getPayload());
         verify(consentRestClient, times((1))).startSCA(spiAccountConsent.getId(), aisConsentMapper.mapToAisConsent(spiAccountConsent));
-        verify(consentDataService).response(ASPSP_CONSENT_DATA.getAspspConsentData());
+        verify(consentDataService).response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes());
         verify(authRequestInterceptor).setAccessToken(null);
 
         List<SpiAccountReference> spiAccountReferences = spiAccountDetails.stream().map(SpiAccountReference::new).collect(Collectors.toList());
@@ -202,7 +202,7 @@ class AisConsentSpiImplTest {
         assertTrue(actualResponse.getErrors().isEmpty());
         assertNotNull(actualResponse.getPayload());
         verify(consentRestClient, times((1))).startSCA(spiAccountConsent.getId(), aisConsentMapper.mapToAisConsent(spiAccountConsent));
-        verify(consentDataService).response(ASPSP_CONSENT_DATA.getAspspConsentData());
+        verify(consentDataService).response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes());
         verify(authRequestInterceptor).setAccessToken(null);
 
         List<SpiAccountReference> spiAccountReferences = spiAccountDetails.stream().map(SpiAccountReference::new).collect(Collectors.toList());
@@ -239,7 +239,7 @@ class AisConsentSpiImplTest {
         assertTrue(actualResponse.getErrors().isEmpty());
         assertNotNull(actualResponse.getPayload());
         verify(consentRestClient, times((1))).startSCA(spiAccountConsent.getId(), aisConsentMapper.mapToAisConsent(spiAccountConsent));
-        verify(consentDataService).response(ASPSP_CONSENT_DATA.getAspspConsentData());
+        verify(consentDataService).response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes());
         verify(authRequestInterceptor).setAccessToken(null);
 
         List<SpiAccountReference> spiAccountReferences = spiAccountDetails.stream().map(SpiAccountReference::new).collect(Collectors.toList());
