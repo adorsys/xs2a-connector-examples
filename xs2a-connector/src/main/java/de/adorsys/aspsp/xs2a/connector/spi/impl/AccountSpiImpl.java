@@ -70,6 +70,7 @@ public class AccountSpiImpl implements AccountSpi {
     private static final String RESPONSE_STATUS_200_WITH_EMPTY_BODY = "Response status was 200, but the body was empty!";
     private static final String DEFAULT_ACCEPT_MEDIA_TYPE = MediaType.APPLICATION_JSON_VALUE;
     private static final String WILDCARD_ACCEPT_HEADER = "*/*";
+    private static final Integer DEFAULT_TOTAL_PAGES = 1;
 
     private final AccountRestClient accountRestClient;
     private final LedgersSpiAccountMapper accountMapper;
@@ -199,11 +200,11 @@ public class AccountSpiImpl implements AccountSpi {
                                                                            @NotNull SpiAccountConsent accountConsent,
                                                                            @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         // TODO Remove it https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1100
+        SpiTransactionLinks spiTransactionLinks = buildSpiTransactionLinks();
         if (BookingStatus.INFORMATION == spiTransactionReportParameters.getBookingStatus()) {
             logger.info("Retrieving mock standing order report for account: {}", accountReference.getResourceId());
-            SpiTransactionLinks spiTransactionLinks = buildSpiTransactionLinks();
             SpiTransactionReport transactionReport = new SpiTransactionReport(null, createStandingOrderReportMock(), null,
-                                                                              processAcceptMediaType(spiTransactionReportParameters.getAcceptMediaType()), null, spiTransactionLinks);
+                                                                              processAcceptMediaType(spiTransactionReportParameters.getAcceptMediaType()), null, spiTransactionLinks, DEFAULT_TOTAL_PAGES);
             return SpiResponse.<SpiTransactionReport>builder()
                            .payload(transactionReport)
                            .build();
@@ -233,9 +234,8 @@ public class AccountSpiImpl implements AccountSpi {
                                                         .map(accountMapper::toSpiTransactions).orElseGet(ArrayList::new);
             List<SpiAccountBalance> balances = getSpiAccountBalances(contextData, withBalance, accountReference,
                                                                      accountConsent, aspspConsentDataProvider);
-            SpiTransactionLinks spiTransactionLinks = buildSpiTransactionLinks();
             SpiTransactionReport transactionReport = new SpiTransactionReport("downloadId", transactions, balances,
-                                                                              processAcceptMediaType(acceptMediaType), null, spiTransactionLinks);
+                                                                              processAcceptMediaType(acceptMediaType), null, spiTransactionLinks, DEFAULT_TOTAL_PAGES);
             logger.info("Finally found {} transactions.", transactionReport.getTransactions().size());
 
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
