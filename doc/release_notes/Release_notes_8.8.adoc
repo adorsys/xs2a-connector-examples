@@ -1,3 +1,9 @@
 = Release notes v.8.8
 
 == Table of Contents
+
+* Updated ledgers version to 3.12
+
+== Updated ledgers version to 3.12
+
+From now on, connector uses ledgers version 3.12
