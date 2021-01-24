@@ -586,14 +586,6 @@ class PaymentCancellationSpiImplTest {
         verify(redirectScaRestClient).getSCA(AUTHORISATION_ID);
     }
 
-    @Test
-    void requestTrustedBeneficiaryFlag() {
-        SpiResponse<Boolean> actual = authorisationSpi.requestTrustedBeneficiaryFlag(SPI_CONTEXT_DATA, businessObject, AUTHORISATION_ID, spiAspspConsentDataProvider);
-
-        assertFalse(actual.hasError());
-        assertTrue(actual.getPayload());
-    }
-
     private GlobalScaResponseTO getScaPaymentResponseTO(ScaStatusTO scaStatusTO) {
         GlobalScaResponseTO scaPaymentResponseTO = new GlobalScaResponseTO();
         scaPaymentResponseTO.setOperationObjectId(PAYMENT_ID);

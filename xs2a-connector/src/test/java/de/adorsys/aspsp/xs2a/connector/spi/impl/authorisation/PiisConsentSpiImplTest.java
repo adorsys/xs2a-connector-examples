@@ -229,13 +229,6 @@ class PiisConsentSpiImplTest {
     }
 
     @Test
-    void requestTrustedBeneficiaryFlag() {
-        SpiResponse<Boolean> actual = piisConsentSpi.requestTrustedBeneficiaryFlag(SPI_CONTEXT_DATA, spiPiisConsent, AUTHORISATION_ID, spiAspspConsentDataProvider);
-        assertTrue(actual.isSuccessful());
-        assertTrue(actual.getPayload());
-    }
-
-    @Test
     void revokePiisConsent() {
         SpiResponse<SpiResponse.VoidResponse> actual = piisConsentSpi.revokePiisConsent(SPI_CONTEXT_DATA, spiPiisConsent, spiAspspConsentDataProvider);
         assertTrue(actual.isSuccessful());

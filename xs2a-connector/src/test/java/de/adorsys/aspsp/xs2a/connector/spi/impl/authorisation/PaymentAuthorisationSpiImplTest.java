@@ -356,19 +356,6 @@ class PaymentAuthorisationSpiImplTest {
     }
 
     @Test
-    void requestTrustedBeneficiaryFlag() {
-        // When
-        SpiResponse<Boolean> actual = authorisationSpi.requestTrustedBeneficiaryFlag(SPI_CONTEXT_DATA,
-                                                                                     businessObject,
-                                                                                     AUTHORISATION_ID,
-                                                                                     spiAspspConsentDataProvider);
-
-        // Then
-        assertFalse(actual.hasError());
-        assertTrue(actual.getPayload());
-    }
-
-    @Test
     void getScaMethods_success_empty() {
         // Given
         GlobalScaResponseTO response = getGlobalScaResponseTO();

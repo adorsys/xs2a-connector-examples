@@ -1,0 +1,10 @@
+= Release notes v.9.7
+
+== Table of Contents
+
+* Added a psuMessage into Get SCA Status Response
+
+== Added a psuMessage into Get SCA Status Response
+
+Added mocked implementation for `AuthorisationSpi#getScaStatus` method.
+Removed implementation of `requestTrustedBeneficiaryFlag` (stub is in XS2A core).
