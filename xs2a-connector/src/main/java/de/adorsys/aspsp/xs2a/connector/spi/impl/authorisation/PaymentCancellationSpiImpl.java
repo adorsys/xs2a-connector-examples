@@ -254,13 +254,4 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
 
         return Optional.ofNullable(cancelScaResponse.getBody()).map(GlobalScaResponseTO::getScaMethods);
     }
-
-    @Override
-    public @NotNull SpiResponse<Boolean> requestTrustedBeneficiaryFlag(@NotNull SpiContextData spiContextData, @NotNull SpiPayment payment, @NotNull String authorisationId, @NotNull SpiAspspConsentDataProvider spiAspspConsentDataProvider) {
-        // TODO replace with real response from ledgers https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/issues/1263
-        logger.info("Retrieving mock trusted beneficiaries flag for payment cancellation: {}", payment);
-        return SpiResponse.<Boolean>builder()
-                       .payload(true)
-                       .build();
-    }
 }

@@ -13,6 +13,7 @@ import de.adorsys.psd2.xs2a.core.authorisation.AuthenticationObject;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
+import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.*;
@@ -36,6 +37,7 @@ public abstract class AbstractAuthorisationSpi<T> {
 
     private static final String DECOUPLED_PSU_MESSAGE = "Please check your app to continue...";
     private static final String LOGIN_AMOUNT_ATTEMPTS_REMAINING_MESSAGE = "You have %s attempts to enter valid credentials";
+    private static final String PSU_MESSAGE = "Mocked PSU message from SPI.";
 
     private final AuthRequestInterceptor authRequestInterceptor;
     private final AspspConsentDataService consentDataService;
@@ -260,6 +262,16 @@ public abstract class AbstractAuthorisationSpi<T> {
         String psuMessage = generatePsuMessage(contextData, authorisationId, aspspConsentDataProvider, response);
         return SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder().payload(new SpiAuthorisationDecoupledScaResponse(psuMessage)).build();
 
+    }
+
+    public SpiResponse<SpiScaStatusResponse> getScaStatus(@NotNull SpiContextData spiContextData,
+                                                          @NotNull String authorisationId,
+                                                          @NotNull SpiAspspConsentDataProvider spiAspspConsentDataProvider) {
+        // Mocked data. Request from ASPSP.
+        // TODO replace with real response from ledgers https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/issues/1263
+        return SpiResponse.<SpiScaStatusResponse>builder()
+                       .payload(new SpiScaStatusResponse(ScaStatus.RECEIVED, false, PSU_MESSAGE))
+                       .build();
     }
 
     private SpiResponse<SpiPsuAuthorisationResponse> handleLoginFailureError(T businessObject,
