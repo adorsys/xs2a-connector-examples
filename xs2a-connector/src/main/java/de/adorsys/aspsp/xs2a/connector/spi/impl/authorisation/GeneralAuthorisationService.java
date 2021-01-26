@@ -29,10 +29,12 @@ import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.UserMgmtRestClient;
+import de.adorsys.psd2.xs2a.core.authorisation.AuthenticationObject;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.sca.ChallengeData;
+import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
@@ -145,13 +147,12 @@ public class GeneralAuthorisationService {
     }
 
     public SpiResponse<SpiAuthorizationCodeResult> returnScaMethodSelection(SpiAspspConsentDataProvider aspspConsentDataProvider, SCAResponseTO sca) {
-        SpiAuthorizationCodeResult spiAuthorizationCodeResult = new SpiAuthorizationCodeResult();
         ChallengeData challengeData = Optional.ofNullable(challengeDataMapper.toChallengeData(sca.getChallengeData())).orElse(new ChallengeData());
-        spiAuthorizationCodeResult.setChallengeData(challengeData);
-        spiAuthorizationCodeResult.setSelectedScaMethod(scaMethodConverter.toAuthenticationObject(sca.getChosenScaMethod()));
+        AuthenticationObject selectedScaMethod = scaMethodConverter.toAuthenticationObject(sca.getChosenScaMethod());
         aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(sca));
         return SpiResponse.<SpiAuthorizationCodeResult>builder()
-                       .payload(spiAuthorizationCodeResult)
+                       .payload(new SpiAuthorizationCodeResult(false, challengeData, selectedScaMethod,
+                                                               ScaStatus.fromValue(sca.getScaStatus().name())))
                        .build();
     }
 }
