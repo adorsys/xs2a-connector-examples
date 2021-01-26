@@ -1,0 +1,9 @@
+= Release notes v.9.8
+
+== Table of Contents
+
+* Improved decoupled approach
+
+== Improved decoupled approach
+
+From now on, method AbstractAuthorisationSpi#startScaDecoupled returns SCA status from ASPSP to XS2A core.

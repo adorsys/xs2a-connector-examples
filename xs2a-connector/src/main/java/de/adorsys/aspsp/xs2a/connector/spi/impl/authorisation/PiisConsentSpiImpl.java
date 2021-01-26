@@ -44,7 +44,6 @@ import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -86,15 +85,6 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent>
         this.aisConsentMapper = aisConsentMapper;
         this.scaResponseMapper = scaResponseMapper;
         this.authConfirmationCodeService = authConfirmationCodeService;
-    }
-
-    @Override
-    protected ResponseEntity<GlobalScaResponseTO> getSelectMethodResponse(@NotNull String authenticationMethodId, GlobalScaResponseTO sca) {
-        ResponseEntity<GlobalScaResponseTO> scaResponse = redirectScaRestClient.selectMethod(sca.getAuthorisationId(), authenticationMethodId);
-
-        return scaResponse.getStatusCode() == HttpStatus.OK
-                       ? ResponseEntity.ok(scaResponse.getBody())
-                       : ResponseEntity.badRequest().build();
     }
 
     @Override
