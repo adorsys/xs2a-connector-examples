@@ -1,0 +1,14 @@
+= Release notes v.8.8
+
+== Table of Contents
+
+* Updated ledgers version to 3.12
+* Updated xs2a version to 8.8
+
+== Updated ledgers version to 3.12
+
+From now on, connector uses ledgers version 3.12
+
+== Updated xs2a version to 8.8
+
+From now on, xs2a-connector-examples uses xs2a version 8.8
