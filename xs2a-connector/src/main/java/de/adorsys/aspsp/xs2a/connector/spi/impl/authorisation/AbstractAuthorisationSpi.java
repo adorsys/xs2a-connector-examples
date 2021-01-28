@@ -256,12 +256,15 @@ public abstract class AbstractAuthorisationSpi<T> {
                                                                                     businessObject, aspspConsentDataProvider);
 
         if (response.hasError()) {
-            return SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder().error(response.getErrors()).build();
+            return SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder()
+                           .error(response.getErrors())
+                           .build();
         }
 
         String psuMessage = generatePsuMessage(contextData, authorisationId, aspspConsentDataProvider, response);
-        return SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder().payload(new SpiAuthorisationDecoupledScaResponse(psuMessage)).build();
-
+        return SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder()
+                       .payload(new SpiAuthorisationDecoupledScaResponse(response.getPayload().getScaStatus(), psuMessage))
+                       .build();
     }
 
     public SpiResponse<SpiScaStatusResponse> getScaStatus(@NotNull SpiContextData spiContextData,
