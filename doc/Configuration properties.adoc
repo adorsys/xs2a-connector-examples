@@ -32,5 +32,7 @@
 |xs2a.cms.url|CMS server URL|http://localhost:38080
 |xs2asandbox.ledgers.url|XS2A sandbox server URL|http://localhost:8088
 |xs2asandbox.tppui.online-banking.url|Online banking server URL|http://localhost:8090/api/v1/consents/confirm/{userLogin}/{consentId}/{authorizationId}/{tan}
+|xs2a.transaction.list.defaultPage|Default page for get transaction list request| 0
+|xs2a.transaction.list.defaultSize|Default items per page for get transaction list request| 100
 
 |===
