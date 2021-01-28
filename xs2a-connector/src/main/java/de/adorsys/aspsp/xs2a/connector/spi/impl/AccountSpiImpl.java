@@ -20,10 +20,13 @@ import de.adorsys.aspsp.xs2a.connector.account.IbanAccountReference;
 import de.adorsys.aspsp.xs2a.connector.account.OwnerNameService;
 import de.adorsys.aspsp.xs2a.connector.mock.IbanResolverMockService;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.service.TransactionLinksService;
 import de.adorsys.ledgers.middleware.api.domain.account.AccountDetailsTO;
+import de.adorsys.ledgers.middleware.api.domain.account.TransactionTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
 import de.adorsys.ledgers.rest.client.AccountRestClient;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
+import de.adorsys.ledgers.util.domain.CustomPageImpl;
 import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
 import de.adorsys.psd2.xs2a.core.consent.AisConsentRequestType;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
@@ -79,6 +82,12 @@ public class AccountSpiImpl implements AccountSpi {
     private final FeignExceptionReader feignExceptionReader;
     private final IbanResolverMockService ibanResolverMockService;
     private final OwnerNameService ownerNameService;
+    private final TransactionLinksService transactionLinksService;
+
+    @Value("${xs2a.transaction.list.defaultPage}")
+    private int defaultPage;
+    @Value("${xs2a.transaction.list.defaultSize}")
+    private int defaultSize;
 
     @Value("${test-download-transaction-list}")
     private String transactionList;
@@ -86,7 +95,7 @@ public class AccountSpiImpl implements AccountSpi {
     public AccountSpiImpl(AccountRestClient restClient, LedgersSpiAccountMapper accountMapper,
                           AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService consentDataService,
                           FeignExceptionReader feignExceptionReader, IbanResolverMockService ibanResolverMockService,
-                          OwnerNameService ownerNameService) {
+                          OwnerNameService ownerNameService, TransactionLinksService transactionLinksService) {
         this.accountRestClient = restClient;
         this.accountMapper = accountMapper;
         this.authRequestInterceptor = authRequestInterceptor;
@@ -94,6 +103,7 @@ public class AccountSpiImpl implements AccountSpi {
         this.feignExceptionReader = feignExceptionReader;
         this.ibanResolverMockService = ibanResolverMockService;
         this.ownerNameService = ownerNameService;
+        this.transactionLinksService = transactionLinksService;
     }
 
     @Override
@@ -200,11 +210,10 @@ public class AccountSpiImpl implements AccountSpi {
                                                                            @NotNull SpiAccountConsent accountConsent,
                                                                            @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         // TODO Remove it https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1100
-        SpiTransactionLinks spiTransactionLinks = buildSpiTransactionLinks();
         if (BookingStatus.INFORMATION == spiTransactionReportParameters.getBookingStatus()) {
             logger.info("Retrieving mock standing order report for account: {}", accountReference.getResourceId());
             SpiTransactionReport transactionReport = new SpiTransactionReport(null, createStandingOrderReportMock(), null,
-                                                                              processAcceptMediaType(spiTransactionReportParameters.getAcceptMediaType()), null, spiTransactionLinks, DEFAULT_TOTAL_PAGES);
+                                                                              processAcceptMediaType(spiTransactionReportParameters.getAcceptMediaType()), null, null, DEFAULT_TOTAL_PAGES);
             return SpiResponse.<SpiTransactionReport>builder()
                            .payload(transactionReport)
                            .build();
@@ -229,12 +238,22 @@ public class AccountSpiImpl implements AccountSpi {
 
             logger.info("Requested transactions for account: {}, dates from: {}, to: {}, withBalance: {}, entryReferenceFrom: {}, deltaList: {}",
                         accountReference.getResourceId(), dateFrom, dateTo, withBalance, entryReferenceFrom, deltaList);
-            List<SpiTransaction> transactions = Optional.ofNullable(
-                    accountRestClient.getTransactionByDates(accountReference.getResourceId(), dateFrom, dateTo).getBody())
-                                                        .map(accountMapper::toSpiTransactions).orElseGet(ArrayList::new);
+
+            int page = Optional.ofNullable(spiTransactionReportParameters.getPageIndex()).orElse(defaultPage);
+            int size = Optional.ofNullable(spiTransactionReportParameters.getItemsPerPage()).orElse(defaultSize);
+
+            CustomPageImpl<TransactionTO> transactionsOnPage = Optional.ofNullable(
+                    accountRestClient.getTransactionByDatesPaged(accountReference.getResourceId(), dateFrom, dateTo, page, size)
+                            .getBody()).orElse(null);
+            List<SpiTransaction> transactionsPaged = Optional.ofNullable(transactionsOnPage)
+                                                             .map(CustomPageImpl::getContent)
+                                                             .map(accountMapper::toSpiTransactions)
+                                                             .orElseGet(ArrayList::new);
+
             List<SpiAccountBalance> balances = getSpiAccountBalances(contextData, withBalance, accountReference,
                                                                      accountConsent, aspspConsentDataProvider);
-            SpiTransactionReport transactionReport = new SpiTransactionReport("downloadId", transactions, balances,
+            SpiTransactionLinks spiTransactionLinks = transactionLinksService.buildSpiTransactionLinks(page, size, transactionsOnPage);
+            SpiTransactionReport transactionReport = new SpiTransactionReport("downloadId", transactionsPaged, balances,
                                                                               processAcceptMediaType(acceptMediaType), null, spiTransactionLinks, DEFAULT_TOTAL_PAGES);
             logger.info("Finally found {} transactions.", transactionReport.getTransactions().size());
 
@@ -515,14 +534,5 @@ public class AccountSpiImpl implements AccountSpi {
         }
 
         return spiAccountDetails;
-    }
-
-    private SpiTransactionLinks buildSpiTransactionLinks() {
-        return new SpiTransactionLinks(
-                "http://localhost:8089/v1/accounts/account-id/transactions?pageIndex=0&itemsPerPage=20",
-                "http://localhost:8089/v1/accounts/account-id/transactions?pageIndex=3&itemsPerPage=20",
-                "http://localhost:8089/v1/accounts/account-id/transactions?pageIndex=1&itemsPerPage=20",
-                "http://localhost:8089/v1/accounts/account-id/transactions?pageIndex=7&itemsPerPage=20"
-        );
     }
 }
