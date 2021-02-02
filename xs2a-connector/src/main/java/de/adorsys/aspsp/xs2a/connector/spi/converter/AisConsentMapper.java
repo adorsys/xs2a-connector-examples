@@ -9,6 +9,7 @@ import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.piis.SpiPiisConsent;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
@@ -32,6 +33,7 @@ public abstract class AisConsentMapper {
 	@Mapping(target = "access.transactions", source = "account", qualifiedByName = "toAccountList")
 	public abstract AisConsentTO mapPiisToAisConsent(SpiPiisConsent consent);
 
+	@Named("toAccountList")
 	List<String> toAccountList(SpiAccountReference account) {
 		return Collections.singletonList(account.getIban());
 	}
@@ -41,6 +43,7 @@ public abstract class AisConsentMapper {
 				       .orElseGet(() -> ibanResolverMockService.handleIbanByAccountReference(s));
 	}
 
+	@Named("mapToAccountAccessType")
 	//TODO Delete this method when Ledgers start support `ALL_ACCOUNTS_WITH_OWNER_NAME` value https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1126
 	public AisAccountAccessTypeTO mapToAccountAccessType(AccountAccessType accountAccessType) {
 		if (accountAccessType == null) {
