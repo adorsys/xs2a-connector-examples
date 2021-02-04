@@ -4,11 +4,10 @@ import de.adorsys.aspsp.xs2a.connector.account.IbanAccountReference;
 import de.adorsys.aspsp.xs2a.connector.account.OwnerNameService;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapperImpl;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.service.TransactionLinksService;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.middleware.api.domain.account.AccountDetailsTO;
-import de.adorsys.ledgers.middleware.api.domain.account.AccountIdentifierTypeTO;
-import de.adorsys.ledgers.middleware.api.domain.account.AdditionalAccountInformationTO;
 import de.adorsys.ledgers.middleware.api.domain.account.TransactionTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAResponseTO;
@@ -16,6 +15,7 @@ import de.adorsys.ledgers.middleware.api.domain.um.AccessTokenTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.rest.client.AccountRestClient;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
+import de.adorsys.ledgers.util.domain.CustomPageImpl;
 import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
@@ -37,7 +37,6 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
-import javax.validation.constraints.NotNull;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -59,7 +58,6 @@ class AccountSpiImplTest {
     private static final AspspConsentData ASPSP_CONSENT_DATA = new AspspConsentData(BYTES, CONSENT_ID);
     private static final String RESOURCE_ID = "11111-999999999";
     private static final String RESOURCE_ID_SECOND_ACCOUNT = "11111-999999998";
-    private static final String RESOURCE_ID_THIRD_ACCOUNT = "33333-999999999";
 
     private final static LocalDate DATE_FROM = LocalDate.of(2019, 1, 1);
     private final static LocalDate DATE_TO = LocalDate.of(2020, 1, 1);
@@ -72,6 +70,8 @@ class AccountSpiImplTest {
     private static final String IBAN = "DE89370400440532013000";
     private static final String IBAN_SECOND_ACCOUNT = "DE32760700240271232100";
     private static final Currency CURRENCY_EUR = Currency.getInstance("EUR");
+    private static final int PAGE = 0;
+    private static final int SIZE = 15;
 
     @InjectMocks
     private AccountSpiImpl accountSpi;
@@ -79,7 +79,7 @@ class AccountSpiImplTest {
     @Mock
     private AccountRestClient accountRestClient;
     @Spy
-    private LedgersSpiAccountMapper accountMapper = new LedgersSpiAccountMapperImpl();
+    private final LedgersSpiAccountMapper accountMapper = new LedgersSpiAccountMapperImpl();
     @Mock
     private AuthRequestInterceptor authRequestInterceptor;
     @Mock
@@ -92,8 +92,10 @@ class AccountSpiImplTest {
     private FeignExceptionReader feignExceptionReader;
     @Mock
     private OwnerNameService ownerNameService;
+    @Mock
+    private TransactionLinksService transactionLinksService;
 
-    private JsonReader jsonReader = new JsonReader();
+    private final JsonReader jsonReader = new JsonReader();
     private SpiAccountConsent spiAccountConsent;
     private SpiAccountConsent spiAccountConsentWithOwnerName;
     private SpiAccountConsent spiAccountConsentGlobal;
@@ -128,13 +130,13 @@ class AccountSpiImplTest {
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
-        when(accountRestClient.getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
+        when(accountRestClient.getTransactionByDatesPaged(RESOURCE_ID, DATE_FROM, DATE_TO, PAGE, SIZE)).thenReturn(ResponseEntity.ok(new CustomPageImpl<>()));
         when(accountRestClient.getBalances(RESOURCE_ID)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
 
         SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, buildSpiTransactionReportParameters(MediaType.APPLICATION_XML_VALUE),
                                                                                                     accountReference, spiAccountConsent, aspspConsentDataProvider);
 
-        verify(accountRestClient, times(1)).getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO);
+        verify(accountRestClient, times(1)).getTransactionByDatesPaged(RESOURCE_ID, DATE_FROM, DATE_TO, PAGE, SIZE);
         verify(accountRestClient, times(1)).getBalances(RESOURCE_ID);
         verify(tokenService, times(2)).response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes());
         verify(authRequestInterceptor, times(2)).setAccessToken("access_token");
@@ -150,13 +152,13 @@ class AccountSpiImplTest {
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
-        when(accountRestClient.getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
+        when(accountRestClient.getTransactionByDatesPaged(RESOURCE_ID, DATE_FROM, DATE_TO, PAGE, SIZE)).thenReturn(ResponseEntity.ok(new CustomPageImpl<>()));
         when(accountRestClient.getBalances(RESOURCE_ID)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
 
         SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, buildSpiTransactionReportParameters(null),
                                                                                                     accountReference, spiAccountConsent, aspspConsentDataProvider);
 
-        verify(accountRestClient, times(1)).getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO);
+        verify(accountRestClient, times(1)).getTransactionByDatesPaged(RESOURCE_ID, DATE_FROM, DATE_TO, PAGE, SIZE);
         verify(accountRestClient, times(1)).getBalances(RESOURCE_ID);
         verify(tokenService, times(2)).response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes());
         verify(authRequestInterceptor, times(2)).setAccessToken("access_token");
@@ -172,13 +174,13 @@ class AccountSpiImplTest {
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
-        when(accountRestClient.getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
+        when(accountRestClient.getTransactionByDatesPaged(RESOURCE_ID, DATE_FROM, DATE_TO, PAGE, SIZE)).thenReturn(ResponseEntity.ok(new CustomPageImpl<>()));
         when(accountRestClient.getBalances(RESOURCE_ID)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
 
         SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, buildSpiTransactionReportParameters("*/*"),
                                                                                                     accountReference, spiAccountConsent, aspspConsentDataProvider);
 
-        verify(accountRestClient, times(1)).getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO);
+        verify(accountRestClient, times(1)).getTransactionByDatesPaged(RESOURCE_ID, DATE_FROM, DATE_TO, PAGE, SIZE);
         verify(accountRestClient, times(1)).getBalances(RESOURCE_ID);
         verify(tokenService, times(2)).response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes());
         verify(authRequestInterceptor, times(2)).setAccessToken("access_token");
@@ -194,7 +196,7 @@ class AccountSpiImplTest {
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
-        when(accountRestClient.getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
+        when(accountRestClient.getTransactionByDatesPaged(RESOURCE_ID, DATE_FROM, DATE_TO, PAGE, SIZE)).thenReturn(ResponseEntity.ok(new CustomPageImpl<>()));
         when(accountRestClient.getBalances(RESOURCE_ID)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
 
         when(tokenService.store(scaResponseTO)).thenThrow(getFeignException());
@@ -208,7 +210,7 @@ class AccountSpiImplTest {
         verify(tokenService, times(2)).response(BYTES);
         verify(authRequestInterceptor, times(2)).setAccessToken(scaResponseTO.getBearerToken().getAccess_token());
         verify(authRequestInterceptor, times(2)).setAccessToken(null);
-        verify(accountRestClient, times(1)).getTransactionByDates(RESOURCE_ID, DATE_FROM, DATE_TO);
+        verify(accountRestClient, times(1)).getTransactionByDatesPaged(RESOURCE_ID, DATE_FROM, DATE_TO, PAGE, SIZE);
         verify(tokenService, times(1)).store(scaResponseTO);
     }
 
@@ -746,7 +748,7 @@ class AccountSpiImplTest {
     }
 
     private SpiTransactionReportParameters buildSpiTransactionReportParameters(String mediaType) {
-        return new SpiTransactionReportParameters(mediaType, true, DATE_FROM, DATE_TO, BookingStatus.BOOKED, null, null, null, null);
+        return new SpiTransactionReportParameters(mediaType, true, DATE_FROM, DATE_TO, BookingStatus.BOOKED, null, null, PAGE, SIZE);
     }
 
     private AccountDetailsTO buildAccountDetailsTO(String iban, String resourceId) {
@@ -771,12 +773,5 @@ class AccountSpiImplTest {
 
     private SpiAccountConsent buildSpiAccountConsent() {
         return jsonReader.getObjectFromFile("json/spi/impl/spi-account-consent-with-2-accounts.json", SpiAccountConsent.class);
-    }
-
-    @NotNull
-    private AdditionalAccountInformationTO buildAdditionalAccountInformationTO(String ownerName) {
-        AdditionalAccountInformationTO additionalAccountInformationTO = new AdditionalAccountInformationTO();
-        additionalAccountInformationTO.setAccountOwnerName(ownerName);
-        return additionalAccountInformationTO;
     }
 }
