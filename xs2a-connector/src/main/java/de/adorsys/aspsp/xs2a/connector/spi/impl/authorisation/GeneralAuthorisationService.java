@@ -21,7 +21,6 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.LedgersErrorCode;
 import de.adorsys.aspsp.xs2a.connector.spi.util.AspspConsentDataExtractor;
 import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
@@ -97,16 +96,8 @@ public class GeneralAuthorisationService {
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Authorise PSU internal failed: authorisation ID {}, business object ID: {}, devMessage: {}", authorisationId, businessObjectId, devMessage);
-
-            LedgersErrorCode errorCode = feignExceptionReader.getLedgersErrorCode(feignException);
-            if (LedgersErrorCode.PSU_AUTH_ATTEMPT_INVALID.equals(errorCode)) {
-                return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                               .payload(new SpiPsuAuthorisationResponse(false, SpiAuthorisationStatus.ATTEMPT_FAILURE))
-                               .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
-                               .build();
-            }
             return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.SCA_INVALID, devMessage))
                            .build();
         }
     }
