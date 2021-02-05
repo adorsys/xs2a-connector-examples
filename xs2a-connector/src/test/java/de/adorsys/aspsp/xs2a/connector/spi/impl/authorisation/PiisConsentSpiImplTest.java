@@ -465,10 +465,8 @@ class PiisConsentSpiImplTest {
         SpiResponse<SpiVerifyScaAuthorisationResponse> actual = piisConsentSpi.verifyScaAuthorisation(SPI_CONTEXT_DATA, spiScaConfirmation, spiPiisConsent, spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());
-        assertNotNull(actual.getPayload());
-        assertEquals(SpiAuthorisationStatus.ATTEMPT_FAILURE, actual.getPayload().getSpiAuthorisationStatus());
-        assertEquals(ConsentStatus.RECEIVED, actual.getPayload().getConsentStatus());
         assertEquals(MessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiAuthorisationStatus.ATTEMPT_FAILURE, actual.getPayload().getSpiAuthorisationStatus());
     }
 
     @Test

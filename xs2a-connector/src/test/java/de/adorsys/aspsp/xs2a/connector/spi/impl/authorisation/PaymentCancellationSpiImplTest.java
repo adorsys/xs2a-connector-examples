@@ -290,14 +290,12 @@ class PaymentCancellationSpiImplTest {
                 .thenThrow(feignException);
         when(feignExceptionReader.getLedgersErrorCode(feignException)).thenReturn(LedgersErrorCode.SCA_VALIDATION_ATTEMPT_FAILED);
 
-        SpiPaymentExecutionResponse expected = new SpiPaymentExecutionResponse(SpiAuthorisationStatus.ATTEMPT_FAILURE);
         SpiResponse<SpiPaymentExecutionResponse> actual = authorisationSpi.verifyScaAuthorisationAndCancelPaymentWithResponse(SPI_CONTEXT_DATA, spiScaConfirmation,
                                                                                                                               businessObject, spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());
-        assertNotNull(actual.getPayload());
         assertEquals(MessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
-        assertEquals(expected, actual.getPayload());
+        assertEquals(SpiAuthorisationStatus.ATTEMPT_FAILURE, actual.getPayload().getSpiAuthorisationStatus());
 
         verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
         verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES);

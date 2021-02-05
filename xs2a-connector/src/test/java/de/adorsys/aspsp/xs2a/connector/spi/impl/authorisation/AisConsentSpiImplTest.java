@@ -521,16 +521,14 @@ class AisConsentSpiImplTest {
 
         SpiScaConfirmation spiScaConfirmation = new SpiScaConfirmation();
         spiScaConfirmation.setTanNumber("tan");
-        SpiVerifyScaAuthorisationResponse expected = new SpiVerifyScaAuthorisationResponse(null, SpiAuthorisationStatus.ATTEMPT_FAILURE);
 
         // When
         SpiResponse<SpiVerifyScaAuthorisationResponse> actual = spi.verifyScaAuthorisation(SPI_CONTEXT_DATA, spiScaConfirmation, spiAccountConsent, spiAspspConsentDataProvider);
 
         // Then
         assertTrue(actual.hasError());
-        assertNotNull(actual.getPayload());
         assertEquals(MessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
-        assertEquals(expected, actual.getPayload());
+        assertEquals(SpiAuthorisationStatus.ATTEMPT_FAILURE, actual.getPayload().getSpiAuthorisationStatus());
     }
 
     @Test

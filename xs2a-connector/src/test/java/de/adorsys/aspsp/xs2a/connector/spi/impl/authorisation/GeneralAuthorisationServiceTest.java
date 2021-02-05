@@ -20,7 +20,6 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.ChallengeDataMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.LedgersErrorCode;
 import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
@@ -150,13 +149,12 @@ class GeneralAuthorisationServiceTest {
         FeignException feignException = getFeignException();
         when(redirectScaRestClient.startSca(scaOprTOCaptor.capture())).thenThrow(feignException);
         when(feignExceptionReader.getErrorMessage(feignException)).thenReturn("error message");
-        when(feignExceptionReader.getLedgersErrorCode(feignException)).thenReturn(LedgersErrorCode.REQUEST_VALIDATION_FAILURE);
 
         SpiResponse<SpiPsuAuthorisationResponse> actual = generalAuthorisationService.authorisePsuInternal(CONSENT_ID, AUTHORISATION_ID, OpTypeTO.CONSENT, globalScaResponseTO, spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());
         assertNull(actual.getPayload());
-        assertEquals(MessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
+        assertEquals(MessageErrorCode.SCA_INVALID, actual.getErrors().get(0).getErrorCode());
 
         verify(spiAspspConsentDataProvider, times(1)).updateAspspConsentData(CONSENT_DATA_BYTES);
     }
@@ -177,15 +175,12 @@ class GeneralAuthorisationServiceTest {
         FeignException feignException = getFeignException();
         when(redirectScaRestClient.startSca(scaOprTOCaptor.capture())).thenThrow(feignException);
         when(feignExceptionReader.getErrorMessage(feignException)).thenReturn("error message");
-        when(feignExceptionReader.getLedgersErrorCode(feignException)).thenReturn(LedgersErrorCode.PSU_AUTH_ATTEMPT_INVALID);
 
         SpiResponse<SpiPsuAuthorisationResponse> actual = generalAuthorisationService.authorisePsuInternal(CONSENT_ID, AUTHORISATION_ID, OpTypeTO.CONSENT, globalScaResponseTO, spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());
-        assertNotNull(actual.getPayload());
-        assertEquals(SpiAuthorisationStatus.ATTEMPT_FAILURE, actual.getPayload().getSpiAuthorisationStatus());
-        assertFalse(actual.getPayload().isScaExempted());
-        assertEquals(MessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
+        assertNull(actual.getPayload());
+        assertEquals(MessageErrorCode.SCA_INVALID, actual.getErrors().get(0).getErrorCode());
 
         verify(spiAspspConsentDataProvider, times(1)).updateAspspConsentData(CONSENT_DATA_BYTES);
     }
