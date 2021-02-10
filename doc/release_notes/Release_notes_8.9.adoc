@@ -2,7 +2,17 @@
 
 == Table of Contents
 
+* Improved decoupled approach
+* Updated mapstruct version
 * Updated xs2a version
+
+== Improved decoupled approach
+
+From now on, method AbstractAuthorisationSpi#startScaDecoupled returns SCA status from ASPSP to XS2A core.
+
+== Updated mapstruct version
+
+Mapstruct version was updated to 1.4.1.RELEASE.
 
 == Updated xs2a version
 
