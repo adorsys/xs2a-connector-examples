@@ -106,7 +106,7 @@
 		<springfox-bean-validators.version>2.9.2</springfox-bean-validators.version>
 		<commons-io.version>2.6</commons-io.version>
 
-		<jackson.version>2.10.1</jackson.version>
+		<jackson.version>2.12.1</jackson.version>
 		<liquibase.version>3.6.2</liquibase.version>
 
 		<junit-jupiter.version>5.5.2</junit-jupiter.version>
