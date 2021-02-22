@@ -13,7 +13,6 @@ import de.adorsys.psd2.xs2a.core.authorisation.AuthenticationObject;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
-import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.*;
@@ -267,13 +266,13 @@ public abstract class AbstractAuthorisationSpi<T> {
                        .build();
     }
 
-    public SpiResponse<SpiScaStatusResponse> getScaStatus(@NotNull SpiContextData spiContextData,
+    public SpiResponse<SpiScaInformationResponse> getScaInformation(@NotNull SpiContextData spiContextData,
                                                           @NotNull String authorisationId,
                                                           @NotNull SpiAspspConsentDataProvider spiAspspConsentDataProvider) {
         // Mocked data. Request from ASPSP.
         // TODO replace with real response from ledgers https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/issues/1263
-        return SpiResponse.<SpiScaStatusResponse>builder()
-                       .payload(new SpiScaStatusResponse(ScaStatus.RECEIVED, false, PSU_MESSAGE))
+        return SpiResponse.<SpiScaInformationResponse>builder()
+                       .payload(new SpiScaInformationResponse(false, PSU_MESSAGE))
                        .build();
     }
 
