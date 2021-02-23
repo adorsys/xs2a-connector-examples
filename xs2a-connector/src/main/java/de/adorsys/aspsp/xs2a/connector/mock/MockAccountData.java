@@ -19,6 +19,7 @@ package de.adorsys.aspsp.xs2a.connector.mock;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiEntryDetails;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiExchangeRate;
+import de.adorsys.psd2.xs2a.spi.domain.account.SpiTransactionInfo;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiAddress;
 
@@ -58,10 +59,18 @@ public class MockAccountData {
     private static SpiEntryDetails buildSpiEntryDetails() {
         return new SpiEntryDetails("endToEndId", "mandateId", "checkId", "creditorId",
                                    new SpiAmount(Currency.getInstance("EUR"), new BigDecimal(123)),
-                                   Collections.singletonList(buildSpiExchangeRate()), "creditorName", buildSpiAccountReferenceCreditor(),
-                                   "creditorAgent", "ultimateCreditor", "debtorName", buildSpiAccountReferenceDebtor(),
-                                   "debtorAgent", "ultimateDebtor", "remittanceInformationUnstructured", Collections.singletonList("remittanceInformationUnstructuredArray"),
-                                   "remittanceInformationStructured", Collections.singletonList("remittanceInformationStructuredArray"), "CDCB");
+                                   Collections.singletonList(buildSpiExchangeRate()), buildSpiTransactionInfo());
+    }
+
+    private static SpiTransactionInfo buildSpiTransactionInfo() {
+        return new SpiTransactionInfo("creditorName", buildSpiAccountReferenceCreditor(),
+                                      "creditorAgent", "ultimateCreditor",
+                                      "debtorName", buildSpiAccountReferenceDebtor(),
+                                      "debtorAgent", "ultimateDebtor",
+                                      "remittanceInformationUnstructured",
+                                      Collections.singletonList("remittanceInformationUnstructuredArray"),
+                                      "remittanceInformationStructured",
+                                      Collections.singletonList("remittanceInformationStructuredArray"), "CDCB");
     }
 
     private static SpiAccountReference buildSpiAccountReferenceCreditor() {

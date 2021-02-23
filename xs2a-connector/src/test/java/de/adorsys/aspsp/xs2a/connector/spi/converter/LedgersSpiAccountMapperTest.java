@@ -22,7 +22,7 @@ class LedgersSpiAccountMapperTest {
 
     @Autowired
     private LedgersSpiAccountMapper ledgersSpiAccountMapper;
-    private JsonReader jsonReader = new JsonReader();
+    private final JsonReader jsonReader = new JsonReader();
 
     @Test
     void toFundsConfirmationTOWithRealData() {
