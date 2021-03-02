@@ -3,7 +3,12 @@
 == Table of Contents
 
 * Updated xs2a version
+* Updated ledgers version
 
 == Updated xs2a version
 
 From now on, xs2a-connector-examples uses xs2a version 9.10
+
+== Updated ledgers version
+
+From now on, connector uses ledgers version 4.7.

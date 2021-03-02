@@ -479,7 +479,7 @@ class GeneralPaymentServiceTest {
     void initiatePaymentInLedgers() {
         PaymentTO paymentTO = new PaymentTO();
 
-        when(paymentRestClient.initiatePayment(PaymentTypeTO.SINGLE, paymentTO))
+        when(paymentRestClient.initiatePayment(paymentTO))
                 .thenReturn(ResponseEntity.ok(new SCAPaymentResponseTO()));
 
         GlobalScaResponseTO actual = generalPaymentService.initiatePaymentInLedgers(PaymentTypeTO.SINGLE, PaymentTypeTO.SINGLE, paymentTO);
