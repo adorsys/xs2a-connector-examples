@@ -3,7 +3,12 @@
 == Table of Contents
 
 * Updated xs2a version
+* Updated jackson version to 2.12.1
 
 == Updated xs2a version
 
 From now on, xs2a-connector-examples uses xs2a version 8.11
+
+== Updated jackson version to 2.12.1
+
+Fixed severe security vulnerability detected in com.fasterxml.jackson.core:jackson-databind < 2.12.1 defined in pom.xml.
