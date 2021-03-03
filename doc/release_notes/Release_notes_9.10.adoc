@@ -4,6 +4,7 @@
 
 * Updated xs2a version
 * Updated ledgers version
+* Updated jackson version to 2.12.1
 
 == Updated xs2a version
 
@@ -12,3 +13,7 @@ From now on, xs2a-connector-examples uses xs2a version 9.10
 == Updated ledgers version
 
 From now on, connector uses ledgers version 4.7.
+
+== Updated jackson version to 2.12.1
+
+Fixed severe security vulnerability detected in com.fasterxml.jackson.core:jackson-databind < 2.12.1 defined in pom.xml.
