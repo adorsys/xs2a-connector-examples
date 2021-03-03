@@ -23,10 +23,6 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring", imports = OpTypeTO.class)
 public interface ScaResponseMapper {
 
-    @Mapping(target = "opType", expression = "java(OpTypeTO.LOGIN)")
-    @Mapping(target = "operationObjectId", source = "scaId")
-    GlobalScaResponseTO toGlobalScaResponse(SCALoginResponseTO responseTO);
-
     @Mapping(target = "opType", expression = "java(OpTypeTO.CONSENT)")
     @Mapping(target = "operationObjectId", source = "consentId")
     @Mapping(target = "tan", source = "chosenScaMethod.staticTan")

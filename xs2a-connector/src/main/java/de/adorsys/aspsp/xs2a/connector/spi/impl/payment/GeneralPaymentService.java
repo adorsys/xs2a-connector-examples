@@ -317,7 +317,7 @@ public class GeneralPaymentService {
 
     public <P> GlobalScaResponseTO initiatePaymentInLedgers(P payment, PaymentTypeTO paymentTypeTO, PaymentTO request) {
         try {
-            SCAPaymentResponseTO initiationResponse = paymentRestClient.initiatePayment(paymentTypeTO, request).getBody();
+            SCAPaymentResponseTO initiationResponse = paymentRestClient.initiatePayment(request).getBody();
             logger.debug("{} payment body: {}", paymentTypeTO, payment);
             return scaResponseMapper.toGlobalScaResponse(initiationResponse);
         } finally {

@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaResponseMapper;
 import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCALoginResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -95,9 +94,6 @@ public class AspspConsentDataService {
         } else if (SCAConsentResponseTO.class.getSimpleName().equals(type)) {
             SCAConsentResponseTO scaConsentResponseTO = objectMapper.readValue(tokenBytes, SCAConsentResponseTO.class);
             return scaResponseMapper.toGlobalScaResponse(scaConsentResponseTO);
-        } else if (SCALoginResponseTO.class.getSimpleName().equals(type)) {
-            SCALoginResponseTO scaLoginResponseTO = objectMapper.readValue(tokenBytes, SCALoginResponseTO.class);
-            return scaResponseMapper.toGlobalScaResponse(scaLoginResponseTO);
         } else if (SCAPaymentResponseTO.class.getSimpleName().equals(type)) {
             SCAPaymentResponseTO scaPaymentResponseTO = objectMapper.readValue(tokenBytes, SCAPaymentResponseTO.class);
             return scaResponseMapper.toGlobalScaResponse(scaPaymentResponseTO);
