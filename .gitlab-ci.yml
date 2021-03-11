@@ -43,8 +43,7 @@ variables: &variables
   # Private Openshift Images #
   ############################
 
-  OPENSHIFT_NAMESPACE_ADORSYS_XS2A_DEV: "adorsys-xs2a-dev"
-  OPENSHIFT_NAMESPACE_ADORSYS_XS2A_INTEG: "adorsys-xs2a-integ"
+  OPENSHIFT_NAMESPACE_SUPPORT10X: adorsys-psd2-support10x
 
 # ------------------------------------------------------------------
 # reusable yaml anchors
@@ -73,14 +72,6 @@ variables: &variables
       --dest-creds=openshift:${OPENSHIFT_TOKEN}
       "docker://docker.io/adorsys/xs2a-connector-examples:${DOCKER_TAG}"
       "docker://${OPENSHIFT_REGISTRY}/${OPENSHIFT_NAMESPACE}/xs2a-connector-examples:latest"
-
-.deploy_openshift_embedded: &deploy_openshift_embedded
-  script:
-    - >-
-      skopeo copy
-      --dest-creds=openshift:${OPENSHIFT_TOKEN}
-      "docker://docker.io/adorsys/xs2a-connector-embedded:${DOCKER_TAG}"
-      "docker://${OPENSHIFT_REGISTRY}/${OPENSHIFT_NAMESPACE}/xs2a-connector-embedded:latest"
 
 # ------------------------------------------------------------------
 # jobs
@@ -250,79 +241,26 @@ Test:Sonarcube:
     - develop
 
 ###########
-# develop #
+# Support 10.x #
 ###########
 
-Push to DockerHub (develop):
+Push to DockerHub (support-10.x):
   stage: "Package"
   only:
-    - develop
+    - support-10.x
   variables:
-    DOCKER_TAG: develop
+    DOCKER_TAG: support10x
   <<: *build_dockerhub_image
 
-Push to DockerHub (develop Embedded):
-  stage: "Package"
-  only:
-    - develop
-  variables:
-    DOCKER_TAG: develop
-  <<: *build_dockerhub_image_embedded
-
-Deploy Openshift (develop):
+Deploy Openshift (support-10.x):
   stage: "Deployment"
   only:
-    - develop
+    - support-10.x
   variables:
     <<: *variables
-    DOCKER_TAG: develop
-    OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_DEV}"
+    DOCKER_TAG: support10x
+    OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_SUPPORT10X}"
   <<: *deploy_openshift
-
-Deploy Openshift (develop Embedded):
-  stage: "Deployment"
-  only:
-    - develop
-  variables:
-    <<: *variables
-    DOCKER_TAG: develop
-    OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_DEV}"
-  <<: *deploy_openshift_embedded
-
-Notify Slack channel (develop):
-  image: "bash:4"
-  stage: "Notification"
-  cache: {}
-  only:
-    - develop
-  variables:
-    HELM_RELEASE: dev-psd2
-    ENV_JSON_FILE: scripts/notifications/psd2-dev.json
-    SLACK_CHANNEL: ${SLACK_PSD2_DEVELOP_CHANNEL}
-  script:
-    - apk update && apk add jq curl
-    - sleep 60
-    - scripts/notifications/./webhook_slack.sh xs2a cms aspspprofile ledgers
-
-##########
-# master #
-##########
-
-Push to DockerHub (master):
-  stage: "Package"
-  only:
-    - master
-  variables:
-    DOCKER_TAG: latest
-  <<: *build_dockerhub_image
-
-Push to DockerHub (master Embedded):
-  stage: "Package"
-  only:
-    - master
-  variables:
-    DOCKER_TAG: latest
-  <<: *build_dockerhub_image_embedded
 
 ###########
 # release #
@@ -335,53 +273,3 @@ Push to DockerHub (Release):
   variables:
     DOCKER_TAG: $CI_COMMIT_TAG
   <<: *build_dockerhub_image
-
-Push to DockerHub (Embedded Release):
-  stage: "Package"
-  only:
-    - tags
-  variables:
-    DOCKER_TAG: $CI_COMMIT_TAG
-  <<: *build_dockerhub_image_embedded
-
-###########
-# nightly #
-###########
-
-Deploy Openshift (Nightly):
-  stage: "Deployment"
-  only:
-    variables:
-      - $NIGHTLY == "true"
-  variables:
-    <<: *variables
-    DOCKER_TAG: develop
-    OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_INTEG}"
-  <<: *deploy_openshift
-
-Deploy Openshift (Nightly Embedded):
-  stage: "Deployment"
-  only:
-    variables:
-      - $NIGHTLY == "true"
-  variables:
-    <<: *variables
-    DOCKER_TAG: develop
-    OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_INTEG}"
-  <<: *deploy_openshift_embedded
-
-Notify Slack channel (Integ):
-  image: "bash:4"
-  stage: "Notification"
-  cache: {}
-  only:
-    - schedules
-  variables:
-    HELM_RELEASE: integ-psd2
-    ENV_JSON_FILE: scripts/notifications/psd2-integ.json
-    SLACK_CHANNEL: ${SLACK_PSD2_INTEG_CHANNEL}
-  script:
-    - apk update && apk add jq curl
-    - sleep 60
-    - scripts/notifications/./webhook_slack.sh xs2a cms aspspprofile ledgers
-
