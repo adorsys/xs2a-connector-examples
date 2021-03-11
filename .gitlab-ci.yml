@@ -370,18 +370,4 @@ Deploy Openshift (Nightly Embedded):
     OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_INTEG}"
   <<: *deploy_openshift_embedded
 
-Notify Slack channel (Integ):
-  image: "bash:4"
-  stage: "Notification"
-  cache: {}
-  only:
-    - schedules
-  variables:
-    HELM_RELEASE: integ-psd2
-    ENV_JSON_FILE: scripts/notifications/psd2-integ.json
-    SLACK_CHANNEL: ${SLACK_PSD2_INTEG_CHANNEL}
-  script:
-    - apk update && apk add jq curl
-    - sleep 60
-    - scripts/notifications/./webhook_slack.sh xs2a cms aspspprofile ledgers
 
