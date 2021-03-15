@@ -43,7 +43,7 @@ variables: &variables
   # Private Openshift Images #
   ############################
 
-  OPENSHIFT_NAMESPACE_SUPPORT10X: adorsys-psd2-support10x
+  OPENSHIFT_NAMESPACE_SUPPORT10X: adorsys-xs2a-support10x
 
 # ------------------------------------------------------------------
 # reusable yaml anchors
@@ -86,7 +86,7 @@ Lint:Docker_compose:
   stage: "Lint"
   except:
     - schedules
-    - develop
+    - support-10.x
     - master
   script:
     - apt update && apt install yamllint docker-compose make -yq
@@ -98,7 +98,7 @@ Lint:Ci_file:
   stage: "Lint"
   except:
     - schedules
-    - develop
+    - support-10.x
     - master
   script:
     - apt-get update && apt-get install yamllint python3-pkg-resources -yq
@@ -110,7 +110,7 @@ Lint:XS2A_connector_yaml_json_xml:
   stage: "Lint"
   except:
     - schedules
-    - develop
+    - support-10.x
     - master
   script:
     - apt-get update && apt-get install jsonlint yamllint libxml2-utils make curl -yq && ln -s /usr/bin/jsonlint-php /usr/bin/jsonlint
@@ -127,7 +127,7 @@ Lint:XS2A_connector_PMD_CPD_Report:
   stage: "Lint"
   except:
     - schedules
-    - develop
+    - support-10.x
     - master
   script:
     - apt update && apt install make -yq
@@ -147,7 +147,7 @@ Lint:XS2A_connector_dockerfiles:
   stage: "Lint"
   except:
     - schedules
-    - develop
+    - support-10.x
     - master
   script:
     - apt-get update && apt-get install jsonlint yamllint libxml2-utils make curl -yq && ln -s /usr/bin/jsonlint-php /usr/bin/jsonlint
@@ -230,7 +230,7 @@ Test:Sonarcube:
   needs: []
   except:
     - schedules
-    - develop
+    - support-10.x
   script:
     - jabba use "system@1.11"
     - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
@@ -238,7 +238,7 @@ Test:Sonarcube:
     - mvn --fail-at-end clean install
     - mvn sonar:sonar -Dsonar.host.url=$SONAR_HOST -Dsonar.login=${SONAR_TOKEN}
   only:
-    - develop
+    - support-10.x
 
 ###########
 # Support 10.x #
