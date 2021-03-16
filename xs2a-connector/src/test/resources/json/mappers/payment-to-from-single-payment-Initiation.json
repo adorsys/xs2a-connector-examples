@@ -10,7 +10,6 @@
     "msisdn": "0172/1111111",
     "currency": "EUR"
   },
-  "debtorName": "Mueller",
   "targets": [
     {
       "endToEndIdentification": "RI-123456789",

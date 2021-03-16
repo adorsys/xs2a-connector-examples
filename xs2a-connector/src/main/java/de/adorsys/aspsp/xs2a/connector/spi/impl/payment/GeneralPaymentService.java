@@ -67,7 +67,6 @@ public class GeneralPaymentService {
     private static final Logger logger = LoggerFactory.getLogger(GeneralPaymentService.class);
     private static final String XML_MEDIA_TYPE = "application/xml";
     private static final String PSU_MESSAGE = "Mocked PSU message from SPI for this payment";
-    private static final String DEBTOR_NAME = "Mocked debtor name from ASPSP";
 
     private final PaymentRestClient paymentRestClient;
     private final AuthRequestInterceptor authRequestInterceptor;
@@ -306,10 +305,6 @@ public class GeneralPaymentService {
         Supplier<SpiResponse<P>> buildFailedResponse = () -> SpiResponse.<P>builder().error(new TppMessage(MessageErrorCode.PAYMENT_FAILED_INCORRECT_ID)).build();
 
         return getPaymentFromLedgers(payment, aspspConsentDataProvider.loadAspspConsentData())
-                       .map(p -> {
-                           p.setDebtorName(DEBTOR_NAME);
-                           return p;
-                       })
                        .map(mapperToSpiPayment)
                        .map(buildSuccessResponse)
                        .orElseGet(buildFailedResponse);
