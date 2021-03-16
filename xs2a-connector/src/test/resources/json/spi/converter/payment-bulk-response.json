@@ -13,7 +13,6 @@
   },
   "targets": [
     {
-      "paymentId": "yc7AU-GdRIMjLAzKXjmDU4",
       "endToEndIdentification": "RI-123456789",
       "instructedAmount": {
         "currency": "EUR",
