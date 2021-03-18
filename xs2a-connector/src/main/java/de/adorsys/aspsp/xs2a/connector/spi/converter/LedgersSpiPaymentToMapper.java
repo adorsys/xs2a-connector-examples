@@ -52,8 +52,9 @@ public class LedgersSpiPaymentToMapper {
                            paymentTO.setPaymentType(PaymentTypeTO.valueOf(spiPaymentInfo.getPaymentType().name()));
                            paymentTO.setPaymentProduct(spiPaymentInfo.getPaymentProduct());
                            paymentTO.setDebtorAccount(mapToAccountReferenceTO(payment.getDebtorAccount()));
-                           paymentTO.setDebtorName(payment.getUltimateDebtor());
+                           paymentTO.setDebtorName(payment.getDebtorName());
                            paymentTO.setTargets(Collections.singletonList(mapToPaymentTargetTO(payment)));
+
                            return paymentTO;
 
                        })
@@ -71,6 +72,7 @@ public class LedgersSpiPaymentToMapper {
                            paymentTO.setPaymentType(PaymentTypeTO.valueOf(spiPaymentInfo.getPaymentType().name()));
                            paymentTO.setPaymentProduct(spiPaymentInfo.getPaymentProduct());
                            paymentTO.setDebtorAccount(mapToAccountReferenceTO(payment.getDebtorAccount()));
+                           paymentTO.setDebtorName(payment.getDebtorName());
                            paymentTO.setBatchBookingPreferred(payment.getBatchBookingPreferred());
                            paymentTO.setRequestedExecutionDate(payment.getRequestedExecutionDate());
                            paymentTO.setRequestedExecutionTime(Optional.ofNullable(payment.getRequestedExecutionTime()).map(OffsetDateTime::toLocalTime).orElse(null));

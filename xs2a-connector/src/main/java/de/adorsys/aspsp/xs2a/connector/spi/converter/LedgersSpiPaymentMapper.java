@@ -59,6 +59,7 @@ public class LedgersSpiPaymentMapper {
         spiBulkPayment.setPaymentId(paymentTO.getPaymentId());
         spiBulkPayment.setBatchBookingPreferred(paymentTO.getBatchBookingPreferred());
         spiBulkPayment.setDebtorAccount(accountMapper.toSpiAccountReference(paymentTO.getDebtorAccount()));
+        spiBulkPayment.setDebtorName(paymentTO.getDebtorName());
         spiBulkPayment.setRequestedExecutionDate(paymentTO.getRequestedExecutionDate());
         spiBulkPayment.setRequestedExecutionTime(toDateTime(paymentTO.getRequestedExecutionDate(), paymentTO.getRequestedExecutionTime()));
         spiBulkPayment.setPaymentStatus(TransactionStatus.valueOf(paymentTO.getTransactionStatus().name()));
