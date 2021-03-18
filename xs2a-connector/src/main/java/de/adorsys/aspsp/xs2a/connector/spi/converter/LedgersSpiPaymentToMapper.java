@@ -52,9 +52,8 @@ public class LedgersSpiPaymentToMapper {
                            paymentTO.setPaymentType(PaymentTypeTO.valueOf(spiPaymentInfo.getPaymentType().name()));
                            paymentTO.setPaymentProduct(spiPaymentInfo.getPaymentProduct());
                            paymentTO.setDebtorAccount(mapToAccountReferenceTO(payment.getDebtorAccount()));
-                           paymentTO.setDebtorName(payment.getUltimateDebtor());
-                           paymentTO.setTargets(Collections.singletonList(mapToPaymentTargetTO(payment, spiPaymentInfo)));
-                           return paymentTO;
+                           paymentTO.setDebtorName(payment.getDebtorName());
+                           paymentTO.setTargets(Collections.singletonList(mapToPaymentTargetTO(payment)));                           return paymentTO;
 
                        })
                        .orElse(null);
@@ -71,11 +70,12 @@ public class LedgersSpiPaymentToMapper {
                            paymentTO.setPaymentType(PaymentTypeTO.valueOf(spiPaymentInfo.getPaymentType().name()));
                            paymentTO.setPaymentProduct(spiPaymentInfo.getPaymentProduct());
                            paymentTO.setDebtorAccount(mapToAccountReferenceTO(payment.getDebtorAccount()));
+                           paymentTO.setDebtorName(payment.getDebtorName());
                            paymentTO.setBatchBookingPreferred(payment.getBatchBookingPreferred());
                            paymentTO.setRequestedExecutionDate(payment.getRequestedExecutionDate());
                            paymentTO.setRequestedExecutionTime(Optional.ofNullable(payment.getRequestedExecutionTime()).map(OffsetDateTime::toLocalTime).orElse(null));
                            paymentTO.setTargets(payment.getPayments().stream()
-                                                        .map(bulk -> mapToPaymentTargetTO(bulk, spiPaymentInfo))
+                                                        .map(this::mapToPaymentTargetTO)
                                                         .collect(Collectors.toList()));
                            return paymentTO;
                        })
@@ -165,14 +165,14 @@ public class LedgersSpiPaymentToMapper {
         return paymentTargetTO;
     }
 
-    private PaymentTargetTO mapToPaymentTargetTO(PaymentInitiationJson payment, SpiPaymentInfo spiPaymentInfo) {
+    private PaymentTargetTO mapToPaymentTargetTO(PaymentInitiationJson payment) {
+
         if (payment == null) {
             return null;
         }
 
         PaymentTargetTO paymentTargetTO = new PaymentTargetTO();
 
-        paymentTargetTO.setPaymentId(spiPaymentInfo.getPaymentId());
         paymentTargetTO.setEndToEndIdentification(payment.getEndToEndIdentification());
         paymentTargetTO.setInstructedAmount(mapToAmountTO(payment.getInstructedAmount()));
         paymentTargetTO.setCreditorAccount(mapToAccountReferenceTO(payment.getCreditorAccount()));
