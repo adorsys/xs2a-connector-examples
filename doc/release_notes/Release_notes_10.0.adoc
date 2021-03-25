@@ -1,0 +1,10 @@
+= Release notes v.10.0
+
+== Table of Contents
+
+* Call SPI for scaStatus on GET SCA Status request
+
+== Call SPI for scaStatus on GET SCA Status request
+
+Default mock implementation for method AuthorisationSpi#getScaStatus has been added.
+Removed payment IDs generation for target payments in bulk.
