@@ -277,7 +277,9 @@ public abstract class AbstractAuthorisationSpi<T> {
                        .build();
     }
 
-    public SpiResponse<SpiScaStatusResponse> getScaStatus(@NotNull ScaStatus scaStatus, @NotNull SpiContextData contextData, @NotNull String authorisationId, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+    public SpiResponse<SpiScaStatusResponse> getScaStatus(@NotNull ScaStatus scaStatus, @NotNull SpiContextData contextData,
+                                                          @NotNull String authorisationId, @NotNull T businessObject,
+                                                          @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         // TODO replace with real response from ledgers https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/issues/1263
         return SpiResponse.<SpiScaStatusResponse>builder()
                        .payload(new SpiScaStatusResponse(scaStatus, false, PSU_MESSAGE))
