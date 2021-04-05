@@ -16,7 +16,7 @@
 
 package de.adorsys.ledgers.rest.client;
 
-import de.adorsys.psd2.consent.api.pis.CmsPayment;
+import de.adorsys.psd2.consent.api.pis.CmsBasePaymentResponse;
 import de.adorsys.psd2.consent.api.pis.CmsPaymentResponse;
 import de.adorsys.psd2.consent.api.pis.CreatePisCommonPaymentResponse;
 import de.adorsys.psd2.xs2a.core.psu.PsuIdData;
@@ -33,7 +33,7 @@ public interface CmsPsuPisRestClient {
             @RequestBody PsuIdData psuIdData);
 
     @GetMapping(path = "/{payment-id}")
-    ResponseEntity<CmsPayment> getPaymentByPaymentId(
+    ResponseEntity<CmsBasePaymentResponse> getPaymentByPaymentId(
             @RequestHeader(value = "psu-id", required = false) String psuId,
             @RequestHeader(value = "psu-id-type", required = false) String psuIdType,
             @RequestHeader(value = "psu-corporate-id", required = false) String psuCorporateId,
