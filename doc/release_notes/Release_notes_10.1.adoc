@@ -1,0 +1,14 @@
+= Release notes v.10.1
+
+== Table of Contents
+
+* Added business object to AuthorisationSpi#getScaStatus
+* Update xs2a version
+
+== Added business object to AuthorisationSpi#getScaStatus
+
+The method AuthorisationSpi#getScaStatus was extended by adding business object.
+
+== Update xs2a version
+
+From now on, xs2a-connector-examples uses xs2a version 10.1
