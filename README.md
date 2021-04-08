@@ -13,6 +13,7 @@ Please use correct version of xs2a-connector-examples and Ledgers. Matches are d
 
 | xs2a-connector-examples | Ledgers |
 |-------------------------|---------|
+| v.10.1                  | v.4.7   |
 | v.10.0                  | v.4.7   |
 | v.9.10                  | v.4.7   |
 | v.9.9                   | v.4.6   |
@@ -25,6 +26,9 @@ Please use correct version of xs2a-connector-examples and Ledgers. Matches are d
 | v.9.2                   | v.4.1   |
 | v.9.1                   | v.4.0.1 |
 | v.9.0                   | v.4.0.1 |
+| v.8.13                  | v.3.12  |
+| v.8.12                  | v.3.12  |
+| v.8.11                  | v.3.12  |
 | v.8.10                  | v.3.12  |
 | v.8.9                   | v.3.12  |
 | v.8.8                   | v.3.12  |
