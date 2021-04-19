@@ -150,13 +150,22 @@ public class GeneralPaymentService {
                                                                          @NotNull byte[] aspspConsentData) {
         if (acceptMediaType.equals(XML_MEDIA_TYPE)) {
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_XML, transactionStatusXmlBody.getBytes(), PSU_MESSAGE))
+                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, null,
+                                                                    SpiGetPaymentStatusResponse.RESPONSE_TYPE_XML,
+                                                                    transactionStatusXmlBody.getBytes(), PSU_MESSAGE,
+                                                                    SpiMockData.SPI_LINKS,
+                                                                    SpiMockData.TPP_MESSAGES
+                           ))
                            .build();
         }
 
         if (!TransactionStatus.ACSP.equals(spiTransactionStatus)) {
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE))
+                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, null,
+                                                                    SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON,
+                                                                    null, PSU_MESSAGE,
+                                                                    SpiMockData.SPI_LINKS,
+                                                                    SpiMockData.TPP_MESSAGES))
                            .build();
         }
         try {
@@ -171,7 +180,10 @@ public class GeneralPaymentService {
                                                                                              Response.builder().status(HttpStatus.BAD_REQUEST.value()).build()));
             logger.info("Transaction status: {}", status);
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                           .payload(new SpiGetPaymentStatusResponse(status, null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE))
+                           .payload(new SpiGetPaymentStatusResponse(status, null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON,
+                                                                    null, PSU_MESSAGE,
+                                                                    SpiMockData.SPI_LINKS,
+                                                                    SpiMockData.TPP_MESSAGES))
                            .build();
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
