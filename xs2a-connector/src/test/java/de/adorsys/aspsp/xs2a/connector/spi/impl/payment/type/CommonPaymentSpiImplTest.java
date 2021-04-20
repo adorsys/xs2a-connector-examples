@@ -1,6 +1,7 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.SpiMockData;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
@@ -116,7 +117,9 @@ class CommonPaymentSpiImplTest {
         spiPaymentInfo.setPaymentId(PAYMENT_ID);
         spiPaymentInfo.setPaymentStatus(TransactionStatus.ACSP);
 
-        SpiGetPaymentStatusResponse spiGetPaymentStatusResponse = new SpiGetPaymentStatusResponse(spiPaymentInfo.getPaymentStatus(), null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE);
+        SpiGetPaymentStatusResponse spiGetPaymentStatusResponse = new SpiGetPaymentStatusResponse(spiPaymentInfo.getPaymentStatus(), null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE,
+                                                                                                  SpiMockData.SPI_LINKS,
+                                                                                                  SpiMockData.TPP_MESSAGES);
 
         //When
         SpiResponse<SpiGetPaymentStatusResponse> paymentStatusById = commonPaymentSpi.getPaymentStatusById(SPI_CONTEXT_DATA, mediaType, spiPaymentInfo, spiAspspConsentDataProvider);
@@ -135,7 +138,9 @@ class CommonPaymentSpiImplTest {
         spiPaymentInfo.setPaymentId(PAYMENT_ID);
         spiPaymentInfo.setPaymentStatus(TransactionStatus.ACSP);
 
-        SpiGetPaymentStatusResponse spiGetPaymentStatusResponse = new SpiGetPaymentStatusResponse(spiPaymentInfo.getPaymentStatus(), null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE);
+        SpiGetPaymentStatusResponse spiGetPaymentStatusResponse = new SpiGetPaymentStatusResponse(spiPaymentInfo.getPaymentStatus(), null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE,
+                                                                                                  SpiMockData.SPI_LINKS,
+                                                                                                  SpiMockData.TPP_MESSAGES);
 
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn("".getBytes());
         when(generalPaymentService.getPaymentStatusById(PaymentTypeTO.valueOf(spiPaymentInfo.getPaymentType().name()),

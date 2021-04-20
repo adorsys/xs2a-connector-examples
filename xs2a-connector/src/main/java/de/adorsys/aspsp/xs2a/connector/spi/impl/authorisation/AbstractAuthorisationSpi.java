@@ -282,7 +282,9 @@ public abstract class AbstractAuthorisationSpi<T> {
                                                           @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         // TODO replace with real response from ledgers https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/issues/1263
         return SpiResponse.<SpiScaStatusResponse>builder()
-                       .payload(new SpiScaStatusResponse(scaStatus, false, PSU_MESSAGE))
+                       .payload(new SpiScaStatusResponse(scaStatus, false, PSU_MESSAGE,
+                                                         SpiMockData.SPI_LINKS,
+                                                         SpiMockData.TPP_MESSAGES))
                        .build();
     }
 
