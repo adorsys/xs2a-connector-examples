@@ -1,0 +1,21 @@
+= Release notes v.11.2
+
+== Table of Contents
+
+* Update xs2a version
+* Added new optional attributes to the Response body
+
+== Update xs2a version
+
+From now on, xs2a-connector-examples uses xs2a version 11.2
+
+== Added new optional attributes to the Response body
+
+From now on, responses for following endpoints contain new fields - `links` and `tpp messages`:
+
+- `GET /v1/{payment-service}/{payment-product}/{paymentId}/cancellation-authorisations/{authorisationId}`
+- `GET /v1/{payment-service}/{payment-product}/{paymentId}/authorisations/{authorisationId}`
+- `GET /v1/{payment-service}/{payment-product}/{paymentId}/status`
+- `GET /v1/consents/{consentId}/authorisations/{authorisationId}`
+
+This new fields could be passed through spi from the bank.

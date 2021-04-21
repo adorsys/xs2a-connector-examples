@@ -3,6 +3,7 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl.payment.type;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.SpiMockData;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation.confirmation.PaymentAuthConfirmationCodeService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
@@ -85,7 +86,9 @@ class SinglePaymentSpiImplTest {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
         when(paymentService.getPaymentStatusById(PaymentTypeTO.SINGLE, JSON_ACCEPT_MEDIA_TYPE, PAYMENT_ID, TransactionStatus.RCVD, CONSENT_DATA_BYTES))
                 .thenReturn(SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                                    .payload(new SpiGetPaymentStatusResponse(TransactionStatus.RCVD, false, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE))
+                                    .payload(new SpiGetPaymentStatusResponse(TransactionStatus.RCVD, false, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE,
+                                                                             SpiMockData.SPI_LINKS,
+                                                                             SpiMockData.TPP_MESSAGES))
                                     .build());
 
         singlePaymentSpi.getPaymentStatusById(SPI_CONTEXT_DATA, JSON_ACCEPT_MEDIA_TYPE, payment, spiAspspConsentDataProvider);
