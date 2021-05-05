@@ -1,0 +1,15 @@
+= Release notes v.11.3
+
+== Table of Contents
+
+* Removed deprecated AuthorisationSpi#getScaInformation
+* Update xs2a version
+
+== Removed deprecated AuthorisationSpi#getScaInformation
+
+From now on, `AuthorisationSpi#getScaInformation` is removed.
+
+== Update xs2a version
+
+From now on, xs2a-connector-examples uses xs2a version 11.3
+
