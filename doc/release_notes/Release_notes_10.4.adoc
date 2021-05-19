@@ -1,0 +1,9 @@
+= Release notes v.10.4
+
+== Table of Contents
+
+* Update xs2a version
+
+== Update xs2a version
+
+From now on, xs2a-connector-examples uses xs2a version 10.4
