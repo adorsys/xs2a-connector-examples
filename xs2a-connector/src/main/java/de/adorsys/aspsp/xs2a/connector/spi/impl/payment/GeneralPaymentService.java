@@ -67,6 +67,7 @@ public class GeneralPaymentService {
     private static final Logger logger = LoggerFactory.getLogger(GeneralPaymentService.class);
     private static final String XML_MEDIA_TYPE = "application/xml";
     private static final String PSU_MESSAGE = "Mocked PSU message from SPI for this payment";
+    private static final String DEBTOR_NAME = "Mocked debtor name";
 
     private final PaymentRestClient paymentRestClient;
     private final AuthRequestInterceptor authRequestInterceptor;
@@ -299,12 +300,14 @@ public class GeneralPaymentService {
         Function<P, SpiResponse<P>> buildSuccessResponse = p -> SpiResponse.<P>builder().payload(p).build();
 
         if (!TransactionStatus.ACSP.equals(payment.getPaymentStatus())) {
+            setDebtorNameIfNull(payment);
             return buildSuccessResponse.apply(payment);
         }
 
         Supplier<SpiResponse<P>> buildFailedResponse = () -> SpiResponse.<P>builder().error(new TppMessage(MessageErrorCode.PAYMENT_FAILED_INCORRECT_ID)).build();
 
         return getPaymentFromLedgers(payment, aspspConsentDataProvider.loadAspspConsentData())
+                       .map(this::setDebtorNameIfNull)
                        .map(mapperToSpiPayment)
                        .map(buildSuccessResponse)
                        .orElseGet(buildFailedResponse);
@@ -355,5 +358,19 @@ public class GeneralPaymentService {
         return Optional.ofNullable(transactionStatusTO)
                        .map(ts -> TransactionStatus.valueOf(ts.name()))
                        .orElse(null);
+    }
+
+    private <P extends SpiPayment> P setDebtorNameIfNull(P payment) {
+        if (payment.getDebtorName() == null) {
+            payment.setDebtorName(DEBTOR_NAME);
+        }
+        return payment;
+    }
+
+    private PaymentTO setDebtorNameIfNull(PaymentTO payment) {
+        if (payment.getDebtorName() == null) {
+            payment.setDebtorName(DEBTOR_NAME);
+        }
+        return payment;
     }
 }
