@@ -3,7 +3,17 @@
 == Table of Contents
 
 * Update xs2a version
+* Added debtorName to get payment response
 
 == Update xs2a version
 
 From now on, xs2a-connector-examples uses xs2a version 11.5
+
+== Added debtorName to get payment response
+
+From now on debtorName is present in get payment response for following payment products:
+
+- bulk-payments - instant-sepa-credit-transfers
+- bulk-payments - target-2-payments
+- single payments - instant-sepa-credit-transfers
+- single payments - target-2-payments
