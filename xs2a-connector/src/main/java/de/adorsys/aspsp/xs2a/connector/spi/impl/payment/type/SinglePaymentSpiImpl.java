@@ -61,7 +61,9 @@ public class SinglePaymentSpiImpl extends AbstractPaymentSpi<SpiSinglePayment, S
     protected SpiResponse<SpiSinglePaymentInitiationResponse> processEmptyAspspConsentData(@NotNull SpiSinglePayment payment,
                                                                                            @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider,
                                                                                            @NotNull SpiPsuData spiPsuData) {
-        Set<SpiAccountReference> spiAccountReferences = new HashSet<>(Collections.singleton(payment.getDebtorAccount()));
+        Set<SpiAccountReference> spiAccountReferences = payment.getDebtorAccount() == null
+                                                                ? Collections.emptySet()
+                                                                : new HashSet<>(Collections.singleton(payment.getDebtorAccount()));
         return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, payment, aspspConsentDataProvider, new SpiSinglePaymentInitiationResponse(), spiPsuData, spiAccountReferences);
     }
 }

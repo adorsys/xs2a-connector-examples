@@ -34,6 +34,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -62,9 +63,11 @@ public class BulkPaymentSpiImpl extends AbstractPaymentSpi<SpiBulkPayment, SpiBu
     protected SpiResponse<SpiBulkPaymentInitiationResponse> processEmptyAspspConsentData(@NotNull SpiBulkPayment payment,
                                                                                          @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider,
                                                                                          @NotNull SpiPsuData spiPsuData) {
-        Set<SpiAccountReference> spiAccountReferences = payment.getPayments().stream()
-                                                                .map(SpiSinglePayment::getDebtorAccount)
-                                                                .collect(Collectors.toSet());
+        Set<SpiAccountReference> spiAccountReferences = payment.getDebtorAccount() == null
+                                                                ? Collections.emptySet()
+                                                                : payment.getPayments().stream()
+                                                                          .map(SpiSinglePayment::getDebtorAccount)
+                                                                          .collect(Collectors.toSet());
         return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.BULK, payment, aspspConsentDataProvider, new SpiBulkPaymentInitiationResponse(), spiPsuData, spiAccountReferences);
     }
 }
