@@ -62,7 +62,9 @@ public class PeriodicPaymentSpiImpl extends AbstractPaymentSpi<SpiPeriodicPaymen
     protected SpiResponse<SpiPeriodicPaymentInitiationResponse> processEmptyAspspConsentData(@NotNull SpiPeriodicPayment payment,
                                                                                              @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider,
                                                                                              @NotNull SpiPsuData spiPsuData) {
-        Set<SpiAccountReference> spiAccountReferences = new HashSet<>(Collections.singleton(payment.getDebtorAccount()));
+        Set<SpiAccountReference> spiAccountReferences = payment.getDebtorAccount() == null
+                                                                ? Collections.emptySet()
+                                                                : new HashSet<>(Collections.singleton(payment.getDebtorAccount()));
         return paymentService.firstCallInstantiatingPayment(PaymentTypeTO.PERIODIC, payment, aspspConsentDataProvider, new SpiPeriodicPaymentInitiationResponse(), spiPsuData, spiAccountReferences);
     }
 

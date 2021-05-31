@@ -129,7 +129,7 @@ class SinglePaymentSpiImplTest {
 
         Set<SpiAccountReference> spiAccountReferences = new HashSet<>(Collections.singleton(payment.getDebtorAccount()));
         when(paymentService.firstCallInstantiatingPayment(eq(PaymentTypeTO.SINGLE), eq(payment),
-                                                          eq(spiAspspConsentDataProvider), spiSinglePaymentInitiationResponseCaptor.capture(), eq(SPI_CONTEXT_DATA.getPsuData()), eq(spiAccountReferences)))
+                                                          eq(spiAspspConsentDataProvider), spiSinglePaymentInitiationResponseCaptor.capture(), eq(SPI_CONTEXT_DATA.getPsuData()), eq(Collections.emptySet())))
                 .thenReturn(SpiResponse.<SpiSinglePaymentInitiationResponse>builder()
                                     .payload(new SpiSinglePaymentInitiationResponse())
                                     .build());
@@ -137,7 +137,7 @@ class SinglePaymentSpiImplTest {
         singlePaymentSpi.initiatePayment(SPI_CONTEXT_DATA, payment, spiAspspConsentDataProvider);
 
         verify(paymentService, times(1)).firstCallInstantiatingPayment(eq(PaymentTypeTO.SINGLE), eq(payment),
-                                                                       eq(spiAspspConsentDataProvider), any(SpiSinglePaymentInitiationResponse.class), eq(SPI_CONTEXT_DATA.getPsuData()), eq(spiAccountReferences));
+                                                                       eq(spiAspspConsentDataProvider), any(SpiSinglePaymentInitiationResponse.class), eq(SPI_CONTEXT_DATA.getPsuData()), eq(Collections.emptySet()));
         assertNull(spiSinglePaymentInitiationResponseCaptor.getValue().getPaymentId());
     }
 

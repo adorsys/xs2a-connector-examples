@@ -136,7 +136,7 @@ class BulkPaymentSpiImplTest {
                                                                 .map(SpiSinglePayment::getDebtorAccount)
                                                                 .collect(Collectors.toSet());
         when(paymentService.firstCallInstantiatingPayment(eq(PaymentTypeTO.BULK), eq(payment),
-                                                          eq(spiAspspConsentDataProvider), spiBulkPaymentInitiationResponseCaptor.capture(), eq(SPI_CONTEXT_DATA.getPsuData()), eq(spiAccountReferences)))
+                                                          eq(spiAspspConsentDataProvider), spiBulkPaymentInitiationResponseCaptor.capture(), eq(SPI_CONTEXT_DATA.getPsuData()), eq(Collections.emptySet())))
                 .thenReturn(SpiResponse.<SpiBulkPaymentInitiationResponse>builder()
                                     .payload(new SpiBulkPaymentInitiationResponse())
                                     .build());
@@ -144,7 +144,7 @@ class BulkPaymentSpiImplTest {
         bulkPaymentSpi.initiatePayment(SPI_CONTEXT_DATA, payment, spiAspspConsentDataProvider);
 
         verify(paymentService, times(1)).firstCallInstantiatingPayment(eq(PaymentTypeTO.BULK), eq(payment),
-                                                                       eq(spiAspspConsentDataProvider), any(SpiBulkPaymentInitiationResponse.class), eq(SPI_CONTEXT_DATA.getPsuData()), eq(spiAccountReferences));
+                                                                       eq(spiAspspConsentDataProvider), any(SpiBulkPaymentInitiationResponse.class), eq(SPI_CONTEXT_DATA.getPsuData()), eq(Collections.emptySet()));
         assertNull(spiBulkPaymentInitiationResponseCaptor.getValue().getPaymentId());
     }
 }

@@ -131,9 +131,8 @@ class PeriodicPaymentSpiImplTest {
         ArgumentCaptor<SpiPeriodicPaymentInitiationResponse> spiPeriodicPaymentInitiationResponseCaptor
                 = ArgumentCaptor.forClass(SpiPeriodicPaymentInitiationResponse.class);
 
-        Set<SpiAccountReference> spiAccountReferences = new HashSet<>(Collections.singleton(payment.getDebtorAccount()));
         when(paymentService.firstCallInstantiatingPayment(eq(PaymentTypeTO.PERIODIC), eq(payment),
-                                                          eq(spiAspspConsentDataProvider), spiPeriodicPaymentInitiationResponseCaptor.capture(), eq(SPI_CONTEXT_DATA.getPsuData()), eq(spiAccountReferences)))
+                                                          eq(spiAspspConsentDataProvider), spiPeriodicPaymentInitiationResponseCaptor.capture(), eq(SPI_CONTEXT_DATA.getPsuData()), eq(Collections.emptySet())))
                 .thenReturn(SpiResponse.<SpiPeriodicPaymentInitiationResponse>builder()
                                     .payload(new SpiPeriodicPaymentInitiationResponse())
                                     .build());
@@ -141,7 +140,7 @@ class PeriodicPaymentSpiImplTest {
         periodicPaymentSpi.initiatePayment(SPI_CONTEXT_DATA, payment, spiAspspConsentDataProvider);
 
         verify(paymentService, times(1)).firstCallInstantiatingPayment(eq(PaymentTypeTO.PERIODIC), eq(payment),
-                                                                       eq(spiAspspConsentDataProvider), any(SpiPeriodicPaymentInitiationResponse.class), eq(SPI_CONTEXT_DATA.getPsuData()), eq(spiAccountReferences));
+                                                                       eq(spiAspspConsentDataProvider), any(SpiPeriodicPaymentInitiationResponse.class), eq(SPI_CONTEXT_DATA.getPsuData()), eq(Collections.emptySet()));
         assertNull(spiPeriodicPaymentInitiationResponseCaptor.getValue().getPaymentId());
     }
 }
