@@ -18,18 +18,20 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
 import de.adorsys.psd2.xs2a.core.domain.TppMessageInformation;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
+import de.adorsys.psd2.xs2a.spi.domain.common.SpiAuthenticationObject;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiHrefType;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiLinks;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-import java.util.Collections;
-import java.util.Set;
+import java.util.*;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SpiMockData {
     public static final SpiLinks SPI_LINKS = buildSpiLinks();
     public static final Set<TppMessageInformation> TPP_MESSAGES = buildTppMessages();
+    public static final List<SpiAuthenticationObject> SCA_METHODS = buildScaMethods();
+    public static final String PSU_MESSAGE = "mocked PSU message";
 
     private static SpiLinks buildSpiLinks() {
         SpiLinks spiLinks = new SpiLinks();
@@ -38,6 +40,19 @@ public class SpiMockData {
     }
 
     private static Set<TppMessageInformation> buildTppMessages() {
-        return Collections.singleton(TppMessageInformation.buildWithCustomWarning(MessageErrorCode.FORMAT_ERROR, "Mocked tpp message from the bank"));
+        HashSet<TppMessageInformation> tppInformationSet = new HashSet<>();
+        tppInformationSet.add(TppMessageInformation.buildWithCustomWarning(MessageErrorCode.FORMAT_ERROR, "Mocked tpp message from the bank"));
+        return tppInformationSet;
+    }
+
+    private static List<SpiAuthenticationObject> buildScaMethods() {
+        SpiAuthenticationObject psi = new SpiAuthenticationObject();
+        psi.setAuthenticationType("Mocked Authentication type");
+        psi.setAuthenticationMethodId("Mocked Authentication id");
+        psi.setDecoupled(false);
+        psi.setName("Mocked name");
+        psi.setAuthenticationVersion("Mocked Authentication version");
+
+        return Collections.singletonList(psi);
     }
 }
