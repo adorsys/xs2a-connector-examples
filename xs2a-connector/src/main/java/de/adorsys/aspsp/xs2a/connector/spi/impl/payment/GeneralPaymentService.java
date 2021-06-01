@@ -139,6 +139,9 @@ public class GeneralPaymentService {
 
         aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response, false));
 
+        responsePayload.setPsuMessage(SpiMockData.PSU_MESSAGE);
+        responsePayload.setScaMethods(SpiMockData.SCA_METHODS);
+        responsePayload.setTppMessages(SpiMockData.TPP_MESSAGES);
         return SpiResponse.<T>builder()
                        .payload(responsePayload)
                        .build();

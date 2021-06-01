@@ -138,8 +138,14 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(globalScaResponse));
         }
 
+        SpiInitiateAisConsentResponse spiInitiateAisConsentResponse =
+                new SpiInitiateAisConsentResponse(accountConsent.getAccess(),
+                                                  false,
+                                                  SpiMockData.PSU_MESSAGE,
+                                                  SpiMockData.SCA_METHODS,
+                                                  SpiMockData.TPP_MESSAGES);
         return SpiResponse.<SpiInitiateAisConsentResponse>builder()
-                       .payload(new SpiInitiateAisConsentResponse(accountConsent.getAccess(), false, ""))
+                       .payload(spiInitiateAisConsentResponse)
                        .build();
     }
 
@@ -425,6 +431,9 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
 
         responsePayload.setAccountAccess(accountConsent.getAccess());
         responsePayload.setMultilevelScaRequired(isMultilevelScaRequired);
+        responsePayload.setScaMethods(SpiMockData.SCA_METHODS);
+        responsePayload.setPsuMessage(SpiMockData.PSU_MESSAGE);
+        responsePayload.setTppMessages(SpiMockData.TPP_MESSAGES);
 
         return SpiResponse.<T>builder()
                        .payload(responsePayload)
