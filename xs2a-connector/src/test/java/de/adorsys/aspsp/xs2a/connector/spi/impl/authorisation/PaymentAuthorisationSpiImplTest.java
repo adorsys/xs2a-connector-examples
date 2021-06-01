@@ -92,7 +92,7 @@ class PaymentAuthorisationSpiImplTest {
                                                             .psuDeviceId(UUID.randomUUID())
                                                             .build();
     private static final String ACCESS_TOKEN = "access_token";
-    private static final SpiContextData SPI_CONTEXT_DATA = new SpiContextData(PSU_ID_DATA_1, new TppInfo(), UUID.randomUUID(), UUID.randomUUID(), ACCESS_TOKEN, null, null);
+    private static final SpiContextData SPI_CONTEXT_DATA = new SpiContextData(PSU_ID_DATA_1, new TppInfo(), UUID.randomUUID(), UUID.randomUUID(), ACCESS_TOKEN, null, null, null);
     private static final String AUTHORISATION_ID = "6f3c444d-c664-4cfc-aff3-576651000726";
     private static final String AUTHENTICATION_METHOD_ID = "VJJwaiPJT2EptJO0jqL37E";
     private static final byte[] CONSENT_DATA_BYTES = "consent_data".getBytes();
