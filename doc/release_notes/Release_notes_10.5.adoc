@@ -1,0 +1,34 @@
+= Release notes v.10.5
+
+== Table of Contents
+
+* Update xs2a version
+* Added debtorName to get payment response
+* Upgraded commons-io
+* Upgraded commons-validator
+* Header TPP-Redirect-Preferred was passed to SPI level
+
+== Update xs2a version
+
+From now on, xs2a-connector-examples uses xs2a version 10.5
+
+== Added debtorName to get payment response
+
+From now on debtorName is present in get payment response for following payment products:
+
+- bulk-payments - instant-sepa-credit-transfers
+- bulk-payments - target-2-payments
+- single payments - instant-sepa-credit-transfers
+- single payments - target-2-payments
+
+== Upgraded commons-io
+
+From now on, commons-io version is 2.8.0
+
+== Upgraded commons-validator
+
+From now on, commons-validator version is 1.7
+
+== Header TPP-Redirect-Preferred was passed to SPI level
+
+Header TPP-Redirect-Preferred was passed to SPI level of the application for Payment/Consent flow.

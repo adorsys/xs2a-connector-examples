@@ -22,7 +22,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.adorsys.ledgers</groupId>
 	<artifactId>xs2a-connector-examples</artifactId>
-    <version>11.4</version>
+    <version>11.5</version>
 	<packaging>pom</packaging>
 
 	<name>XS2A Connector Examples</name>
@@ -86,7 +86,7 @@
 		<ruleset.basedir>${project.basedir}</ruleset.basedir>
 
 		<!-- xs2a version -->
-		<xs2a.version>11.4</xs2a.version>
+		<xs2a.version>11.5</xs2a.version>
 		<!-- ledgers version -->
 		<ledgers.version>4.7</ledgers.version>
 
@@ -104,7 +104,7 @@
 		<lombok.version>1.18.6</lombok.version>
 		<google.guava.version>23.0</google.guava.version>
 		<springfox-bean-validators.version>2.9.2</springfox-bean-validators.version>
-		<commons-io.version>2.6</commons-io.version>
+		<commons-io.version>2.8.0</commons-io.version>
 		<javax.validation.version>2.0.1.Final</javax.validation.version>
 
 		<jackson.version>2.12.1</jackson.version>

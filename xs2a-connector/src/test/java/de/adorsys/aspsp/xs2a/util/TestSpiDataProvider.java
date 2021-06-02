@@ -50,6 +50,8 @@ public class TestSpiDataProvider {
                 INTERNAL_REQUEST_ID,
                 AUTHORISATION,
                 TPP_BRAND_LOGGING_INFORMATION,
+                false,
+                false,
                 false
         );
     }

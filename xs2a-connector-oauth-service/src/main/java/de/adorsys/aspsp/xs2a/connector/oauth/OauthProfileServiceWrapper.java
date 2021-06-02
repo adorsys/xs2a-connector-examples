@@ -133,7 +133,8 @@ public class OauthProfileServiceWrapper implements AspspProfileService {
                                              existingSetting.isAuthorisationConfirmationCheckByXs2a(),
                                              existingSetting.isCheckUriComplianceToDomainSupported(),
                                              existingSetting.getTppUriComplianceResponse(),
-                                             existingSetting.isPsuInInitialRequestIgnored());
+                                             existingSetting.isPsuInInitialRequestIgnored(),
+                                             existingSetting.isIbanValidationDisabled());
     }
 
     private AisAspspProfileSetting buildCustomAisAspspProfileSetting(AisAspspProfileSetting existingSetting, String redirectUrlSuffix) {
@@ -147,6 +148,13 @@ public class OauthProfileServiceWrapper implements AspspProfileService {
 
         PisRedirectLinkSetting redirectLinkToOnlineBanking = existingSetting.getRedirectLinkToOnlineBanking();
         PisRedirectLinkSetting customRedirectLinkSetting = new PisRedirectLinkSetting(customInitiationRedirectUrl, customCancellationRedirectUrl, redirectLinkToOnlineBanking.getPaymentCancellationRedirectUrlExpirationTimeMs());
-        return new PisAspspProfileSetting(existingSetting.getSupportedPaymentTypeAndProductMatrix(), existingSetting.getMaxTransactionValidityDays(), existingSetting.getNotConfirmedPaymentExpirationTimeMs(), existingSetting.isPaymentCancellationAuthorisationMandated(), customRedirectLinkSetting, existingSetting.getCountryValidationSupported(), existingSetting.getSupportedTransactionStatusFormats());
+        return new PisAspspProfileSetting(existingSetting.getSupportedPaymentTypeAndProductMatrix(),
+                                          existingSetting.getMaxTransactionValidityDays(),
+                                          existingSetting.getNotConfirmedPaymentExpirationTimeMs(),
+                                          existingSetting.isPaymentCancellationAuthorisationMandated(),
+                                          customRedirectLinkSetting,
+                                          existingSetting.getCountryValidationSupported(),
+                                          existingSetting.getSupportedTransactionStatusFormats(),
+                                          existingSetting.isDebtorAccountOptionalInInitialRequest());
     }
 }
