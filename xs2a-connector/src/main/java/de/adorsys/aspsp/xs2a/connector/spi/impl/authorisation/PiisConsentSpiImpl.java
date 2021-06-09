@@ -19,6 +19,7 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.AisConsentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaResponseMapper;
+import de.adorsys.aspsp.xs2a.connector.spi.converter.SpiScaStatusResponseMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation.confirmation.ConsentAuthConfirmationCodeService;
 import de.adorsys.ledgers.keycloak.client.api.KeycloakTokenService;
@@ -73,9 +74,9 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent>
                               MultilevelScaService multilevelScaService,
                               RedirectScaRestClient redirectScaRestClient,
                               KeycloakTokenService keycloakTokenService, ConsentRestClient consentRestClient, AisConsentMapper aisConsentMapper,
-                              ScaResponseMapper scaResponseMapper, ConsentAuthConfirmationCodeService authConfirmationCodeService) {
+                              ScaResponseMapper scaResponseMapper, ConsentAuthConfirmationCodeService authConfirmationCodeService, SpiScaStatusResponseMapper spiScaStatusResponseMapper) {
         super(authRequestInterceptor, consentDataService, authorisationService, scaMethodConverter, feignExceptionReader,
-              keycloakTokenService, redirectScaRestClient);
+              keycloakTokenService, redirectScaRestClient, spiScaStatusResponseMapper);
         this.authRequestInterceptor = authRequestInterceptor;
         this.consentDataService = consentDataService;
         this.multilevelScaService = multilevelScaService;

@@ -1,0 +1,9 @@
+= Release notes v.10.6
+
+== Table of Contents
+
+* Get ScaStatus from Ledgers
+
+== GetScaStatus from Ledgers
+
+From now on `ScaStatus` is being retrieved from ledgers, if possible
