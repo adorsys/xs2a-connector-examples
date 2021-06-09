@@ -4,6 +4,12 @@
 
 * Updated connector uses latest ledgers version
 
+* Get ScaStatus from Ledgers
+
 == Updated connector uses latest ledgers version
 
 From now on, xs2a-connector-examples uses ledgers version 4.13.
+
+== GetScaStatus from Ledgers
+
+From now on `ScaStatus` is being retrieved from ledgers, if possible

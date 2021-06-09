@@ -3,6 +3,7 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.AisConsentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
+import de.adorsys.aspsp.xs2a.connector.spi.converter.SpiScaStatusResponseMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation.confirmation.ConsentAuthConfirmationCodeService;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
@@ -22,6 +23,7 @@ import de.adorsys.psd2.xs2a.core.consent.ConsentStatus;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.sca.ChallengeData;
+import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountConsent;
@@ -73,6 +75,10 @@ class AisConsentSpiImplTest {
     private static final String RESPONSE_STATUS_200_WITH_EMPTY_BODY = "Response status was 200, but the body was empty!";
     private static final String ONLINE_BANKING_URL_FIELD_NAME = "onlineBankingUrl";
     private static final String ONLINE_BANKING_URL_VALUE = "some.url";
+    private static final String PSU_MESSAGE_FROM_LEDGERS = "Your Login for CONSENT id: cd9eb664-660c-48a6-878d-ddc74273315c is successful";
+    private static final ScaStatus SCA_STATUS_FROM_LEDGERS = ScaStatus.PSUAUTHENTICATED;
+    private static final String PSU_MESSAGE_MOCKED = "Mocked PSU message from SPI.";
+    private static final ScaStatus SCA_STATUS_FROM_CMS = ScaStatus.FAILED;
 
     private JsonReader jsonReader = new JsonReader();
     private SpiAccountConsent spiAccountConsent = jsonReader.getObjectFromFile("json/spi/impl/spi-account-consent.json", SpiAccountConsent.class);
@@ -113,6 +119,8 @@ class AisConsentSpiImplTest {
     private KeycloakTokenService keycloakTokenService;
     @Mock
     private ConsentAuthConfirmationCodeService authConfirmationCodeService;
+    @Mock
+    private SpiScaStatusResponseMapper spiScaStatusResponseMapper;
 
     @Test
     void initiateAisConsent_WithInitialAspspConsentData() {
@@ -532,6 +540,84 @@ class AisConsentSpiImplTest {
     }
 
     @Test
+    void getScaStatusFromLedgers() {
+        //Given
+        when(spiAspspConsentDataProvider.loadAspspConsentData())
+                .thenReturn(CONSENT_DATA_BYTES);
+        GlobalScaResponseTO scaConsentResponseTO = buildSCAConsentResponseTO(ScaStatusTO.PSUIDENTIFIED);
+        when(consentDataService.response(CONSENT_DATA_BYTES, false))
+                .thenReturn(scaConsentResponseTO);
+        when(redirectScaRestClient.getSCA(AUTHORISATION_ID))
+                .thenReturn(ResponseEntity.ok(scaConsentResponseTO));
+        when(spiScaStatusResponseMapper.toSpiScaStatusResponse(ResponseEntity.ok(scaConsentResponseTO).getBody()))
+                .thenReturn(getTestData_ledgersAnswer());
+
+        //When
+        SpiResponse<SpiScaStatusResponse> actual = spi.getScaStatus(SCA_STATUS_FROM_CMS, SPI_CONTEXT_DATA, AUTHORISATION_ID,
+                                                                    spiAccountConsent, spiAspspConsentDataProvider);
+
+        //Then
+        assertFalse(actual.hasError());
+        assertEquals(SCA_STATUS_FROM_LEDGERS, actual.getPayload().getScaStatus());
+        assertEquals(PSU_MESSAGE_FROM_LEDGERS, actual.getPayload().getPsuMessage());
+
+        verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
+        verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, false);
+        verify(redirectScaRestClient).getSCA(AUTHORISATION_ID);
+    }
+
+    @Test
+    void getScaStatusFromCms() {
+        //Given
+        when(spiAspspConsentDataProvider.loadAspspConsentData())
+                .thenReturn(CONSENT_DATA_BYTES);
+        when(consentDataService.response(CONSENT_DATA_BYTES, false))
+                .thenReturn(null);
+
+        //When
+        SpiResponse<SpiScaStatusResponse> actual = spi.getScaStatus(SCA_STATUS_FROM_CMS, SPI_CONTEXT_DATA, AUTHORISATION_ID,
+                                                                    spiAccountConsent, spiAspspConsentDataProvider);
+
+        //Then
+        assertFalse(actual.hasError());
+        assertEquals(SCA_STATUS_FROM_CMS, actual.getPayload().getScaStatus());
+        assertEquals(PSU_MESSAGE_MOCKED, actual.getPayload().getPsuMessage());
+
+        verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
+        verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, false);
+        verifyNoInteractions(redirectScaRestClient);
+        verifyNoInteractions(spiScaStatusResponseMapper);
+    }
+
+    @Test
+    void getScaStatus_feignException() {
+        //Given
+        when(spiAspspConsentDataProvider.loadAspspConsentData())
+                .thenReturn(CONSENT_DATA_BYTES);
+        GlobalScaResponseTO scaConsentResponseTO = buildSCAConsentResponseTO(ScaStatusTO.PSUIDENTIFIED);
+        when(consentDataService.response(CONSENT_DATA_BYTES, false))
+                .thenReturn(scaConsentResponseTO);
+        FeignException feignException = FeignExceptionHandler.getException(HttpStatus.NOT_FOUND, "message");
+        when(redirectScaRestClient.getSCA(AUTHORISATION_ID))
+                .thenThrow(feignException);
+
+
+        //When
+        SpiResponse<SpiScaStatusResponse> actual = spi.getScaStatus(SCA_STATUS_FROM_CMS, SPI_CONTEXT_DATA, AUTHORISATION_ID,
+                                                                    spiAccountConsent, spiAspspConsentDataProvider);
+
+        //Then
+        assertFalse(actual.hasError());
+        assertEquals(SCA_STATUS_FROM_CMS, actual.getPayload().getScaStatus());
+        assertEquals(PSU_MESSAGE_MOCKED, actual.getPayload().getPsuMessage());
+
+        verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
+        verify(consentDataService, times(1)).response(CONSENT_DATA_BYTES, false);
+        verify(redirectScaRestClient).getSCA(AUTHORISATION_ID);
+        verifyNoInteractions(spiScaStatusResponseMapper);
+    }
+
+    @Test
     void requestAvailableScaMethods_success() {
         // Given
         when(spiAspspConsentDataProvider.loadAspspConsentData())
@@ -919,5 +1005,21 @@ class AisConsentSpiImplTest {
                        .request(Request.create(Request.HttpMethod.GET, "", Collections.emptyMap(), null, Charset.defaultCharset(), null))
                        .headers(Collections.emptyMap())
                        .build();
+    }
+
+    private SpiScaStatusResponse getTestData_ledgersAnswer() {
+        return new SpiScaStatusResponse(SCA_STATUS_FROM_LEDGERS,
+                                        false,
+                                        PSU_MESSAGE_FROM_LEDGERS,
+                                        SpiMockData.SPI_LINKS,
+                                        SpiMockData.TPP_MESSAGES);
+    }
+
+    private SpiScaStatusResponse getTestData_mockedData() {
+        return new SpiScaStatusResponse(SCA_STATUS_FROM_CMS,
+                                        false,
+                                        PSU_MESSAGE_MOCKED,
+                                        SpiMockData.SPI_LINKS,
+                                        SpiMockData.TPP_MESSAGES);
     }
 }
