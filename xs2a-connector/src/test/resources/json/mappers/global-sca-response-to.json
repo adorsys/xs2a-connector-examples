@@ -1,0 +1,21 @@
+{
+  "opType" : "CONSENT",
+  "operationObjectId" : "cd9eb664-660c-48a6-878d-ddc74273315c",
+  "authorisationId" : "42065b4f-ecaa-4ec7-b4fb-7d55368ddebd",
+  "scaStatus" : "psuAuthenticated",
+  "scaMethods" : [
+    {
+      "id": "LFwZWcvNQT0g-ysBJY_QYE",
+      "scaMethod" : "EMAIL",
+      "methodValue" : "anton.brueckner@mail.de",
+      "usesStaticTan" : true,
+      "staticTan" : "Zw6zTT1M3j+4ITn6h1KYGA=="
+    }
+  ],
+  "psuMessage" : "Your Login for CONSENT id: cd9eb664-660c-48a6-878d-ddc74273315c is successful",
+  "bearerToken" : {
+    "access_token" : "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJrSnEtNWdHSWh0aER3VDdaNlNYSVQtVWhMd3hKMmNwUkZ1czdJQXp1SkxrIn0.eyJleHAiOjE2MjMwNjE0NzMsImlhdCI6MTYyMzA1MDY3MywianRpIjoiNmY0YzEwMjUtOTRmNy00NzRmLWFhN2ItODcwMTVlMWI3YTYzIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL2F1dGgvcmVhbG1zL2xlZGdlcnMiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiZmMxZTYxM2MtYmE5ZS00ZmRmLTk4N2MtYTIxN2RhMWJjM2IxIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoibGVkZ2Vycy1jbGllbnQiLCJzZXNzaW9uX3N0YXRlIjoiMGM3ODBjMjAtYzhlMS00NDUxLWE0M2UtNzQ4NzQ4ZDBjNzU4IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwOi8vbG9jYWxob3N0OjgwODAiLCIqIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsIkNVU1RPTUVSIiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6ImVtYWlsIHByb2ZpbGUgc2NhIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJhbnRvbi5icnVlY2tuZXIiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJhbnRvbi5icnVlY2tuZXIiLCJnaXZlbl9uYW1lIjoiYW50b24uYnJ1ZWNrbmVyIiwiZW1haWwiOiJhbnRvbi5icnVlY2tuZXJAbWFpbC5kZSJ9.aZaeZp4M6Ab4RMF_v5svHhcG-27TsI7rIbvfaHlABX5Ed94pTVAmIXjVOH58I4FLH06vbYVTXrGP5NMSV3bxVZdZbWUx50HuccdDT3Jgjs5c6r-VxLVthValeX2MIL_80-GhKkkYHAZ3vOhQ5AvMXNUvjxVNL60ZErx8pdZ4QlcOyX_x0iwBy1duOcDBdxAwVPk7bWqp661g1P3qm9uoBKpzvTqP1rNk0UaxYrRPVdX8WcoIe1MAMNTBqhdk6Tf_nSE5ht9cwfJzpOCGuhn9bmfavX2csV0gTRl_P8X55lt-Ip0TXfUd0LM76FtEu0oqqECYC2wpZ-PBPgN3tGbQRA",
+    "token_type" : "Bearer",
+    "expires_in" : "9041"
+  }
+}
