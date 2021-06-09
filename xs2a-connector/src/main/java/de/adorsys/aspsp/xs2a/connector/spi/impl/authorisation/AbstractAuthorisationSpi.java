@@ -1,6 +1,7 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
+import de.adorsys.aspsp.xs2a.connector.spi.converter.SpiScaStatusResponseMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
 import de.adorsys.ledgers.keycloak.client.api.KeycloakTokenService;
 import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
@@ -46,6 +47,7 @@ public abstract class AbstractAuthorisationSpi<T> {
     private final FeignExceptionReader feignExceptionReader;
     private final KeycloakTokenService keycloakTokenService;
     private final RedirectScaRestClient redirectScaRestClient;
+    private final SpiScaStatusResponseMapper spiScaStatusResponseMapper;
 
     protected ResponseEntity<GlobalScaResponseTO> getSelectMethodResponse(@NotNull String authenticationMethodId, GlobalScaResponseTO sca) {
         ResponseEntity<GlobalScaResponseTO> scaResponse = redirectScaRestClient.selectMethod(sca.getAuthorisationId(), authenticationMethodId);
@@ -270,11 +272,31 @@ public abstract class AbstractAuthorisationSpi<T> {
     public SpiResponse<SpiScaStatusResponse> getScaStatus(@NotNull ScaStatus scaStatus, @NotNull SpiContextData contextData,
                                                           @NotNull String authorisationId, @NotNull T businessObject,
                                                           @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        // TODO replace with real response from ledgers https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/issues/1263
+
+        SpiScaStatusResponse payload;
+        try {
+            GlobalScaResponseTO scaResponseTO = getScaObjectResponse(aspspConsentDataProvider, false);
+            if (scaResponseTO != null && scaResponseTO.getBearerToken() != null) {
+                authRequestInterceptor.setAccessToken(scaResponseTO.getBearerToken().getAccess_token());
+                ResponseEntity<GlobalScaResponseTO> responseEntity = redirectScaRestClient.getSCA(authorisationId);
+                payload = spiScaStatusResponseMapper.toSpiScaStatusResponse(responseEntity.getBody());
+            } else {
+                log.info("Request ScaStatus from Bank failed: business object ID: {}", getBusinessObjectId(businessObject));
+                payload = new SpiScaStatusResponse(scaStatus, false, PSU_MESSAGE,
+                                                   SpiMockData.SPI_LINKS,
+                                                   SpiMockData.TPP_MESSAGES);
+            }
+        } catch (FeignException.NotFound feignException) {
+            String devMessage = feignExceptionReader.getErrorMessage(feignException);
+            log.info("Request ScaStatus from Bank failed: business object ID: {}, devMessage: {}", getBusinessObjectId(businessObject), devMessage);
+            payload = new SpiScaStatusResponse(scaStatus, false, PSU_MESSAGE,
+                                               SpiMockData.SPI_LINKS,
+                                               SpiMockData.TPP_MESSAGES);
+        } finally {
+            authRequestInterceptor.setAccessToken(null);
+        }
         return SpiResponse.<SpiScaStatusResponse>builder()
-                       .payload(new SpiScaStatusResponse(scaStatus, false, PSU_MESSAGE,
-                                                         SpiMockData.SPI_LINKS,
-                                                         SpiMockData.TPP_MESSAGES))
+                       .payload(payload)
                        .build();
     }
 

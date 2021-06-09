@@ -20,6 +20,7 @@ import de.adorsys.aspsp.xs2a.connector.cms.CmsPsuPisClient;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiCommonPaymentTOMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaResponseMapper;
+import de.adorsys.aspsp.xs2a.connector.spi.converter.SpiScaStatusResponseMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
@@ -90,9 +91,9 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
                                        AspspConsentDataService aspspConsentDataService,
                                        ScaResponseMapper scaResponseMapper,
                                        PaymentRestClient paymentRestClient, CmsPsuPisClient cmsPsuPisClient,
-                                       RequestProviderService requestProviderService) {
+                                       RequestProviderService requestProviderService,SpiScaStatusResponseMapper spiScaStatusResponseMapper) {
         super(authRequestInterceptor, consentDataService, authorisationService, scaMethodConverter, feignExceptionReader,
-              keycloakTokenService, redirectScaRestClient);
+              keycloakTokenService, redirectScaRestClient, spiScaStatusResponseMapper);
         this.paymentService = paymentService;
         this.ledgersSpiCommonPaymentTOMapper = ledgersSpiCommonPaymentTOMapper;
         this.aspspConsentDataService = aspspConsentDataService;
