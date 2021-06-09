@@ -1,0 +1,9 @@
+= Release notes v.11.6
+
+== Table of Contents
+
+* Updated connector uses latest ledgers version
+
+== Updated connector uses latest ledgers version
+
+From now on, xs2a-connector-examples uses ledgers version 4.13.
