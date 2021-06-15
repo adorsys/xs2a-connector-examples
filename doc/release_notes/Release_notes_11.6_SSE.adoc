@@ -6,10 +6,16 @@
 
 * Get ScaStatus from Ledgers
 
+* Migrate Connector to use OperationInitiationResource
+
 == Updated connector uses latest ledgers version
 
 From now on, xs2a-connector-examples uses ledgers version 4.13.
 
 == GetScaStatus from Ledgers
 
-From now on `ScaStatus` is being retrieved from ledgers, if possible
+From now on, `ScaStatus` is being retrieved from ledgers, if possible
+
+== Migrate Connector to use OperationInitiationResource
+
+Connector was refactored for usage of new OperationInitiationResourceRestClient from ledgers
