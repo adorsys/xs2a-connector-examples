@@ -163,6 +163,7 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent>
 
     @Override
     protected void updateStatusInCms(String businessObjectId, SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        // There is no need to update consent in CMS
     }
 
     @Override
