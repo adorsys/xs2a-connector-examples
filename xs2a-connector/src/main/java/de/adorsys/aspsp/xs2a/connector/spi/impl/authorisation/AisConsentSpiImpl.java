@@ -16,20 +16,15 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation;
 
-import de.adorsys.aspsp.xs2a.connector.spi.converter.AisConsentMapper;
-import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
-import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
-import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaResponseMapper;
+import de.adorsys.aspsp.xs2a.connector.spi.converter.*;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation.confirmation.ConsentAuthConfirmationCodeService;
 import de.adorsys.aspsp.xs2a.connector.spi.util.AspspConsentDataExtractor;
 import de.adorsys.ledgers.keycloak.client.api.KeycloakTokenService;
 import de.adorsys.ledgers.middleware.api.domain.sca.*;
+import de.adorsys.ledgers.middleware.api.domain.um.AisConsentTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
-import de.adorsys.ledgers.rest.client.AccountRestClient;
-import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
-import de.adorsys.ledgers.rest.client.ConsentRestClient;
-import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
+import de.adorsys.ledgers.rest.client.*;
 import de.adorsys.psd2.xs2a.core.consent.ConsentStatus;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
@@ -79,10 +74,9 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
     private final FeignExceptionReader feignExceptionReader;
     private final MultilevelScaService multilevelScaService;
     private final RedirectScaRestClient redirectScaRestClient;
-    private final ConsentRestClient consentRestClient;
     private final AisConsentMapper aisConsentMapper;
-    private final ScaResponseMapper scaResponseMapper;
     private final ConsentAuthConfirmationCodeService authConfirmationCodeService;
+    private final OperationInitiationRestClient operationInitiationRestClient;
 
     @Value("${xs2asandbox.tppui.online-banking.url}")
     private String onlineBankingUrl;
@@ -91,12 +85,15 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
     public AisConsentSpiImpl(AuthRequestInterceptor authRequestInterceptor, //NOSONAR
                              AspspConsentDataService consentDataService, GeneralAuthorisationService authorisationService,
                              ScaMethodConverter scaMethodConverter, FeignExceptionReader feignExceptionReader,
-                             AccountRestClient accountRestClient, LedgersSpiAccountMapper accountMapper, MultilevelScaService multilevelScaService, RedirectScaRestClient redirectScaRestClient,
-                             KeycloakTokenService keycloakTokenService, ConsentRestClient consentRestClient, AisConsentMapper aisConsentMapper, ScaResponseMapper scaResponseMapper,
-                             ConsentAuthConfirmationCodeService authConfirmationCodeService) {
+                             AccountRestClient accountRestClient, LedgersSpiAccountMapper accountMapper,
+                             MultilevelScaService multilevelScaService, RedirectScaRestClient redirectScaRestClient,
+                             KeycloakTokenService keycloakTokenService, AisConsentMapper aisConsentMapper,
+                             ConsentAuthConfirmationCodeService authConfirmationCodeService,
+                             SpiScaStatusResponseMapper spiScaStatusResponseMapper,
+                             OperationInitiationRestClient operationInitiationRestClient) {
 
         super(authRequestInterceptor, consentDataService, authorisationService, scaMethodConverter, feignExceptionReader,
-              keycloakTokenService, redirectScaRestClient);
+              keycloakTokenService, redirectScaRestClient, spiScaStatusResponseMapper);
         this.authRequestInterceptor = authRequestInterceptor;
         this.consentDataService = consentDataService;
         this.feignExceptionReader = feignExceptionReader;
@@ -104,10 +101,9 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
         this.accountMapper = accountMapper;
         this.multilevelScaService = multilevelScaService;
         this.redirectScaRestClient = redirectScaRestClient;
-        this.consentRestClient = consentRestClient;
         this.aisConsentMapper = aisConsentMapper;
-        this.scaResponseMapper = scaResponseMapper;
         this.authConfirmationCodeService = authConfirmationCodeService;
+        this.operationInitiationRestClient = operationInitiationRestClient;
     }
 
     /*
@@ -138,8 +134,14 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(globalScaResponse));
         }
 
+        SpiInitiateAisConsentResponse spiInitiateAisConsentResponse =
+                new SpiInitiateAisConsentResponse(accountConsent.getAccess(),
+                                                  false,
+                                                  SpiMockData.PSU_MESSAGE,
+                                                  SpiMockData.SCA_METHODS,
+                                                  SpiMockData.TPP_MESSAGES);
         return SpiResponse.<SpiInitiateAisConsentResponse>builder()
-                       .payload(new SpiInitiateAisConsentResponse(accountConsent.getAccess(), false, ""))
+                       .payload(spiInitiateAisConsentResponse)
                        .build();
     }
 
@@ -257,6 +259,7 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
 
     @Override
     protected void updateStatusInCms(String businessObjectId, SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        // There is no need to update consent in CMS
     }
 
     @Override
@@ -338,18 +341,19 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
                 }
             }
 
-            ResponseEntity<SCAConsentResponseTO> initiateAisConsentResponse = consentRestClient.initiateAisConsent(accountConsent.getId(), aisConsentMapper.mapToAisConsent(accountConsent));
+            AisConsentTO aisConsentTO = aisConsentMapper.mapToAisConsent(accountConsent);
+            ResponseEntity<GlobalScaResponseTO> initiateAisConsentResponse = operationInitiationRestClient.initiateAisConsent(aisConsentTO);
 
             if (initiateAisConsentResponse != null && initiateAisConsentResponse.getBody() != null) {
-                SCAConsentResponseTO consentResponse = initiateAisConsentResponse.getBody();
+                GlobalScaResponseTO globalScaResponseTO = initiateAisConsentResponse.getBody();
 
-                authRequestInterceptor.setAccessToken(consentResponse.getBearerToken().getAccess_token()); //NOSONAR
+                authRequestInterceptor.setAccessToken(globalScaResponseTO.getBearerToken().getAccess_token()); //NOSONAR
 
-                consentResponse.setAuthorisationId(authorisationId);
+                globalScaResponseTO.setAuthorisationId(authorisationId);
 
                 // EXEMPTED here means that we should not start SCA in ledgers.
-                if (consentResponse.getScaStatus() == ScaStatusTO.EXEMPTED) {
-                    return scaResponseMapper.toGlobalScaResponse(consentResponse);
+                if (globalScaResponseTO.getScaStatus() == ScaStatusTO.EXEMPTED) {
+                    return globalScaResponseTO;
                 }
 
                 StartScaOprTO startScaOprTO = new StartScaOprTO(accountConsent.getId(), OpTypeTO.CONSENT);
@@ -425,6 +429,9 @@ public class AisConsentSpiImpl extends AbstractAuthorisationSpi<SpiAccountConsen
 
         responsePayload.setAccountAccess(accountConsent.getAccess());
         responsePayload.setMultilevelScaRequired(isMultilevelScaRequired);
+        responsePayload.setScaMethods(SpiMockData.SCA_METHODS);
+        responsePayload.setPsuMessage(SpiMockData.PSU_MESSAGE);
+        responsePayload.setTppMessages(SpiMockData.TPP_MESSAGES);
 
         return SpiResponse.<T>builder()
                        .payload(responsePayload)

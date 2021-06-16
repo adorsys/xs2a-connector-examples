@@ -2,7 +2,6 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
 import de.adorsys.aspsp.xs2a.connector.cms.CmsPsuPisClient;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiPaymentMapper;
-import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaResponseMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
@@ -10,10 +9,10 @@ import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAPaymentResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
+import de.adorsys.ledgers.rest.client.OperationInitiationRestClient;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
@@ -39,9 +38,7 @@ import feign.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -89,9 +86,8 @@ class GeneralPaymentServiceTest {
     private CmsPsuPisClient cmsPsuPisClient;
     @Mock
     private RequestProviderService requestProviderService;
-
-    @Spy
-    private ScaResponseMapper scaResponseMapper = Mappers.getMapper(ScaResponseMapper.class);
+    @Mock
+    private OperationInitiationRestClient operationInitiationRestClient;
 
     private GeneralPaymentService generalPaymentService;
     private String paymentBodyXml;
@@ -101,8 +97,9 @@ class GeneralPaymentServiceTest {
         paymentBodyXml = jsonReader.getStringFromFile("xml/payment-body.xml");
         generalPaymentService = new GeneralPaymentService(paymentRestClient, authRequestInterceptor, consentDataService,
                                                           feignExceptionReader, paymentBodyXml, multilevelScaService,
-                                                          redirectScaRestClient, scaResponseMapper,
-                                                          cmsPsuPisClient, requestProviderService);
+                                                          redirectScaRestClient,
+                                                          cmsPsuPisClient, requestProviderService,
+                                                          operationInitiationRestClient);
     }
 
     @Test
@@ -407,16 +404,16 @@ class GeneralPaymentServiceTest {
         authRequestInterceptor.setAccessToken(ACCESS_TOKEN);
 
         when(redirectScaRestClient.validateScaCode(AUTHORISATION_ID, TAN_NUMBER)).thenReturn(ResponseEntity.ok(globalScaResponseTO));
-        SCAPaymentResponseTO scaPaymentResponseTO = new SCAPaymentResponseTO();
-        scaPaymentResponseTO.setPaymentId(PAYMENT_ID);
-        scaPaymentResponseTO.setTransactionStatus(TransactionStatusTO.ACCP);
-        when(paymentRestClient.executePayment(PAYMENT_ID)).thenReturn(ResponseEntity.accepted().body(scaPaymentResponseTO));
+        GlobalScaResponseTO globalScaResponse = new GlobalScaResponseTO();
+        globalScaResponse.setOperationObjectId(PAYMENT_ID);
+        globalScaResponse.setTransactionStatus(TransactionStatusTO.ACCP);
         when(requestProviderService.getInstanceId()).thenReturn(INSTANCE_ID);
 
         when(consentDataService.store(globalScaResponseTO)).thenReturn(BYTES);
         doNothing().when(spiAspspConsentDataProvider).updateAspspConsentData(BYTES);
 
         when(paymentRestClient.getPaymentStatusById(PAYMENT_ID)).thenReturn(ResponseEntity.ok(TransactionStatusTO.ACCP));
+        when(operationInitiationRestClient.execution(OpTypeTO.PAYMENT,"payment id")).thenReturn(ResponseEntity.accepted().body(globalScaResponse));
 
         SpiResponse<SpiPaymentExecutionResponse> actual = generalPaymentService.verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(spiScaConfirmation, spiAspspConsentDataProvider);
 
@@ -579,8 +576,8 @@ class GeneralPaymentServiceTest {
     void initiatePaymentInLedgers() {
         PaymentTO paymentTO = new PaymentTO();
 
-        when(paymentRestClient.initiatePayment(paymentTO))
-                .thenReturn(ResponseEntity.ok(new SCAPaymentResponseTO()));
+        when(operationInitiationRestClient.initiatePayment(PaymentTypeTO.SINGLE, paymentTO))
+                .thenReturn(ResponseEntity.ok(new GlobalScaResponseTO()));
 
         GlobalScaResponseTO actual = generalPaymentService.initiatePaymentInLedgers(PaymentTypeTO.SINGLE, PaymentTypeTO.SINGLE, paymentTO);
 
@@ -590,8 +587,8 @@ class GeneralPaymentServiceTest {
 
     @Test
     void initiatePaymentCancellationInLedgers() {
-        when(paymentRestClient.initiatePmtCancellation(PAYMENT_ID))
-                .thenReturn(ResponseEntity.ok(new SCAPaymentResponseTO()));
+        when(operationInitiationRestClient.initiatePmtCancellation(PAYMENT_ID))
+                .thenReturn(ResponseEntity.ok(new GlobalScaResponseTO()));
 
         GlobalScaResponseTO actual = generalPaymentService.initiatePaymentCancellationInLedgers(PAYMENT_ID);
 
