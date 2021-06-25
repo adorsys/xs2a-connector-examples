@@ -95,34 +95,34 @@ xs2a:
       allowed-methods: DELETE,GET,OPTIONS,PATCH,POST,PUT
       # How long, in seconds, the response from a pre-flight request can be cached by clients
       max-age: 3600
+  cms:
+    not-confirmed-consent-expiration:
+      cron:
+        # the top of every hour of every day
+        expression: 0 0 * * * *
 
-stoplist:
-  cron:
-    # the top of every hour of every day
-    expression: 0 0 * * * *
+    not-confirmed-payment-expiration:
+      cron:
+        # the top of every hour of every day
+        expression: 0 0 * * * *
 
-not-confirmed-consent-expiration:
-  cron:
-    # the top of every hour of every day
-    expression: 0 0 * * * *
+    used-non-recurring-consent-expiration:
+      cron:
+        # the top of every hour of every day
+        expression: 0 0 * * * *
 
-not-confirmed-payment-expiration:
-  cron:
-    # the top of every hour of every day
-    expression: 0 0 * * * *
+    stoplist:
+      cron:
+        # the top of every hour of every day
+        expression: 0 0 * * * *
 
-used-non-recurring-consent-expiration:
-  cron:
-    # the top of every hour of every day
-    expression: 0 0 * * * *
+    consent:
+      cron:
+        expression: 0 0 1 * * ?
 
-consent:
-  cron:
-    expression: 0 0 1 * * ?
-
-scheduler:
-  pool:
-    size: 30
+    scheduler:
+      pool:
+        size: 30
 
 ---
 spring:
