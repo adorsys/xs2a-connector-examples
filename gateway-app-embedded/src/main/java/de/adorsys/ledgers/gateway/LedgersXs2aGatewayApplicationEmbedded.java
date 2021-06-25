@@ -24,11 +24,13 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.ComponentScan;
 
 @EnableFeignClients(basePackageClasses = PaymentRestClient.class)
 @SpringBootApplication(exclude = {HypermediaAutoConfiguration.class})
 @EnableLedgersXS2AConnectorEmbedded
 @EnableXs2aInterface
+@ComponentScan(basePackages = {"de.adorsys.psd2.scheduler"})
 @EnableXs2aSwagger
 public class LedgersXs2aGatewayApplicationEmbedded {
 
