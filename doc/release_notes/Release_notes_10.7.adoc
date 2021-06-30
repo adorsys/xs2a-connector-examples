@@ -1,4 +1,4 @@
-= Release notes v.11.7
+= Release notes v.10.7
 
 == Table of Contents
 
@@ -7,8 +7,8 @@
 
 == Migrated onto new Ledgers version
 
-From now on Connector uses Ledgers version 4.14.
+From now on Connector uses Ledgers version 4.7.1.
 
 == Migrated onto new xs2a version
 
-From now on Connector uses xs2a version 4.14.
+From now on Connector uses xs2a version 10.7.
