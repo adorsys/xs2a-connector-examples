@@ -1,9 +1,0 @@
-= Release notes v.10.7
-
-== Table of Contents
-
-* Migrated onto new Ledgers version
-
-== Migrated onto new Ledgers version
-
-From now on Connector uses Ledgers version 4.7.1.
