@@ -14,6 +14,7 @@ import de.adorsys.psd2.xs2a.core.authorisation.AuthenticationObject;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
+import de.adorsys.psd2.xs2a.core.profile.ScaApproach;
 import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
@@ -84,6 +85,17 @@ public abstract class AbstractAuthorisationSpi<T> {
 
     protected boolean validateStatuses(T businessObject, GlobalScaResponseTO sca) {
         return false;
+    }
+
+    public SpiResponse<SpiStartAuthorisationResponse> startAuthorisation(@NotNull SpiContextData contextData,
+                                                                         @NotNull ScaApproach scaApproach,
+                                                                         @NotNull ScaStatus scaStatus,
+                                                                         @NotNull String authorisationId,
+                                                                         T businessObject,
+                                                                         @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        return SpiResponse.<SpiStartAuthorisationResponse>builder()
+                       .payload(new SpiStartAuthorisationResponse(scaApproach, scaStatus, SpiMockData.PSU_MESSAGE_START_AUTHORISATION, SpiMockData.TPP_MESSAGES_START_AUTHORISATION))
+                       .build();
     }
 
     public SpiResponse<SpiPsuAuthorisationResponse> authorisePsu(@NotNull SpiContextData contextData,
