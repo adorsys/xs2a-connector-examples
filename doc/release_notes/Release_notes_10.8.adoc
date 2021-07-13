@@ -1,3 +1,9 @@
 = Release notes v.10.8
 
 == Table of Contents
+
+* Migrated onto new xs2a version
+
+== Migrated onto new xs2a version
+
+From now on Connector uses xs2a version 10.8.
