@@ -24,18 +24,23 @@ import de.adorsys.psd2.xs2a.spi.domain.common.SpiLinks;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SpiMockData {
     public static final SpiLinks SPI_LINKS = buildSpiLinks();
     public static final Set<TppMessageInformation> TPP_MESSAGES = buildTppMessages();
+    public static final Set<TppMessageInformation> TPP_MESSAGES_START_AUTHORISATION = buildTppMessagesStartAuthorisation();
     public static final List<SpiAuthenticationObject> SCA_METHODS = buildScaMethods();
-    public static final String PSU_MESSAGE = "mocked PSU message";
+    public static final String PSU_MESSAGE = "mocked PSU message from the bank";
+    public static final String PSU_MESSAGE_START_AUTHORISATION = "Start authorisation mocked PSU message from the bank";
 
     private static SpiLinks buildSpiLinks() {
         SpiLinks spiLinks = new SpiLinks();
-        spiLinks.setAccount(new SpiHrefType("Mock spi account link"));
+        spiLinks.setAccount(new SpiHrefType("Mock spi account link from the bank"));
         return spiLinks;
     }
 
@@ -45,13 +50,19 @@ public class SpiMockData {
         return tppInformationSet;
     }
 
+    private static Set<TppMessageInformation> buildTppMessagesStartAuthorisation() {
+        HashSet<TppMessageInformation> tppInformationSet = new HashSet<>();
+        tppInformationSet.add(TppMessageInformation.buildWithCustomWarning(MessageErrorCode.FORMAT_ERROR, "Start authorisation Mocked tpp message from the bank"));
+        return tppInformationSet;
+    }
+
     private static List<SpiAuthenticationObject> buildScaMethods() {
         SpiAuthenticationObject psi = new SpiAuthenticationObject();
-        psi.setAuthenticationType("Mocked Authentication type");
-        psi.setAuthenticationMethodId("Mocked Authentication id");
+        psi.setAuthenticationType("Mocked Authentication type the bank");
+        psi.setAuthenticationMethodId("Mocked Authentication id the bank");
         psi.setDecoupled(false);
-        psi.setName("Mocked name");
-        psi.setAuthenticationVersion("Mocked Authentication version");
+        psi.setName("Mocked name the bank");
+        psi.setAuthenticationVersion("Mocked Authentication version the bank");
 
         return Collections.singletonList(psi);
     }
