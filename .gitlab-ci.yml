@@ -16,7 +16,6 @@ stages:
   - "Test"       # run tests and code quality checks
   - "Package"    # dockerize jar and push to docker registry
   - "Deployment" # push to openshift registry (snapshot Deploymentment) or release registry
-  - "Notification" # Notify to specific channel about applications versions
 
 # ------------------------------------------------------------------
 # variables
@@ -287,21 +286,6 @@ Deploy Openshift (develop Embedded):
     DOCKER_TAG: develop
     OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_DEV}"
   <<: *deploy_openshift_embedded
-
-Notify Slack channel (develop):
-  image: "bash:4"
-  stage: "Notification"
-  cache: {}
-  only:
-    - develop
-  variables:
-    HELM_RELEASE: dev-psd2
-    ENV_JSON_FILE: scripts/notifications/psd2-dev.json
-    SLACK_CHANNEL: ${SLACK_PSD2_DEVELOP_CHANNEL}
-  script:
-    - apk update && apk add jq curl
-    - sleep 60
-    - scripts/notifications/./webhook_slack.sh xs2a cms aspspprofile ledgers
 
 ##########
 # master #
