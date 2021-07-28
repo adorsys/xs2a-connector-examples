@@ -1,0 +1,9 @@
+= Release notes v.11.9
+
+== Table of Contents
+
+* Migrated onto new xs2a version
+
+== Migrated onto new xs2a version
+
+From now on Connector uses xs2a version 11.9.
