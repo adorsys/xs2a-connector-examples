@@ -6,4 +6,4 @@
 
 == Migrated onto new XS2A version
 
-From now on Connector uses XS2A version 10.10.
+From now on, Connector uses XS2A version 10.10.

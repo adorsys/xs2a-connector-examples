@@ -66,6 +66,7 @@ class GeneralPaymentServiceTest {
     private static final String TAN_NUMBER = "123456";
     private final static String INSTANCE_ID = "test-instance-id";
     private final static String DEBTOR_NAME = "Mocked debtorName";
+    private final static boolean FUNDS_AVAILABLE = true;
 
     private final JsonReader jsonReader = new JsonReader();
 
@@ -109,7 +110,7 @@ class GeneralPaymentServiceTest {
     void getPaymentStatusById_withXmlMediaType_shouldReturnMockResponse() {
         // Given
         byte[] xmlBody = paymentBodyXml.getBytes();
-        SpiGetPaymentStatusResponse expectedResponse = new SpiGetPaymentStatusResponse(TransactionStatus.ACSP, null, XML_MEDIA_TYPE, xmlBody, PSU_MESSAGE);
+        SpiGetPaymentStatusResponse expectedResponse = new SpiGetPaymentStatusResponse(TransactionStatus.ACSP, FUNDS_AVAILABLE, XML_MEDIA_TYPE, xmlBody, PSU_MESSAGE);
 
         // When
         SpiResponse<SpiGetPaymentStatusResponse> spiResponse = generalPaymentService.getPaymentStatusById(PaymentTypeTO.SINGLE, XML_MEDIA_TYPE, "payment id", TransactionStatus.ACSP, BYTES);
@@ -124,7 +125,7 @@ class GeneralPaymentServiceTest {
     @Test
     void getPaymentStatusById_withNotAcspStatus_shouldReturnSameStatus() {
         // Given
-        SpiGetPaymentStatusResponse expectedResponse = new SpiGetPaymentStatusResponse(TransactionStatus.ACSC, null, JSON_MEDIA_TYPE, null, PSU_MESSAGE);
+        SpiGetPaymentStatusResponse expectedResponse = new SpiGetPaymentStatusResponse(TransactionStatus.ACSC, FUNDS_AVAILABLE, JSON_MEDIA_TYPE, null, PSU_MESSAGE);
 
         // When
         SpiResponse<SpiGetPaymentStatusResponse> spiResponse = generalPaymentService.getPaymentStatusById(PaymentTypeTO.SINGLE, ANY_MEDIA_TYPE, "payment id", TransactionStatus.ACSC, BYTES);
@@ -344,7 +345,7 @@ class GeneralPaymentServiceTest {
         assertEquals(TransactionStatus.ACSP, actual.getPayload().getTransactionStatus());
         assertEquals(SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, actual.getPayload().getResponseContentType());
         assertEquals(PSU_MESSAGE, actual.getPayload().getPsuMessage());
-        assertNull(actual.getPayload().getFundsAvailable());
+        assertTrue(actual.getPayload().getFundsAvailable());
         assertNull(actual.getPayload().getPaymentStatusRaw());
 
         verify(authRequestInterceptor, times(1)).setAccessToken(null);
