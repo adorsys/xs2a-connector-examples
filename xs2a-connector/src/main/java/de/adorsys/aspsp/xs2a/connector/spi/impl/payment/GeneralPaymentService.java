@@ -68,6 +68,7 @@ public class GeneralPaymentService {
     private static final String XML_MEDIA_TYPE = "application/xml";
     private static final String PSU_MESSAGE = "Mocked PSU message from SPI for this payment";
     private static final String DEBTOR_NAME = "Mocked debtor name";
+    private static final boolean MOCKED_FUNDS_AVAILABLE = true;
 
     private final PaymentRestClient paymentRestClient;
     private final AuthRequestInterceptor authRequestInterceptor;
@@ -151,13 +152,13 @@ public class GeneralPaymentService {
                                                                          @NotNull byte[] aspspConsentData) {
         if (acceptMediaType.equals(XML_MEDIA_TYPE)) {
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_XML, transactionStatusXmlBody.getBytes(), PSU_MESSAGE))
+                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, MOCKED_FUNDS_AVAILABLE, SpiGetPaymentStatusResponse.RESPONSE_TYPE_XML, transactionStatusXmlBody.getBytes(), PSU_MESSAGE))
                            .build();
         }
 
         if (!TransactionStatus.ACSP.equals(spiTransactionStatus)) {
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE))
+                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, MOCKED_FUNDS_AVAILABLE, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE))
                            .build();
         }
         try {
@@ -171,8 +172,9 @@ public class GeneralPaymentService {
                                                .orElseThrow(() -> FeignException.errorStatus("Request failed, response was 200, but body was empty!",
                                                                                              Response.builder().status(HttpStatus.BAD_REQUEST.value()).build()));
             logger.info("Transaction status: {}", status);
+            //TODO: after implementation of https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/-/issues/305 set "fundsAvailable" flag from Ledgers response into SpiGetPaymentStatusResponse
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                           .payload(new SpiGetPaymentStatusResponse(status, null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE))
+                           .payload(new SpiGetPaymentStatusResponse(status, MOCKED_FUNDS_AVAILABLE, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE))
                            .build();
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
