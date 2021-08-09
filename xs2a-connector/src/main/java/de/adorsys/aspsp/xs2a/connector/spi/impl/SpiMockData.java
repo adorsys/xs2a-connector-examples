@@ -37,6 +37,7 @@ public class SpiMockData {
     public static final List<SpiAuthenticationObject> SCA_METHODS = buildScaMethods();
     public static final String PSU_MESSAGE = "mocked PSU message from the bank";
     public static final String PSU_MESSAGE_START_AUTHORISATION = "Start authorisation mocked PSU message from the bank";
+    public static final boolean FUNDS_AVAILABLE = true;
 
     private static SpiLinks buildSpiLinks() {
         SpiLinks spiLinks = new SpiLinks();
@@ -58,11 +59,11 @@ public class SpiMockData {
 
     private static List<SpiAuthenticationObject> buildScaMethods() {
         SpiAuthenticationObject psi = new SpiAuthenticationObject();
-        psi.setAuthenticationType("Mocked Authentication type the bank");
-        psi.setAuthenticationMethodId("Mocked Authentication id the bank");
+        psi.setAuthenticationType("Mocked Authentication type from the bank");
+        psi.setAuthenticationMethodId("Mocked Authentication id from the bank");
         psi.setDecoupled(false);
-        psi.setName("Mocked name the bank");
-        psi.setAuthenticationVersion("Mocked Authentication version the bank");
+        psi.setName("Mocked name from the bank");
+        psi.setAuthenticationVersion("Mocked Authentication version from the bank");
 
         return Collections.singletonList(psi);
     }
