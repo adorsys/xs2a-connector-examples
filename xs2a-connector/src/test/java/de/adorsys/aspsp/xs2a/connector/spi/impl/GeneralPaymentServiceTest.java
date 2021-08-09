@@ -106,7 +106,7 @@ class GeneralPaymentServiceTest {
     void getPaymentStatusById_withXmlMediaType_shouldReturnMockResponse() {
         // Given
         byte[] xmlBody = paymentBodyXml.getBytes();
-        SpiGetPaymentStatusResponse expectedResponse = new SpiGetPaymentStatusResponse(TransactionStatus.ACSP, null, XML_MEDIA_TYPE, xmlBody, PSU_MESSAGE,
+        SpiGetPaymentStatusResponse expectedResponse = new SpiGetPaymentStatusResponse(TransactionStatus.ACSP, SpiMockData.FUNDS_AVAILABLE, XML_MEDIA_TYPE, xmlBody, PSU_MESSAGE,
                                                                                        SpiMockData.SPI_LINKS,
                                                                                        SpiMockData.TPP_MESSAGES);
 
@@ -123,7 +123,7 @@ class GeneralPaymentServiceTest {
     @Test
     void getPaymentStatusById_withNotAcspStatus_shouldReturnSameStatus() {
         // Given
-        SpiGetPaymentStatusResponse expectedResponse = new SpiGetPaymentStatusResponse(TransactionStatus.ACSC, null, JSON_MEDIA_TYPE, null, PSU_MESSAGE,
+        SpiGetPaymentStatusResponse expectedResponse = new SpiGetPaymentStatusResponse(TransactionStatus.ACSC, SpiMockData.FUNDS_AVAILABLE, JSON_MEDIA_TYPE, null, PSU_MESSAGE,
                                                                                        SpiMockData.SPI_LINKS,
                                                                                        SpiMockData.TPP_MESSAGES);
 
@@ -340,7 +340,7 @@ class GeneralPaymentServiceTest {
         assertEquals(TransactionStatus.ACSP, actual.getPayload().getTransactionStatus());
         assertEquals(SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, actual.getPayload().getResponseContentType());
         assertEquals(PSU_MESSAGE, actual.getPayload().getPsuMessage());
-        assertNull(actual.getPayload().getFundsAvailable());
+        assertTrue(actual.getPayload().getFundsAvailable());
         assertNull(actual.getPayload().getPaymentStatusRaw());
 
         verify(authRequestInterceptor, times(1)).setAccessToken(null);
