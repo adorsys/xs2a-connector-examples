@@ -1,0 +1,21 @@
+= Release notes v.11.10
+
+== Table of Contents
+
+* Migrated onto new XS2A version
+
+* Adjusted connector to retrieve "fundsAvailable" for Get Transaction Status response
+
+* Links with wrong host URL removed from GET Transactions by download resource
+
+== Migrated onto new XS2A version
+
+From now on, Connector uses XS2A version 11.10.
+
+== Adjusted connector to retrieve "fundsAvailable" for Get Transaction Status response
+
+Mocked `fundsAvailable = TRUE` value from connector now is present in Get Transaction Status response
+
+== Links with wrong host URL removed from GET Transactions by download resource
+
+Wrong host URLs were removed from mocked data on GET Transactions by download resource link on Connector side.

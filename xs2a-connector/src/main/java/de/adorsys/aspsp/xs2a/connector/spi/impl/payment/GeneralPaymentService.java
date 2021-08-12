@@ -153,7 +153,7 @@ public class GeneralPaymentService {
                                                                          @NotNull byte[] aspspConsentData) {
         if (acceptMediaType.equals(XML_MEDIA_TYPE)) {
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, null,
+                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, SpiMockData.FUNDS_AVAILABLE,
                                                                     SpiGetPaymentStatusResponse.RESPONSE_TYPE_XML,
                                                                     transactionStatusXmlBody.getBytes(), PSU_MESSAGE,
                                                                     SpiMockData.SPI_LINKS,
@@ -164,7 +164,7 @@ public class GeneralPaymentService {
 
         if (!TransactionStatus.ACSP.equals(spiTransactionStatus)) {
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, null,
+                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, SpiMockData.FUNDS_AVAILABLE,
                                                                     SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON,
                                                                     null, PSU_MESSAGE,
                                                                     SpiMockData.SPI_LINKS,
@@ -182,8 +182,9 @@ public class GeneralPaymentService {
                                                .orElseThrow(() -> FeignException.errorStatus("Request failed, response was 200, but body was empty!",
                                                                                              Response.builder().status(HttpStatus.BAD_REQUEST.value()).build()));
             logger.info("Transaction status: {}", status);
+            //TODO: after implementation of https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/-/issues/305 set "fundsAvailable" flag from Ledgers response into SpiGetPaymentStatusResponse
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                           .payload(new SpiGetPaymentStatusResponse(status, null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON,
+                           .payload(new SpiGetPaymentStatusResponse(status, SpiMockData.FUNDS_AVAILABLE, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON,
                                                                     null, PSU_MESSAGE,
                                                                     SpiMockData.SPI_LINKS,
                                                                     SpiMockData.TPP_MESSAGES))
