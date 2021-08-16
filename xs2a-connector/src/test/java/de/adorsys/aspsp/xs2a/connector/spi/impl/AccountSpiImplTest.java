@@ -102,6 +102,7 @@ class AccountSpiImplTest {
     private AccountDetailsTO accountDetailsTO;
     private SpiAccountReference accountReference;
     private TransactionTO transactionTO;
+    private GlobalScaResponseTO testSca;
 
     @BeforeEach
     void setUp() {
@@ -111,16 +112,7 @@ class AccountSpiImplTest {
         accountDetailsTO = jsonReader.getObjectFromFile("json/spi/impl/account-details.json", AccountDetailsTO.class);
         accountReference = jsonReader.getObjectFromFile("json/spi/impl/account-reference.json", SpiAccountReference.class);
         transactionTO = jsonReader.getObjectFromFile("json/mappers/transaction-to.json", TransactionTO.class);
-
-        GlobalScaResponseTO sca = new GlobalScaResponseTO();
-        BearerTokenTO token = new BearerTokenTO();
-        token.setExpires_in(100);
-        token.setAccessTokenObject(new AccessTokenTO());
-        token.setRefresh_token("refresh_token");
-        token.setAccess_token("access_token");
-        sca.setBearerToken(token);
-        when(tokenService.response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes())).thenReturn(sca);
-        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
+        testSca = getTestSca();
     }
 
     @Test
@@ -132,6 +124,7 @@ class AccountSpiImplTest {
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
         when(accountRestClient.getTransactionByDatesPaged(RESOURCE_ID, DATE_FROM, DATE_TO, PAGE, SIZE)).thenReturn(ResponseEntity.ok(new CustomPageImpl<>()));
         when(accountRestClient.getBalances(RESOURCE_ID)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
 
         SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, buildSpiTransactionReportParameters(MediaType.APPLICATION_XML_VALUE),
                                                                                                     accountReference, spiAccountConsent, aspspConsentDataProvider);
@@ -146,9 +139,25 @@ class AccountSpiImplTest {
     }
 
     @Test
+    void requestTransactionsForAccount_InformationBookingStatus() {
+        //When
+        SpiResponse<SpiTransactionReport> actualResponse =
+                accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, buildSpiTransactionReportParametersInformationBookingStatus(),
+                                                         accountReference, spiAccountConsent, aspspConsentDataProvider);
+
+        //Then
+        verifyNoInteractions(accountRestClient);
+        verifyNoInteractions(tokenService);
+        verifyNoInteractions(authRequestInterceptor);
+        assertEquals(MediaType.APPLICATION_JSON_VALUE, actualResponse.getPayload().getResponseContentType());
+        assertNotNull(actualResponse.getPayload().getTransactions().get(0).getAdditionalInformationStructured());
+    }
+
+    @Test
     void requestTransactionsForAccount_useDefaultAcceptTypeWhenNull_success() {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
@@ -171,6 +180,7 @@ class AccountSpiImplTest {
     void requestTransactionsForAccount_useDefaultAcceptTypeWhenWildcard_success() {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
@@ -193,6 +203,7 @@ class AccountSpiImplTest {
     void requestTransactionsForAccount_withException() {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
@@ -218,6 +229,7 @@ class AccountSpiImplTest {
     void requestAccountList_withoutBalance_regularConsent() {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
@@ -239,6 +251,7 @@ class AccountSpiImplTest {
     void requestAccountList_withBalance_regularConsent() {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
@@ -260,6 +273,7 @@ class AccountSpiImplTest {
     void requestAccountList_withBalance_consentWithOwnerName() {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
@@ -283,6 +297,7 @@ class AccountSpiImplTest {
     void requestAccountList_withBalance_globalConsent() {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
@@ -299,6 +314,7 @@ class AccountSpiImplTest {
 
     @Test
     void requestAccountList_withoutBalanceAndException_regularConsent() {
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(tokenService.response(BYTES)).thenThrow(getFeignException());
 
         SpiResponse<List<SpiAccountDetails>> actualResponse = accountSpi.requestAccountList(SPI_CONTEXT_DATA, false,
@@ -315,6 +331,7 @@ class AccountSpiImplTest {
     void requestAccountList_withoutBalance_regularConsent_noCurrency() {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
@@ -340,6 +357,7 @@ class AccountSpiImplTest {
     void requestAccountList_withoutBalance_regularConsent_currencyPresent() {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
@@ -365,6 +383,8 @@ class AccountSpiImplTest {
         SpiAccountConsent spiAccountConsent = buildSpiAccountConsent();
         SpiAccountAccess accountAccess = spiAccountConsent.getAccess();
         accountAccess.setSpiAdditionalInformationAccess(new SpiAdditionalInformationAccess(Collections.emptyList(), Collections.emptyList()));
+        when(tokenService.response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes())).thenReturn(testSca);
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
 
         List<AccountDetailsTO> accountDetailsTOList = accountAccess.getAccounts().stream()
                                                               .map(account -> buildAccountDetailsTO(account.getIban(), account.getResourceId()))
@@ -403,6 +423,8 @@ class AccountSpiImplTest {
         List<AccountDetailsTO> accountDetailsTOList = accounts.stream()
                                                               .map(account -> buildAccountDetailsTO(account.getIban(), account.getResourceId()))
                                                               .collect(Collectors.toList());
+        when(tokenService.response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes())).thenReturn(testSca);
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(accountDetailsTOList));
 
         when(ownerNameService.shouldContainOwnerName(new IbanAccountReference(IBAN, CURRENCY_EUR), accountAccess))
@@ -435,6 +457,8 @@ class AccountSpiImplTest {
         List<AccountDetailsTO> accountDetailsTOList = accountAccess.getAccounts().stream()
                                                               .map(account -> buildAccountDetailsTO(account.getIban(), account.getResourceId()))
                                                               .collect(Collectors.toList());
+        when(tokenService.response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes())).thenReturn(testSca);
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(accountDetailsTOList));
 
         SpiAccountDetails spiAccountDetailsFirstAccount = buildSpiAccountDetails(IBAN, RESOURCE_ID);
@@ -466,6 +490,8 @@ class AccountSpiImplTest {
         SpiAccountAccess accountAccess = spiAccountConsent.getAccess();
 
         SpiAccountDetails spiAccountDetailsFirstAccount = buildSpiAccountDetails(IBAN, RESOURCE_ID);
+        when(tokenService.response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes())).thenReturn(testSca);
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(ownerNameService.shouldContainOwnerName(new IbanAccountReference(IBAN, CURRENCY_EUR), accountAccess))
                 .thenReturn(true);
         when(ownerNameService.enrichAccountDetailsWithOwnerName(spiAccountDetailsFirstAccount))
@@ -485,6 +511,8 @@ class AccountSpiImplTest {
     void requestAccountList_availableAccountsWithBalanceConsent_withOwnerName() {
         //Given
         when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(Collections.singletonList(buildAccountDetailsTO(IBAN, RESOURCE_ID))));
+        when(tokenService.response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes())).thenReturn(testSca);
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         SpiAccountConsent spiAccountConsent = jsonReader.getObjectFromFile("json/spi/impl/account-spi/spi-account-consent-available-accounts-balance-owner-name.json", SpiAccountConsent.class);
         SpiAccountAccess accountAccess = spiAccountConsent.getAccess();
 
@@ -508,6 +536,8 @@ class AccountSpiImplTest {
     void requestAccountList_globalConsent_withOwnerName() {
         //Given
         when(accountRestClient.getListOfAccounts()).thenReturn(ResponseEntity.ok(Collections.singletonList(buildAccountDetailsTO(IBAN, RESOURCE_ID))));
+        when(tokenService.response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes())).thenReturn(testSca);
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         SpiAccountConsent spiAccountConsent = jsonReader.getObjectFromFile("json/spi/impl/account-spi/spi-account-consent-global-owner-name.json", SpiAccountConsent.class);
         SpiAccountAccess accountAccess = spiAccountConsent.getAccess();
 
@@ -534,6 +564,8 @@ class AccountSpiImplTest {
         SpiAccountAccess accountAccess = spiAccountConsent.getAccess();
         accountAccess.setSpiAdditionalInformationAccess(new SpiAdditionalInformationAccess(Collections.emptyList(), Collections.emptyList()));
         when(accountRestClient.getAccountDetailsById(RESOURCE_ID)).thenReturn(ResponseEntity.ok(buildAccountDetailsTO(IBAN, RESOURCE_ID)));
+        when(tokenService.response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes())).thenReturn(testSca);
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         SpiAccountDetails spiAccountDetailsFirstAccount = buildSpiAccountDetails(IBAN, RESOURCE_ID);
         when(ownerNameService.shouldContainOwnerName(new IbanAccountReference(IBAN, CURRENCY_EUR), accountAccess))
                 .thenReturn(true);
@@ -559,6 +591,8 @@ class AccountSpiImplTest {
         SpiAdditionalInformationAccess spiAdditionalInformationAccess = new SpiAdditionalInformationAccess(Collections.singletonList(accounts.get(1)), Collections.emptyList());
         accountAccess.setSpiAdditionalInformationAccess(spiAdditionalInformationAccess);
         when(accountRestClient.getAccountDetailsById(RESOURCE_ID)).thenReturn(ResponseEntity.ok(this.accountDetailsTO));
+        when(tokenService.response(ASPSP_CONSENT_DATA.getAspspConsentDataBytes())).thenReturn(testSca);
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
 
         //when
         SpiResponse<SpiAccountDetails> actualResponse = accountSpi.requestAccountDetailForAccount(SPI_CONTEXT_DATA, false, accountReference,
@@ -582,6 +616,7 @@ class AccountSpiImplTest {
     void requestAccountDetailForAccount_withBalance() {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
@@ -604,6 +639,7 @@ class AccountSpiImplTest {
     void requestAccountDetailForAccount_withoutBalance() {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
@@ -625,6 +661,7 @@ class AccountSpiImplTest {
     void requestAccountDetailForAccount_withoutBalanceAndException() {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
 
@@ -644,6 +681,7 @@ class AccountSpiImplTest {
     void requestTransactionForAccountByTransactionId_success() {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
@@ -665,6 +703,7 @@ class AccountSpiImplTest {
     void requestTransactionForAccountByTransactionId_WithException() {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
 
@@ -685,6 +724,7 @@ class AccountSpiImplTest {
     void requestTransactionsByDownloadLink_success() throws NoSuchFieldException, IllegalAccessException {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
         when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
@@ -704,6 +744,7 @@ class AccountSpiImplTest {
 
     @Test
     void requestTransactionsByDownloadLink_WithError() {
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
         when(tokenService.response(BYTES)).thenThrow(getFeignException());
 
         SpiResponse<SpiTransactionsDownloadResponse> actualResponse = accountSpi
@@ -758,7 +799,11 @@ class AccountSpiImplTest {
     }
 
     private SpiTransactionReportParameters buildSpiTransactionReportParameters(String mediaType) {
-        return new SpiTransactionReportParameters(mediaType, true, DATE_FROM, DATE_TO, BookingStatus.BOOKED, null, null, PAGE, SIZE);
+        return new SpiTransactionReportParameters(mediaType, true, DATE_FROM, DATE_TO, BookingStatus.ALL, null, null, PAGE, SIZE);
+    }
+
+    private SpiTransactionReportParameters buildSpiTransactionReportParametersInformationBookingStatus() {
+        return new SpiTransactionReportParameters(MediaType.APPLICATION_JSON_VALUE, true, DATE_FROM, DATE_TO, BookingStatus.INFORMATION, null, null, PAGE, SIZE);
     }
 
     private AccountDetailsTO buildAccountDetailsTO(String iban, String resourceId) {
@@ -783,5 +828,16 @@ class AccountSpiImplTest {
 
     private SpiAccountConsent buildSpiAccountConsent() {
         return jsonReader.getObjectFromFile("json/spi/impl/spi-account-consent-with-2-accounts.json", SpiAccountConsent.class);
+    }
+
+    private GlobalScaResponseTO getTestSca() {
+        GlobalScaResponseTO sca = new GlobalScaResponseTO();
+        BearerTokenTO token = new BearerTokenTO();
+        token.setExpires_in(100);
+        token.setAccessTokenObject(new AccessTokenTO());
+        token.setRefresh_token("refresh_token");
+        token.setAccess_token("access_token");
+        sca.setBearerToken(token);
+        return sca;
     }
 }

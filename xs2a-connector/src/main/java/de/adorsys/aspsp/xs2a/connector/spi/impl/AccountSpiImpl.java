@@ -252,6 +252,10 @@ public class AccountSpiImpl implements AccountSpi {
 
             List<SpiAccountBalance> balances = getSpiAccountBalances(contextData, withBalance, accountReference,
                                                                      accountConsent, aspspConsentDataProvider);
+            if (BookingStatus.ALL == spiTransactionReportParameters.getBookingStatus() && page == 0) {
+                logger.info("Retrieving mock standing order report for account: {}", accountReference.getResourceId());
+                transactionsPaged.addAll(createStandingOrderReportMock());
+            }
             SpiTransactionLinks spiTransactionLinks = transactionLinksService.buildSpiTransactionLinks(page, size, transactionsOnPage);
             SpiTransactionReport transactionReport = new SpiTransactionReport("downloadId", transactionsPaged, balances,
                                                                               processAcceptMediaType(acceptMediaType), null, spiTransactionLinks, DEFAULT_TOTAL_PAGES);
