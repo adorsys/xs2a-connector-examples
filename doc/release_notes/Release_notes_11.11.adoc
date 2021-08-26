@@ -1,0 +1,15 @@
+= Release notes v.11.11
+
+== Table of Contents
+
+* Migrated onto new XS2A version
+
+* Connector refactored to support a new query parameter of bookingStatus for Transaction report
+
+== Migrated onto new XS2A version
+
+From now on, Connector uses XS2A version 11.11.
+
+== Connector refactored to support a new query parameter of bookingStatus for Transaction report
+
+Connector was refactored to support new `BookingStatus.ALL` value for Transaction report.
