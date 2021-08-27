@@ -93,8 +93,11 @@ public abstract class AbstractAuthorisationSpi<T> {
                                                                          @NotNull String authorisationId,
                                                                          T businessObject,
                                                                          @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
+        String psuMessage = (scaApproach == ScaApproach.DECOUPLED)
+                                    ? SpiMockData.DECOUPLED_PSU_MESSAGE
+                                    : SpiMockData.PSU_MESSAGE_START_AUTHORISATION;
         return SpiResponse.<SpiStartAuthorisationResponse>builder()
-                       .payload(new SpiStartAuthorisationResponse(scaApproach, scaStatus, SpiMockData.PSU_MESSAGE_START_AUTHORISATION, SpiMockData.TPP_MESSAGES_START_AUTHORISATION))
+                       .payload(new SpiStartAuthorisationResponse(scaApproach, scaStatus, psuMessage, SpiMockData.TPP_MESSAGES_START_AUTHORISATION))
                        .build();
     }
 

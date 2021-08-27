@@ -37,6 +37,7 @@ public class SpiMockData {
     public static final List<SpiAuthenticationObject> SCA_METHODS = buildScaMethods();
     public static final String PSU_MESSAGE = "mocked PSU message from the bank";
     public static final String PSU_MESSAGE_START_AUTHORISATION = "Start authorisation mocked PSU message from the bank";
+    public static final String DECOUPLED_PSU_MESSAGE = "Please check your app to continue...";
     public static final boolean FUNDS_AVAILABLE = true;
 
     private static SpiLinks buildSpiLinks() {
