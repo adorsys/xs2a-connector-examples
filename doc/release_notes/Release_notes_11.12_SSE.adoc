@@ -1,0 +1,16 @@
+= Release notes v.11.12
+
+== Table of Contents
+
+* Migrated onto new XS2A version
+
+* Added specific PSU Message to response in case of Decoupled SCA approach
+
+== Migrated onto new XS2A version
+
+From now on, Connector uses XS2A version 11.12.
+
+== Added specific PSU Message to response in case of Decoupled SCA approach
+
+From now on, specific PSU message "Please check your app to continue..." is sent after authorisation start
+in case of `Decoupled` SCA approach
