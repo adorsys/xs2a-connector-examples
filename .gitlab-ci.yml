@@ -42,8 +42,7 @@ variables: &variables
   # Private Openshift Images #
   ############################
 
-  OPENSHIFT_NAMESPACE_ADORSYS_XS2A_DEV: "adorsys-xs2a-dev"
-  OPENSHIFT_NAMESPACE_ADORSYS_XS2A_INTEG: "adorsys-xs2a-integ"
+  OPENSHIFT_NAMESPACE_SUPPORT12X: "adorsys-xs2a-support12x"
 
 # ------------------------------------------------------------------
 # reusable yaml anchors
@@ -247,65 +246,57 @@ Test:Sonarcube:
   only:
     - develop
 
-###########
-# develop #
-###########
+################
+# support-12.x #
+################
 
-Push to DockerHub (develop):
+Push to DockerHub (support-12.x):
   stage: "Package"
   only:
-    - develop
+    - support-12.x
+  except:
+    - schedules
   variables:
-    DOCKER_TAG: develop
+    DOCKER_TAG: support12x
   <<: *build_dockerhub_image
 
-Push to DockerHub (develop Embedded):
+Push to DockerHub (support-12.x develop Embedded):
   stage: "Package"
   only:
-    - develop
+    - support-12.x
+  except:
+    - schedules
   variables:
-    DOCKER_TAG: develop
+    DOCKER_TAG: support12x
   <<: *build_dockerhub_image_embedded
 
-Deploy Openshift (develop):
+Deploy Openshift (support-12.x):
   stage: "Deployment"
+  cache: {}
+  dependencies: []
   only:
-    - develop
+    - support-12.x
+  except:
+    - schedules
   variables:
-    <<: *variables
-    DOCKER_TAG: develop
-    OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_DEV}"
+    GIT_STRATEGY: none
+    DOCKER_TAG: support12x # Dockerhub source tag
+    OPENSHIFT_NAMESPACE: ${OPENSHIFT_NAMESPACE_SUPPORT12X} # Openshift target namespace
   <<: *deploy_openshift
 
-Deploy Openshift (develop Embedded):
+Deploy Openshift (support-12.x Embedded):
   stage: "Deployment"
+  cache: {}
+  dependencies: []
   only:
-    - develop
+    - support-12.x
+  except:
+    - schedules
   variables:
-    <<: *variables
-    DOCKER_TAG: develop
-    OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_DEV}"
+    GIT_STRATEGY: none
+    DOCKER_TAG: support12x # Dockerhub source tag
+    OPENSHIFT_NAMESPACE: ${OPENSHIFT_NAMESPACE_SUPPORT12X} # Openshift target namespace
   <<: *deploy_openshift_embedded
-
-##########
-# master #
-##########
-
-Push to DockerHub (master):
-  stage: "Package"
-  only:
-    - master
-  variables:
-    DOCKER_TAG: latest
-  <<: *build_dockerhub_image
-
-Push to DockerHub (master Embedded):
-  stage: "Package"
-  only:
-    - master
-  variables:
-    DOCKER_TAG: latest
-  <<: *build_dockerhub_image_embedded
 
 ###########
 # release #
@@ -326,31 +317,3 @@ Push to DockerHub (Embedded Release):
   variables:
     DOCKER_TAG: $CI_COMMIT_TAG
   <<: *build_dockerhub_image_embedded
-
-###########
-# nightly #
-###########
-
-Deploy Openshift (Nightly):
-  stage: "Deployment"
-  only:
-    variables:
-      - $NIGHTLY == "true"
-  variables:
-    <<: *variables
-    DOCKER_TAG: develop
-    OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_INTEG}"
-  <<: *deploy_openshift
-
-Deploy Openshift (Nightly Embedded):
-  stage: "Deployment"
-  only:
-    variables:
-      - $NIGHTLY == "true"
-  variables:
-    <<: *variables
-    DOCKER_TAG: develop
-    OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_INTEG}"
-  <<: *deploy_openshift_embedded
-
-
