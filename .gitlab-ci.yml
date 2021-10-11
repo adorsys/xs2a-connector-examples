@@ -271,7 +271,7 @@ Push to DockerHub (support-12.x develop Embedded):
   <<: *build_dockerhub_image_embedded
 
 Deploy Openshift (support-12.x):
-  stage: "Deploy"
+  stage: "Deployment"
   cache: {}
   dependencies: []
   only:
@@ -285,7 +285,7 @@ Deploy Openshift (support-12.x):
   <<: *deploy_openshift
 
 Deploy Openshift (support-12.x Embedded):
-  stage: "Deploy"
+  stage: "Deployment"
   cache: {}
   dependencies: []
   only:
