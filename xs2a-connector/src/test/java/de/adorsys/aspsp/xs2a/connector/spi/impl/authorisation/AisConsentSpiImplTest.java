@@ -980,7 +980,7 @@ class AisConsentSpiImplTest {
 
     private ScaUserDataTO getScaUserData() {
         ScaUserDataTO userDataTO = new ScaUserDataTO();
-        userDataTO.setScaMethod(ScaMethodTypeTO.EMAIL);
+        userDataTO.setScaMethod(ScaMethodTypeTO.SMTP_OTP);
         userDataTO.setDecoupled(false);
         return userDataTO;
     }
