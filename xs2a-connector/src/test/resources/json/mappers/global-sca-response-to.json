@@ -6,7 +6,7 @@
   "scaMethods" : [
     {
       "id": "LFwZWcvNQT0g-ysBJY_QYE",
-      "scaMethod" : "EMAIL",
+      "scaMethod" : "SMTP_OTP",
       "methodValue" : "anton.brueckner@mail.de",
       "usesStaticTan" : true,
       "staticTan" : "Zw6zTT1M3j+4ITn6h1KYGA=="
