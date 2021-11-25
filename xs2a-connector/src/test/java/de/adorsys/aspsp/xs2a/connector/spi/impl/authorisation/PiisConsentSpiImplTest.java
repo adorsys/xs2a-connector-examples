@@ -521,7 +521,7 @@ class PiisConsentSpiImplTest {
     private ScaUserDataTO getScaUserDataTO(String methodId) {
         ScaUserDataTO scaUserDataTO = new ScaUserDataTO();
         scaUserDataTO.setId(methodId);
-        scaUserDataTO.setScaMethod(ScaMethodTypeTO.EMAIL);
+        scaUserDataTO.setScaMethod(ScaMethodTypeTO.SMTP_OTP);
         scaUserDataTO.setMethodValue("method value");
         scaUserDataTO.setDecoupled(false);
         return scaUserDataTO;
