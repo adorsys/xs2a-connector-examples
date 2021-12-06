@@ -1,5 +1,5 @@
 {
   "authenticationMethodId": "111",
-  "authenticationType": "EMAIL",
+  "authenticationType": "SMTP_OTP",
   "name": "some@email.com"
 }

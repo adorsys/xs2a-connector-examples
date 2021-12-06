@@ -1,6 +1,6 @@
 {
   "id": "111",
-  "scaMethod": "EMAIL",
+  "scaMethod": "SMTP_OTP",
   "methodValue": "some@email.com",
   "user": {
     "login": "user1",
