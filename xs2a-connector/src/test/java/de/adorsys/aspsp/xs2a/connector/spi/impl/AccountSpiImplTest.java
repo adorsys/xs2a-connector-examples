@@ -1,9 +1,12 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import de.adorsys.aspsp.xs2a.connector.account.IbanAccountReference;
 import de.adorsys.aspsp.xs2a.connector.account.OwnerNameService;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapperImpl;
+import de.adorsys.aspsp.xs2a.connector.spi.file.exception.FileManagementException;
+import de.adorsys.aspsp.xs2a.connector.spi.file.util.FileManagementService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.service.TransactionLinksService;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
@@ -15,8 +18,10 @@ import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.rest.client.AccountRestClient;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.util.domain.CustomPageImpl;
+import de.adorsys.psd2.mapper.Xs2aObjectMapper;
 import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
+import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
@@ -33,10 +38,12 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
-import java.lang.reflect.Field;
+import java.io.File;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -58,6 +65,8 @@ class AccountSpiImplTest {
     private static final AspspConsentData ASPSP_CONSENT_DATA = new AspspConsentData(BYTES, CONSENT_ID);
     private static final String RESOURCE_ID = "11111-999999999";
     private static final String RESOURCE_ID_SECOND_ACCOUNT = "11111-999999998";
+    private static final String TRANSACTIONS_FILEPATH = "/tmp/XS2A/1233444/transactions.json";
+    private static final String EMPTY_FILE_MESSAGE = "Nothing to download, file is empty";
 
     private final static LocalDate DATE_FROM = LocalDate.of(2019, 1, 1);
     private final static LocalDate DATE_TO = LocalDate.of(2020, 1, 1);
@@ -94,6 +103,10 @@ class AccountSpiImplTest {
     private OwnerNameService ownerNameService;
     @Mock
     private TransactionLinksService transactionLinksService;
+    @Mock
+    private Xs2aObjectMapper xs2aObjectMapper;
+    @Mock
+    FileManagementService fileManagementService;
 
     private final JsonReader jsonReader = new JsonReader();
     private SpiAccountConsent spiAccountConsent;
@@ -116,7 +129,7 @@ class AccountSpiImplTest {
     }
 
     @Test
-    void requestTransactionsForAccount_success() {
+    void requestTransactionsForAccount_success() throws JsonProcessingException, FileManagementException {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
         when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
@@ -125,6 +138,8 @@ class AccountSpiImplTest {
         when(accountRestClient.getTransactionByDatesPaged(RESOURCE_ID, DATE_FROM, DATE_TO, PAGE, SIZE)).thenReturn(ResponseEntity.ok(new CustomPageImpl<>()));
         when(accountRestClient.getBalances(RESOURCE_ID)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
         when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
+        when(xs2aObjectMapper.writeValueAsBytes(anyList())).thenReturn(BYTES);
+        when(fileManagementService.saveFileAndBuildDownloadLink(new ByteArrayResource(BYTES), null)).thenReturn(TRANSACTIONS_FILEPATH);
 
         SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, buildSpiTransactionReportParameters(MediaType.APPLICATION_XML_VALUE),
                                                                                                     accountReference, spiAccountConsent, aspspConsentDataProvider);
@@ -154,7 +169,7 @@ class AccountSpiImplTest {
     }
 
     @Test
-    void requestTransactionsForAccount_useDefaultAcceptTypeWhenNull_success() {
+    void requestTransactionsForAccount_useDefaultAcceptTypeWhenNull_success() throws JsonProcessingException, FileManagementException {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
         when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
@@ -163,6 +178,9 @@ class AccountSpiImplTest {
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
         when(accountRestClient.getTransactionByDatesPaged(RESOURCE_ID, DATE_FROM, DATE_TO, PAGE, SIZE)).thenReturn(ResponseEntity.ok(new CustomPageImpl<>()));
         when(accountRestClient.getBalances(RESOURCE_ID)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
+        when(xs2aObjectMapper.writeValueAsBytes(anyList())).thenReturn(BYTES);
+        when(fileManagementService.saveFileAndBuildDownloadLink(new ByteArrayResource(BYTES), null)).thenReturn(TRANSACTIONS_FILEPATH);
+
 
         SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, buildSpiTransactionReportParameters(null),
                                                                                                     accountReference, spiAccountConsent, aspspConsentDataProvider);
@@ -177,7 +195,7 @@ class AccountSpiImplTest {
     }
 
     @Test
-    void requestTransactionsForAccount_useDefaultAcceptTypeWhenWildcard_success() {
+    void requestTransactionsForAccount_useDefaultAcceptTypeWhenWildcard_success() throws JsonProcessingException, FileManagementException {
         BearerTokenTO bearerTokenTO = new BearerTokenTO();
         bearerTokenTO.setAccess_token("access_token");
         when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
@@ -186,6 +204,8 @@ class AccountSpiImplTest {
         when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
         when(accountRestClient.getTransactionByDatesPaged(RESOURCE_ID, DATE_FROM, DATE_TO, PAGE, SIZE)).thenReturn(ResponseEntity.ok(new CustomPageImpl<>()));
         when(accountRestClient.getBalances(RESOURCE_ID)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
+        when(xs2aObjectMapper.writeValueAsBytes(anyList())).thenReturn(BYTES);
+        when(fileManagementService.saveFileAndBuildDownloadLink(new ByteArrayResource(BYTES), null)).thenReturn(TRANSACTIONS_FILEPATH);
 
         SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, buildSpiTransactionReportParameters("*/*"),
                                                                                                     accountReference, spiAccountConsent, aspspConsentDataProvider);
@@ -223,6 +243,33 @@ class AccountSpiImplTest {
         verify(authRequestInterceptor, times(2)).setAccessToken(null);
         verify(accountRestClient, times(1)).getTransactionByDatesPaged(RESOURCE_ID, DATE_FROM, DATE_TO, PAGE, SIZE);
         verify(tokenService, times(1)).store(scaResponseTO);
+    }
+
+    @Test
+    void requestTransactionsForAccount_emptyDownloadLink() throws JsonProcessingException, FileManagementException {
+        BearerTokenTO bearerTokenTO = new BearerTokenTO();
+        bearerTokenTO.setAccess_token("access_token");
+        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
+        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
+        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
+        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+        when(accountRestClient.getTransactionByDatesPaged(RESOURCE_ID, DATE_FROM, DATE_TO, PAGE, SIZE)).thenReturn(ResponseEntity.ok(new CustomPageImpl<>()));
+        when(accountRestClient.getBalances(RESOURCE_ID)).thenReturn(ResponseEntity.ok(Collections.emptyList()));
+        when(xs2aObjectMapper.writeValueAsBytes(anyList())).thenReturn(BYTES);
+
+        when(fileManagementService.saveFileAndBuildDownloadLink(new ByteArrayResource(BYTES), null)).thenThrow(getFileManagementException("FileManagementException"));
+
+        SpiResponse<SpiTransactionReport> actualResponse = accountSpi.requestTransactionsForAccount(SPI_CONTEXT_DATA, buildSpiTransactionReportParameters(MediaType.APPLICATION_XML_VALUE),
+                                                                                                    accountReference, spiAccountConsent, aspspConsentDataProvider);
+
+        assertTrue(actualResponse.getErrors().isEmpty());
+        assertTrue(actualResponse.getPayload().getDownloadId().isEmpty());
+        verify(aspspConsentDataProvider, times(2)).loadAspspConsentData();
+        verify(tokenService, times(2)).response(BYTES);
+        verify(authRequestInterceptor, times(2)).setAccessToken(scaResponseTO.getBearerToken().getAccess_token());
+        verify(authRequestInterceptor, times(2)).setAccessToken(null);
+        verify(accountRestClient, times(1)).getTransactionByDatesPaged(RESOURCE_ID, DATE_FROM, DATE_TO, PAGE, SIZE);
+        verify(tokenService, times(2)).store(scaResponseTO);
     }
 
     @Test
@@ -721,40 +768,58 @@ class AccountSpiImplTest {
     }
 
     @Test
-    void requestTransactionsByDownloadLink_success() throws NoSuchFieldException, IllegalAccessException {
-        BearerTokenTO bearerTokenTO = new BearerTokenTO();
-        bearerTokenTO.setAccess_token("access_token");
-        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
-        when(scaResponseTO.getBearerToken()).thenReturn(bearerTokenTO);
-        when(tokenService.response(BYTES)).thenReturn(scaResponseTO);
-        when(tokenService.store(scaResponseTO)).thenReturn(BYTES);
+    void requestTransactionsByDownloadLink_success() throws FileManagementException {
+        when(fileManagementService.getFileByDownloadLink(DOWNLOAD_ID)).thenReturn(new ByteArrayResource(BYTES));
 
-        String transactionList = "transactionList";
-        Field fieldTransactionList = accountSpi.getClass().getDeclaredField(transactionList);
-        fieldTransactionList.setAccessible(true);
-        fieldTransactionList.set(accountSpi, transactionList);
-
-        SpiResponse<SpiTransactionsDownloadResponse> actualResponse = accountSpi
-                                                                              .requestTransactionsByDownloadLink(SPI_CONTEXT_DATA, spiAccountConsent, DOWNLOAD_ID, aspspConsentDataProvider);
+        SpiResponse<SpiTransactionsDownloadResponse> actualResponse =
+                accountSpi.requestTransactionsByDownloadLink(SPI_CONTEXT_DATA, spiAccountConsent, DOWNLOAD_ID, aspspConsentDataProvider);
 
         assertTrue(actualResponse.getErrors().isEmpty());
         assertNotNull(actualResponse.getPayload());
-        verifyApplyAuthorisationUsedAndInterceptorWithNull();
+        verify(fileManagementService, times(1)).deleteFileByDownloadLink(DOWNLOAD_ID);
     }
 
     @Test
-    void requestTransactionsByDownloadLink_WithError() {
-        when(aspspConsentDataProvider.loadAspspConsentData()).thenReturn(BYTES);
-        when(tokenService.response(BYTES)).thenThrow(getFeignException());
+    void requestTransactionsByDownloadLink_blockedResource() throws FileManagementException {
+        File file = new File(TRANSACTIONS_FILEPATH);
+        file.setReadable(false);
+        FileSystemResource resource = new FileSystemResource(file);
+        when(fileManagementService.getFileByDownloadLink(DOWNLOAD_ID)).thenReturn(resource);
 
-        SpiResponse<SpiTransactionsDownloadResponse> actualResponse = accountSpi
-                                                                              .requestTransactionsByDownloadLink(SPI_CONTEXT_DATA, spiAccountConsent, DOWNLOAD_ID, aspspConsentDataProvider);
+        SpiResponse<SpiTransactionsDownloadResponse> actualResponse =
+                accountSpi.requestTransactionsByDownloadLink(SPI_CONTEXT_DATA, spiAccountConsent, DOWNLOAD_ID, aspspConsentDataProvider);
 
         assertFalse(actualResponse.getErrors().isEmpty());
         assertNull(actualResponse.getPayload());
-        verify(aspspConsentDataProvider, times(1)).loadAspspConsentData();
-        verify(tokenService, times(1)).response(BYTES);
-        verify(authRequestInterceptor, times(1)).setAccessToken(null);
+        assertEquals(MessageErrorCode.RESOURCE_BLOCKED, actualResponse.getErrors().get(0).getErrorCode());
+        verify(fileManagementService, never()).deleteFileByDownloadLink(DOWNLOAD_ID);
+    }
+
+    @Test
+    void requestTransactionsByDownloadLink_emptyFile() throws FileManagementException {
+        ByteArrayResource resource = new ByteArrayResource("".getBytes());
+        when(fileManagementService.getFileByDownloadLink(DOWNLOAD_ID)).thenReturn(resource);
+
+        SpiResponse<SpiTransactionsDownloadResponse> actualResponse =
+                accountSpi.requestTransactionsByDownloadLink(SPI_CONTEXT_DATA, spiAccountConsent, DOWNLOAD_ID, aspspConsentDataProvider);
+
+        assertFalse(actualResponse.getErrors().isEmpty());
+        assertNull(actualResponse.getPayload());
+        assertEquals(MessageErrorCode.RESOURCE_UNKNOWN_404, actualResponse.getErrors().get(0).getErrorCode());
+        assertEquals(EMPTY_FILE_MESSAGE, actualResponse.getErrors().get(0).getMessageText());
+        verify(fileManagementService, never()).deleteFileByDownloadLink(DOWNLOAD_ID);
+    }
+
+    @Test
+    void requestTransactionsByDownloadLink_WithError() throws FileManagementException {
+        when(fileManagementService.getFileByDownloadLink(DOWNLOAD_ID)).thenThrow(getFileManagementException(null));
+
+        SpiResponse<SpiTransactionsDownloadResponse> actualResponse =
+                accountSpi.requestTransactionsByDownloadLink(SPI_CONTEXT_DATA, spiAccountConsent, DOWNLOAD_ID, aspspConsentDataProvider);
+
+        assertFalse(actualResponse.getErrors().isEmpty());
+        assertNull(actualResponse.getPayload());
+        verify(fileManagementService, never()).deleteFileByDownloadLink(DOWNLOAD_ID);
     }
 
     @Test
@@ -782,6 +847,10 @@ class AccountSpiImplTest {
     private FeignException getFeignException() {
         return FeignException.errorStatus(RESPONSE_STATUS_200_WITH_EMPTY_BODY,
                                           buildErrorResponse());
+    }
+
+    private FileManagementException getFileManagementException(String message) {
+        return new FileManagementException(message);
     }
 
     private Response buildErrorResponse() {

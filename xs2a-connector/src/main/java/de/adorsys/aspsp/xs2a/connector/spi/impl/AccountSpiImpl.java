@@ -20,6 +20,8 @@ import de.adorsys.aspsp.xs2a.connector.account.IbanAccountReference;
 import de.adorsys.aspsp.xs2a.connector.account.OwnerNameService;
 import de.adorsys.aspsp.xs2a.connector.mock.IbanResolverMockService;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
+import de.adorsys.aspsp.xs2a.connector.spi.file.exception.FileManagementException;
+import de.adorsys.aspsp.xs2a.connector.spi.file.util.FileManagementService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.service.TransactionLinksService;
 import de.adorsys.ledgers.middleware.api.domain.account.AccountDetailsTO;
 import de.adorsys.ledgers.middleware.api.domain.account.TransactionTO;
@@ -27,6 +29,7 @@ import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
 import de.adorsys.ledgers.rest.client.AccountRestClient;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.util.domain.CustomPageImpl;
+import de.adorsys.psd2.mapper.Xs2aObjectMapper;
 import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
 import de.adorsys.psd2.xs2a.core.consent.AisConsentRequestType;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
@@ -43,7 +46,6 @@ import de.adorsys.psd2.xs2a.spi.domain.payment.SpiAddress;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.AccountSpi;
 import feign.FeignException;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -51,8 +53,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
@@ -62,10 +67,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Currency;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Component
 @PropertySource("classpath:mock-data.properties")
 public class AccountSpiImpl implements AccountSpi {
@@ -83,19 +91,22 @@ public class AccountSpiImpl implements AccountSpi {
     private final IbanResolverMockService ibanResolverMockService;
     private final OwnerNameService ownerNameService;
     private final TransactionLinksService transactionLinksService;
+    private final FileManagementService fileManagementService;
+    private final Xs2aObjectMapper xs2aObjectMapper;
+
 
     @Value("${xs2a.transaction.list.defaultPage}")
     private int defaultPage;
     @Value("${xs2a.transaction.list.defaultSize}")
     private int defaultSize;
-
-    @Value("${test-download-transaction-list}")
-    private String transactionList;
+    @Value("${xs2a.transaction.list.filename:transactions.json}")
+    private String transactionsFilename;
 
     public AccountSpiImpl(AccountRestClient restClient, LedgersSpiAccountMapper accountMapper,
                           AuthRequestInterceptor authRequestInterceptor, AspspConsentDataService consentDataService,
                           FeignExceptionReader feignExceptionReader, IbanResolverMockService ibanResolverMockService,
-                          OwnerNameService ownerNameService, TransactionLinksService transactionLinksService) {
+                          OwnerNameService ownerNameService, TransactionLinksService transactionLinksService,
+                          FileManagementService fileManagementService, Xs2aObjectMapper xs2aObjectMapper) {
         this.accountRestClient = restClient;
         this.accountMapper = accountMapper;
         this.authRequestInterceptor = authRequestInterceptor;
@@ -104,6 +115,8 @@ public class AccountSpiImpl implements AccountSpi {
         this.ibanResolverMockService = ibanResolverMockService;
         this.ownerNameService = ownerNameService;
         this.transactionLinksService = transactionLinksService;
+        this.fileManagementService = fileManagementService;
+        this.xs2aObjectMapper = xs2aObjectMapper;
     }
 
     @Override
@@ -257,8 +270,16 @@ public class AccountSpiImpl implements AccountSpi {
                 transactionsPaged.addAll(createStandingOrderReportMock());
             }
             SpiTransactionLinks spiTransactionLinks = transactionLinksService.buildSpiTransactionLinks(page, size, transactionsOnPage);
-            SpiTransactionReport transactionReport = new SpiTransactionReport("downloadId", transactionsPaged, balances,
-                                                                              processAcceptMediaType(acceptMediaType), null, spiTransactionLinks, DEFAULT_TOTAL_PAGES);
+
+            String downloadLink = getDownloadLink(transactionsPaged);
+
+            SpiTransactionReport transactionReport = new SpiTransactionReport(downloadLink,
+                                                                              transactionsPaged,
+                                                                              balances,
+                                                                              processAcceptMediaType(acceptMediaType),
+                                                                              null,
+                                                                              spiTransactionLinks,
+                                                                              DEFAULT_TOTAL_PAGES);
             logger.info("Finally found {} transactions.", transactionReport.getTransactions().size());
 
             aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
@@ -274,6 +295,17 @@ public class AccountSpiImpl implements AccountSpi {
                            .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
+        }
+    }
+
+    private String getDownloadLink(List<SpiTransaction> transactions) {
+        try {
+            byte[] bytes = xs2aObjectMapper.writeValueAsBytes(transactions);
+            Resource resource = new ByteArrayResource(bytes);
+            return fileManagementService.saveFileAndBuildDownloadLink(resource, transactionsFilename);
+        } catch (IOException ex) {
+            logger.error("Unable to save transactions file, Exception: {}, Message: {}", ex.getClass(), ex.getMessage());
+            return StringUtils.EMPTY;
         }
     }
 
@@ -358,37 +390,51 @@ public class AccountSpiImpl implements AccountSpi {
                                                                                           @NotNull String downloadId,
                                                                                           @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
 
-        byte[] aspspConsentData = aspspConsentDataProvider.loadAspspConsentData();
-
+        logger.info("Requested downloading list of transactions by download ID: {}", downloadId);
         try {
-            GlobalScaResponseTO response = applyAuthorisation(aspspConsentData);
+            Resource resource = fileManagementService.getFileByDownloadLink(downloadId);
+            if (!resource.isReadable()) {
+                logger.info("Reading transactions file is failed, file is not readable yet: consent ID: [{}], filename: [{}]", spiAccountConsent.getId(), resource.getFilename());
+                return getErrorResponse("File is not ready, try again later", MessageErrorCode.RESOURCE_BLOCKED);
+            }
 
-            logger.info("Requested downloading list of transactions by download ID: {}", downloadId);
-            SpiTransactionsDownloadResponse transactionsDownloadResponse = getSpiTransactionsDownloadResponse(transactionList);
+            byte[] bytes = readResourceInputStreamBytes(resource);
+            int byteLength = bytes.length;
 
-            aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(response));
+            if (byteLength == 0) {
+                logger.error("Reading transactions input stream failed, file is empty: consent ID {}, filename {}", spiAccountConsent.getId(), resource.getFilename());
+                return getErrorResponse("Nothing to download, file is empty", MessageErrorCode.RESOURCE_UNKNOWN_404);
+            }
 
+            logger.info("Consent ID {}, Decrypted Download id: [{}], Bytes read: [{}]", spiAccountConsent.getId(), downloadId, byteLength);
+
+            SpiTransactionsDownloadResponse transactionsDownloadResponse =
+                    new SpiTransactionsDownloadResponse(new ByteArrayInputStream(bytes), resource.getFilename(), byteLength);
+
+            fileManagementService.deleteFileByDownloadLink(downloadId);
             return SpiResponse.<SpiTransactionsDownloadResponse>builder()
                            .payload(transactionsDownloadResponse)
                            .build();
-        } catch (FeignException feignException) {
-            String devMessage = feignExceptionReader.getErrorMessage(feignException);
-            logger.error("Request transactions by download link failed: consent ID {}, download link {}, devMessage {}", spiAccountConsent.getId(), downloadId, devMessage);
-            return SpiResponse.<SpiTransactionsDownloadResponse>builder()
-                           .error(buildTppMessage(feignException))
-                           .build();
-        } finally {
-            authRequestInterceptor.setAccessToken(null);
+        } catch (FileManagementException fileManagementException) {
+            logger.error("Reading transactions file has failed (FileManagementException): consent ID: [{}], message: [{}]", spiAccountConsent.getId(), fileManagementException.getMessage());
+            return getErrorResponse(fileManagementException.getMessage(), MessageErrorCode.RESOURCE_UNKNOWN_404);
         }
     }
 
-    private SpiTransactionsDownloadResponse getSpiTransactionsDownloadResponse(String transactionList) {
-        try (InputStream stream = new ByteArrayInputStream(transactionList.getBytes())) {
-            return new SpiTransactionsDownloadResponse(stream, "transactions.json", transactionList.getBytes().length);
-        } catch (IOException e) {
-            logger.error("It is not possible to prepare mock transaction list details");
-            return null;
+    private byte[] readResourceInputStreamBytes(Resource resource) throws FileManagementException {
+        try (InputStream inputStream = resource.getInputStream()) {
+            return inputStream.readAllBytes();
+        } catch (IOException ex) {
+            logger.error("Unable to read resource input stream bytes, Message: {}", ex.getMessage());
+            throw new FileManagementException("File not found or corrupted(IOException). Message:" + ex.getMessage());
         }
+    }
+
+    private SpiResponse<SpiTransactionsDownloadResponse> getErrorResponse(@Nullable String message, MessageErrorCode errorCode) {
+        TppMessage tppMessage = new TppMessage(errorCode, message);
+        return SpiResponse.<SpiTransactionsDownloadResponse>builder()
+                       .error(tppMessage)
+                       .build();
     }
 
     private List<SpiAccountDetails> getSpiAccountDetails(boolean withBalance, @NotNull SpiAccountConsent accountConsent) {
