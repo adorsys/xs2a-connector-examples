@@ -47,7 +47,14 @@ keycloak:
     secret: a61a81cd-7178-40d8-8386-ed02791e6592 #Here should be personal generated secret for client (swap public to 'private?' generate secret, swap to public again)
 
 xs2a.funds-confirmation-user-login: admin
-xs2a.funds-confirmation-user-password: 12345
+xs2a.funds-confirmation-user-password: admin123
+
+# FILE DOWNLOADING RELATED PROPERTIES
+#Filedir for the files which should be accessible by downloadLink, default value "/tmp/XS2A"
+xs2a.download.files.dir: /tmp/XS2A
+#Delay in seconds when already downloaded file and its parent dir will be deleted, default value 30
+xs2a.download.files.cleanup.delay_s: 30
+
 
 spring:
   application.name: ledgers-xs2a-gateway
