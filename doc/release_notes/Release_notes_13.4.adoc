@@ -1,0 +1,23 @@
+= Release notes v.13.4
+
+== Table of Contents
+
+* Implemented writing transactions data into file asynchronous
+
+* Technical password from property `xs2a.funds-confirmation-user-password` changed
+
+== Implemented writing transactions data into file asynchronous
+
+From now on, content of downloaded transaction file is no more mocked, but the real data got during Read Transaction List
+request. Transaction file writing is being performed in a separate thread to increase performance and reduce response time.
+New properties were added into `application.yml` :
+
+* `xs2a.download.files.dir` - path to directory, where files are being created for downloading
+* `xs2a.download.files.cleanup.delay_s` - time in seconds, specifies how long download link will be valid after the first retrieval request.
+When specified time passes, file and its parent directory will be deleted, all next requests by the same download
+link will cause response with code 404 `Not Found`
+
+== Technical password from property `xs2a.funds-confirmation-user-password` changed
+
+Property value `xs2a.funds-confirmation-user-password` changed from `12345` to `admin123` to handle properly
+ASPSP PIIS consents.
