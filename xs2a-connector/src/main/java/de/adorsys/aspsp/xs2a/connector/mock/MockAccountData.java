@@ -52,6 +52,7 @@ public class MockAccountData {
     public static final int BATCH_NUMBER_OF_TRANSACTIONS = 14;
     public static final List<SpiEntryDetails> ENTRY_DETAILS = Collections.singletonList(buildSpiEntryDetails());
     public static final boolean DEBIT_ACCOUNTING = false;
+    public static final SpiAmount GRAND_TOTAL_AMOUNT = new SpiAmount(Currency.getInstance("EUR"), BigDecimal.valueOf(2.05));
 
     private MockAccountData() {
     }

@@ -46,8 +46,16 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.time.*;
-import java.util.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Currency;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -362,7 +370,9 @@ public class CardAccountSpiImpl implements CardAccountSpi {
                                       LocalDate.of(2019, Month.JANUARY, 4),
                                       OffsetDateTime.of(2019, 1, 4, 10, 0, 0, 0, ZoneOffset.UTC),
                                       LocalDate.of(2019, Month.JANUARY, 4),
+                                      LocalDate.of(2019, Month.JANUARY, 4),
                                       new SpiAmount(Currency.getInstance("EUR"), new BigDecimal(200)),
+                                      new SpiAmount(Currency.getInstance("EUR"), new BigDecimal(2)),
                                       new ArrayList<>(),
                                       new SpiAmount(Currency.getInstance("EUR"), new BigDecimal(200)),
                                       new SpiAmount(Currency.getInstance("EUR"), new BigDecimal(200)),
