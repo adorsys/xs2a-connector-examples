@@ -103,6 +103,7 @@ public abstract class LedgersSpiAccountMapper {
     }  //Full manual mapping here, no extra tests necessary
 
     public SpiCardTransaction toSpiCardTransaction(TransactionTO transaction) {
+        //TODO: Add real values from ledgers when it starts supporting them
         return Optional.ofNullable(transaction)
                        .map(t -> new SpiCardTransaction(
                                t.getTransactionId(),
@@ -110,7 +111,9 @@ public abstract class LedgersSpiAccountMapper {
                                t.getValueDate(),
                                MockAccountData.ACCEPTOR_TRANSACTION_DATE_TIME,
                                t.getBookingDate(),
+                               t.getValueDate(),
                                toSpiAmount(t.getAmount()),
+                               MockAccountData.GRAND_TOTAL_AMOUNT,
                                toSpiExchangeRateList(t.getExchangeRate()),
                                toSpiAmount(t.getAmount()),
                                toSpiAmount(t.getAmount()),

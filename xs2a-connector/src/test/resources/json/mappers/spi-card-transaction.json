@@ -4,9 +4,14 @@
   "transactionDate": "2018-01-01",
   "acceptorTransactionDateTime": "2020-03-03T10:00Z",
   "bookingDate": "2017-01-01",
+  "valueDate": "2018-01-01",
   "transactionAmount": {
     "currency": "EUR",
     "amount": "1.06"
+  },
+  "grandTotalAmount": {
+    "currency": "EUR",
+    "amount": "2.05"
   },
   "originalAmount": {
     "currency": "EUR",
