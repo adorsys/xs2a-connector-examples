@@ -310,7 +310,7 @@ Deploy Openshift (develop):
     <<: *variables
     DOCKER_TAG: develop
     DOCKERHUB_REGISTRY: gitlab-registry.adorsys.de
-    DOCKERHUB_NAMESPACE: "adorsys/xs2a/xs2a-conector-examples"
+    DOCKERHUB_NAMESPACE: "adorsys/xs2a/xs2a-connector-examples"
     OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_DEV}"
   <<: *deploy_openshift
 
@@ -322,7 +322,7 @@ Deploy Openshift (develop Embedded):
     <<: *variables
     DOCKER_TAG: develop
     DOCKERHUB_REGISTRY: gitlab-registry.adorsys.de
-    DOCKERHUB_NAMESPACE: "adorsys/xs2a/xs2a-conector-examples"
+    DOCKERHUB_NAMESPACE: "adorsys/xs2a/xs2a-connector-examples"
     OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_DEV}"
   <<: *deploy_openshift_embedded
 
@@ -391,7 +391,7 @@ Deploy Openshift (Nightly):
     <<: *variables
     DOCKER_TAG: develop
     DOCKERHUB_REGISTRY: gitlab-registry.adorsys.de
-    DOCKERHUB_NAMESPACE: "adorsys/xs2a/xs2a-conector-examples"
+    DOCKERHUB_NAMESPACE: "adorsys/xs2a/xs2a-connector-examples"
     OPENSHIFT_NAMESPACE: "${OPENSHIFT_NAMESPACE_ADORSYS_XS2A_DEV}"
   <<: *deploy_openshift
 
