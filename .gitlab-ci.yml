@@ -98,6 +98,7 @@ variables: &variables
 
 .deploy_openshift: &deploy_openshift
   script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - >-
       skopeo copy
       --dest-creds=openshift:${OPENSHIFT_TOKEN}
@@ -106,6 +107,7 @@ variables: &variables
 
 .deploy_openshift_embedded: &deploy_openshift_embedded
   script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - >-
       skopeo copy
       --dest-creds=openshift:${OPENSHIFT_TOKEN}
