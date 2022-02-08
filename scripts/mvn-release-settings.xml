@@ -43,6 +43,30 @@
                 </httpHeaders>
             </configuration>
         </server>
+        <server>
+            <!-- XS2A impl private repository-->
+            <id>gitlab-xs2a-impl</id>
+            <configuration>
+                <httpHeaders>
+                <property>
+                    <name>Deploy-Token</name>
+                    <value>${GITLAB_XS2A_IMPL_READ_REPOSITORY_TOKEN}</value>
+                </property>
+                </httpHeaders>
+            </configuration>
+        </server>
+        <server>
+            <!-- XS2A ledgers private repository-->
+            <id>gitlab-ledgers</id>
+            <configuration>
+                <httpHeaders>
+                <property>
+                    <name>Deploy-Token</name>
+                    <value>${GITLAB_LEDGERS_READ_REPOSITORY_TOKEN}</value>
+                </property>
+                </httpHeaders>
+            </configuration>
+        </server>
     </servers>
     <profiles>
         <profile>

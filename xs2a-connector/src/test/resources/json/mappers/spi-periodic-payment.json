@@ -34,13 +34,21 @@
     "postCode": "90543",
     "country": "DE"
   },
-  "remittanceInformationUnstructured": "Ref. Number TELEKOM-1222",
+  "remittanceInformationUnstructuredArray": [
+    "Ref. Number TELEKOM-1222"
+  ],
   "paymentStatus": "ACSC",
   "paymentProduct": "sepa-credit-transfers",
   "requestedExecutionDate" : "2020-12-12",
   "requestedExecutionTime": "2020-12-12T12:00:00.000Z",
   "purposeCode": "BKDF",
-  "remittanceInformationStructured": "Ref Number Merchant",
+  "remittanceInformationStructuredArray": [
+    {
+      "reference": "Ref Number Merchant",
+      "referenceType": "reference type",
+      "referenceIssuer": "reference issuer"
+    }
+  ],
   "startDate": "2018-12-12",
   "endDate": "2018-12-28",
   "executionRule": "following",

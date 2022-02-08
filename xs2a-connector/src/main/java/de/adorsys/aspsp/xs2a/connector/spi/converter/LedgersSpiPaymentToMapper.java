@@ -23,6 +23,7 @@ import de.adorsys.ledgers.middleware.api.domain.payment.*;
 import de.adorsys.psd2.core.payment.model.*;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -30,8 +31,10 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Currency;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -114,6 +117,18 @@ public class LedgersSpiPaymentToMapper {
                        .orElse(null);
     }
 
+    private <T> List<T> processRemittances(T remittance, List<T> remittanceList) {
+        if (remittance == null) {
+            return remittanceList;
+        }
+
+        List<T> newRemittanceList = remittanceList != null
+                                            ? remittanceList
+                                            : new ArrayList<>();
+        newRemittanceList.add(remittance);
+        return newRemittanceList;
+    }
+
     private FrequencyCodeTO mapToFrequencyCodeTO(FrequencyCode frequencyCode) {
         return Optional.ofNullable(frequencyCode)
                        .map(FrequencyCode::name)
@@ -161,8 +176,8 @@ public class LedgersSpiPaymentToMapper {
         paymentTargetTO.setCreditorName(payment.getCreditorName());
         paymentTargetTO.setCreditorAddress(mapToAddressTO(payment.getCreditorAddress()));
         paymentTargetTO.setPurposeCode(mapToPurposeCodeTO(payment.getPurposeCode()));
-        paymentTargetTO.setRemittanceInformationUnstructured(payment.getRemittanceInformationUnstructured());
-        paymentTargetTO.setRemittanceInformationStructured(mapToRemittanceInformationStructuredTO(payment.getRemittanceInformationStructured()));
+        paymentTargetTO.setRemittanceInformationUnstructuredArray(processRemittances(payment.getRemittanceInformationUnstructured(), payment.getRemittanceInformationUnstructuredArray()));
+        paymentTargetTO.setRemittanceInformationStructuredArray(mapToRemittanceInformationStructuredArray(processRemittances(payment.getRemittanceInformationStructured(), payment.getRemittanceInformationStructuredArray())));
 
         return paymentTargetTO;
     }
@@ -181,8 +196,8 @@ public class LedgersSpiPaymentToMapper {
         paymentTargetTO.setCreditorName(payment.getCreditorName());
         paymentTargetTO.setCreditorAddress(mapToAddressTO(payment.getCreditorAddress()));
         paymentTargetTO.setPurposeCode(mapToPurposeCodeTO(payment.getPurposeCode()));
-        paymentTargetTO.setRemittanceInformationUnstructured(payment.getRemittanceInformationUnstructured());
-        paymentTargetTO.setRemittanceInformationStructured(mapToRemittanceInformationStructuredTO(payment.getRemittanceInformationStructured()));
+        paymentTargetTO.setRemittanceInformationUnstructuredArray(processRemittances(payment.getRemittanceInformationUnstructured(), payment.getRemittanceInformationUnstructuredArray()));
+        paymentTargetTO.setRemittanceInformationStructuredArray(mapToRemittanceInformationStructuredArray(processRemittances(payment.getRemittanceInformationStructured(), payment.getRemittanceInformationStructuredArray())));
 
         return paymentTargetTO;
     }
@@ -199,6 +214,15 @@ public class LedgersSpiPaymentToMapper {
         remittanceInformationStructuredTO.setReferenceIssuer(remittanceInformationStructured.getReferenceIssuer());
 
         return remittanceInformationStructuredTO;
+    }
+
+    protected List<RemittanceInformationStructuredTO> mapToRemittanceInformationStructuredArray(List<RemittanceInformationStructured> remittanceInformationStructuredList) {
+        if(CollectionUtils.isEmpty(remittanceInformationStructuredList)) {
+            return null;
+        }
+        return remittanceInformationStructuredList.stream()
+                .map(this::mapToRemittanceInformationStructuredTO)
+                .collect(Collectors.toList());
     }
 
     private PurposeCodeTO mapToPurposeCodeTO(PurposeCode purposeCode) {

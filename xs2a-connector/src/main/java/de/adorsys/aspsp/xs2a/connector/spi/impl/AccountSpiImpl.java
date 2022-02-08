@@ -570,8 +570,7 @@ public class AccountSpiImpl implements AccountSpi {
                                         null, Currency.getInstance("EUR"), null);
         return new SpiTransactionInfo("John Miles", spiAccountReference, null, null,
                                       null, null, null, null,
-                                      null, null,
-                                      null, null, null);
+                                      null, null, null, null, null);
     }
 
     private SpiAccountBalance buildSpiAccountBalance() {

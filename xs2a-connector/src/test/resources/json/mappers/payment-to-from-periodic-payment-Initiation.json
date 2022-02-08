@@ -41,12 +41,16 @@
         "country": "DE"
       },
       "purposeCode": "BKDF",
-      "remittanceInformationUnstructured": "Ref. Number TELEKOM-1222",
-      "remittanceInformationStructured": {
-        "reference": "Ref Number Merchant",
-        "referenceType": "reference type",
-        "referenceIssuer": "reference issuer"
-      }
+      "remittanceInformationUnstructuredArray": [
+        "Ref. Number TELEKOM-1222"
+      ],
+      "remittanceInformationStructuredArray": [
+        {
+          "reference": "Ref Number Merchant",
+          "referenceType": "reference type",
+          "referenceIssuer": "reference issuer"
+        }
+      ]
     }
   ]
 }
