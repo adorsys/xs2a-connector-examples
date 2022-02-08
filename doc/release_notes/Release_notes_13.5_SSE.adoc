@@ -4,13 +4,12 @@
 
 * Connector refactored to handle properly XS2A changes after migration to BG yaml file v.1.3.11.
 
-* Bumped up version of h2 in-memory DB
+* Bumped up versions of h2 in-memory DB and PostgreSQL
 
 == Connector refactored to handle properly XS2A changes after migration to BG yaml file v.1.3.11.
 
-New fields were added into XS2A class `SpiCardTransaction` (`valueDate` and `grandTotalAmount`), so
-`CardAccountSpiImpl` and `LedgersSpiAccountMapper` were refactored to handle these changes properly.
+New fields were added into XS2A models, so connector was refactored to handle these changes properly.
 
-== Bumped up version of h2 in-memory DB
+== Bumped up versions of h2 in-memory DB and PostgreSQL
 
-From now on, connector-embedded uses h2 of version 2.0.206
+From now on, connector-embedded uses h2 of version 2.1.210 and PostgreSQL of 42.2.25

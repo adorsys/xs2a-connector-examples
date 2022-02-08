@@ -22,6 +22,7 @@ import de.adorsys.psd2.xs2a.spi.domain.account.SpiExchangeRate;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiTransactionInfo;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiAddress;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiRemittance;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -58,20 +59,20 @@ public class MockAccountData {
     }
 
     private static SpiEntryDetails buildSpiEntryDetails() {
-        return new SpiEntryDetails("endToEndId", "mandateId", "checkId", "creditorId",
+        return new SpiEntryDetails("mocked endToEndId", "mocked mandateId", "mocked checkId", "mocked creditorId",
                                    new SpiAmount(Currency.getInstance("EUR"), new BigDecimal(123)),
                                    Collections.singletonList(buildSpiExchangeRate()), buildSpiTransactionInfo());
     }
 
     private static SpiTransactionInfo buildSpiTransactionInfo() {
-        return new SpiTransactionInfo("creditorName", buildSpiAccountReferenceCreditor(),
-                                      "creditorAgent", "ultimateCreditor",
-                                      "debtorName", buildSpiAccountReferenceDebtor(),
-                                      "debtorAgent", "ultimateDebtor",
-                                      "remittanceInformationUnstructured",
-                                      Collections.singletonList("remittanceInformationUnstructuredArray"),
-                                      "remittanceInformationStructured",
-                                      Collections.singletonList("remittanceInformationStructuredArray"), "CDCB");
+        return new SpiTransactionInfo("mocked creditorName", buildSpiAccountReferenceCreditor(),
+                                      "mocked creditorAgent", "ultimateCreditor",
+                                      "mocked debtorName", buildSpiAccountReferenceDebtor(),
+                                      "mocked debtorAgent", "mocked ultimateDebtor",
+                                      "Mocked remittanceInformationUnstructured",
+                                      Collections.singletonList("Mocked remittanceInformationUnstructured"),
+                                      getTestSpiRemittance(),
+                                      Collections.singletonList(getTestSpiRemittance()), "CDCB");
     }
 
     private static SpiAccountReference buildSpiAccountReferenceCreditor() {
@@ -90,6 +91,14 @@ public class MockAccountData {
                                    "EUR",
                                    "EUR",
                                    LocalDate.parse("2018-02-02"),
-                                   "contractIdentification");
+                                   "mocked contractIdentification");
+    }
+
+    private static SpiRemittance getTestSpiRemittance() {
+        SpiRemittance remittance = new SpiRemittance();
+        remittance.setReference("Mocked reference");
+        remittance.setReferenceType("Mocked reference type");
+        remittance.setReferenceIssuer("Mocked reference issuer");
+        return remittance;
     }
 }

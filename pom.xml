@@ -109,7 +109,8 @@
 
 		<jackson.version>2.12.1</jackson.version>
 		<liquibase.version>3.6.2</liquibase.version>
-		<h2.version>2.0.206</h2.version>
+		<h2.version>2.1.210</h2.version>
+		<postgresql.version>42.2.25</postgresql.version>
 
 		<junit-jupiter.version>5.5.2</junit-jupiter.version>
 		<mockito.version>3.2.4</mockito.version>
@@ -154,6 +155,26 @@
 		<repository>
 			<id>gitlab-maven</id>
 			<url>https://git.adorsys.de/api/v4/groups/49/-/packages/maven</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>gitlab-xs2a-impl</id>
+			<url>https://git.adorsys.de/api/v4/projects/1323/packages/maven</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>gitlab-ledgers</id>
+			<url>https://git.adorsys.de/api/v4/projects/1500/packages/maven</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
@@ -497,7 +518,7 @@
 		</profile>
 
 		<profile>
-				<id>gitlab-maven</id>
+				<id>gitlab-xs2a-impl</id>
 				<build>
 						<plugins>
 

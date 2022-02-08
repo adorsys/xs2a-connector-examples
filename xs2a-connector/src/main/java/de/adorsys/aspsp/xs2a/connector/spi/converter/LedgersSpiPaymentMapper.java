@@ -1,20 +1,33 @@
 package de.adorsys.aspsp.xs2a.connector.spi.converter;
 
 import de.adorsys.ledgers.middleware.api.domain.general.AddressTO;
-import de.adorsys.ledgers.middleware.api.domain.payment.*;
+import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTargetTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.PurposeCodeTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.RemittanceInformationStructuredTO;
+import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
 import de.adorsys.psd2.core.payment.model.PurposeCode;
-import de.adorsys.psd2.xs2a.core.pis.*;
+import de.adorsys.psd2.xs2a.core.pis.FrequencyCode;
+import de.adorsys.psd2.xs2a.core.pis.PisDayOfExecution;
+import de.adorsys.psd2.xs2a.core.pis.PisExecutionRule;
+import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiAddress;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiRemittance;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -99,20 +112,23 @@ public class LedgersSpiPaymentMapper {
         spiPayment.setCreditorAgent(paymentTargetTO.getCreditorAgent());
         spiPayment.setCreditorName(paymentTargetTO.getCreditorName());
         spiPayment.setCreditorAddress(toSpiAddress(paymentTargetTO.getCreditorAddress()));
-        spiPayment.setRemittanceInformationUnstructured(paymentTargetTO.getRemittanceInformationUnstructured());
+        spiPayment.setRemittanceInformationUnstructuredArray(paymentTargetTO.getRemittanceInformationUnstructuredArray());
         spiPayment.setInstructedAmount(accountMapper.toSpiAmount(paymentTargetTO.getInstructedAmount()));
         spiPayment.setCreditorAccount(accountMapper.toSpiAccountReference(paymentTargetTO.getCreditorAccount()));
-        spiPayment.setRemittanceInformationStructured(mapToRemittanceString(paymentTargetTO.getRemittanceInformationStructured()));
+        spiPayment.setRemittanceInformationStructuredArray(mapToRemittanceStructuredArray(paymentTargetTO.getRemittanceInformationStructuredArray()));
         spiPayment.setPurposeCode(Optional.ofNullable(paymentTargetTO.getPurposeCode())
                                           .map(PurposeCodeTO::name)
                                           .map(PurposeCode::fromValue)
                                           .orElse(null));
     }
 
-    public String mapToRemittanceString(RemittanceInformationStructuredTO remittanceInformationStructuredTO) {
-        return Optional.ofNullable(remittanceInformationStructuredTO)
-                       .map(RemittanceInformationStructuredTO::getReference)
-                       .orElse(null);
+    public List<SpiRemittance> mapToRemittanceStructuredArray(List<RemittanceInformationStructuredTO> remittanceInformationStructuredTOArray) {
+        if (remittanceInformationStructuredTOArray == null) {
+            return null;
+        }
+        return remittanceInformationStructuredTOArray.stream()
+                       .map(this::mapToSpiRemittance)
+                       .collect(Collectors.toList());
     }
 
     private OffsetDateTime toDateTime(LocalDate date, LocalTime time) {
@@ -132,5 +148,13 @@ public class LedgersSpiPaymentMapper {
                                a.getPostalCode(),
                                a.getCountry()))
                        .orElse(null);
+    }
+
+    private SpiRemittance mapToSpiRemittance(RemittanceInformationStructuredTO remittanceInformationStructuredTO) {
+        SpiRemittance spiRemittance = new SpiRemittance();
+        spiRemittance.setReference(remittanceInformationStructuredTO.getReference());
+        spiRemittance.setReferenceType(remittanceInformationStructuredTO.getReferenceType());
+        spiRemittance.setReferenceIssuer(remittanceInformationStructuredTO.getReferenceIssuer());
+        return spiRemittance;
     }
 }

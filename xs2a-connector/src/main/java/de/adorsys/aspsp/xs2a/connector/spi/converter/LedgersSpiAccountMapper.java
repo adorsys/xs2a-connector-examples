@@ -7,12 +7,15 @@ import de.adorsys.ledgers.middleware.api.domain.payment.RemittanceInformationStr
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiRemittance;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public abstract class LedgersSpiAccountMapper {
@@ -28,7 +31,7 @@ public abstract class LedgersSpiAccountMapper {
                                d.getMsisdn(),
                                d.getCurrency(),
                                d.getName(),
-                               MockAccountData.DISPLAY_NAME,
+                               d.getDisplayName(),
                                d.getProduct(),
                                SpiAccountType.valueOf(d.getAccountType().name()),
                                SpiAccountStatus.valueOf(d.getAccountStatus().name()),
@@ -50,7 +53,7 @@ public abstract class LedgersSpiAccountMapper {
                                d.getMaskedPan(),
                                d.getCurrency(),
                                d.getName(),
-                               MockAccountData.DISPLAY_NAME,
+                               d.getDisplayName(),
                                d.getProduct(),
                                SpiAccountStatus.valueOf(d.getAccountStatus().name()),
                                SpiAccountType.valueOf(d.getAccountType().name()),
@@ -68,6 +71,7 @@ public abstract class LedgersSpiAccountMapper {
     public abstract List<SpiCardTransaction> toSpiCardTransactions(List<TransactionTO> transactions);
 
     public SpiTransaction toSpiTransaction(TransactionTO transaction) {
+
         return Optional.ofNullable(transaction)
                        .map(t -> new SpiTransaction(
                                t.getTransactionId(),
@@ -88,17 +92,17 @@ public abstract class LedgersSpiAccountMapper {
                                                       toSpiAccountReference(t.getDebtorAccount()),
                                                       t.getDebtorAgent(),
                                                       t.getUltimateDebtor(),
-                                                      t.getRemittanceInformationUnstructured(),
-                                                      MockAccountData.REMITTANCE_UNSTRUCTURED_ARRAY,
-                                                      mapToRemittanceString(t.getRemittanceInformationStructured()),
-                                                      MockAccountData.REMITTANCE_STRUCTURED_ARRAY,
+                                                      null,
+                                                      t.getRemittanceInformationUnstructuredArray(),
+                                                      null,
+                                                      mapToRemittanceStructuredArray(t.getRemittanceInformationStructuredArray()),
                                                       t.getPurposeCode()),
                                t.getBankTransactionCode(),
                                t.getProprietaryBankTransactionCode(),
-                               MockAccountData.ADDITIONAL_INFORMATION,
+                               t.getAdditionalInformation(),
                                null, // TODO Map proper field https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1100
                                accountBalanceTOToSpiAccountBalance(t.getBalanceAfterTransaction()),
-                               MockAccountData.BATCH_INDICATOR, MockAccountData.BATCH_NUMBER_OF_TRANSACTIONS, MockAccountData.ENTRY_DETAILS))
+                               MockAccountData.BATCH_INDICATOR, MockAccountData.BATCH_NUMBER_OF_TRANSACTIONS, mapToSpiEntryDetailsList(t)))
                        .orElse(null);
     }  //Full manual mapping here, no extra tests necessary
 
@@ -178,9 +182,62 @@ public abstract class LedgersSpiAccountMapper {
 
     public abstract AccountReferenceTO mapToAccountReferenceTO(SpiAccountReference spiAccountReference);
 
-    public String mapToRemittanceString(RemittanceInformationStructuredTO remittanceInformationStructuredTO) {
-        return Optional.ofNullable(remittanceInformationStructuredTO)
-                       .map(RemittanceInformationStructuredTO::getReference)
+    public List<SpiRemittance> mapToRemittanceStructuredArray(List<RemittanceInformationStructuredTO> remittanceInformationStructuredTO) {
+        if (remittanceInformationStructuredTO == null) {
+            return null;
+        }
+        return remittanceInformationStructuredTO.stream()
+                       .map(this::mapToSpiRemittance)
+                       .collect(Collectors.toList());
+    }
+
+    protected SpiRemittance mapToSpiRemittance(RemittanceInformationStructuredTO remittance) {
+        return Optional.ofNullable(remittance)
+                       .map(r -> {
+                           SpiRemittance spiRemittance = new SpiRemittance();
+                           spiRemittance.setReference(r.getReference());
+                           spiRemittance.setReferenceType(r.getReferenceType());
+                           spiRemittance.setReferenceIssuer(r.getReferenceIssuer());
+                           return spiRemittance;
+                       })
                        .orElse(null);
+    }
+
+    private List<SpiEntryDetails> mapToSpiEntryDetailsList(TransactionTO transaction) {
+        return Collections.singletonList(new SpiEntryDetails(
+                transaction.getEndToEndId(), transaction.getMandateId(), transaction.getCheckId(), transaction.getCreditorId(),
+                toSpiAmount(transaction.getAmount()),
+                buildSpiExchangeRate(transaction.getExchangeRate()),
+                buildSpiTransactionInfo(transaction)
+
+        ));
+    }
+
+    private List<SpiExchangeRate> buildSpiExchangeRate(List<ExchangeRateTO> exchangeRates) {
+        return Optional.ofNullable(exchangeRates)
+                       .map(rates -> rates.stream().map(r -> new SpiExchangeRate(r.getCurrencyFrom().getCurrencyCode(),
+                                                                                 r.getRateFrom(),
+                                                                                 r.getCurrency().getCurrencyCode(),
+                                                                                 r.getRateTo(),
+                                                                                 r.getRateDate(),
+                                                                                 r.getRateContract()))
+                                             .collect(Collectors.toList()))
+                       .orElse(null);
+    }
+
+    private SpiTransactionInfo buildSpiTransactionInfo(TransactionTO transaction) {
+        return new SpiTransactionInfo(transaction.getCreditorName(),
+                                      toSpiAccountReference(transaction.getCreditorAccount()),
+                                      transaction.getCreditorAgent(),
+                                      transaction.getUltimateCreditor(),
+                                      transaction.getDebtorName(),
+                                      toSpiAccountReference(transaction.getDebtorAccount()),
+                                      transaction.getDebtorAgent(),
+                                      transaction.getUltimateDebtor(),
+                                      null,
+                                      transaction.getRemittanceInformationUnstructuredArray(),
+                                      null,
+                                      mapToRemittanceStructuredArray(transaction.getRemittanceInformationStructuredArray()),
+                                      transaction.getPurposeCode());
     }
 }

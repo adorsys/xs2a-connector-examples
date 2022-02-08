@@ -8,6 +8,7 @@ import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiRemittance;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +21,9 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Currency;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -66,14 +69,22 @@ class LedgersSpiPaymentMapperTest {
     }
 
     @Test
-    void mapToSpiRemittance() {
+    void mapToRemittanceStructuredArray() {
         //Given
         RemittanceInformationStructuredTO remittanceInformationStructuredTO = jsonReader.getObjectFromFile("json/mappers/remittance.json", RemittanceInformationStructuredTO.class);
         //When
-        String actual = ledgersSpiPaymentMapper.mapToRemittanceString(remittanceInformationStructuredTO);
+        List<SpiRemittance> actual = ledgersSpiPaymentMapper.mapToRemittanceStructuredArray(Collections.singletonList(remittanceInformationStructuredTO));
         //Then
-        String expected = "Ref Number Merchant";
+        List<SpiRemittance> expected = getTestSpiRemittanceList();
         assertEquals(expected, actual);
+    }
+
+    private List<SpiRemittance> getTestSpiRemittanceList() {
+        SpiRemittance remittance = new SpiRemittance();
+        remittance.setReference("Ref Number Merchant");
+        remittance.setReferenceType("reference type");
+        remittance.setReferenceIssuer("reference issuer");
+        return Collections.singletonList(remittance);
     }
 
     private SpiBulkPayment buildSpiBulkPayment() {
