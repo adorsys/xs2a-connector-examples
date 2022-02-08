@@ -518,7 +518,7 @@
 		</profile>
 
 		<profile>
-				<id>gitlab-xs2a-impl</id>
+				<id>gitlab-maven</id>
 				<build>
 						<plugins>
 
