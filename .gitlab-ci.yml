@@ -286,8 +286,8 @@ Test:Sonarcube:
 
 build_dockerhub_image_develop_private:
   stage: "Package"
-  except:
-    - schedules
+  # except:
+  #   - schedules
   only:
     - develop
   variables:
@@ -302,8 +302,8 @@ build_dockerhub_image_develop_private:
 
 Deploy Openshift (develop):
   stage: "Deploy"
-  except:
-    - schedules
+  # except:
+  #   - schedules
   only:
     - develop
   variables:
