@@ -38,7 +38,7 @@ springdoc:
     enabled: false
 
 keycloak:
-  auth-server-url: http://localhost:8080/auth
+  auth-server-url: http://localhost:8080
   realm: ledgers
   resource: ledgers-client
   public-client: false
