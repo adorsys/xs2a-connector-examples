@@ -51,7 +51,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=cms
       - SPRING_DATASOURCE_PASSWORD=cms
       - ASPSP_PROFILE_BASEURL=${ASPSP_PROFILE_BASEURL:-http://aspsp-profile:8080/api/v1}
-      - KEYCLOAK_AUTH_SERVER_URL=http://xs2a-idp:8080
+      - KEYCLOAK_AUTH_SERVER_URL=http://xs2a-idp:8080/auth
       - KEYCLOAK_CREDENTIALS_SECRET="${XS2A_CMS_CLIENT_SECRET}"
       - SERVER_KEY=ledgers_conenctor_secret
     depends_on:

@@ -86,9 +86,9 @@
 		<ruleset.basedir>${project.basedir}</ruleset.basedir>
 
 		<!-- xs2a version -->
-		<xs2a.version>13.6-SNAPSHOT</xs2a.version>
+		<xs2a.version>13.5-SNAPSHOT</xs2a.version>
 		<!-- ledgers version -->
-		<ledgers.version>4.19-SNAPSHOT</ledgers.version>
+		<ledgers.version>4.18-SNAPSHOT</ledgers.version>
 
 		<!-- other properties -->
 		<spring-boot-dependencies.version>2.2.4.RELEASE</spring-boot-dependencies.version>
