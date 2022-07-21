@@ -1,3 +1,15 @@
 = Release notes v.13.7
 
 == Table of Contents
+
+* Migrated onto new XS2A version
+
+* Migrated project to OpenAPI 3.0
+
+== Migrated onto new XS2A version
+
+From now on, Connector uses XS2A version 13.7.
+
+== Migrated project to OpenAPI 3.0
+
+From this release, the application uses OpenAPI 3.0 in XS2A, ASPSP Profile and CMS.

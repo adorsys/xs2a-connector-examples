@@ -1,0 +1,15 @@
+= Release notes v.12.5
+
+== Table of Contents
+
+* Fixed multithreading issue
+
+* Bumped up version of h2 in-memory DB and PostgreSQL
+
+== Fixed multithreading issue
+
+Multithreading issue with token interceptor causing 401 HTTP error was fixed.
+
+== Bumped up version of h2 in-memory DB and PostgreSQL
+
+From now on, connector-embedded uses h2 of version 2.1.210 and PostgreSQL of 42.2.25.
