@@ -35,7 +35,7 @@ application:
 
 springdoc:
   api-docs:
-    enabled: false
+    enabled: true
 
 keycloak:
   auth-server-url: http://localhost:8080

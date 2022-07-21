@@ -21,7 +21,7 @@ server:
 
 springdoc:
   api-docs:
-    enabled: false
+    enabled: true
 
 keycloak:
   auth-server-url: http://localhost:8080
@@ -91,6 +91,8 @@ xs2a:
 ---
 spring:
   profiles: dev
+  main:
+    allow-bean-definition-overriding: true
 
 logging.level.org.postgresql: INFO
 logging.level.org.hibernate.SQL: WARN

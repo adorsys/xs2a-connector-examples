@@ -16,6 +16,10 @@
 
 package de.adorsys.aspsp.xs2a.embedded.connector;
 
+import de.adorsys.psd2.aspsp.profile.web.config.AspspProfileApiSwaggerConfig;
+import de.adorsys.psd2.consent.web.aspsp.config.AspspApiSwaggerConfig;
+import de.adorsys.psd2.consent.web.psu.config.PsuApiSwaggerConfig;
+import de.adorsys.psd2.consent.web.xs2a.config.Xs2aApiSwaggerConfig;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.Documented;
@@ -26,7 +30,11 @@ import java.lang.annotation.Target;
 @Target(value = {java.lang.annotation.ElementType.TYPE})
 @Documented
 @Import({
-        LedgersXS2AConnectorEmbeddedConfiguration.class
+        LedgersXS2AConnectorEmbeddedConfiguration.class,
+        Xs2aApiSwaggerConfig.class,
+        PsuApiSwaggerConfig.class,
+        AspspApiSwaggerConfig.class,
+        AspspProfileApiSwaggerConfig.class
 })
 public @interface EnableLedgersXS2AConnectorEmbedded {
 }
