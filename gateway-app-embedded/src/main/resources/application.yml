@@ -82,6 +82,7 @@ xs2asandbox.tppui.online-banking.url: http://localhost:8090/api/v1/consents/conf
 logging.level.org.springframework.web: ERROR
 
 xs2a.license.url: https://github.com/adorsys/xs2a/blob/master/LICENSE.md
+xs2a.spi-mock-data.enabled: true
 springfox.documentation.swagger.v2.path: /swagger.json
 
 skip.ssl.certificate.verification: true

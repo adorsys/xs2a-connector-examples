@@ -17,7 +17,12 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment;
 
 import de.adorsys.aspsp.xs2a.connector.cms.CmsPsuPisClient;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.LedgersErrorCode;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.MultilevelScaService;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.SpiMockData;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
@@ -65,7 +70,6 @@ import java.util.function.Supplier;
 public class GeneralPaymentService {
     private static final Logger logger = LoggerFactory.getLogger(GeneralPaymentService.class);
     private static final String XML_MEDIA_TYPE = "application/xml";
-    private static final String PSU_MESSAGE = "Mocked PSU message from SPI for this payment";
     private static final String DEBTOR_NAME = "Mocked debtor name";
 
     private final PaymentRestClient paymentRestClient;
@@ -155,7 +159,7 @@ public class GeneralPaymentService {
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
                            .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, SpiMockData.FUNDS_AVAILABLE,
                                                                     SpiGetPaymentStatusResponse.RESPONSE_TYPE_XML,
-                                                                    transactionStatusXmlBody.getBytes(), PSU_MESSAGE,
+                                                                    transactionStatusXmlBody.getBytes(), SpiMockData.PSU_MESSAGE,
                                                                     SpiMockData.SPI_LINKS,
                                                                     SpiMockData.TPP_MESSAGES
                            ))
@@ -166,7 +170,7 @@ public class GeneralPaymentService {
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
                            .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, SpiMockData.FUNDS_AVAILABLE,
                                                                     SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON,
-                                                                    null, PSU_MESSAGE,
+                                                                    null, SpiMockData.PSU_MESSAGE,
                                                                     SpiMockData.SPI_LINKS,
                                                                     SpiMockData.TPP_MESSAGES))
                            .build();
@@ -185,7 +189,7 @@ public class GeneralPaymentService {
             //TODO: after implementation of https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/-/issues/305 set "fundsAvailable" flag from Ledgers response into SpiGetPaymentStatusResponse
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
                            .payload(new SpiGetPaymentStatusResponse(status, SpiMockData.FUNDS_AVAILABLE, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON,
-                                                                    null, PSU_MESSAGE,
+                                                                    null, SpiMockData.PSU_MESSAGE,
                                                                     SpiMockData.SPI_LINKS,
                                                                     SpiMockData.TPP_MESSAGES))
                            .build();
