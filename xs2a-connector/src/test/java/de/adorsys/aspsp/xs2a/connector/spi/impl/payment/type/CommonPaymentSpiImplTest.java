@@ -27,14 +27,16 @@ import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CommonPaymentSpiImplTest {
     private final static String PAYMENT_PRODUCT = "sepa-credit-transfers";
     private static final String PAYMENT_ID = "c966f143-f6a2-41db-9036-8abaeeef3af7";
     private static final SpiContextData SPI_CONTEXT_DATA = TestSpiDataProvider.getSpiContextData();
-    private static final String PSU_MESSAGE = "Mocked PSU message from SPI for this payment";
+    private static final String PSU_MESSAGE = "Mocked PSU message from SPI";
 
     @InjectMocks
     private CommonPaymentSpiImpl commonPaymentSpi;

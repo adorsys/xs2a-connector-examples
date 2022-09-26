@@ -35,37 +35,38 @@ public class SpiMockData {
     public static final Set<TppMessageInformation> TPP_MESSAGES = buildTppMessages();
     public static final Set<TppMessageInformation> TPP_MESSAGES_START_AUTHORISATION = buildTppMessagesStartAuthorisation();
     public static final List<SpiAuthenticationObject> SCA_METHODS = buildScaMethods();
-    public static final String PSU_MESSAGE = "mocked PSU message from the bank";
-    public static final String PSU_MESSAGE_START_AUTHORISATION = "Start authorisation mocked PSU message from the bank";
+    public static final String PSU_MESSAGE = "Mocked PSU message from SPI";
+    public static final String PSU_MESSAGE_START_AUTHORISATION = "Start authorisation mocked PSU message from SPI";
     public static final String DECOUPLED_PSU_MESSAGE = "Please check your app to continue...";
     public static final boolean FUNDS_AVAILABLE = true;
+    public static final boolean TRUSTED_BENEFICIARY_FLAG = false;
 
     private static SpiLinks buildSpiLinks() {
         SpiLinks spiLinks = new SpiLinks();
-        spiLinks.setAccount(new SpiHrefType("Mock spi account link from the bank"));
+        spiLinks.setAccount(new SpiHrefType("Mocked account link from SPI"));
         return spiLinks;
     }
 
     private static Set<TppMessageInformation> buildTppMessages() {
         HashSet<TppMessageInformation> tppInformationSet = new HashSet<>();
-        tppInformationSet.add(TppMessageInformation.buildWithCustomWarning(MessageErrorCode.FORMAT_ERROR, "Mocked tpp message from the bank"));
+        tppInformationSet.add(TppMessageInformation.buildWithCustomWarning(MessageErrorCode.FORMAT_ERROR, "Mocked tpp message from SPI"));
         return tppInformationSet;
     }
 
     private static Set<TppMessageInformation> buildTppMessagesStartAuthorisation() {
         HashSet<TppMessageInformation> tppInformationSet = new HashSet<>();
-        tppInformationSet.add(TppMessageInformation.buildWithCustomWarning(MessageErrorCode.FORMAT_ERROR, "Start authorisation Mocked tpp message from the bank"));
+        tppInformationSet.add(TppMessageInformation.buildWithCustomWarning(MessageErrorCode.FORMAT_ERROR, "Start authorisation mocked tpp message from SPI"));
         return tppInformationSet;
     }
 
     private static List<SpiAuthenticationObject> buildScaMethods() {
-        SpiAuthenticationObject psi = new SpiAuthenticationObject();
-        psi.setAuthenticationType("Mocked Authentication type from the bank");
-        psi.setAuthenticationMethodId("Mocked Authentication id from the bank");
-        psi.setDecoupled(false);
-        psi.setName("Mocked name from the bank");
-        psi.setAuthenticationVersion("Mocked Authentication version from the bank");
+        SpiAuthenticationObject spiAuthObject = new SpiAuthenticationObject();
+        spiAuthObject.setAuthenticationType("Mocked Authentication type from SPI");
+        spiAuthObject.setAuthenticationMethodId("Mocked Authentication id from SPI");
+        spiAuthObject.setDecoupled(false);
+        spiAuthObject.setName("Mocked name from SPI");
+        spiAuthObject.setAuthenticationVersion("Mocked Authentication version from SPI");
 
-        return Collections.singletonList(psi);
+        return Collections.singletonList(spiAuthObject);
     }
 }

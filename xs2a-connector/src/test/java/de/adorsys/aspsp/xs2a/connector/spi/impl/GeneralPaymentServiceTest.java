@@ -56,7 +56,7 @@ class GeneralPaymentServiceTest {
     private static final String ANY_MEDIA_TYPE = MediaType.ALL_VALUE;
     private static final String JSON_MEDIA_TYPE = MediaType.APPLICATION_JSON_VALUE;
     private static final String XML_MEDIA_TYPE = MediaType.APPLICATION_XML_VALUE;
-    private static final String PSU_MESSAGE = "Mocked PSU message from SPI for this payment";
+    private static final String PSU_MESSAGE = "Mocked PSU message from SPI";
     private static final byte[] BYTES = "data".getBytes();
     private static final String ACCESS_TOKEN = "access_token";
     private static final String PAYMENT_ID = "payment id";
