@@ -1,0 +1,16 @@
+= Release notes v.15.1
+
+== Table of Contents
+
+* Migrated onto new XS2A version
+
+* Implement a flag in Connector to switch off mocked data in responses
+
+== Migrated onto new XS2A version
+
+From now on, Connector uses XS2A version 15.1.
+
+== Implement a flag in Connector to switch off mocked data in responses
+
+From now on mocked data on SPI level can be disabled or enabled manually, behaviour is defined by property `xs2a.spi-mock-data.enabled`
+(mocked data is disabled if property is undefined in application properties file)

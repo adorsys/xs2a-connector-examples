@@ -26,7 +26,10 @@ import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentInfo;
-import de.adorsys.psd2.xs2a.spi.domain.payment.response.*;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiGetPaymentStatusResponse;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
+import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiSinglePaymentInitiationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.CommonPaymentSpi;
@@ -39,8 +42,6 @@ import java.util.HashSet;
 
 @Service
 public class CommonPaymentSpiImpl extends AbstractPaymentSpi<SpiPaymentInfo, SpiPaymentInitiationResponse> implements CommonPaymentSpi {
-
-    private static final String PSU_MESSAGE = "Mocked PSU message from SPI for this payment";
 
     @Autowired
     public CommonPaymentSpiImpl(GeneralPaymentService generalPaymentService, AspspConsentDataService consentDataService,
@@ -70,7 +71,11 @@ public class CommonPaymentSpiImpl extends AbstractPaymentSpi<SpiPaymentInfo, Spi
         }
 
         return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                       .payload(new SpiGetPaymentStatusResponse(TransactionStatus.ACSP, null, MediaType.APPLICATION_JSON_VALUE, null, PSU_MESSAGE,
+                       .payload(new SpiGetPaymentStatusResponse(TransactionStatus.ACSP,
+                                                                null,
+                                                                MediaType.APPLICATION_JSON_VALUE,
+                                                                null,
+                                                                SpiMockData.PSU_MESSAGE,
                                                                 SpiMockData.SPI_LINKS,
                                                                 SpiMockData.TPP_MESSAGES))
                        .build();
