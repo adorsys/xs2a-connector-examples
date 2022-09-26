@@ -1,0 +1,15 @@
+= Release notes v.14.1
+
+== Table of Contents
+
+* Migrated onto new XS2A version
+
+* SpiMockData changes
+
+== Migrated onto new XS2A version
+
+From now on, Connector uses XS2A version 14.1.
+
+== SpiMockData changes
+
+Text of mocked SPI messages was changed, all mocked data now is available in `SpiMockData` class
