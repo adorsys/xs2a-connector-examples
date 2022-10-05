@@ -6,7 +6,7 @@
 		<groupId>de.adorsys.ledgers</groupId>
 		<artifactId>xs2a-connector-examples</artifactId>
 		<version>14.2-SNAPSHOT</version>
-		<relativePath>..</relativePath>
+		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<artifactId>xs2a-connector</artifactId>
