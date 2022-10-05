@@ -1,3 +1,20 @@
 = Release notes v.15.2
 
 == Table of Contents
+
+* Migrated onto new XS2A version
+
+* Updated dependencies
+
+== Migrated onto new XS2A version
+
+From now on, Connector uses XS2A version 15.2.
+
+== Updated dependencies
+
+From now on, actual versions of project dependencies are:
+
+- SLF4J - 1.36;
+- Jackson - 2.3.12;
+- Liquibase - 4.9.0;
+- Mockito - 3.11.2.
