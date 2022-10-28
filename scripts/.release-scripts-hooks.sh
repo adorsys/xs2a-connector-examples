@@ -43,7 +43,7 @@ function get_develop_branch_name {
 # Hook method to define the master branch name
 # Returns the master branch name as text
 function get_master_branch_name {
-  if [[ "$1"  =~ ^12\..* ]]
+  if [[ "$1"  =~ ^14\..* ]]
   then
     echo "master-14.x"
   else
