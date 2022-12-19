@@ -25,6 +25,8 @@ import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiStartAuthorisationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
+import de.adorsys.psd2.xs2a.spi.domain.sca.SpiScaApproach;
+import de.adorsys.psd2.xs2a.spi.domain.sca.SpiScaStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -41,8 +43,11 @@ class AbstractAuthorisationSpiTest {
     private static final String PSU_ID = "anton.brueckner";
     private static final String AUTHORISATION_ID = "authorisation Id";
     private static final ScaApproach DECOUPLED_APPROACH = ScaApproach.DECOUPLED;
+    private static final SpiScaApproach SPI_DECOUPLED_APPROACH = SpiScaApproach.DECOUPLED;
     private static final ScaApproach NON_DECOUPLED_APPROACH = ScaApproach.EMBEDDED;
+    private static final SpiScaApproach SPI_NON_DECOUPLED_APPROACH = SpiScaApproach.EMBEDDED;
     private static final ScaStatus SCA_STATUS = ScaStatus.PSUAUTHENTICATED;
+    private static final SpiScaStatus SPI_SCA_STATUS = SpiScaStatus.PSUAUTHENTICATED;
     private static final SpiPsuData PSU_ID_DATA_1 = SpiPsuData.builder()
                                                             .psuId(PSU_ID)
                                                             .psuIdType("2")
@@ -74,7 +79,7 @@ class AbstractAuthorisationSpiTest {
 
         //When
         SpiResponse<SpiStartAuthorisationResponse> actual =
-                authorisationSpi.startAuthorisation(SPI_CONTEXT_DATA, DECOUPLED_APPROACH, SCA_STATUS, AUTHORISATION_ID, null, spiAspspConsentDataProvider);
+                authorisationSpi.startAuthorisation(SPI_CONTEXT_DATA, SPI_DECOUPLED_APPROACH, SPI_SCA_STATUS, AUTHORISATION_ID, null, spiAspspConsentDataProvider);
 
         //Then
         assertNotNull(actual.getPayload());
@@ -88,7 +93,7 @@ class AbstractAuthorisationSpiTest {
 
         //When
         SpiResponse<SpiStartAuthorisationResponse> actual =
-                authorisationSpi.startAuthorisation(SPI_CONTEXT_DATA, NON_DECOUPLED_APPROACH, SCA_STATUS, AUTHORISATION_ID, null, spiAspspConsentDataProvider);
+                authorisationSpi.startAuthorisation(SPI_CONTEXT_DATA, SPI_NON_DECOUPLED_APPROACH, SPI_SCA_STATUS, AUTHORISATION_ID, null, spiAspspConsentDataProvider);
 
         //Then
         assertNotNull(actual.getPayload());

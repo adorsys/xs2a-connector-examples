@@ -2,12 +2,7 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.SpiScaStatusResponseMapper;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.LoginAttemptAspspConsentDataService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.LoginAttemptResponse;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.SpiMockData;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
 import de.adorsys.ledgers.keycloak.client.api.KeycloakTokenService;
 import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
@@ -26,6 +21,8 @@ import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.*;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
+import de.adorsys.psd2.xs2a.spi.domain.sca.SpiScaApproach;
+import de.adorsys.psd2.xs2a.spi.domain.sca.SpiScaStatus;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,20 +31,13 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.EXEMPTED;
-import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.PSUAUTHENTICATED;
-import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.PSUIDENTIFIED;
+import static de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO.*;
 
 @Slf4j
 @RequiredArgsConstructor
 public abstract class AbstractAuthorisationSpi<T> {
-
     private static final String LOGIN_AMOUNT_ATTEMPTS_REMAINING_MESSAGE = "You have %s attempts to enter valid credentials";
 
     private final AuthRequestInterceptor authRequestInterceptor;
@@ -97,16 +87,16 @@ public abstract class AbstractAuthorisationSpi<T> {
     }
 
     public SpiResponse<SpiStartAuthorisationResponse> startAuthorisation(@NotNull SpiContextData contextData,
-                                                                         @NotNull ScaApproach scaApproach,
-                                                                         @NotNull ScaStatus scaStatus,
+                                                                         @NotNull SpiScaApproach scaApproach,
+                                                                         @NotNull SpiScaStatus scaStatus,
                                                                          @NotNull String authorisationId,
                                                                          T businessObject,
                                                                          @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        String psuMessage = (scaApproach == ScaApproach.DECOUPLED)
+        String psuMessage = (scaApproach == SpiScaApproach.DECOUPLED)
                                     ? SpiMockData.DECOUPLED_PSU_MESSAGE
                                     : SpiMockData.PSU_MESSAGE_START_AUTHORISATION;
         return SpiResponse.<SpiStartAuthorisationResponse>builder()
-                       .payload(new SpiStartAuthorisationResponse(scaApproach, scaStatus, psuMessage, SpiMockData.TPP_MESSAGES_START_AUTHORISATION))
+                       .payload(new SpiStartAuthorisationResponse(ScaApproach.valueOf(scaApproach.name()), ScaStatus.valueOf(scaStatus.name()), psuMessage, SpiMockData.TPP_MESSAGES_START_AUTHORISATION))
                        .build();
     }
 
@@ -293,7 +283,7 @@ public abstract class AbstractAuthorisationSpi<T> {
                        .build();
     }
 
-    public SpiResponse<SpiScaStatusResponse> getScaStatus(@NotNull ScaStatus scaStatus, @NotNull SpiContextData contextData,
+    public SpiResponse<SpiScaStatusResponse> getScaStatus(@NotNull SpiScaStatus scaStatus, @NotNull SpiContextData contextData,
                                                           @NotNull String authorisationId, @NotNull T businessObject,
                                                           @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
 
@@ -306,18 +296,14 @@ public abstract class AbstractAuthorisationSpi<T> {
                 payload = spiScaStatusResponseMapper.toSpiScaStatusResponse(responseEntity.getBody());
             } else {
                 log.info("Request ScaStatus from Bank failed: business object ID: {}", getBusinessObjectId(businessObject));
-                payload = new SpiScaStatusResponse(scaStatus,
-                                                   SpiMockData.TRUSTED_BENEFICIARY_FLAG,
-                                                   SpiMockData.PSU_MESSAGE,
+                payload = new SpiScaStatusResponse(ScaStatus.valueOf(scaStatus.name()), SpiMockData.TRUSTED_BENEFICIARY_FLAG, SpiMockData.PSU_MESSAGE,
                                                    SpiMockData.SPI_LINKS,
                                                    SpiMockData.TPP_MESSAGES);
             }
         } catch (FeignException.NotFound feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             log.info("Request ScaStatus from Bank failed: business object ID: {}, devMessage: {}", getBusinessObjectId(businessObject), devMessage);
-            payload = new SpiScaStatusResponse(scaStatus,
-                                               SpiMockData.TRUSTED_BENEFICIARY_FLAG,
-                                               SpiMockData.PSU_MESSAGE,
+            payload = new SpiScaStatusResponse(ScaStatus.valueOf(scaStatus.name()), SpiMockData.TRUSTED_BENEFICIARY_FLAG, SpiMockData.PSU_MESSAGE,
                                                SpiMockData.SPI_LINKS,
                                                SpiMockData.TPP_MESSAGES);
         } finally {
@@ -369,5 +355,4 @@ public abstract class AbstractAuthorisationSpi<T> {
         }
         return MessageErrorCode.INTERNAL_SERVER_ERROR;
     }
-
 }

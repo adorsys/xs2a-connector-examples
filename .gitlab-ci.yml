@@ -180,10 +180,14 @@ Lint:XS2A_connector_PMD_CPD_Report:
     expire_in: "10 day"
 
 Lint:XS2A_connector_dockerfiles:
-  image: docker:20.10
+  image: docker
   stage: "Lint"
   services:
-    - docker:20.10-dind
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: overlay2
   except:
     - schedules
     - develop
