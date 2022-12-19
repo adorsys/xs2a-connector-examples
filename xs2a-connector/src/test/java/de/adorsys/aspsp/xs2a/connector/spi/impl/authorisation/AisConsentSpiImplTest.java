@@ -4,31 +4,18 @@ import de.adorsys.aspsp.xs2a.connector.spi.converter.AisConsentMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.LedgersSpiAccountMapper;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.SpiScaStatusResponseMapper;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.LedgersErrorCode;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.MultilevelScaService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.SpiMockData;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation.confirmation.ConsentAuthConfirmationCodeService;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.keycloak.client.api.KeycloakTokenService;
 import de.adorsys.ledgers.middleware.api.domain.account.AccountDetailsTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.SCAConsentResponseTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.ScaStatusTO;
-import de.adorsys.ledgers.middleware.api.domain.sca.StartScaOprTO;
+import de.adorsys.ledgers.middleware.api.domain.sca.*;
 import de.adorsys.ledgers.middleware.api.domain.um.AisConsentTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaMethodTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
-import de.adorsys.ledgers.rest.client.AccountRestClient;
-import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
-import de.adorsys.ledgers.rest.client.ConsentRestClient;
-import de.adorsys.ledgers.rest.client.OperationInitiationRestClient;
-import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
+import de.adorsys.ledgers.rest.client.*;
 import de.adorsys.psd2.xs2a.core.consent.ConsentStatus;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
@@ -46,17 +33,14 @@ import de.adorsys.psd2.xs2a.spi.domain.consent.SpiInitiateAisConsentResponse;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiVerifyScaAuthorisationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
+import de.adorsys.psd2.xs2a.spi.domain.sca.SpiScaStatus;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.Spy;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -93,6 +77,7 @@ class AisConsentSpiImplTest {
     private static final ScaStatus SCA_STATUS_FROM_LEDGERS = ScaStatus.PSUAUTHENTICATED;
     private static final String PSU_MESSAGE_MOCKED = "Mocked PSU message from SPI";
     private static final ScaStatus SCA_STATUS_FROM_CMS = ScaStatus.FAILED;
+    private static final SpiScaStatus SPI_SCA_STATUS = SpiScaStatus.FAILED;
 
     private JsonReader jsonReader = new JsonReader();
     private SpiAccountConsent spiAccountConsent = jsonReader.getObjectFromFile("json/spi/impl/spi-account-consent.json", SpiAccountConsent.class);
@@ -569,7 +554,7 @@ class AisConsentSpiImplTest {
                 .thenReturn(getTestData_ledgersAnswer());
 
         //When
-        SpiResponse<SpiScaStatusResponse> actual = spi.getScaStatus(SCA_STATUS_FROM_CMS, SPI_CONTEXT_DATA, AUTHORISATION_ID,
+        SpiResponse<SpiScaStatusResponse> actual = spi.getScaStatus(SPI_SCA_STATUS, SPI_CONTEXT_DATA, AUTHORISATION_ID,
                                                                     spiAccountConsent, spiAspspConsentDataProvider);
 
         //Then
@@ -591,7 +576,7 @@ class AisConsentSpiImplTest {
                 .thenReturn(null);
 
         //When
-        SpiResponse<SpiScaStatusResponse> actual = spi.getScaStatus(SCA_STATUS_FROM_CMS, SPI_CONTEXT_DATA, AUTHORISATION_ID,
+        SpiResponse<SpiScaStatusResponse> actual = spi.getScaStatus(SPI_SCA_STATUS, SPI_CONTEXT_DATA, AUTHORISATION_ID,
                                                                     spiAccountConsent, spiAspspConsentDataProvider);
 
         //Then
@@ -619,7 +604,7 @@ class AisConsentSpiImplTest {
 
 
         //When
-        SpiResponse<SpiScaStatusResponse> actual = spi.getScaStatus(SCA_STATUS_FROM_CMS, SPI_CONTEXT_DATA, AUTHORISATION_ID,
+        SpiResponse<SpiScaStatusResponse> actual = spi.getScaStatus(SPI_SCA_STATUS, SPI_CONTEXT_DATA, AUTHORISATION_ID,
                                                                     spiAccountConsent, spiAspspConsentDataProvider);
 
         //Then
