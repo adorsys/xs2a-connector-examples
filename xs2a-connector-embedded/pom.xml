@@ -169,7 +169,7 @@
         <dependency>
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
-            <version>${liquibase.version}</version>
+            <version>${liquibase-core.version}</version>
         </dependency>
 
         <dependency>
