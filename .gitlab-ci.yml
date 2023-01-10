@@ -226,7 +226,6 @@ build_dockerhub_image_develop_private:
   #   - schedules
   only:
     - develop
-    - DKA_clean_develop
   variables:
     DOCKER_TAG: develop
     DOCKERHUB_REGISTRY: gitlab-registry.adorsys.de
