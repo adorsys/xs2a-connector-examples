@@ -212,6 +212,11 @@ Test:IT_Java11:
 
 Test:DOCKER_test_image_build:
   stage: "Test"
+  image: docker
+  services:
+    - name: docker:dind
+      alias: docker
+      command: ["--tls=false"]
   script:
     - docker build -t "adorsys/xs2a-connector-examples:test" gateway-app
     - docker build -t "adorsys/xs2a-connector-embedded:test" gateway-app-embedded
