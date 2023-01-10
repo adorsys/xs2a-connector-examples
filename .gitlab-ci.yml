@@ -134,7 +134,7 @@ Lint:XS2A_connector_dockerfiles:
   image: docker:19-dind
   stage: "Lint"
   services:
-    - name: dind
+    - name: docker:dind
       alias: docker
   variables:
     DOCKER_HOST: tcp://docker:2375
