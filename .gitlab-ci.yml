@@ -134,8 +134,9 @@ Lint:XS2A_connector_dockerfiles:
   image: docker:19-dind
   stage: "Lint"
   services:
-    - name: docker:dind
+    - name: docker:19-dind
       alias: docker
+      command: ["--tls=false"]
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
