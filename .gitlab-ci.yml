@@ -203,7 +203,6 @@ Test:Javadoc Java11:
   stage: "Test"
   script:
     - jabba use "system@1.11"
-    - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
     - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
     - mvn --settings scripts/mvn-release-settings.xml -Dmaven.test.skip=true package javadoc:javadoc
   artifacts:
@@ -216,7 +215,6 @@ Test:UI_Tests_Java11:
   stage: "Test"
   script:
     - jabba use "system@1.11"
-    - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
     - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
     - mvn --settings scripts/mvn-release-settings.xml -DskipITs --fail-at-end clean install
   artifacts:
@@ -229,7 +227,6 @@ Test:IT_Java11:
   stage: "Test"
   script:
     - jabba use "system@1.11"
-    - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
     - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
     - mvn --settings scripts/mvn-release-settings.xml -ntp failsafe:integration-test failsafe:verify
   variables:
@@ -249,7 +246,6 @@ Test:Sonarcube:
     - develop
   script:
     - jabba use "system@1.11"
-    - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
     - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
     - mvn --fail-at-end clean install
     - mvn --settings scripts/mvn-release-settings.xml sonar:sonar -Dsonar.host.url=$SONAR_HOST -Dsonar.login=${SONAR_TOKEN}
