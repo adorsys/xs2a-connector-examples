@@ -131,10 +131,10 @@ Lint:XS2A_connector_PMD_CPD_Report:
     expire_in: "10 day"
 
 Lint:XS2A_connector_dockerfiles:
-  image: docker
+  image: docker:19-dind
   stage: "Lint"
   services:
-    - name: docker:dind
+    - name: dind
       alias: docker
   variables:
     DOCKER_HOST: tcp://docker:2375
