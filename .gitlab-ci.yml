@@ -22,7 +22,6 @@ stages:
 # ------------------------------------------------------------------
 
 variables: &variables
-  SONAR_HOST: "https://psd2-quality.cloud.adorsys.de"
 
   ###########################
   # Docker images variables #
@@ -41,28 +40,6 @@ variables: &variables
 # ------------------------------------------------------------------
 # reusable yaml anchors
 # ------------------------------------------------------------------
-
-# Build docker images and put them to DOCKER HUB repo
-.build_dockerhub_image: &build_dockerhub_image
-  script:
-    - docker login -u $DOCKER_HUB_LOGIN -p $DOCKER_HUB_PASS
-    - docker build -t "adorsys/xs2a-connector-examples:$DOCKER_TAG" gateway-app
-    - docker push "adorsys/xs2a-connector-examples:$DOCKER_TAG"
-    - docker logout
-
-# Build docker image xs2a-connector separately and put them to DOCKER HUB repo
-.build_dockerhub_image_embedded: &build_dockerhub_image_embedded
-  script:
-    - docker login -u $DOCKER_HUB_LOGIN -p $DOCKER_HUB_PASS
-    - docker build -t "adorsys/xs2a-connector-embedded:$DOCKER_TAG" gateway-app-embedded
-    - docker push "adorsys/xs2a-connector-embedded:$DOCKER_TAG"
-    - docker logout
-
-# Build docker images and put them to DOCKER HUB repo
-.build_docker_images_private: &build_docker_images_private
-  script:
-    - docker build -t "${DOCKERHUB_REGISTRY}/${DOCKERHUB_NAMESPACE}/${DOCKER_IMAGE_NAME_XS2A_CONNECTOR}:${DOCKER_TAG}" gateway-app
-    - docker build -t "${DOCKERHUB_REGISTRY}/${DOCKERHUB_NAMESPACE}/${DOCKER_IMAGE_NAME_XS2A_CONNECTOR_EMBEDDED}:${DOCKER_TAG}" gateway-app-embedded
 
 .push_dockerhub_images_private: &push_dockerhub_images_private
   script:
@@ -238,19 +215,6 @@ Test:DOCKER_test_image_build:
     - docker build -t "adorsys/xs2a-connector-examples:test" gateway-app
     - docker build -t "adorsys/xs2a-connector-embedded:test" gateway-app-embedded
 
-Test:Sonarcube:
-  stage: "Test"
-  needs: []
-  except:
-    - schedules
-    - develop
-  script:
-    - jabba use "system@1.11"
-    - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
-    - mvn --fail-at-end clean install
-    - mvn --settings scripts/mvn-release-settings.xml sonar:sonar -Dsonar.host.url=$SONAR_HOST -Dsonar.login=${SONAR_TOKEN}
-  only:
-    - develop
 
 ###########
 # develop #
