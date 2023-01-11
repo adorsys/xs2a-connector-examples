@@ -157,7 +157,6 @@ Build:XS2A_connector_Java11:
   stage: "Compile"
   script:
     - jabba use "system@1.11"
-    - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
     - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
     - mvn -DskipITs -DskipTests --settings scripts/mvn-release-settings.xml -Dci.build.number=Build\:${CI_PIPELINE_ID} clean install
   artifacts:
