@@ -41,7 +41,7 @@ variables: &variables
 # reusable yaml anchors
 # ------------------------------------------------------------------
 
-.push_dockerhub_images_private: &push_dockerhub_images_private
+.build_and_push_dockerhub_images_private: &build_and_push_dockerhub_images_private
   script:
     - docker build -t "${DOCKERHUB_REGISTRY}/${DOCKERHUB_NAMESPACE}/${DOCKER_IMAGE_NAME_XS2A_CONNECTOR}:${DOCKER_TAG}" gateway-app
     - docker build -t "${DOCKERHUB_REGISTRY}/${DOCKERHUB_NAMESPACE}/${DOCKER_IMAGE_NAME_XS2A_CONNECTOR_EMBEDDED}:${DOCKER_TAG}" gateway-app-embedded
