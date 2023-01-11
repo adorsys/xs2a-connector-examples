@@ -253,7 +253,7 @@ Push to DockerHub (master):
     DOCKER_TAG: latest
     DOCKERHUB_REGISTRY: gitlab-registry.adorsys.de
     DOCKERHUB_NAMESPACE: "adorsys/xs2a/xs2a-connector-examples"
-  <<: *push_dockerhub_images_private
+  <<: *build_and_push_dockerhub_images_private
 
 ###########
 # release #
@@ -267,7 +267,7 @@ Push to DockerHub (Release):
     DOCKER_TAG: $CI_COMMIT_TAG
     DOCKERHUB_REGISTRY: gitlab-registry.adorsys.de
     DOCKERHUB_NAMESPACE: "adorsys/xs2a/xs2a-connector-examples"
-  <<: *push_dockerhub_images_private
+  <<: *build_and_push_dockerhub_images_private
 
 release_snapshot_artifacts_private:
   stage: "Release"
