@@ -240,7 +240,7 @@ build_dockerhub_image_develop_private:
     DOCKER_TAG: develop
     DOCKERHUB_REGISTRY: gitlab-registry.adorsys.de
     DOCKERHUB_NAMESPACE: "adorsys/xs2a/xs2a-connector-examples"
-  <<: *push_dockerhub_images_private
+  <<: *build_and_push_dockerhub_images_private
 
 ##########
 # master #
