@@ -242,7 +242,7 @@ Test:DOCKER_test_image_build:
 # support-14.x #
 ################
 
-build_dockerhub_image_develop_private:
+build_dockerhub_image_support_private:
   stage: "Package"
   # except:
   #   - schedules
