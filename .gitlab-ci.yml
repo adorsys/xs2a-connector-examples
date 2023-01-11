@@ -15,14 +15,12 @@ stages:
   - "Compile"    # build jar and provide as artifact
   - "Test"       # run tests and code quality checks
   - "Package"    # dockerize jar and push to docker registry
-  - "Deploy"     # push to openshift registry (snapshot Deployment) or release registry
   - "Release"    # release
 # ------------------------------------------------------------------
 # variables
 # ------------------------------------------------------------------
 
 variables: &variables
-  SONAR_HOST: "https://psd2-quality.cloud.adorsys.de"
 
   ###########################
   # Docker images variables #
@@ -48,21 +46,6 @@ variables: &variables
 # reusable yaml anchors
 # ------------------------------------------------------------------
 
-# Build docker images and put them to DOCKER HUB repo
-.build_dockerhub_image: &build_dockerhub_image
-  script:
-    - docker login -u $DOCKER_HUB_LOGIN -p $DOCKER_HUB_PASS
-    - docker build -t "adorsys/xs2a-connector-examples:$DOCKER_TAG" gateway-app
-    - docker push "adorsys/xs2a-connector-examples:$DOCKER_TAG"
-    - docker logout
-
-# Build docker image xs2a-connector separately and put them to DOCKER HUB repo
-.build_dockerhub_image_embedded: &build_dockerhub_image_embedded
-  script:
-    - docker login -u $DOCKER_HUB_LOGIN -p $DOCKER_HUB_PASS
-    - docker build -t "adorsys/xs2a-connector-embedded:$DOCKER_TAG" gateway-app-embedded
-    - docker push "adorsys/xs2a-connector-embedded:$DOCKER_TAG"
-    - docker logout
 
 # Build docker images and put them to DOCKER HUB repo
 .build_docker_images_private: &build_docker_images_private
@@ -70,7 +53,7 @@ variables: &variables
     - docker build -t "${DOCKERHUB_REGISTRY}/${DOCKERHUB_NAMESPACE}/${DOCKER_IMAGE_NAME_XS2A_CONNECTOR}:${DOCKER_TAG}" gateway-app
     - docker build -t "${DOCKERHUB_REGISTRY}/${DOCKERHUB_NAMESPACE}/${DOCKER_IMAGE_NAME_XS2A_CONNECTOR_EMBEDDED}:${DOCKER_TAG}" gateway-app-embedded
 
-.push_dockerhub_images_private: &push_dockerhub_images_private
+.build_and_push_dockerhub_images_private: &build_and_push_dockerhub_images_private
   script:
     - docker build -t "${DOCKERHUB_REGISTRY}/${DOCKERHUB_NAMESPACE}/${DOCKER_IMAGE_NAME_XS2A_CONNECTOR}:${DOCKER_TAG}" gateway-app
     - docker build -t "${DOCKERHUB_REGISTRY}/${DOCKERHUB_NAMESPACE}/${DOCKER_IMAGE_NAME_XS2A_CONNECTOR_EMBEDDED}:${DOCKER_TAG}" gateway-app-embedded
@@ -91,24 +74,6 @@ variables: &variables
     key: "Java_${CI_COMMIT_REF_SLUG}"
     paths:
       - /builds/adorsys/xs2a/xs2a-conector-examples/.m2/repository
-
-.deploy_openshift: &deploy_openshift
-  script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - >-
-      skopeo copy
-      --dest-creds=openshift:${OPENSHIFT_TOKEN}
-      "docker://${DOCKERHUB_REGISTRY}/${DOCKERHUB_NAMESPACE}/${DOCKER_IMAGE_NAME_XS2A_CONNECTOR}:${DOCKER_TAG}"
-      "docker://${OPENSHIFT_REGISTRY}/${OPENSHIFT_NAMESPACE}/${DOCKER_IMAGE_NAME_XS2A_CONNECTOR}:latest"
-
-.deploy_openshift_embedded: &deploy_openshift_embedded
-  script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - >-
-      skopeo copy
-      --dest-creds=openshift:${OPENSHIFT_TOKEN}
-      "docker://${DOCKERHUB_REGISTRY}/${DOCKERHUB_NAMESPACE}/${DOCKER_IMAGE_NAME_XS2A_CONNECTOR_EMBEDDED}:${DOCKER_TAG}"
-      "docker://${OPENSHIFT_REGISTRY}/${OPENSHIFT_NAMESPACE}/${DOCKER_IMAGE_NAME_XS2A_CONNECTOR_EMBEDDED}:latest"
 
 
 # ------------------------------------------------------------------
@@ -183,7 +148,9 @@ Lint:XS2A_connector_dockerfiles:
   image: docker
   stage: "Lint"
   services:
-    - docker:dind
+    - name: docker:dind
+      alias: docker
+      command: ["--tls=false"]
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
@@ -205,7 +172,6 @@ Build:XS2A_connector_Java11:
   stage: "Compile"
   script:
     - jabba use "system@1.11"
-    - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
     - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
     - mvn -DskipITs -DskipTests --settings scripts/mvn-release-settings.xml -Dci.build.number=Build\:${CI_PIPELINE_ID} clean install
   artifacts:
@@ -228,7 +194,6 @@ Test:Javadoc Java11:
   stage: "Test"
   script:
     - jabba use "system@1.11"
-    - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
     - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
     - mvn --settings scripts/mvn-release-settings.xml -Dmaven.test.skip=true package javadoc:javadoc
   artifacts:
@@ -241,7 +206,6 @@ Test:UI_Tests_Java11:
   stage: "Test"
   script:
     - jabba use "system@1.11"
-    - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
     - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
     - mvn --settings scripts/mvn-release-settings.xml -DskipITs --fail-at-end clean install
   artifacts:
@@ -254,7 +218,6 @@ Test:IT_Java11:
   stage: "Test"
   script:
     - jabba use "system@1.11"
-    - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
     - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
     - mvn --settings scripts/mvn-release-settings.xml -ntp failsafe:integration-test failsafe:verify
   variables:
@@ -262,6 +225,15 @@ Test:IT_Java11:
 
 Test:DOCKER_test_image_build:
   stage: "Test"
+  image: docker
+  services:
+    - name: docker:dind
+      alias: docker
+      command: ["--tls=false"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: overlay2
   script:
     - docker build -t "adorsys/xs2a-connector-examples:test" gateway-app
     - docker build -t "adorsys/xs2a-connector-embedded:test" gateway-app-embedded
@@ -270,7 +242,7 @@ Test:DOCKER_test_image_build:
 # support-14.x #
 ################
 
-build_dockerhub_image_develop_private:
+build_dockerhub_image_support_private:
   stage: "Package"
   # except:
   #   - schedules
@@ -280,44 +252,8 @@ build_dockerhub_image_develop_private:
     DOCKER_TAG: support14x
     DOCKERHUB_REGISTRY: gitlab-registry.adorsys.de
     DOCKERHUB_NAMESPACE: "adorsys/xs2a/xs2a-connector-examples"
-  <<: *push_dockerhub_images_private
+  <<: *build_and_push_dockerhub_images_private
 
-##########
-# deploy #
-##########
-
-
-Deploy Openshift (support-14.x):
-  stage: "Deploy"
-  cache: {}
-  dependencies: []
-  only:
-    - support-14.x
-  except:
-    - schedules
-  variables:
-    DOCKERHUB_REGISTRY: gitlab-registry.adorsys.de
-    DOCKERHUB_NAMESPACE: "adorsys/xs2a/xs2a-connector-examples"
-    GIT_STRATEGY: none
-    DOCKER_TAG: support14x # Dockerhub source tag
-    OPENSHIFT_NAMESPACE: ${OPENSHIFT_NAMESPACE_SUPPORT14X} # Openshift target namespace
-  <<: *deploy_openshift
-
-Deploy Openshift (support-14.x Embedded):
-  stage: "Deploy"
-  cache: {}
-  dependencies: []
-  only:
-    - support-14.x
-  except:
-    - schedules
-  variables:
-    DOCKERHUB_REGISTRY: gitlab-registry.adorsys.de
-    DOCKERHUB_NAMESPACE: "adorsys/xs2a/xs2a-connector-examples"
-    GIT_STRATEGY: none
-    DOCKER_TAG: support14x # Dockerhub source tag
-    OPENSHIFT_NAMESPACE: ${OPENSHIFT_NAMESPACE_SUPPORT14X} # Openshift target namespace
-  <<: *deploy_openshift_embedded
 
 ###########
 # release #
@@ -331,7 +267,7 @@ Push to DockerHub (Release):
     DOCKER_TAG: $CI_COMMIT_TAG
     DOCKERHUB_REGISTRY: gitlab-registry.adorsys.de
     DOCKERHUB_NAMESPACE: "adorsys/xs2a/xs2a-connector-examples"
-  <<: *push_dockerhub_images_private
+  <<: *build_and_push_dockerhub_images_private
 
 release_snapshot_artifacts_private:
   stage: "Release"
