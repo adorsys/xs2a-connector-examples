@@ -20,7 +20,7 @@ stages:
 # variables
 # ------------------------------------------------------------------
 
-variables: &variables
+variables:
 
   ###########################
   # Docker images variables #
@@ -36,22 +36,9 @@ variables: &variables
   JAVA_TOOL_OPTIONS: "-XX:+UnlockExperimentalVMOptions -XX:MaxRAM=3G -XX:MaxRAMFraction=3"
   MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
 
-  ############################
-  # Private Openshift Images #
-  ############################
-
-  OPENSHIFT_NAMESPACE_SUPPORT14X: "adorsys-xs2a-support14x"
-
 # ------------------------------------------------------------------
 # reusable yaml anchors
 # ------------------------------------------------------------------
-
-
-# Build docker images and put them to DOCKER HUB repo
-.build_docker_images_private: &build_docker_images_private
-  script:
-    - docker build -t "${DOCKERHUB_REGISTRY}/${DOCKERHUB_NAMESPACE}/${DOCKER_IMAGE_NAME_XS2A_CONNECTOR}:${DOCKER_TAG}" gateway-app
-    - docker build -t "${DOCKERHUB_REGISTRY}/${DOCKERHUB_NAMESPACE}/${DOCKER_IMAGE_NAME_XS2A_CONNECTOR_EMBEDDED}:${DOCKER_TAG}" gateway-app-embedded
 
 .build_and_push_dockerhub_images_private: &build_and_push_dockerhub_images_private
   script:
@@ -62,12 +49,10 @@ variables: &variables
     - docker push "${DOCKERHUB_REGISTRY}/${DOCKERHUB_NAMESPACE}/${DOCKER_IMAGE_NAME_XS2A_CONNECTOR_EMBEDDED}:${DOCKER_TAG}"
     - docker logout
 
-# release java artifact privately
 .release_java_private: &release_java_private
   stage: "Release"
   script:
     - jabba use $BUILD_JAVA_VERSION
-    - cat /sys/fs/cgroup/memory/memory.limit_in_bytes
     - java -XX:+PrintFlagsFinal -version | grep -Ei "maxheapsize|maxram"
     - mvn -ntp --settings scripts/mvn-release-settings.xml -Pgitlab-maven -DskipTests -U deploy
   cache:
@@ -81,40 +66,40 @@ variables: &variables
 # ------------------------------------------------------------------
 
 #-------------------------------------------------------------------
-# lint
+# Lint
 #-------------------------------------------------------------------
 
-Lint:Docker_compose:
+Lint (Docker compose):
   image: maven:3.6-jdk-11-slim
   stage: "Lint"
   except:
     - schedules
     - support-14.x
-    - master
+    - master-14.x
   script:
     - apt update && apt install yamllint docker-compose make -yq
     - echo "Run Docker compose lint"
     - docker-compose -f docker-compose.yml config  -q
 
-Lint:Ci_file:
+Lint (CI):
   image: debian:stretch-slim
   stage: "Lint"
   except:
     - schedules
     - support-14.x
-    - master
+    - master-14.x
   script:
     - apt-get update && apt-get install yamllint python3-pkg-resources -yq
     - echo "Run Gitlab ci file lint"
     - yamllint -d relaxed .gitlab-ci.yml
 
-Lint:XS2A_connector_yaml_json_xml:
+Lint (YAML, JSON, XML):
   image: debian:stretch-slim
   stage: "Lint"
   except:
     - schedules
     - support-14.x
-    - master
+    - master-14.x
   script:
     - apt-get update && apt-get install jsonlint yamllint libxml2-utils make curl -yq && ln -s /usr/bin/jsonlint-php /usr/bin/jsonlint
     - echo "Run Xs2A core lint"
@@ -124,13 +109,13 @@ Lint:XS2A_connector_yaml_json_xml:
 # commented cause get error Unsupported version '1.1'
 #	  - find ./ -type f \( -iname "*.xml" ! -iname pom.xml \) -exec xmllint --noout {} \;
 
-Lint:XS2A_connector_PMD_CPD_Report:
+Lint (PMD CPD):
   image: maven:3.6-jdk-11-slim
   stage: "Lint"
   except:
     - schedules
     - support-14.x
-    - master
+    - master-14.x
   script:
     - apt update && apt install make -yq
     - echo "Test java code for PMD and CPD"
@@ -144,7 +129,7 @@ Lint:XS2A_connector_PMD_CPD_Report:
     name: "${CI_PROJECT_NAME}-${CI_BUILD_REF_NAME#*v}-pmd"
     expire_in: "10 day"
 
-Lint:XS2A_connector_dockerfiles:
+Lint (Dockerfiles):
   image: docker
   stage: "Lint"
   services:
@@ -158,7 +143,7 @@ Lint:XS2A_connector_dockerfiles:
   except:
     - schedules
     - support-14.x
-    - master
+    - master-14.x
   script:
     - echo "Run Xs2a connector dockerfile checks"
     - docker run --rm -i hadolint/hadolint < ./gateway-app/Dockerfile
@@ -168,7 +153,7 @@ Lint:XS2A_connector_dockerfiles:
 # Compile
 #-------------------------------------------------------------------
 
-Build:XS2A_connector_Java11:
+Build (XS2A Connector):
   stage: "Compile"
   script:
     - jabba use "system@1.11"
@@ -190,7 +175,7 @@ Build:XS2A_connector_Java11:
 # Test
 #-------------------
 
-Test:Javadoc Java11:
+Test (Javadoc):
   stage: "Test"
   script:
     - jabba use "system@1.11"
@@ -202,7 +187,7 @@ Test:Javadoc Java11:
     name: "$CI_PROJECT_NAME-${CI_BUILD_REF_NAME#*v}-javadoc"
     expire_in: "10 day"
 
-Test:UI_Tests_Java11:
+Test (Unit Tests):
   stage: "Test"
   script:
     - jabba use "system@1.11"
@@ -214,7 +199,7 @@ Test:UI_Tests_Java11:
     name: "$CI_PROJECT_NAME-${CI_BUILD_REF_NAME#*v}-*"
     expire_in: "10 day"
 
-Test:IT_Java11:
+Test (IT):
   stage: "Test"
   script:
     - jabba use "system@1.11"
@@ -223,72 +208,67 @@ Test:IT_Java11:
   variables:
     JAVA_TOOL_OPTIONS: "-Djavax.net.ssl.trustStorePassword=changeit -XX:MaxRAM=3G"
 
-Test:DOCKER_test_image_build:
-  stage: "Test"
-  image: docker
-  services:
-    - name: docker:dind
-      alias: docker
-      command: ["--tls=false"]
-  variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_TLS_CERTDIR: ""
-    DOCKER_DRIVER: overlay2
-  script:
-    - docker build -t "adorsys/xs2a-connector-examples:test" gateway-app
-    - docker build -t "adorsys/xs2a-connector-embedded:test" gateway-app-embedded
-
 ################
-# support-14.x #
+# Package
 ################
 
-build_dockerhub_image_support_private:
+Build and push images to private repo (support14x):
   stage: "Package"
   # except:
   #   - schedules
   only:
     - support-14.x
+  services:
+    - name: docker:dind
   variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: overlay2
     DOCKER_TAG: support14x
     DOCKERHUB_REGISTRY: gitlab-registry.adorsys.de
     DOCKERHUB_NAMESPACE: "adorsys/xs2a/xs2a-connector-examples"
   <<: *build_and_push_dockerhub_images_private
 
 
-###########
-# release #
-###########
-
-Push to DockerHub (Release):
+Build and push images to private repo (tags):
   stage: "Package"
   only:
     - tags
+  services:
+    - name: docker:dind
   variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: overlay2
     DOCKER_TAG: $CI_COMMIT_TAG
     DOCKERHUB_REGISTRY: gitlab-registry.adorsys.de
     DOCKERHUB_NAMESPACE: "adorsys/xs2a/xs2a-connector-examples"
   <<: *build_and_push_dockerhub_images_private
 
-release_snapshot_artifacts_private:
+###########
+# Release #
+###########
+
+Release snapshot artifacts (support-14.x):
   stage: "Release"
-  except:
-    - schedules
-  cache: {}
-  variables:
-    BUILD_JAVA_VERSION: system@1.11
-    JAVA_TOOL_OPTIONS: "-Djavax.net.ssl.trustStorePassword=changeit -XX:MaxRAM=3G"
   only:
     - support-14.x
-  <<: *release_java_private
-
-release_artifacts_private:
-  stage: "Release"
   except:
     - schedules
   cache: {}
   variables:
     BUILD_JAVA_VERSION: system@1.11
     JAVA_TOOL_OPTIONS: "-Djavax.net.ssl.trustStorePassword=changeit -XX:MaxRAM=3G"
+  <<: *release_java_private
+
+Release snapshot artifacts (tags):
+  stage: "Release"
   only:
     - tags
+  except:
+    - schedules
+  cache: {}
+  variables:
+    BUILD_JAVA_VERSION: system@1.11
+    JAVA_TOOL_OPTIONS: "-Djavax.net.ssl.trustStorePassword=changeit -XX:MaxRAM=3G"
   <<: *release_java_private
