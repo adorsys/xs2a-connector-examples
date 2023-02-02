@@ -24,7 +24,7 @@ Ledgers project:
 - Create the database with name `ledgers`;
 - Clone the project and build it:
 ```bash
-$ git clone https://github.com/adorsys/ledgers.git
+$ git clone https://git.adorsys.de/adorsys/xs2a/ledgers.git
 $ cd ledgers
 $ mvn clean install
 ```
@@ -33,7 +33,7 @@ $ mvn clean install
 ### XS2A connector with Ledgers inside the docker container
 
 Ledgers project:
-- Clone the project: https://github.com/adorsys/ledgers.git;
+- Clone the project: https://git.adorsys.de/adorsys/xs2a/ledgers.git;
 - Run `docker-compose up` in the root directory.
 
 ### XS2A connector
@@ -41,7 +41,7 @@ Ledgers project:
 The XS2A connector itself is launched equally in both cases:
 - Clone the project and build it:
 ```bash
-$ git clone https://github.com/adorsys/xs2a-connector-examples.git
+$ git clone https://git.adorsys.de/adorsys/xs2a/xs2a-connector-examples.git
 $ cd xs2a-connector-examples
 $ mvn clean install
 ```

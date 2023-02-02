@@ -38,7 +38,7 @@
 		<module>xs2a-connector-oauth-service</module>
 	</modules>
 
-	<url>https://github.com/adorsys/xs2a-connector-examples</url>
+	<url>https://git.adorsys.de/adorsys/xs2a/xs2a-connector-examples</url>
 
 	<licenses>
 		<license>
