@@ -1,6 +1,6 @@
 FROM adorsys/java:11
 
-LABEL maintainer="https://github.com/adorsys/xs2a-connector-examples"
+LABEL maintainer="https://git.adorsys.de/adorsys/xs2a/xs2a-connector-examples"
 
 ENV SERVER_PORT 8089
 ENV JAVA_OPTS -Xmx1024m
