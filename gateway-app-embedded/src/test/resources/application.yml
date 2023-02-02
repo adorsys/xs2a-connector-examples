@@ -57,7 +57,7 @@ server_key: test123
 #LOGGER
 logging.level.org.springframework.web: ERROR
 
-xs2a.license.url: https://github.com/adorsys/xs2a/blob/master/LICENSE.md
+xs2a.license.url: https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/blob/master/LICENSE
 springfox.documentation.swagger.v2.path: /swagger.json
 
 skip.ssl.certificate.verification: true
