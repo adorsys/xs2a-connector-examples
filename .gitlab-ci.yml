@@ -133,9 +133,7 @@ Lint (Dockerfiles):
   image: docker
   stage: "Lint"
   services:
-    - name: docker:dind
-      alias: docker
-      command: ["--tls=false"]
+    - docker:dind
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
@@ -219,7 +217,7 @@ Build and push images to private repo (support14x):
   only:
     - support-14.x
   services:
-    - name: docker:dind
+    - docker:dind
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
@@ -235,7 +233,7 @@ Build and push images to private repo (tags):
   only:
     - tags
   services:
-    - name: docker:dind
+    - docker:dind
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
