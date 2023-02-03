@@ -133,9 +133,7 @@ Lint (Dockerfiles):
   image: docker
   stage: "Lint"
   services:
-    - name: docker:dind
-      alias: docker
-      command: ["--tls=false"]
+    - docker:dind
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
@@ -219,7 +217,7 @@ Build and push to private repo (develop):
   only:
     - develop
   services:
-    - name: docker:dind
+    - docker:dind
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
@@ -234,7 +232,7 @@ Build and push to private repo (master):
   only:
     - master
   services:
-    - name: docker:dind
+    - docker:dind
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
@@ -249,7 +247,7 @@ Build and push to private repo (tags):
   only:
     - tags
   services:
-    - name: docker:dind
+    - docker:dind
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
@@ -263,7 +261,7 @@ Build and push to private repo (tags):
 # Release
 #-------------------
 
-Release snapshot artefacts (develop):
+Release snapshot artifacts (develop):
   stage: "Release"
   only:
     - develop
@@ -275,7 +273,7 @@ Release snapshot artefacts (develop):
     JAVA_TOOL_OPTIONS: "-Djavax.net.ssl.trustStorePassword=changeit -XX:MaxRAM=3G"
   <<: *release_java_private
 
-Release snapshot artefacts (tags):
+Release snapshot artifacts (tags):
   stage: "Release"
   only:
     - tags
