@@ -21,7 +21,7 @@
 	<parent>
 		<groupId>de.adorsys.ledgers</groupId>
 		<artifactId>xs2a-connector-examples</artifactId>
-		<version>14.7-SNAPSHOT</version>
+		<version>14.7</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>ledgers-rest-client</artifactId>
