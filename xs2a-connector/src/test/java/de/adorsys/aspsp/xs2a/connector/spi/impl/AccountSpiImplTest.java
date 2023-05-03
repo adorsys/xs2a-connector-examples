@@ -35,13 +35,13 @@ import de.adorsys.ledgers.rest.client.AccountRestClient;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.util.domain.CustomPageImpl;
 import de.adorsys.psd2.mapper.Xs2aObjectMapper;
-import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
-import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
+import de.adorsys.psd2.xs2a.spi.domain.consent.SpiBookingStatus;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import feign.FeignException;
 import feign.Request;
@@ -807,7 +807,7 @@ class AccountSpiImplTest {
 
         assertFalse(actualResponse.getErrors().isEmpty());
         assertNull(actualResponse.getPayload());
-        assertEquals(MessageErrorCode.RESOURCE_BLOCKED, actualResponse.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.RESOURCE_BLOCKED, actualResponse.getErrors().get(0).getErrorCode());
         verify(fileManagementService, never()).deleteFileByDownloadLink(DOWNLOAD_ID);
     }
 
@@ -821,7 +821,7 @@ class AccountSpiImplTest {
 
         assertFalse(actualResponse.getErrors().isEmpty());
         assertNull(actualResponse.getPayload());
-        assertEquals(MessageErrorCode.RESOURCE_UNKNOWN_404, actualResponse.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.RESOURCE_UNKNOWN_404, actualResponse.getErrors().get(0).getErrorCode());
         assertEquals(EMPTY_FILE_MESSAGE, actualResponse.getErrors().get(0).getMessageText());
         verify(fileManagementService, never()).deleteFileByDownloadLink(DOWNLOAD_ID);
     }
@@ -884,11 +884,11 @@ class AccountSpiImplTest {
     }
 
     private SpiTransactionReportParameters buildSpiTransactionReportParameters(String mediaType) {
-        return new SpiTransactionReportParameters(mediaType, true, DATE_FROM, DATE_TO, BookingStatus.ALL, null, null, PAGE, SIZE);
+        return new SpiTransactionReportParameters(mediaType, true, DATE_FROM, DATE_TO, SpiBookingStatus.ALL, null, null, PAGE, SIZE);
     }
 
     private SpiTransactionReportParameters buildSpiTransactionReportParametersInformationBookingStatus() {
-        return new SpiTransactionReportParameters(MediaType.APPLICATION_JSON_VALUE, true, DATE_FROM, DATE_TO, BookingStatus.INFORMATION, null, null, PAGE, SIZE);
+        return new SpiTransactionReportParameters(MediaType.APPLICATION_JSON_VALUE, true, DATE_FROM, DATE_TO, SpiBookingStatus.INFORMATION, null, null, PAGE, SIZE);
     }
 
     private AccountDetailsTO buildAccountDetailsTO(String iban, String resourceId) {

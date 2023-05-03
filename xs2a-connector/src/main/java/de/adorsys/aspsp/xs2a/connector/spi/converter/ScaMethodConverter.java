@@ -17,7 +17,7 @@
 package de.adorsys.aspsp.xs2a.connector.spi.converter;
 
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
-import de.adorsys.psd2.xs2a.core.authorisation.AuthenticationObject;
+import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -29,8 +29,8 @@ public interface ScaMethodConverter {
     @Mapping(source = "scaMethod", target = "authenticationType")
     @Mapping(source = "methodValue", target = "name")
     @Mapping(source = "id", target = "authenticationMethodId")
-    AuthenticationObject toAuthenticationObject(ScaUserDataTO method);
+    SpiAuthenticationObject toAuthenticationObject(ScaUserDataTO method);
 
-    List<AuthenticationObject> toAuthenticationObjectList(List<ScaUserDataTO> methods);
+    List<SpiAuthenticationObject> toAuthenticationObjectList(List<ScaUserDataTO> methods);
 }
 

@@ -17,9 +17,6 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation;
 
 import de.adorsys.aspsp.xs2a.connector.spi.impl.SpiMockData;
-import de.adorsys.psd2.xs2a.core.profile.ScaApproach;
-import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
-import de.adorsys.psd2.xs2a.core.tpp.TppInfo;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiStartAuthorisationResponse;
@@ -27,6 +24,7 @@ import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.domain.sca.SpiScaApproach;
 import de.adorsys.psd2.xs2a.spi.domain.sca.SpiScaStatus;
+import de.adorsys.psd2.xs2a.spi.domain.tpp.SpiTppInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -42,11 +40,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class AbstractAuthorisationSpiTest {
     private static final String PSU_ID = "anton.brueckner";
     private static final String AUTHORISATION_ID = "authorisation Id";
-    private static final ScaApproach DECOUPLED_APPROACH = ScaApproach.DECOUPLED;
     private static final SpiScaApproach SPI_DECOUPLED_APPROACH = SpiScaApproach.DECOUPLED;
-    private static final ScaApproach NON_DECOUPLED_APPROACH = ScaApproach.EMBEDDED;
     private static final SpiScaApproach SPI_NON_DECOUPLED_APPROACH = SpiScaApproach.EMBEDDED;
-    private static final ScaStatus SCA_STATUS = ScaStatus.PSUAUTHENTICATED;
     private static final SpiScaStatus SPI_SCA_STATUS = SpiScaStatus.PSUAUTHENTICATED;
     private static final SpiPsuData PSU_ID_DATA_1 = SpiPsuData.builder()
                                                             .psuId(PSU_ID)
@@ -65,7 +60,7 @@ class AbstractAuthorisationSpiTest {
                                                             .psuDeviceId(UUID.randomUUID())
                                                             .build();
     private static final String ACCESS_TOKEN = "access_token";
-    private static final SpiContextData SPI_CONTEXT_DATA = new SpiContextData(PSU_ID_DATA_1, new TppInfo(), UUID.randomUUID(), UUID.randomUUID(), ACCESS_TOKEN, null, null, null, null);
+    private static final SpiContextData SPI_CONTEXT_DATA = new SpiContextData(PSU_ID_DATA_1, new SpiTppInfo(), UUID.randomUUID(), UUID.randomUUID(), ACCESS_TOKEN, null, null, null, null);
 
     private final AbstractAuthorisationSpi authorisationSpi = Mockito.mock(AbstractAuthorisationSpi.class, Mockito.CALLS_REAL_METHODS);
 

@@ -21,12 +21,12 @@ import de.adorsys.aspsp.xs2a.connector.spi.impl.SpiMockData;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
-import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
-import de.adorsys.psd2.xs2a.core.profile.PaymentType;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentInfo;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentType;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiTransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiGetPaymentStatusResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
@@ -43,9 +43,7 @@ import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CommonPaymentSpiImplTest {
@@ -67,7 +65,7 @@ class CommonPaymentSpiImplTest {
     void verifyScaAuthorisationAndExecutePayment() {
         SpiScaConfirmation spiScaConfirmation = new SpiScaConfirmation();
         when(generalPaymentService.verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(spiScaConfirmation, spiAspspConsentDataProvider))
-                .thenReturn(buildSpiResponse(new SpiPaymentExecutionResponse(TransactionStatus.ACSP)));
+                .thenReturn(buildSpiResponse(new SpiPaymentExecutionResponse(SpiTransactionStatus.ACSP)));
 
         SpiResponse<SpiPaymentExecutionResponse> response = commonPaymentSpi.verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(SPI_CONTEXT_DATA, spiScaConfirmation, new SpiPaymentInfo(PAYMENT_PRODUCT), spiAspspConsentDataProvider);
 
@@ -81,7 +79,7 @@ class CommonPaymentSpiImplTest {
         SpiPaymentInfo spiPaymentInfo = new SpiPaymentInfo(PAYMENT_PRODUCT);
         SpiSinglePaymentInitiationResponse spiSinglePaymentInitiationResponse = new SpiSinglePaymentInitiationResponse();
         spiSinglePaymentInitiationResponse.setPaymentId(PAYMENT_ID);
-        spiPaymentInfo.setPaymentType(PaymentType.SINGLE);
+        spiPaymentInfo.setPaymentType(SpiPaymentType.SINGLE);
 
         when(generalPaymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, spiPaymentInfo, spiAspspConsentDataProvider, new SpiSinglePaymentInitiationResponse(), SPI_CONTEXT_DATA.getPsuData(), new HashSet<>()))
                 .thenReturn(buildSpiResponse(spiSinglePaymentInitiationResponse));
@@ -100,7 +98,7 @@ class CommonPaymentSpiImplTest {
         SpiPaymentInfo spiPaymentInfo = new SpiPaymentInfo(PAYMENT_PRODUCT);
         SpiSinglePaymentInitiationResponse spiSinglePaymentInitiationResponse = new SpiSinglePaymentInitiationResponse();
         spiSinglePaymentInitiationResponse.setPaymentId(PAYMENT_ID);
-        spiPaymentInfo.setPaymentType(PaymentType.SINGLE);
+        spiPaymentInfo.setPaymentType(SpiPaymentType.SINGLE);
 
         when(generalPaymentService.firstCallInstantiatingPayment(PaymentTypeTO.SINGLE, spiPaymentInfo, spiAspspConsentDataProvider, new SpiSinglePaymentInitiationResponse(), SPI_CONTEXT_DATA.getPsuData(), new HashSet<>()))
                 .thenReturn(buildSpiResponse(spiSinglePaymentInitiationResponse));
@@ -131,9 +129,9 @@ class CommonPaymentSpiImplTest {
         String mediaType = MediaType.APPLICATION_JSON_VALUE;
 
         SpiPaymentInfo spiPaymentInfo = new SpiPaymentInfo(PAYMENT_PRODUCT);
-        spiPaymentInfo.setPaymentType(PaymentType.SINGLE);
+        spiPaymentInfo.setPaymentType(SpiPaymentType.SINGLE);
         spiPaymentInfo.setPaymentId(PAYMENT_ID);
-        spiPaymentInfo.setPaymentStatus(TransactionStatus.ACSP);
+        spiPaymentInfo.setPaymentStatus(SpiTransactionStatus.ACSP);
 
         SpiGetPaymentStatusResponse spiGetPaymentStatusResponse = new SpiGetPaymentStatusResponse(spiPaymentInfo.getPaymentStatus(), null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE,
                                                                                                   SpiMockData.SPI_LINKS,
@@ -152,9 +150,9 @@ class CommonPaymentSpiImplTest {
         String mediaType = MediaType.APPLICATION_XML_VALUE;
 
         SpiPaymentInfo spiPaymentInfo = new SpiPaymentInfo(PAYMENT_PRODUCT);
-        spiPaymentInfo.setPaymentType(PaymentType.SINGLE);
+        spiPaymentInfo.setPaymentType(SpiPaymentType.SINGLE);
         spiPaymentInfo.setPaymentId(PAYMENT_ID);
-        spiPaymentInfo.setPaymentStatus(TransactionStatus.ACSP);
+        spiPaymentInfo.setPaymentStatus(SpiTransactionStatus.ACSP);
 
         SpiGetPaymentStatusResponse spiGetPaymentStatusResponse = new SpiGetPaymentStatusResponse(spiPaymentInfo.getPaymentStatus(), null, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE,
                                                                                                   SpiMockData.SPI_LINKS,

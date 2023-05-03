@@ -24,15 +24,15 @@ import de.adorsys.ledgers.middleware.api.domain.account.AccountDetailsTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
 import de.adorsys.ledgers.rest.client.AccountRestClient;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
-import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
-import de.adorsys.psd2.xs2a.core.consent.AisConsentRequestType;
-import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
-import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
+import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAisConsentRequestType;
+import de.adorsys.psd2.xs2a.spi.domain.consent.SpiBookingStatus;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiTppMessage;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.CardAccountSpi;
 import feign.FeignException;
@@ -46,16 +46,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Currency;
-import java.util.List;
-import java.util.Optional;
+import java.time.*;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -169,7 +161,7 @@ public class CardAccountSpiImpl implements CardAccountSpi {
                                                                                    @NotNull SpiAccountConsent accountConsent,
                                                                                    @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         // TODO Remove it https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1100
-        if (BookingStatus.INFORMATION == spiTransactionReportParameters.getBookingStatus()) {
+        if (SpiBookingStatus.INFORMATION == spiTransactionReportParameters.getBookingStatus()) {
             logger.info("Retrieving mock standing order report for account: {}", accountReference.getResourceId());
             SpiCardTransactionReport transactionReport = new SpiCardTransactionReport("dGVzdA==", buildSpiTransactionList(), Collections.singletonList(buildSpiAccountBalance()), "application/json", null);
             return SpiResponse.<SpiCardTransactionReport>builder()
@@ -298,7 +290,7 @@ public class CardAccountSpiImpl implements CardAccountSpi {
     }
 
     private boolean isAllAvailableAccountsConsent(SpiAccountConsent accountConsent) {
-        return accountConsent.getAisConsentRequestType() == AisConsentRequestType.ALL_AVAILABLE_ACCOUNTS;
+        return accountConsent.getAisConsentRequestType() == SpiAisConsentRequestType.ALL_AVAILABLE_ACCOUNTS;
     }
 
     private List<SpiCardAccountDetails> getAccountDetailsByConsentId(byte[] aspspConsentData) {
@@ -352,8 +344,8 @@ public class CardAccountSpiImpl implements CardAccountSpi {
         return sca;
     }
 
-    private TppMessage buildTppMessage(FeignException exception) {
-        return FeignExceptionHandler.getFailureMessage(exception, MessageErrorCode.CONSENT_UNKNOWN_400, feignExceptionReader.getErrorMessage(exception));
+    private SpiTppMessage buildTppMessage(FeignException exception) {
+        return FeignExceptionHandler.getFailureMessage(exception, SpiMessageErrorCode.CONSENT_UNKNOWN_400, feignExceptionReader.getErrorMessage(exception));
     }
 
     private List<SpiCardTransaction> buildSpiTransactionList() {

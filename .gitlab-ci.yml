@@ -82,7 +82,7 @@ Lint (Docker compose):
     - docker-compose -f docker-compose.yml config  -q
 
 Lint (CI):
-  image: debian:stretch-slim
+  image: debian:stable-slim
   stage: "Lint"
   except:
     - schedules
@@ -94,7 +94,7 @@ Lint (CI):
     - yamllint -d relaxed .gitlab-ci.yml
 
 Lint (YAML, JSON, XML):
-  image: debian:stretch-slim
+  image: debian:stable-slim
   stage: "Lint"
   except:
     - schedules
@@ -134,6 +134,8 @@ Lint (Dockerfiles):
   stage: "Lint"
   services:
     - docker:dind
+  tags:
+    - aws
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
@@ -218,6 +220,8 @@ Build and push images to private repo (support14x):
     - support-14.x
   services:
     - docker:dind
+  tags:
+    - aws
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
@@ -234,6 +238,8 @@ Build and push images to private repo (tags):
     - tags
   services:
     - docker:dind
+  tags:
+    - aws
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""

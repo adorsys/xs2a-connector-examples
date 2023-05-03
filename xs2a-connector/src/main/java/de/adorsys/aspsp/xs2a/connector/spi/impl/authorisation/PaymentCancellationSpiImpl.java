@@ -34,11 +34,13 @@ import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
-import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiTppMessage;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiTransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentCancellationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
@@ -100,7 +102,7 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
                                                                                             @NotNull SpiPayment payment,
                                                                                             @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         SpiPaymentCancellationResponse response = new SpiPaymentCancellationResponse();
-        boolean cancellationMandated = payment.getPaymentStatus() != TransactionStatus.RCVD;
+        boolean cancellationMandated = payment.getPaymentStatus() != SpiTransactionStatus.RCVD;
         response.setCancellationAuthorisationMandated(cancellationMandated);
         response.setTransactionStatus(payment.getPaymentStatus());
         return SpiResponse.<SpiPaymentCancellationResponse>builder()
@@ -119,7 +121,7 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
     public @NotNull SpiResponse<SpiResponse.VoidResponse> cancelPaymentWithoutSca(@NotNull SpiContextData contextData,
                                                                                   @NotNull SpiPayment payment,
                                                                                   @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
-        if (payment.getPaymentStatus() == TransactionStatus.RCVD) {
+        if (payment.getPaymentStatus() == SpiTransactionStatus.RCVD) {
             return SpiResponse.<SpiResponse.VoidResponse>builder()
                            .payload(SpiResponse.voidResponse())
                            .build();
@@ -137,12 +139,12 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
                 String devMessage = feignExceptionReader.getErrorMessage(feignException);
                 logger.error("Cancel payment without SCA failed: payment ID: {}, devMessage: {}", payment.getPaymentId(), devMessage);
                 return SpiResponse.<SpiResponse.VoidResponse>builder()
-                               .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR_CANCELLATION, devMessage))
+                               .error(FeignExceptionHandler.getFailureMessage(feignException, SpiMessageErrorCode.FORMAT_ERROR_CANCELLATION, devMessage))
                                .build();
             }
         }
         return SpiResponse.<SpiResponse.VoidResponse>builder()
-                       .error(new TppMessage(MessageErrorCode.CANCELLATION_INVALID))
+                       .error(new SpiTppMessage(SpiMessageErrorCode.CANCELLATION_INVALID))
                        .build();
     }
 
@@ -186,7 +188,7 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
             }
 
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.UNAUTHORIZED_CANCELLATION))
+                           .error(new SpiTppMessage(SpiMessageErrorCode.UNAUTHORIZED_CANCELLATION))
                            .build();
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
@@ -196,11 +198,11 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
             if (LedgersErrorCode.SCA_VALIDATION_ATTEMPT_FAILED.equals(errorCode)) {
                 return SpiResponse.<SpiPaymentExecutionResponse>builder()
                                .payload(new SpiPaymentExecutionResponse(SpiAuthorisationStatus.ATTEMPT_FAILURE))
-                               .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
+                               .error(FeignExceptionHandler.getFailureMessage(feignException, SpiMessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
                                .build();
             }
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.PSU_CREDENTIALS_INVALID))
+                           .error(new SpiTppMessage(SpiMessageErrorCode.PSU_CREDENTIALS_INVALID))
                            .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
@@ -230,7 +232,7 @@ public class PaymentCancellationSpiImpl extends AbstractAuthorisationSpi<SpiPaym
 
     @Override
     protected boolean validateStatuses(SpiPayment businessObject, GlobalScaResponseTO sca) {
-        return businessObject.getPaymentStatus() == TransactionStatus.RCVD ||
+        return businessObject.getPaymentStatus() == SpiTransactionStatus.RCVD ||
                        sca.getScaStatus() == ScaStatusTO.EXEMPTED;
     }
 

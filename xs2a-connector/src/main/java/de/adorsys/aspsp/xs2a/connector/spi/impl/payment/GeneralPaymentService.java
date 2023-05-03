@@ -17,12 +17,7 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment;
 
 import de.adorsys.aspsp.xs2a.connector.cms.CmsPsuPisClient;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.AspspConsentDataService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionHandler;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.FeignExceptionReader;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.LedgersErrorCode;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.MultilevelScaService;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.SpiMockData;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
@@ -34,14 +29,15 @@ import de.adorsys.ledgers.rest.client.OperationInitiationRestClient;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
 import de.adorsys.ledgers.util.Ids;
-import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
-import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.service.RequestProviderService;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiTppMessage;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiTransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiGetPaymentStatusResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
@@ -124,7 +120,7 @@ public class GeneralPaymentService {
         response.setOperationObjectId(paymentId);
         response.setOpType(OpTypeTO.PAYMENT);
         responsePayload.setPaymentId(paymentId);
-        responsePayload.setTransactionStatus(TransactionStatus.RCVD);
+        responsePayload.setTransactionStatus(SpiTransactionStatus.RCVD);
 
         boolean isMultilevelScaRequired;
 
@@ -133,7 +129,7 @@ public class GeneralPaymentService {
         } catch (FeignException e) {
             logger.error("Error during REST call for payment initiation to ledgers for account multilevel checking, PSU ID: {}", spiPsuData.getPsuId());
             return SpiResponse.<T>builder()
-                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR_UNKNOWN_ACCOUNT))
+                           .error(new SpiTppMessage(SpiMessageErrorCode.FORMAT_ERROR_UNKNOWN_ACCOUNT))
                            .build();
         }
 
@@ -153,7 +149,7 @@ public class GeneralPaymentService {
     public SpiResponse<SpiGetPaymentStatusResponse> getPaymentStatusById(@NotNull PaymentTypeTO paymentType,
                                                                          @NotNull String acceptMediaType,
                                                                          @NotNull String paymentId,
-                                                                         @NotNull TransactionStatus spiTransactionStatus,
+                                                                         @NotNull SpiTransactionStatus spiTransactionStatus,
                                                                          @NotNull byte[] aspspConsentData) {
         if (acceptMediaType.equals(XML_MEDIA_TYPE)) {
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
@@ -168,7 +164,7 @@ public class GeneralPaymentService {
                            .build();
         }
 
-        if (!TransactionStatus.ACSP.equals(spiTransactionStatus)) {
+        if (!SpiTransactionStatus.ACSP.equals(spiTransactionStatus)) {
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
                            .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus,
                                                                     SpiMockData.FUNDS_AVAILABLE,
@@ -185,8 +181,8 @@ public class GeneralPaymentService {
 
             logger.info("Get payment status by ID with type: {} and ID: {}", paymentType, paymentId);
             TransactionStatusTO response = paymentRestClient.getPaymentStatusById(sca.getOperationObjectId()).getBody();
-            TransactionStatus status = Optional.ofNullable(response)
-                                               .map(r -> TransactionStatus.valueOf(r.name()))
+            SpiTransactionStatus status = Optional.ofNullable(response)
+                                               .map(r -> SpiTransactionStatus.valueOf(r.name()))
                                                .orElseThrow(() -> FeignException.errorStatus("Request failed, response was 200, but body was empty!",
                                                                                              Response.builder().status(HttpStatus.BAD_REQUEST.value()).build()));
             logger.info("Transaction status: {}", status);
@@ -204,7 +200,7 @@ public class GeneralPaymentService {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Get payment status by ID failed: payment ID: {}, devMessage: {}", paymentId, devMessage);
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR, devMessage))
+                           .error(new SpiTppMessage(SpiMessageErrorCode.FORMAT_ERROR, devMessage))
                            .build();
 
         } finally {
@@ -270,16 +266,16 @@ public class GeneralPaymentService {
             if (LedgersErrorCode.SCA_VALIDATION_ATTEMPT_FAILED.equals(errorCode)) {
                 return SpiResponse.<SpiPaymentExecutionResponse>builder()
                                .payload(new SpiPaymentExecutionResponse(SpiAuthorisationStatus.ATTEMPT_FAILURE))
-                               .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
+                               .error(FeignExceptionHandler.getFailureMessage(feignException, SpiMessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
                                .build();
             }
 
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, SpiMessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
                            .build();
         } catch (Exception exception) {
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED))
+                           .error(new SpiTppMessage(SpiMessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED))
                            .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
@@ -310,13 +306,13 @@ public class GeneralPaymentService {
                                .build();
             }
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED, transactionStatusTO, scaStatusName))
+                           .error(new SpiTppMessage(SpiMessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED, transactionStatusTO, scaStatusName))
                            .build();
         } catch (FeignException feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Execute payment without SCA failed: devMessage {}", devMessage);
             return SpiResponse.<SpiPaymentExecutionResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR, devMessage))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, SpiMessageErrorCode.FORMAT_ERROR, devMessage))
                            .build();
         }
     }
@@ -325,12 +321,12 @@ public class GeneralPaymentService {
 
         Function<P, SpiResponse<P>> buildSuccessResponse = p -> SpiResponse.<P>builder().payload(p).build();
 
-        if (!TransactionStatus.ACSP.equals(payment.getPaymentStatus())) {
+        if (!SpiTransactionStatus.ACSP.equals(payment.getPaymentStatus())) {
             setDebtorNameIfNull(payment);
             return buildSuccessResponse.apply(payment);
         }
 
-        Supplier<SpiResponse<P>> buildFailedResponse = () -> SpiResponse.<P>builder().error(new TppMessage(MessageErrorCode.PAYMENT_FAILED_INCORRECT_ID)).build();
+        Supplier<SpiResponse<P>> buildFailedResponse = () -> SpiResponse.<P>builder().error(new SpiTppMessage(SpiMessageErrorCode.PAYMENT_FAILED_INCORRECT_ID)).build();
 
         return getPaymentFromLedgers(payment, aspspConsentDataProvider.loadAspspConsentData())
                        .map(this::setDebtorNameIfNull)
@@ -377,7 +373,7 @@ public class GeneralPaymentService {
     }
 
     private SpiPaymentExecutionResponse spiPaymentExecutionResponse(TransactionStatusTO transactionStatus) {
-        return new SpiPaymentExecutionResponse(TransactionStatus.valueOf(transactionStatus.name()));
+        return new SpiPaymentExecutionResponse(SpiTransactionStatus.valueOf(transactionStatus.name()));
     }
 
     private TransactionStatus getTransactionStatus(TransactionStatusTO transactionStatusTO) {

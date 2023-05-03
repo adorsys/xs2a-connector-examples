@@ -32,23 +32,18 @@ import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaMethodTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
 import de.adorsys.ledgers.rest.client.*;
-import de.adorsys.psd2.xs2a.core.consent.ConsentStatus;
-import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
-import de.adorsys.psd2.xs2a.core.error.TppMessage;
-import de.adorsys.psd2.xs2a.core.sca.ChallengeData;
-import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountConsent;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountDetails;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.*;
-import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
-import de.adorsys.psd2.xs2a.spi.domain.consent.SpiConsentConfirmationCodeValidationResponse;
-import de.adorsys.psd2.xs2a.spi.domain.consent.SpiInitiateAisConsentResponse;
-import de.adorsys.psd2.xs2a.spi.domain.consent.SpiVerifyScaAuthorisationResponse;
+import de.adorsys.psd2.xs2a.spi.domain.consent.*;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiTppMessage;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
+import de.adorsys.psd2.xs2a.spi.domain.sca.SpiChallengeData;
 import de.adorsys.psd2.xs2a.spi.domain.sca.SpiScaStatus;
 import feign.FeignException;
 import feign.Request;
@@ -90,9 +85,9 @@ class AisConsentSpiImplTest {
     private static final String ONLINE_BANKING_URL_FIELD_NAME = "onlineBankingUrl";
     private static final String ONLINE_BANKING_URL_VALUE = "some.url";
     private static final String PSU_MESSAGE_FROM_LEDGERS = "Your Login for CONSENT id: cd9eb664-660c-48a6-878d-ddc74273315c is successful";
-    private static final ScaStatus SCA_STATUS_FROM_LEDGERS = ScaStatus.PSUAUTHENTICATED;
+    private static final SpiScaStatus SCA_STATUS_FROM_LEDGERS = SpiScaStatus.PSUAUTHENTICATED;
     private static final String PSU_MESSAGE_MOCKED = "Mocked PSU message from SPI";
-    private static final ScaStatus SCA_STATUS_FROM_CMS = ScaStatus.FAILED;
+    private static final SpiScaStatus SCA_STATUS_FROM_CMS = SpiScaStatus.FAILED;
     private static final SpiScaStatus SPI_SCA_STATUS = SpiScaStatus.FAILED;
 
     private JsonReader jsonReader = new JsonReader();
@@ -315,7 +310,7 @@ class AisConsentSpiImplTest {
 
         assertFalse(actualResponse.getErrors().isEmpty());
         assertNull(actualResponse.getPayload());
-        assertTrue(actualResponse.getErrors().contains(new TppMessage(MessageErrorCode.FORMAT_ERROR_UNKNOWN_ACCOUNT)));
+        assertTrue(actualResponse.getErrors().contains(new SpiTppMessage(SpiMessageErrorCode.FORMAT_ERROR_UNKNOWN_ACCOUNT)));
     }
 
     @Test
@@ -427,7 +422,7 @@ class AisConsentSpiImplTest {
 
         // Then
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
     }
 
     @Test
@@ -453,7 +448,7 @@ class AisConsentSpiImplTest {
         authoriseConsentResponseTO.setScaStatus(PSUAUTHENTICATED);
         when(redirectScaRestClient.validateScaCode("authorisation id", "tan")).thenReturn(ResponseEntity.ok(authoriseConsentResponseTO));
 
-        SpiVerifyScaAuthorisationResponse expected = new SpiVerifyScaAuthorisationResponse(ConsentStatus.VALID);
+        SpiVerifyScaAuthorisationResponse expected = new SpiVerifyScaAuthorisationResponse(SpiConsentStatus.VALID);
 
         // When
         SpiResponse<SpiVerifyScaAuthorisationResponse> actual = spi.verifyScaAuthorisation(SPI_CONTEXT_DATA, spiScaConfirmation, spiAccountConsent, spiAspspConsentDataProvider);
@@ -488,7 +483,7 @@ class AisConsentSpiImplTest {
         authoriseConsentResponseTO.setScaStatus(FINALISED);
         when(redirectScaRestClient.validateScaCode("authorisation id", "tan")).thenReturn(ResponseEntity.ok(authoriseConsentResponseTO));
 
-        SpiVerifyScaAuthorisationResponse expected = new SpiVerifyScaAuthorisationResponse(ConsentStatus.PARTIALLY_AUTHORISED);
+        SpiVerifyScaAuthorisationResponse expected = new SpiVerifyScaAuthorisationResponse(SpiConsentStatus.PARTIALLY_AUTHORISED);
 
         // When
         SpiResponse<SpiVerifyScaAuthorisationResponse> actual = spi.verifyScaAuthorisation(SPI_CONTEXT_DATA, spiScaConfirmation, spiAccountConsent, spiAspspConsentDataProvider);
@@ -523,7 +518,7 @@ class AisConsentSpiImplTest {
 
         // Then
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
     }
 
     @Test
@@ -552,7 +547,7 @@ class AisConsentSpiImplTest {
 
         // Then
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
         assertEquals(SpiAuthorisationStatus.ATTEMPT_FAILURE, actual.getPayload().getSpiAuthorisationStatus());
     }
 
@@ -674,7 +669,7 @@ class AisConsentSpiImplTest {
 
         // Then
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.SCA_METHOD_UNKNOWN_PROCESS_MISMATCH, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.SCA_METHOD_UNKNOWN_PROCESS_MISMATCH, actual.getErrors().get(0).getErrorCode());
 
         verify(spiAspspConsentDataProvider, times(2)).loadAspspConsentData();
         verify(consentDataService, times(2)).response(CONSENT_DATA_BYTES, true);
@@ -699,7 +694,7 @@ class AisConsentSpiImplTest {
 
         // Then
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.FORMAT_ERROR_SCA_METHODS, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.FORMAT_ERROR_SCA_METHODS, actual.getErrors().get(0).getErrorCode());
 
         verify(spiAspspConsentDataProvider, times(2)).loadAspspConsentData();
         verify(consentDataService, times(2)).response(CONSENT_DATA_BYTES, true);
@@ -715,7 +710,7 @@ class AisConsentSpiImplTest {
         when(consentDataService.response(CONSENT_DATA_BYTES, true)).thenReturn(scaConsentResponseTO);
 
         SpiAuthorizationCodeResult expected = new SpiAuthorizationCodeResult();
-        ChallengeData challengeData = new ChallengeData();
+        SpiChallengeData challengeData = new SpiChallengeData();
         challengeData.setAdditionalInformation("SCA method EMAIL: tan is 123456");
         expected.setChallengeData(challengeData);
 
@@ -744,7 +739,7 @@ class AisConsentSpiImplTest {
         when(consentDataService.response(CONSENT_DATA_BYTES, true)).thenReturn(scaConsentResponseTO);
 
         SpiAuthorizationCodeResult expected = new SpiAuthorizationCodeResult();
-        ChallengeData challengeData = new ChallengeData();
+        SpiChallengeData challengeData = new SpiChallengeData();
         challengeData.setAdditionalInformation("SCA method EMAIL: tan is 123456");
         expected.setChallengeData(challengeData);
 
@@ -756,7 +751,7 @@ class AisConsentSpiImplTest {
 
         // Then
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.SCA_METHOD_UNKNOWN, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.SCA_METHOD_UNKNOWN, actual.getErrors().get(0).getErrorCode());
     }
 
     @Test
@@ -768,7 +763,7 @@ class AisConsentSpiImplTest {
         when(consentDataService.response(CONSENT_DATA_BYTES, true)).thenReturn(scaConsentResponseTO);
 
         SpiAuthorizationCodeResult expected = new SpiAuthorizationCodeResult();
-        ChallengeData challengeData = new ChallengeData();
+        SpiChallengeData challengeData = new SpiChallengeData();
         challengeData.setAdditionalInformation("SCA method EMAIL: tan is 123456");
         expected.setChallengeData(challengeData);
 
@@ -780,7 +775,7 @@ class AisConsentSpiImplTest {
 
         // Then
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.FORMAT_ERROR, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.FORMAT_ERROR, actual.getErrors().get(0).getErrorCode());
     }
 
     @Test
@@ -792,7 +787,7 @@ class AisConsentSpiImplTest {
         when(consentDataService.response(CONSENT_DATA_BYTES, true)).thenReturn(scaConsentResponseTO);
 
         SpiAuthorizationCodeResult expected = new SpiAuthorizationCodeResult();
-        ChallengeData challengeData = new ChallengeData();
+        SpiChallengeData challengeData = new SpiChallengeData();
         challengeData.setAdditionalInformation("SCA method EMAIL: tan is 123456");
         expected.setChallengeData(challengeData);
 
@@ -804,7 +799,7 @@ class AisConsentSpiImplTest {
 
         // Then
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
     }
 
     @Test
@@ -816,7 +811,7 @@ class AisConsentSpiImplTest {
         when(consentDataService.response(CONSENT_DATA_BYTES, true)).thenReturn(scaConsentResponseTO);
 
         SpiAuthorizationCodeResult expected = new SpiAuthorizationCodeResult();
-        ChallengeData challengeData = new ChallengeData();
+        SpiChallengeData challengeData = new SpiChallengeData();
         challengeData.setAdditionalInformation("SCA method EMAIL: tan is 123456");
         expected.setChallengeData(challengeData);
 
@@ -848,9 +843,10 @@ class AisConsentSpiImplTest {
         when(redirectScaRestClient.selectMethod("authorisation id", "authentication method id"))
                 .thenReturn(ResponseEntity.ok(scaConsentResponseTO));
         SpiAuthorizationCodeResult payload = new SpiAuthorizationCodeResult();
-        ChallengeData challengeData = new ChallengeData();
+        SpiChallengeData challengeData = new SpiChallengeData();
         challengeData.setAdditionalInformation("SCA method EMAIL: tan is 123456");
         payload.setChallengeData(challengeData);
+        payload.setScaStatus(SpiScaStatus.PSUIDENTIFIED);
         when(authorisationService.returnScaMethodSelection(spiAspspConsentDataProviderWithEncryptedId, scaConsentResponseTO, "authentication method id"))
                 .thenReturn(SpiResponse.<SpiAuthorizationCodeResult>builder()
                                     .payload(payload)
@@ -907,9 +903,10 @@ class AisConsentSpiImplTest {
         when(consentDataService.response(CONSENT_DATA_BYTES, true)).thenReturn(scaConsentResponseTO);
 
         SpiAuthorizationCodeResult payload = new SpiAuthorizationCodeResult();
-        ChallengeData challengeData = new ChallengeData();
+        SpiChallengeData challengeData = new SpiChallengeData();
         challengeData.setAdditionalInformation("SCA method EMAIL: tan is 123456");
         payload.setChallengeData(challengeData);
+        payload.setScaStatus(SpiScaStatus.FINALISED);
 
         SpiAspspConsentDataProvider spiAspspConsentDataProviderWithEncryptedId = new SpiAspspConsentDataProviderWithEncryptedId(spiAspspConsentDataProvider, CONSENT_ID);
 
@@ -936,7 +933,7 @@ class AisConsentSpiImplTest {
                                                                                          spiAccountConsent, spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.SERVICE_NOT_SUPPORTED, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.SERVICE_NOT_SUPPORTED, actual.getErrors().get(0).getErrorCode());
     }
 
     @Test

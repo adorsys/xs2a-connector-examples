@@ -21,11 +21,11 @@ import de.adorsys.aspsp.xs2a.connector.spi.impl.SpiMockData;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation.confirmation.PaymentAuthConfirmationCodeService;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
-import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentInfo;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiTransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiGetPaymentStatusResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
@@ -71,11 +71,7 @@ public class CommonPaymentSpiImpl extends AbstractPaymentSpi<SpiPaymentInfo, Spi
         }
 
         return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                       .payload(new SpiGetPaymentStatusResponse(TransactionStatus.ACSP,
-                                                                null,
-                                                                MediaType.APPLICATION_JSON_VALUE,
-                                                                null,
-                                                                SpiMockData.PSU_MESSAGE,
+                       .payload(new SpiGetPaymentStatusResponse(SpiTransactionStatus.ACSP, null, MediaType.APPLICATION_JSON_VALUE, null, SpiMockData.PSU_MESSAGE,
                                                                 SpiMockData.SPI_LINKS,
                                                                 SpiMockData.TPP_MESSAGES))
                        .build();

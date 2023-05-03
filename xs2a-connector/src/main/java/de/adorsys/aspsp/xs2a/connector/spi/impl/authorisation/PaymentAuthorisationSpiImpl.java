@@ -41,12 +41,14 @@ import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
-import de.adorsys.psd2.xs2a.core.profile.PaymentType;
 import de.adorsys.psd2.xs2a.service.RequestProviderService;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiPsuAuthorisationResponse;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentInfo;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentType;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiTransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.PaymentAuthorisationSpi;
 import de.adorsys.psd2.xs2a.spi.service.SpiPayment;
@@ -123,11 +125,11 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
     @Override
     protected GlobalScaResponseTO initiateBusinessObject(SpiPayment businessObject, @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider, String authorisationId) {
 
-        if (businessObject.getPaymentStatus() == TransactionStatus.PATC) {
+        if (businessObject.getPaymentStatus() == SpiTransactionStatus.PATC) {
             return aspspConsentDataService.response(aspspConsentDataProvider.loadAspspConsentData());
         }
 
-        PaymentType paymentType = businessObject.getPaymentType();
+        SpiPaymentType paymentType = businessObject.getPaymentType();
         PaymentTO paymentTO = ledgersSpiCommonPaymentTOMapper.mapToPaymentTO(paymentType, (SpiPaymentInfo) businessObject);
 
         return paymentService.initiatePaymentInLedgers(businessObject, PaymentTypeTO.valueOf(paymentType.toString()), paymentTO);
@@ -183,13 +185,13 @@ public class PaymentAuthorisationSpiImpl extends AbstractAuthorisationSpi<SpiPay
         LedgersErrorCode errorCode = feignExceptionReader.getLedgersErrorCode(feignException);
         if (LedgersErrorCode.INSUFFICIENT_FUNDS.equals(errorCode)) {
             return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED, devMessage))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, SpiMessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED, devMessage))
                            .build();
         }
 
         if (LedgersErrorCode.REQUEST_VALIDATION_FAILURE.equals(errorCode)) {
             return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PRODUCT_UNKNOWN, devMessage))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, SpiMessageErrorCode.PRODUCT_UNKNOWN, devMessage))
                            .build();
         }
 
