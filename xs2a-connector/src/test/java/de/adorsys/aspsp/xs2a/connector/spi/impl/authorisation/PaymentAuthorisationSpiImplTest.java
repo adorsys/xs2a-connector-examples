@@ -39,15 +39,18 @@ import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
-import de.adorsys.psd2.xs2a.core.profile.PaymentType;
-import de.adorsys.psd2.xs2a.core.tpp.TppInfo;
 import de.adorsys.psd2.xs2a.service.RequestProviderService;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.*;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentInfo;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentType;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiTransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
+import de.adorsys.psd2.xs2a.spi.domain.sca.SpiScaStatus;
+import de.adorsys.psd2.xs2a.spi.domain.tpp.SpiTppInfo;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
@@ -108,7 +111,7 @@ class PaymentAuthorisationSpiImplTest {
                                                             .psuDeviceId(UUID.randomUUID())
                                                             .build();
     private static final String ACCESS_TOKEN = "access_token";
-    private static final SpiContextData SPI_CONTEXT_DATA = new SpiContextData(PSU_ID_DATA_1, new TppInfo(), UUID.randomUUID(), UUID.randomUUID(), ACCESS_TOKEN, null, null, null, null);
+    private static final SpiContextData SPI_CONTEXT_DATA = new SpiContextData(PSU_ID_DATA_1, new SpiTppInfo(), UUID.randomUUID(), UUID.randomUUID(), ACCESS_TOKEN, null, null, null, null);
     private static final String AUTHORISATION_ID = "6f3c444d-c664-4cfc-aff3-576651000726";
     private static final String AUTHENTICATION_METHOD_ID = "VJJwaiPJT2EptJO0jqL37E";
     private static final byte[] CONSENT_DATA_BYTES = "consent_data".getBytes();
@@ -156,7 +159,7 @@ class PaymentAuthorisationSpiImplTest {
     void setUp() {
         businessObject = new SpiPaymentInfo(PAYMENT_PRODUCT);
         businessObject.setPaymentId(PAYMENT_ID);
-        businessObject.setPaymentType(PaymentType.SINGLE);
+        businessObject.setPaymentType(SpiPaymentType.SINGLE);
     }
 
     @Test
@@ -314,9 +317,11 @@ class PaymentAuthorisationSpiImplTest {
                 .thenReturn(scaPaymentResponseTO);
         doNothing()
                 .when(authRequestInterceptor).setAccessToken(ACCESS_TOKEN);
+        SpiAuthorizationCodeResult spiAuthorizationCodeResult = new SpiAuthorizationCodeResult();
+        spiAuthorizationCodeResult.setScaStatus(SpiScaStatus.PSUIDENTIFIED);
         when(authorisationService.returnScaMethodSelection(spiAspspConsentDataProvider, getScaMethodsResponseTO(), AUTHENTICATION_METHOD_ID))
                 .thenReturn(SpiResponse.<SpiAuthorizationCodeResult>builder()
-                                    .payload(new SpiAuthorizationCodeResult())
+                                    .payload(spiAuthorizationCodeResult)
                                     .build());
         when(redirectScaRestClient.selectMethod(AUTHORISATION_ID, AUTHENTICATION_METHOD_ID))
                 .thenReturn(ResponseEntity.ok(getGlobalScaResponseTO()));
@@ -400,12 +405,12 @@ class PaymentAuthorisationSpiImplTest {
         SpiResponse<SpiAuthorisationDecoupledScaResponse> actual = authorisationSpi.startScaDecoupled(SPI_CONTEXT_DATA, AUTHORISATION_ID, null,
                                                                                                       businessObject, spiAspspConsentDataProvider);
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.SERVICE_NOT_SUPPORTED, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.SERVICE_NOT_SUPPORTED, actual.getErrors().get(0).getErrorCode());
     }
 
     @Test
     void initiateBusinessObject_TransactionStatusPATC() {
-        businessObject.setStatus(TransactionStatus.PATC);
+        businessObject.setStatus(SpiTransactionStatus.PATC);
         GlobalScaResponseTO globalScaResponseTO = new GlobalScaResponseTO();
 
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
@@ -466,7 +471,7 @@ class PaymentAuthorisationSpiImplTest {
         SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.resolveErrorResponse(businessObject, feignException);
 
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED, actual.getErrors().get(0).getErrorCode());
     }
 
     @Test
@@ -479,7 +484,7 @@ class PaymentAuthorisationSpiImplTest {
         SpiResponse<SpiPsuAuthorisationResponse> actual = authorisationSpi.resolveErrorResponse(businessObject, feignException);
 
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.PRODUCT_UNKNOWN, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.PRODUCT_UNKNOWN, actual.getErrors().get(0).getErrorCode());
     }
 
     @Test

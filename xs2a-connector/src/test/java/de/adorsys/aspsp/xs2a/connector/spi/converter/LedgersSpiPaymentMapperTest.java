@@ -19,13 +19,9 @@ package de.adorsys.aspsp.xs2a.connector.spi.converter;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.RemittanceInformationStructuredTO;
-import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
-import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
-import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
-import de.adorsys.psd2.xs2a.spi.domain.payment.SpiRemittance;
-import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
+import de.adorsys.psd2.xs2a.spi.domain.payment.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -116,7 +112,7 @@ class LedgersSpiPaymentMapperTest {
         spiBulkPayment.setDebtorAccount(debtorAccount);
         spiBulkPayment.setRequestedExecutionDate(LocalDate.of(2020, 12, 12));
         spiBulkPayment.setRequestedExecutionTime(OffsetDateTime.of(2020, 12, 12, 12, 0, 0, 0, ZoneOffset.UTC));
-        spiBulkPayment.setPaymentStatus(TransactionStatus.ACSC);
+        spiBulkPayment.setPaymentStatus(SpiTransactionStatus.ACSC);
         spiBulkPayment.setPaymentProduct("sepa-credit-transfers");
 
         return spiBulkPayment;

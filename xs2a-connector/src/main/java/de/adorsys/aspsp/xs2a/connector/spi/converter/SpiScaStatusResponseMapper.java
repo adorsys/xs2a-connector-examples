@@ -18,8 +18,8 @@ package de.adorsys.aspsp.xs2a.connector.spi.converter;
 
 import de.adorsys.aspsp.xs2a.connector.spi.impl.SpiMockData;
 import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
-import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaStatusResponse;
+import de.adorsys.psd2.xs2a.spi.domain.sca.SpiScaStatus;
 import org.springframework.stereotype.Component;
 
 
@@ -30,7 +30,7 @@ public class SpiScaStatusResponseMapper {
         if (globalScaResponseTO == null) {
             return null;
         }
-        return new SpiScaStatusResponse(ScaStatus.valueOf(globalScaResponseTO.getScaStatus().name()),
+        return new SpiScaStatusResponse(SpiScaStatus.valueOf(globalScaResponseTO.getScaStatus().name()),
                                         false,
                                         globalScaResponseTO.getPsuMessage(),
                                         SpiMockData.SPI_LINKS,

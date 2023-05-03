@@ -20,12 +20,12 @@ import de.adorsys.aspsp.xs2a.connector.mock.IbanResolverMockService;
 import de.adorsys.ledgers.middleware.api.domain.account.AccountIdentifierTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.account.AdditionalAccountInformationTO;
 import de.adorsys.ledgers.rest.client.AccountRestClient;
-import de.adorsys.psd2.xs2a.core.ais.AccountAccessType;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountDetails;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAdditionalInformationAccess;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiCardAccountDetails;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
+import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccessType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -52,8 +52,8 @@ public class OwnerNameService {
             return ownerName.isEmpty() || containsAccountReferenceWithIban(ownerName, ibanAccountReference.getIban(), ibanAccountReference.getCurrency());
         }
 
-        AccountAccessType allAccountsWithOwnerName = AccountAccessType.ALL_ACCOUNTS_WITH_OWNER_NAME;
-        List<AccountAccessType> accountAccessTypes = Arrays.asList(accountAccess.getAvailableAccounts(), accountAccess.getAvailableAccountsWithBalance(), accountAccess.getAllPsd2());
+        SpiAccountAccessType allAccountsWithOwnerName = SpiAccountAccessType.ALL_ACCOUNTS_WITH_OWNER_NAME;
+        List<SpiAccountAccessType> accountAccessTypes = Arrays.asList(accountAccess.getAvailableAccounts(), accountAccess.getAvailableAccountsWithBalance(), accountAccess.getAllPsd2());
         return accountAccessTypes.contains(allAccountsWithOwnerName);
     }
 

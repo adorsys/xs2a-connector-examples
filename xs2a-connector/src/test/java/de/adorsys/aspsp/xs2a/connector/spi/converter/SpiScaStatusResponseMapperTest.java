@@ -19,8 +19,8 @@ package de.adorsys.aspsp.xs2a.connector.spi.converter;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.SpiMockData;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
-import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaStatusResponse;
+import de.adorsys.psd2.xs2a.spi.domain.sca.SpiScaStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +64,7 @@ class SpiScaStatusResponseMapperTest {
     }
 
     private SpiScaStatusResponse getTestData() {
-        return new SpiScaStatusResponse(ScaStatus.PSUAUTHENTICATED,
+        return new SpiScaStatusResponse(SpiScaStatus.PSUAUTHENTICATED,
                                         false,
                                         PSU_MESSAGE,
                                         SpiMockData.SPI_LINKS,

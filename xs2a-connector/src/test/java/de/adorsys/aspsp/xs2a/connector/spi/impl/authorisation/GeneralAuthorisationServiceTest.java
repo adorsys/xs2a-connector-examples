@@ -29,11 +29,11 @@ import de.adorsys.ledgers.middleware.api.domain.um.ScaMethodTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
-import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiPsuAuthorisationResponse;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import feign.FeignException;
 import feign.Request;
@@ -154,7 +154,7 @@ class GeneralAuthorisationServiceTest {
 
         assertTrue(actual.hasError());
         assertNull(actual.getPayload());
-        assertEquals(MessageErrorCode.SCA_INVALID, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.SCA_INVALID, actual.getErrors().get(0).getErrorCode());
 
         verify(spiAspspConsentDataProvider, times(1)).updateAspspConsentData(CONSENT_DATA_BYTES);
     }
@@ -180,7 +180,7 @@ class GeneralAuthorisationServiceTest {
 
         assertTrue(actual.hasError());
         assertNull(actual.getPayload());
-        assertEquals(MessageErrorCode.SCA_INVALID, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.SCA_INVALID, actual.getErrors().get(0).getErrorCode());
 
         verify(spiAspspConsentDataProvider, times(1)).updateAspspConsentData(CONSENT_DATA_BYTES);
     }
@@ -202,7 +202,7 @@ class GeneralAuthorisationServiceTest {
         SpiResponse<SpiPsuAuthorisationResponse> actual = generalAuthorisationService.authorisePsuInternal(CONSENT_ID, AUTHORISATION_ID, OpTypeTO.CONSENT, globalScaResponseTO, spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.FORMAT_ERROR, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.FORMAT_ERROR, actual.getErrors().get(0).getErrorCode());
     }
 
     @Test
@@ -236,7 +236,7 @@ class GeneralAuthorisationServiceTest {
         verify(spiAspspConsentDataProvider, never()).updateAspspConsentData(any());
 
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.SCA_INVALID, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.SCA_INVALID, actual.getErrors().get(0).getErrorCode());
     }
 
     private FeignException getFeignException() {

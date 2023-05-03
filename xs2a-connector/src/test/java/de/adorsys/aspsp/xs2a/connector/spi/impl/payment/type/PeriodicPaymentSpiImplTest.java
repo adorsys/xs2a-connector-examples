@@ -24,13 +24,12 @@ import de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation.confirmation.Payme
 import de.adorsys.aspsp.xs2a.connector.spi.impl.payment.GeneralPaymentService;
 import de.adorsys.aspsp.xs2a.util.TestSpiDataProvider;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
-import de.adorsys.psd2.xs2a.core.pis.FrequencyCode;
-import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
-import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiFrequencyCode;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiTransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiGetPaymentStatusResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPeriodicPaymentInitiationResponse;
@@ -46,8 +45,6 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -82,8 +79,8 @@ class PeriodicPaymentSpiImplTest {
     void setUp() {
         payment = new SpiPeriodicPayment(PAYMENT_PRODUCT);
         payment.setPaymentId(PAYMENT_ID);
-        payment.setPaymentStatus(TransactionStatus.RCVD);
-        payment.setFrequency(FrequencyCode.MONTHLY);
+        payment.setPaymentStatus(SpiTransactionStatus.RCVD);
+        payment.setFrequency(SpiFrequencyCode.MONTHLY);
     }
 
     @Test
@@ -104,9 +101,9 @@ class PeriodicPaymentSpiImplTest {
     @Test
     void getPaymentStatusById() {
         when(spiAspspConsentDataProvider.loadAspspConsentData()).thenReturn(CONSENT_DATA_BYTES);
-        when(paymentService.getPaymentStatusById(PaymentTypeTO.PERIODIC, JSON_ACCEPT_MEDIA_TYPE, PAYMENT_ID, TransactionStatus.RCVD, CONSENT_DATA_BYTES))
+        when(paymentService.getPaymentStatusById(PaymentTypeTO.PERIODIC, JSON_ACCEPT_MEDIA_TYPE, PAYMENT_ID, SpiTransactionStatus.RCVD, CONSENT_DATA_BYTES))
                 .thenReturn(SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                                    .payload(new SpiGetPaymentStatusResponse(TransactionStatus.RCVD, false, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE,
+                                    .payload(new SpiGetPaymentStatusResponse(SpiTransactionStatus.RCVD, false, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, null, PSU_MESSAGE,
                                                                              SpiMockData.SPI_LINKS,
                                                                              SpiMockData.TPP_MESSAGES))
                                     .build());
@@ -114,14 +111,14 @@ class PeriodicPaymentSpiImplTest {
         periodicPaymentSpi.getPaymentStatusById(SPI_CONTEXT_DATA, JSON_ACCEPT_MEDIA_TYPE, payment, spiAspspConsentDataProvider);
 
         verify(spiAspspConsentDataProvider, times(1)).loadAspspConsentData();
-        verify(paymentService, times(1)).getPaymentStatusById(PaymentTypeTO.PERIODIC, JSON_ACCEPT_MEDIA_TYPE, PAYMENT_ID, TransactionStatus.RCVD, CONSENT_DATA_BYTES);
+        verify(paymentService, times(1)).getPaymentStatusById(PaymentTypeTO.PERIODIC, JSON_ACCEPT_MEDIA_TYPE, PAYMENT_ID, SpiTransactionStatus.RCVD, CONSENT_DATA_BYTES);
     }
 
     @Test
     void executePaymentWithoutSca() {
         when(paymentService.executePaymentWithoutSca(spiAspspConsentDataProvider))
                 .thenReturn(SpiResponse.<SpiPaymentExecutionResponse>builder()
-                                    .payload(new SpiPaymentExecutionResponse(TransactionStatus.RCVD))
+                                    .payload(new SpiPaymentExecutionResponse(SpiTransactionStatus.RCVD))
                                     .build());
 
         periodicPaymentSpi.executePaymentWithoutSca(SPI_CONTEXT_DATA, payment, spiAspspConsentDataProvider);
@@ -134,7 +131,7 @@ class PeriodicPaymentSpiImplTest {
         SpiScaConfirmation spiScaConfirmation = new SpiScaConfirmation();
         when(paymentService.verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(spiScaConfirmation, spiAspspConsentDataProvider))
                 .thenReturn(SpiResponse.<SpiPaymentExecutionResponse>builder()
-                                    .payload(new SpiPaymentExecutionResponse(TransactionStatus.RCVD))
+                                    .payload(new SpiPaymentExecutionResponse(SpiTransactionStatus.RCVD))
                                     .build());
 
         periodicPaymentSpi.verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(SPI_CONTEXT_DATA, spiScaConfirmation, payment, spiAspspConsentDataProvider);

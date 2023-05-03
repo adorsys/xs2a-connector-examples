@@ -18,10 +18,10 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation.confirmation;
 
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.AuthConfirmationTO;
-import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
-import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiTransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentConfirmationCodeValidationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
+import de.adorsys.psd2.xs2a.spi.domain.sca.SpiScaStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -43,8 +43,8 @@ class PaymentAuthConfirmationCodeServiceImplTest {
         SpiResponse<SpiPaymentConfirmationCodeValidationResponse> actual =
                 authConfirmationCodeService.handleAuthConfirmationResponse(ResponseEntity.ok(authConfirmation));
 
-        assertEquals(ScaStatus.FAILED, actual.getPayload().getScaStatus());
-        assertEquals(TransactionStatus.RJCT, actual.getPayload().getTransactionStatus());
+        assertEquals(SpiScaStatus.FAILED, actual.getPayload().getScaStatus());
+        assertEquals(SpiTransactionStatus.RJCT, actual.getPayload().getTransactionStatus());
     }
 
     @Test
@@ -56,8 +56,8 @@ class PaymentAuthConfirmationCodeServiceImplTest {
         SpiResponse<SpiPaymentConfirmationCodeValidationResponse> actual =
                 authConfirmationCodeService.handleAuthConfirmationResponse(ResponseEntity.ok(authConfirmation));
 
-        assertEquals(ScaStatus.FINALISED, actual.getPayload().getScaStatus());
-        assertEquals(TransactionStatus.PATC, actual.getPayload().getTransactionStatus());
+        assertEquals(SpiScaStatus.FINALISED, actual.getPayload().getScaStatus());
+        assertEquals(SpiTransactionStatus.PATC, actual.getPayload().getTransactionStatus());
     }
 
     @Test
@@ -70,7 +70,7 @@ class PaymentAuthConfirmationCodeServiceImplTest {
         SpiResponse<SpiPaymentConfirmationCodeValidationResponse> actual =
                 authConfirmationCodeService.handleAuthConfirmationResponse(ResponseEntity.ok(authConfirmation));
 
-        assertEquals(ScaStatus.FINALISED, actual.getPayload().getScaStatus());
-        assertEquals(TransactionStatus.ACSP, actual.getPayload().getTransactionStatus());
+        assertEquals(SpiScaStatus.FINALISED, actual.getPayload().getScaStatus());
+        assertEquals(SpiTransactionStatus.ACSP, actual.getPayload().getTransactionStatus());
     }
 }
