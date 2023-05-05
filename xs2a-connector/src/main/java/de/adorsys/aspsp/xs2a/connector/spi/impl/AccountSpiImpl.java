@@ -30,19 +30,19 @@ import de.adorsys.ledgers.rest.client.AccountRestClient;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.util.domain.CustomPageImpl;
 import de.adorsys.psd2.mapper.Xs2aObjectMapper;
-import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
-import de.adorsys.psd2.xs2a.core.consent.AisConsentRequestType;
-import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
-import de.adorsys.psd2.xs2a.core.error.TppMessage;
-import de.adorsys.psd2.xs2a.core.pis.FrequencyCode;
-import de.adorsys.psd2.xs2a.core.pis.PisDayOfExecution;
-import de.adorsys.psd2.xs2a.core.pis.PisExecutionRule;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAmount;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
+import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAisConsentRequestType;
+import de.adorsys.psd2.xs2a.spi.domain.consent.SpiBookingStatus;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiTppMessage;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiAddress;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiFrequencyCode;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPisDayOfExecution;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPisExecutionRule;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.service.AccountSpi;
 import feign.FeignException;
@@ -67,11 +67,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Currency;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -223,7 +219,7 @@ public class AccountSpiImpl implements AccountSpi {
                                                                            @NotNull SpiAccountConsent accountConsent,
                                                                            @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         // TODO Remove it https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/issues/1100
-        if (BookingStatus.INFORMATION == spiTransactionReportParameters.getBookingStatus()) {
+        if (SpiBookingStatus.INFORMATION == spiTransactionReportParameters.getBookingStatus()) {
             logger.info("Retrieving mock standing order report for account: {}", accountReference.getResourceId());
             SpiTransactionReport transactionReport = new SpiTransactionReport(null, createStandingOrderReportMock(), null,
                                                                               processAcceptMediaType(spiTransactionReportParameters.getAcceptMediaType()), null, null, DEFAULT_TOTAL_PAGES);
@@ -265,7 +261,7 @@ public class AccountSpiImpl implements AccountSpi {
 
             List<SpiAccountBalance> balances = getSpiAccountBalances(contextData, withBalance, accountReference,
                                                                      accountConsent, aspspConsentDataProvider);
-            if (BookingStatus.ALL == spiTransactionReportParameters.getBookingStatus() && page == 0) {
+            if (SpiBookingStatus.ALL == spiTransactionReportParameters.getBookingStatus() && page == 0) {
                 logger.info("Retrieving mock standing order report for account: {}", accountReference.getResourceId());
                 transactionsPaged.addAll(createStandingOrderReportMock());
             }
@@ -344,7 +340,7 @@ public class AccountSpiImpl implements AccountSpi {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             logger.error("Request transactions for account by transaction id failed: consent ID {}, resource ID {}, transaction ID {}, devMessage {}", accountConsent.getId(), accountReference.getResourceId(), transactionId, devMessage);
             return SpiResponse.<SpiTransaction>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.RESOURCE_UNKNOWN_403))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, SpiMessageErrorCode.RESOURCE_UNKNOWN_403))
                            .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
@@ -395,7 +391,7 @@ public class AccountSpiImpl implements AccountSpi {
             Resource resource = fileManagementService.getFileByDownloadLink(downloadId);
             if (!resource.isReadable()) {
                 logger.info("Reading transactions file is failed, file is not readable yet: consent ID: [{}], filename: [{}]", spiAccountConsent.getId(), resource.getFilename());
-                return getErrorResponse("File is not ready, try again later", MessageErrorCode.RESOURCE_BLOCKED);
+                return getErrorResponse("File is not ready, try again later", SpiMessageErrorCode.RESOURCE_BLOCKED);
             }
 
             byte[] bytes = readResourceInputStreamBytes(resource);
@@ -403,7 +399,7 @@ public class AccountSpiImpl implements AccountSpi {
 
             if (byteLength == 0) {
                 logger.error("Reading transactions input stream failed, file is empty: consent ID {}, filename {}", spiAccountConsent.getId(), resource.getFilename());
-                return getErrorResponse("Nothing to download, file is empty", MessageErrorCode.RESOURCE_UNKNOWN_404);
+                return getErrorResponse("Nothing to download, file is empty", SpiMessageErrorCode.RESOURCE_UNKNOWN_404);
             }
 
             logger.info("Consent ID {}, Decrypted Download id: [{}], Bytes read: [{}]", spiAccountConsent.getId(), downloadId, byteLength);
@@ -417,7 +413,7 @@ public class AccountSpiImpl implements AccountSpi {
                            .build();
         } catch (FileManagementException fileManagementException) {
             logger.error("Reading transactions file has failed (FileManagementException): consent ID: [{}], message: [{}]", spiAccountConsent.getId(), fileManagementException.getMessage());
-            return getErrorResponse(fileManagementException.getMessage(), MessageErrorCode.RESOURCE_UNKNOWN_404);
+            return getErrorResponse(fileManagementException.getMessage(), SpiMessageErrorCode.RESOURCE_UNKNOWN_404);
         }
     }
 
@@ -430,8 +426,8 @@ public class AccountSpiImpl implements AccountSpi {
         }
     }
 
-    private SpiResponse<SpiTransactionsDownloadResponse> getErrorResponse(@Nullable String message, MessageErrorCode errorCode) {
-        TppMessage tppMessage = new TppMessage(errorCode, message);
+    private SpiResponse<SpiTransactionsDownloadResponse> getErrorResponse(@Nullable String message, SpiMessageErrorCode errorCode) {
+        SpiTppMessage tppMessage = new SpiTppMessage(errorCode, message);
         return SpiResponse.<SpiTransactionsDownloadResponse>builder()
                        .error(tppMessage)
                        .build();
@@ -472,7 +468,7 @@ public class AccountSpiImpl implements AccountSpi {
     }
 
     private boolean isAllAvailableAccountsConsent(SpiAccountConsent accountConsent) {
-        return accountConsent.getAisConsentRequestType() == AisConsentRequestType.ALL_AVAILABLE_ACCOUNTS;
+        return accountConsent.getAisConsentRequestType() == SpiAisConsentRequestType.ALL_AVAILABLE_ACCOUNTS;
     }
 
     private List<SpiAccountDetails> getAccountDetailsByConsentId() {
@@ -546,15 +542,15 @@ public class AccountSpiImpl implements AccountSpi {
                                   .anyMatch(a -> iban.equals(a.getIban()));
     }
 
-    private TppMessage buildTppMessage(FeignException exception) {
-        return FeignExceptionHandler.getFailureMessage(exception, MessageErrorCode.CONSENT_UNKNOWN_400, feignExceptionReader.getErrorMessage(exception));
+    private SpiTppMessage buildTppMessage(FeignException exception) {
+        return FeignExceptionHandler.getFailureMessage(exception, SpiMessageErrorCode.CONSENT_UNKNOWN_400, feignExceptionReader.getErrorMessage(exception));
     }
 
     private List<SpiTransaction> createStandingOrderReportMock() {
         SpiStandingOrderDetails standingOrderDetails = new SpiStandingOrderDetails(LocalDate.of(2021, Month.JANUARY, 4),
                                                                                    LocalDate.of(2021, Month.MARCH, 12),
-                                                                                   PisExecutionRule.PRECEDING, null,
-                                                                                   FrequencyCode.MONTHLYVARIABLE, null, null, PisDayOfExecution.DAY_24, null);
+                                                                                   SpiPisExecutionRule.PRECEDING, null,
+                                                                                   SpiFrequencyCode.MONTHLYVARIABLE, null, null, SpiPisDayOfExecution.DAY_24, null);
         SpiAdditionalInformationStructured additionalInformationStructured = new SpiAdditionalInformationStructured(standingOrderDetails);
         return Collections.singletonList(new SpiTransaction(null, null, null, null, null,
                                                             null, null, null, null, null,

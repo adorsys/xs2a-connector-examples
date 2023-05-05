@@ -29,13 +29,13 @@ import de.adorsys.ledgers.middleware.api.domain.um.AccessTokenTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.rest.client.AccountRestClient;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
-import de.adorsys.psd2.xs2a.core.ais.BookingStatus;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
-import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.*;
 import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccess;
+import de.adorsys.psd2.xs2a.spi.domain.consent.SpiBookingStatus;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import feign.FeignException;
 import feign.Request;
@@ -443,7 +443,7 @@ class CardAccountSpiImplTest {
                                                                                                                spiAccountConsent, aspspConsentDataProvider);
         // Then
         assertTrue(actualResponse.hasError());
-        assertEquals(MessageErrorCode.CONSENT_UNKNOWN_400, actualResponse.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.CONSENT_UNKNOWN_400, actualResponse.getErrors().get(0).getErrorCode());
 
         verify(authRequestInterceptor, times(1)).setAccessToken(null);
     }
@@ -571,6 +571,6 @@ class CardAccountSpiImplTest {
     }
 
     private SpiTransactionReportParameters buildSpiTransactionReportParameters(String mediaType) {
-        return new SpiTransactionReportParameters(mediaType, true, DATE_FROM, DATE_TO, BookingStatus.BOOKED, null, null, null, null);
+        return new SpiTransactionReportParameters(mediaType, true, DATE_FROM, DATE_TO, SpiBookingStatus.BOOKED, null, null, null, null);
     }
 }

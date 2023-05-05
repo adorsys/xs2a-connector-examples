@@ -26,15 +26,13 @@ import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
-import de.adorsys.psd2.xs2a.core.authorisation.AuthenticationObject;
 import de.adorsys.psd2.xs2a.core.consent.AspspConsentData;
-import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
-import de.adorsys.psd2.xs2a.core.profile.ScaApproach;
-import de.adorsys.psd2.xs2a.core.sca.ScaStatus;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.*;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiTppMessage;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
 import de.adorsys.psd2.xs2a.spi.domain.sca.SpiScaApproach;
@@ -112,7 +110,7 @@ public abstract class AbstractAuthorisationSpi<T> {
                                     ? SpiMockData.DECOUPLED_PSU_MESSAGE
                                     : SpiMockData.PSU_MESSAGE_START_AUTHORISATION;
         return SpiResponse.<SpiStartAuthorisationResponse>builder()
-                       .payload(new SpiStartAuthorisationResponse(ScaApproach.valueOf(scaApproach.name()), ScaStatus.valueOf(scaStatus.name()), psuMessage, SpiMockData.TPP_MESSAGES_START_AUTHORISATION))
+                       .payload(new SpiStartAuthorisationResponse(scaApproach, scaStatus, psuMessage, SpiMockData.TPP_MESSAGES_START_AUTHORISATION))
                        .build();
     }
 
@@ -160,7 +158,7 @@ public abstract class AbstractAuthorisationSpi<T> {
                 String devMessage = feignExceptionReader.getErrorMessage(feignException);
                 log.info("Processing of successful authorisation failed: devMessage '{}'", devMessage);
                 return SpiResponse.<SpiPsuAuthorisationResponse>builder()
-                               .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR))
+                               .error(FeignExceptionHandler.getFailureMessage(feignException, SpiMessageErrorCode.FORMAT_ERROR))
                                .build();
             }
         }
@@ -219,7 +217,7 @@ public abstract class AbstractAuthorisationSpi<T> {
                                                              .orElse(Collections.emptyList()) : Collections.emptyList();
 
             if (!scaMethods.isEmpty()) {
-                List<AuthenticationObject> authenticationObjects = scaMethodConverter.toAuthenticationObjectList(scaMethods);
+                List<SpiAuthenticationObject> authenticationObjects = scaMethodConverter.toAuthenticationObjectList(scaMethods);
 
                 return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
                                .payload(new SpiAvailableScaMethodsResponse(authenticationObjects))
@@ -230,12 +228,12 @@ public abstract class AbstractAuthorisationSpi<T> {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             log.error("Request available SCA methods failed: business object ID: {}, devMessage: {}", getBusinessObjectId(businessObject), devMessage);
             return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.FORMAT_ERROR_SCA_METHODS))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, SpiMessageErrorCode.FORMAT_ERROR_SCA_METHODS))
                            .build();
         }
 
         return SpiResponse.<SpiAvailableScaMethodsResponse>builder()
-                       .error(new TppMessage(MessageErrorCode.SCA_METHOD_UNKNOWN_PROCESS_MISMATCH))
+                       .error(new SpiTppMessage(SpiMessageErrorCode.SCA_METHOD_UNKNOWN_PROCESS_MISMATCH))
                        .build();
     }
 
@@ -261,7 +259,7 @@ public abstract class AbstractAuthorisationSpi<T> {
             } catch (FeignException feignException) {
                 String devMessage = feignExceptionReader.getErrorMessage(feignException);
                 log.error("Request authorisation code failed: business object ID: {}, devMessage: {}", getBusinessObjectId(businessObject), devMessage);
-                TppMessage errorMessage = new TppMessage(getMessageErrorCodeByStatus(feignException.status()));
+                SpiTppMessage errorMessage = new SpiTppMessage(getMessageErrorCodeByStatus(feignException.status()));
                 return SpiResponse.<SpiAuthorizationCodeResult>builder()
                                .error(errorMessage)
                                .build();
@@ -280,7 +278,7 @@ public abstract class AbstractAuthorisationSpi<T> {
                                                                                         @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) {
         if (authenticationMethodId == null) {
             return SpiResponse.<SpiAuthorisationDecoupledScaResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.SERVICE_NOT_SUPPORTED))
+                           .error(new SpiTppMessage(SpiMessageErrorCode.SERVICE_NOT_SUPPORTED))
                            .build();
         }
 
@@ -312,14 +310,14 @@ public abstract class AbstractAuthorisationSpi<T> {
                 payload = spiScaStatusResponseMapper.toSpiScaStatusResponse(responseEntity.getBody());
             } else {
                 log.info("Request ScaStatus from Bank failed: business object ID: {}", getBusinessObjectId(businessObject));
-                payload = new SpiScaStatusResponse(ScaStatus.valueOf(scaStatus.name()), SpiMockData.TRUSTED_BENEFICIARY_FLAG, SpiMockData.PSU_MESSAGE,
+                payload = new SpiScaStatusResponse(scaStatus, SpiMockData.TRUSTED_BENEFICIARY_FLAG, SpiMockData.PSU_MESSAGE,
                                                    SpiMockData.SPI_LINKS,
                                                    SpiMockData.TPP_MESSAGES);
             }
         } catch (FeignException.NotFound feignException) {
             String devMessage = feignExceptionReader.getErrorMessage(feignException);
             log.info("Request ScaStatus from Bank failed: business object ID: {}, devMessage: {}", getBusinessObjectId(businessObject), devMessage);
-            payload = new SpiScaStatusResponse(ScaStatus.valueOf(scaStatus.name()), SpiMockData.TRUSTED_BENEFICIARY_FLAG, SpiMockData.PSU_MESSAGE,
+            payload = new SpiScaStatusResponse(scaStatus, SpiMockData.TRUSTED_BENEFICIARY_FLAG, SpiMockData.PSU_MESSAGE,
                                                SpiMockData.SPI_LINKS,
                                                SpiMockData.TPP_MESSAGES);
         } finally {
@@ -351,7 +349,7 @@ public abstract class AbstractAuthorisationSpi<T> {
             log.info(devMessage);
             return SpiResponse.<SpiPsuAuthorisationResponse>builder()
                            .payload(new SpiPsuAuthorisationResponse(false, SpiAuthorisationStatus.ATTEMPT_FAILURE))
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, SpiMessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
                            .build();
         }
         return SpiResponse.<SpiPsuAuthorisationResponse>builder()
@@ -359,16 +357,16 @@ public abstract class AbstractAuthorisationSpi<T> {
                        .build();
     }
 
-    private MessageErrorCode getMessageErrorCodeByStatus(int status) {
+    private SpiMessageErrorCode getMessageErrorCodeByStatus(int status) {
         if (status == 501) {
-            return MessageErrorCode.SCA_METHOD_UNKNOWN;
+            return SpiMessageErrorCode.SCA_METHOD_UNKNOWN;
         }
         if (Arrays.asList(400, 401, 403).contains(status)) {
-            return MessageErrorCode.FORMAT_ERROR;
+            return SpiMessageErrorCode.FORMAT_ERROR;
         }
         if (status == 404) {
-            return MessageErrorCode.PSU_CREDENTIALS_INVALID;
+            return SpiMessageErrorCode.PSU_CREDENTIALS_INVALID;
         }
-        return MessageErrorCode.INTERNAL_SERVER_ERROR;
+        return SpiMessageErrorCode.INTERNAL_SERVER_ERROR;
     }
 }

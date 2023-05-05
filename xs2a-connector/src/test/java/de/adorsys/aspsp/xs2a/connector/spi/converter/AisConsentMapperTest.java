@@ -20,9 +20,9 @@ import de.adorsys.aspsp.xs2a.connector.mock.IbanResolverMockService;
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.ledgers.middleware.api.domain.um.AisAccountAccessTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.um.AisConsentTO;
-import de.adorsys.psd2.xs2a.core.ais.AccountAccessType;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountConsent;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
+import de.adorsys.psd2.xs2a.spi.domain.consent.SpiAccountAccessType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +68,7 @@ class AisConsentMapperTest {
     void mapToAccountAccessType() {
         assertNull(aisConsentMapper.mapToAccountAccessType(null));
 
-        assertEquals(AisAccountAccessTypeTO.ALL_ACCOUNTS, aisConsentMapper.mapToAccountAccessType(AccountAccessType.ALL_ACCOUNTS));
-        assertEquals(AisAccountAccessTypeTO.ALL_ACCOUNTS, aisConsentMapper.mapToAccountAccessType(AccountAccessType.ALL_ACCOUNTS_WITH_OWNER_NAME));
+        assertEquals(AisAccountAccessTypeTO.ALL_ACCOUNTS, aisConsentMapper.mapToAccountAccessType(SpiAccountAccessType.ALL_ACCOUNTS));
+        assertEquals(AisAccountAccessTypeTO.ALL_ACCOUNTS, aisConsentMapper.mapToAccountAccessType(SpiAccountAccessType.ALL_ACCOUNTS_WITH_OWNER_NAME));
     }
 }

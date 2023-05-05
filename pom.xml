@@ -85,10 +85,10 @@
 
 		<ruleset.basedir>${project.basedir}</ruleset.basedir>
 
-		<!-- xs2a version -->
+		<!-- XS2A version -->
 		<xs2a.version>14.8-SNAPSHOT</xs2a.version>
 
-		<!-- ledgers version -->
+		<!-- Ledgers version -->
 		<ledgers.version>4.21</ledgers.version>
 
 		<!-- Spring-related versions -->

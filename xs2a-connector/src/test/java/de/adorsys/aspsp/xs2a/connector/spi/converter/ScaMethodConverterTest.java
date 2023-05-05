@@ -18,7 +18,7 @@ package de.adorsys.aspsp.xs2a.connector.spi.converter;
 
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.ledgers.middleware.api.domain.um.ScaUserDataTO;
-import de.adorsys.psd2.xs2a.core.authorisation.AuthenticationObject;
+import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -34,32 +34,32 @@ class ScaMethodConverterTest {
     private ScaMethodConverter mapper;
     private JsonReader jsonReader = new JsonReader();
     private ScaUserDataTO userData;
-    private AuthenticationObject expected;
+    private SpiAuthenticationObject expected;
 
     @BeforeEach
     void setUp() {
         userData = jsonReader.getObjectFromFile("json/spi/converter/sca-user-data.json", ScaUserDataTO.class);
-        expected = jsonReader.getObjectFromFile("json/spi/converter/spi-authentication-object.json", AuthenticationObject.class);
+        expected = jsonReader.getObjectFromFile("json/spi/converter/spi-authentication-object.json", SpiAuthenticationObject.class);
 
         mapper = Mappers.getMapper(ScaMethodConverter.class);
     }
 
     @Test
     void toAuthenticationObject() {
-        AuthenticationObject authenticationObject = mapper.toAuthenticationObject(userData);
+        SpiAuthenticationObject authenticationObject = mapper.toAuthenticationObject(userData);
 
         assertEquals(expected, authenticationObject);
     }
 
     @Test
     void toAuthenticationObject_nullValue() {
-        AuthenticationObject authenticationObject = mapper.toAuthenticationObject(null);
+        SpiAuthenticationObject authenticationObject = mapper.toAuthenticationObject(null);
         assertNull(authenticationObject);
     }
 
     @Test
     void toAuthenticationObjectList() {
-        List<AuthenticationObject> objects = mapper.toAuthenticationObjectList(Collections.singletonList(userData));
+        List<SpiAuthenticationObject> objects = mapper.toAuthenticationObjectList(Collections.singletonList(userData));
 
         assertEquals(1, objects.size());
         assertEquals(expected, objects.get(0));
@@ -67,7 +67,7 @@ class ScaMethodConverterTest {
 
     @Test
     void toAuthenticationObjectList_nullValue() {
-        List<AuthenticationObject> objects = mapper.toAuthenticationObjectList(null);
+        List<SpiAuthenticationObject> objects = mapper.toAuthenticationObjectList(null);
         assertNull(objects);
     }
 }

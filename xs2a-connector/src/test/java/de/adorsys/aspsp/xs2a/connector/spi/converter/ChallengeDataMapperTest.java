@@ -18,7 +18,7 @@ package de.adorsys.aspsp.xs2a.connector.spi.converter;
 
 import de.adorsys.aspsp.xs2a.util.JsonReader;
 import de.adorsys.ledgers.middleware.api.domain.sca.ChallengeDataTO;
-import de.adorsys.psd2.xs2a.core.sca.ChallengeData;
+import de.adorsys.psd2.xs2a.spi.domain.sca.SpiChallengeData;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,15 +40,15 @@ class ChallengeDataMapperTest {
     void toChallengeDataWithRealData() {
         ChallengeDataTO inputData = jsonReader.getObjectFromFile("json/mappers/challenge-data-to.json", ChallengeDataTO.class);
         inputData.setImage("image".getBytes());
-        ChallengeData actualResult = challengeDataMapper.toChallengeData(inputData);
-        ChallengeData expectedResult = jsonReader.getObjectFromFile("json/mappers/challenge-data.json", ChallengeData.class);
+        SpiChallengeData actualResult = challengeDataMapper.toChallengeData(inputData);
+        SpiChallengeData expectedResult = jsonReader.getObjectFromFile("json/mappers/challenge-data.json", SpiChallengeData.class);
         expectedResult.setImage("image".getBytes());
         assertEquals(expectedResult, actualResult);
     }
 
     @Test
     void toChallengeDataWithNull() {
-        ChallengeData actualResult = challengeDataMapper.toChallengeData(null);
+        SpiChallengeData actualResult = challengeDataMapper.toChallengeData(null);
         assertNull(actualResult);
     }
 }
