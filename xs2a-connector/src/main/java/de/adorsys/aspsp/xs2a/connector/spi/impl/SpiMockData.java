@@ -16,28 +16,24 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
-import de.adorsys.psd2.xs2a.core.domain.TppMessageInformation;
-import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiAuthenticationObject;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiHrefType;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiLinks;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
+import de.adorsys.psd2.xs2a.spi.domain.response.SpiTppMessageInformation;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SpiMockData {
     public static final boolean IS_MOCK_DATA_ENABLED = isMockedDataEnabled();
     public static final SpiLinks SPI_LINKS = buildSpiLinks();
-    public static final Set<TppMessageInformation> TPP_MESSAGES = buildTppMessages();
-    public static final Set<TppMessageInformation> TPP_MESSAGES_START_AUTHORISATION = buildTppMessagesStartAuthorisation();
+    public static final Set<SpiTppMessageInformation> TPP_MESSAGES = buildTppMessages();
+    public static final Set<SpiTppMessageInformation> TPP_MESSAGES_START_AUTHORISATION = buildTppMessagesStartAuthorisation();
     public static final List<SpiAuthenticationObject> SCA_METHODS = buildScaMethods();
     public static final String PSU_MESSAGE = IS_MOCK_DATA_ENABLED
                                                      ? "Mocked PSU message from SPI"
@@ -59,23 +55,23 @@ public class SpiMockData {
         return spiLinks;
     }
 
-    private static Set<TppMessageInformation> buildTppMessages() {
+    private static Set<SpiTppMessageInformation> buildTppMessages() {
         if (!IS_MOCK_DATA_ENABLED) {
             return null;
         }
 
-        HashSet<TppMessageInformation> tppInformationSet = new HashSet<>();
-        tppInformationSet.add(TppMessageInformation.buildWithCustomWarning(MessageErrorCode.FORMAT_ERROR, "Mocked tpp message from SPI"));
+        HashSet<SpiTppMessageInformation> tppInformationSet = new HashSet<>();
+        tppInformationSet.add(SpiTppMessageInformation.buildWithCustomWarning(SpiMessageErrorCode.FORMAT_ERROR, "Mocked tpp message from SPI"));
         return tppInformationSet;
     }
 
-    private static Set<TppMessageInformation> buildTppMessagesStartAuthorisation() {
+    private static Set<SpiTppMessageInformation> buildTppMessagesStartAuthorisation() {
         if (!IS_MOCK_DATA_ENABLED) {
             return null;
         }
 
-        HashSet<TppMessageInformation> tppInformationSet = new HashSet<>();
-        tppInformationSet.add(TppMessageInformation.buildWithCustomWarning(MessageErrorCode.FORMAT_ERROR, "Start authorisation mocked tpp message from SPI"));
+        HashSet<SpiTppMessageInformation> tppInformationSet = new HashSet<>();
+        tppInformationSet.add(SpiTppMessageInformation.buildWithCustomWarning(SpiMessageErrorCode.FORMAT_ERROR, "Start authorisation mocked tpp message from SPI"));
         return tppInformationSet;
     }
 

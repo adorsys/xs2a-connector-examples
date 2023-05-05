@@ -23,9 +23,9 @@ import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.um.BearerTokenTO;
 import de.adorsys.ledgers.rest.client.AccountRestClient;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
-import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
 import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationRequest;
 import de.adorsys.psd2.xs2a.spi.domain.fund.SpiFundsConfirmationResponse;
 import de.adorsys.psd2.xs2a.spi.domain.piis.SpiPiisConsent;
@@ -105,7 +105,7 @@ public class FundsConfirmationSpiImpl implements FundsConfirmationSpi {
                            .build();
         } catch (FeignException e) {
             return SpiResponse.<SpiFundsConfirmationResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(e, MessageErrorCode.FUNDS_CONFIRMATION_FAILED))
+                           .error(FeignExceptionHandler.getFailureMessage(e, SpiMessageErrorCode.FUNDS_CONFIRMATION_FAILED))
                            .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);

@@ -22,8 +22,8 @@ import de.adorsys.ledgers.middleware.client.mappers.PaymentMapperTO;
 import de.adorsys.psd2.mapper.Xs2aObjectMapper;
 import de.adorsys.psd2.model.ExecutionRule;
 import de.adorsys.psd2.model.PeriodicPaymentInitiationXmlPart2StandingorderTypeJson;
-import de.adorsys.psd2.xs2a.core.profile.PaymentType;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentInfo;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -39,13 +39,13 @@ public class LedgersSpiCommonPaymentTOMapper {
     private final PaymentMapperTO paymentMapperTO;
     private final Xs2aObjectMapper xs2aObjectMapper;
 
-    public PaymentTO mapToPaymentTO(PaymentType paymentType, SpiPaymentInfo spiPaymentInfo) {
+    public PaymentTO mapToPaymentTO(SpiPaymentType paymentType, SpiPaymentInfo spiPaymentInfo) {
         if (standardPaymentProductsResolverConnector.isRawPaymentProduct(spiPaymentInfo.getPaymentProduct())) {
             PaymentTO paymentTO = paymentMapperTO.toAbstractPayment(new String(spiPaymentInfo.getPaymentData()),
                                                                     paymentType.name(),
                                                                     spiPaymentInfo.getPaymentProduct());
             paymentTO.setPaymentId(spiPaymentInfo.getPaymentId());
-            if (PaymentType.PERIODIC == paymentType) {
+            if (SpiPaymentType.PERIODIC == paymentType) {
                 enrichPeriodicPaymentFields(paymentTO, spiPaymentInfo);
             }
             return paymentTO;

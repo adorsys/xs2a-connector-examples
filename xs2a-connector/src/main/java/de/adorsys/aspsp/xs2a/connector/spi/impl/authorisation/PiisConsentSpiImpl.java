@@ -27,10 +27,8 @@ import de.adorsys.ledgers.middleware.api.domain.sca.*;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.ConsentRestClient;
 import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
-import de.adorsys.psd2.xs2a.core.consent.ConsentStatus;
 import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.core.error.TppMessage;
-import de.adorsys.psd2.xs2a.core.tpp.TppInfo;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountConsent;
@@ -38,8 +36,11 @@ import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiCheckConfirmationCodeRequest;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
 import de.adorsys.psd2.xs2a.spi.domain.consent.*;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiTppMessage;
 import de.adorsys.psd2.xs2a.spi.domain.piis.SpiPiisConsent;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
+import de.adorsys.psd2.xs2a.spi.domain.tpp.SpiTppInfo;
 import de.adorsys.psd2.xs2a.spi.service.PiisConsentSpi;
 import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
@@ -118,7 +119,7 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent>
             SpiAccountAccess access = new SpiAccountAccess();
             access.setAccounts(Collections.singletonList(piisConsent.getAccount()));
             mockedConsent.setAccess(access);
-            TppInfo tppInfo = new TppInfo();
+            SpiTppInfo tppInfo = new SpiTppInfo();
             tppInfo.setAuthorityId("TPP ID");
             tppInfo.setAuthorisationNumber("TPP ID");
             mockedConsent.setTppInfo(tppInfo);
@@ -176,7 +177,7 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent>
             if (authorizeConsentResponse == null || authorizeConsentResponse.getBody() == null) {
                 log.error("Validate SCA code response is NULL");
                 return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder()
-                               .error(new TppMessage(MessageErrorCode.FORMAT_ERROR))
+                               .error(new SpiTppMessage(SpiMessageErrorCode.FORMAT_ERROR))
                                .build();
             }
 
@@ -199,12 +200,12 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent>
             if (LedgersErrorCode.SCA_VALIDATION_ATTEMPT_FAILED.equals(errorCode)) {
                 return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder()
                                .payload(new SpiVerifyScaAuthorisationResponse(spiPiisConsent.getConsentStatus(), SpiAuthorisationStatus.ATTEMPT_FAILURE))
-                               .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
+                               .error(FeignExceptionHandler.getFailureMessage(feignException, SpiMessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
                                .build();
             }
 
             return SpiResponse.<SpiVerifyScaAuthorisationResponse>builder()
-                           .error(FeignExceptionHandler.getFailureMessage(feignException, MessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
+                           .error(FeignExceptionHandler.getFailureMessage(feignException, SpiMessageErrorCode.PSU_CREDENTIALS_INVALID, devMessage))
                            .build();
         } finally {
             authRequestInterceptor.setAccessToken(null);
@@ -223,7 +224,7 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent>
         } catch (FeignException e) {
             log.error("Error during REST call for consent initiation to ledgers for account multilevel checking, PSU ID: {}", contextData.getPsuData().getPsuId());
             return SpiResponse.<SpiInitiatePiisConsentResponse>builder()
-                           .error(new TppMessage(MessageErrorCode.FORMAT_ERROR_UNKNOWN_ACCOUNT))
+                           .error(new SpiTppMessage(SpiMessageErrorCode.FORMAT_ERROR_UNKNOWN_ACCOUNT))
                            .build();
         }
         GlobalScaResponseTO response = new GlobalScaResponseTO();
@@ -272,13 +273,13 @@ public class PiisConsentSpiImpl extends AbstractAuthorisationSpi<SpiPiisConsent>
         return authConfirmationCodeService.checkConfirmationCodeInternally(authorisationId, confirmationCode, scaAuthenticationData, aspspConsentDataProvider);
     }
 
-    ConsentStatus mapToConsentStatus(GlobalScaResponseTO globalScaResponse) {
+    SpiConsentStatus mapToConsentStatus(GlobalScaResponseTO globalScaResponse) {
         if (globalScaResponse != null
                     && globalScaResponse.isPartiallyAuthorised()
                     && ScaStatusTO.FINALISED.equals(globalScaResponse.getScaStatus())) {
-            return ConsentStatus.PARTIALLY_AUTHORISED;
+            return SpiConsentStatus.PARTIALLY_AUTHORISED;
         }
-        return ConsentStatus.VALID;
+        return SpiConsentStatus.VALID;
     }
 
 }

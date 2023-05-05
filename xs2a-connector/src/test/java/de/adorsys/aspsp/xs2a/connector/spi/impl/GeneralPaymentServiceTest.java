@@ -31,16 +31,17 @@ import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.OperationInitiationRestClient;
 import de.adorsys.ledgers.rest.client.PaymentRestClient;
 import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
-import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
-import de.adorsys.psd2.xs2a.core.error.TppMessage;
 import de.adorsys.psd2.xs2a.core.pis.TransactionStatus;
 import de.adorsys.psd2.xs2a.service.RequestProviderService;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiScaConfirmation;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiTppMessage;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiTransactionStatus;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiGetPaymentStatusResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentExecutionResponse;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiPaymentInitiationResponse;
@@ -122,12 +123,12 @@ class GeneralPaymentServiceTest {
     void getPaymentStatusById_withXmlMediaType_shouldReturnMockResponse() {
         // Given
         byte[] xmlBody = paymentBodyXml.getBytes();
-        SpiGetPaymentStatusResponse expectedResponse = new SpiGetPaymentStatusResponse(TransactionStatus.ACSP, SpiMockData.FUNDS_AVAILABLE, XML_MEDIA_TYPE, xmlBody, PSU_MESSAGE,
+        SpiGetPaymentStatusResponse expectedResponse = new SpiGetPaymentStatusResponse(SpiTransactionStatus.ACSP, SpiMockData.FUNDS_AVAILABLE, XML_MEDIA_TYPE, xmlBody, PSU_MESSAGE,
                                                                                        SpiMockData.SPI_LINKS,
                                                                                        SpiMockData.TPP_MESSAGES);
 
         // When
-        SpiResponse<SpiGetPaymentStatusResponse> spiResponse = generalPaymentService.getPaymentStatusById(PaymentTypeTO.SINGLE, XML_MEDIA_TYPE, "payment id", TransactionStatus.ACSP, BYTES);
+        SpiResponse<SpiGetPaymentStatusResponse> spiResponse = generalPaymentService.getPaymentStatusById(PaymentTypeTO.SINGLE, XML_MEDIA_TYPE, "payment id", SpiTransactionStatus.ACSP, BYTES);
 
         // Then
         assertFalse(spiResponse.hasError());
@@ -139,12 +140,12 @@ class GeneralPaymentServiceTest {
     @Test
     void getPaymentStatusById_withNotAcspStatus_shouldReturnSameStatus() {
         // Given
-        SpiGetPaymentStatusResponse expectedResponse = new SpiGetPaymentStatusResponse(TransactionStatus.ACSC, SpiMockData.FUNDS_AVAILABLE, JSON_MEDIA_TYPE, null, PSU_MESSAGE,
+        SpiGetPaymentStatusResponse expectedResponse = new SpiGetPaymentStatusResponse(SpiTransactionStatus.ACSC, SpiMockData.FUNDS_AVAILABLE, JSON_MEDIA_TYPE, null, PSU_MESSAGE,
                                                                                        SpiMockData.SPI_LINKS,
                                                                                        SpiMockData.TPP_MESSAGES);
 
         // When
-        SpiResponse<SpiGetPaymentStatusResponse> spiResponse = generalPaymentService.getPaymentStatusById(PaymentTypeTO.SINGLE, ANY_MEDIA_TYPE, "payment id", TransactionStatus.ACSC, BYTES);
+        SpiResponse<SpiGetPaymentStatusResponse> spiResponse = generalPaymentService.getPaymentStatusById(PaymentTypeTO.SINGLE, ANY_MEDIA_TYPE, "payment id", SpiTransactionStatus.ACSC, BYTES);
 
         // Then
         assertFalse(spiResponse.hasError());
@@ -156,7 +157,7 @@ class GeneralPaymentServiceTest {
     @Test
     void getPaymentByIdTransactionStatusRCVD() {
         //Given
-        SpiPayment initialPayment = getSpiSingle(TransactionStatus.RCVD, "initialPayment");
+        SpiPayment initialPayment = getSpiSingle(SpiTransactionStatus.RCVD, "initialPayment");
         //When
         SpiResponse<SpiPayment> paymentById = generalPaymentService.getPaymentById(initialPayment, null, null);
         //Then
@@ -167,8 +168,8 @@ class GeneralPaymentServiceTest {
     @Test
     void getPaymentByIdTransactionStatusACSP() {
         //Given
-        SpiPayment initialPayment = getSpiSingle(TransactionStatus.ACSP, "initialPayment");
-        SpiPayment paymentAspsp = getSpiSingle(TransactionStatus.ACSP, "paymentAspsp");
+        SpiPayment initialPayment = getSpiSingle(SpiTransactionStatus.ACSP, "initialPayment");
+        SpiPayment paymentAspsp = getSpiSingle(SpiTransactionStatus.ACSP, "paymentAspsp");
 
         PaymentTO paymentTO = new PaymentTO();
         paymentTO.setPaymentId("myPaymentId");
@@ -202,8 +203,8 @@ class GeneralPaymentServiceTest {
     @Test
     void getPaymentByIdTransactionStatusACSP_withDebtorName() {
         //Given
-        SpiPayment input = getSpiSingleWithDebtorName(TransactionStatus.ACSP);
-        SpiPayment expected = getSpiSingleWithDebtorName(TransactionStatus.ACSP);
+        SpiPayment input = getSpiSingleWithDebtorName(SpiTransactionStatus.ACSP);
+        SpiPayment expected = getSpiSingleWithDebtorName(SpiTransactionStatus.ACSP);
 
         PaymentTO paymentTO = getPaymentToWithDebtorName();
 
@@ -233,9 +234,9 @@ class GeneralPaymentServiceTest {
     void getPaymentByIdTransactionStatusACSP_BulkPaymentWithDebtorName() {
         //Given
         SpiBulkPayment input = getBulkPaymentWithDebtorName();
-        input.setPaymentStatus(TransactionStatus.ACSP);
+        input.setPaymentStatus(SpiTransactionStatus.ACSP);
         SpiBulkPayment expected = getBulkPaymentWithDebtorName();
-        expected.setPaymentStatus(TransactionStatus.ACSP);
+        expected.setPaymentStatus(SpiTransactionStatus.ACSP);
 
         PaymentTO paymentTO = getPaymentToWithDebtorName();
 
@@ -265,8 +266,8 @@ class GeneralPaymentServiceTest {
     @Test
     void getPaymentByIdTransactionStatusRCVD_withDebtorName() {
         //Given
-        SpiPayment input = getSpiSingleWithDebtorName(TransactionStatus.RCVD);
-        SpiPayment expected = getSpiSingleWithDebtorName(TransactionStatus.RCVD);
+        SpiPayment input = getSpiSingleWithDebtorName(SpiTransactionStatus.RCVD);
+        SpiPayment expected = getSpiSingleWithDebtorName(SpiTransactionStatus.RCVD);
 
         //When
         SpiResponse<SpiPayment> paymentById = generalPaymentService.getPaymentById(input, spiAspspConsentDataProvider, paymentMapper::toSpiSinglePayment);
@@ -295,7 +296,7 @@ class GeneralPaymentServiceTest {
 
     @Test
     void firstCallInstantiatingPayment_LedgersError() {
-        SpiPayment initialPayment = getSpiSingle(TransactionStatus.RCVD, "initialPayment");
+        SpiPayment initialPayment = getSpiSingle(SpiTransactionStatus.RCVD, "initialPayment");
 
         SpiAccountReference spiAccountReference = jsonReader.getObjectFromFile("json/spi/impl/account-reference.json", SpiAccountReference.class);
 
@@ -309,7 +310,7 @@ class GeneralPaymentServiceTest {
 
         assertFalse(actualResponse.getErrors().isEmpty());
         assertNull(actualResponse.getPayload());
-        assertTrue(actualResponse.getErrors().contains(new TppMessage(MessageErrorCode.FORMAT_ERROR_UNKNOWN_ACCOUNT)));
+        assertTrue(actualResponse.getErrors().contains(new SpiTppMessage(SpiMessageErrorCode.FORMAT_ERROR_UNKNOWN_ACCOUNT)));
     }
 
     @Test
@@ -319,7 +320,7 @@ class GeneralPaymentServiceTest {
         response.setOpType(OpTypeTO.PAYMENT);
         response.setMultilevelScaRequired(true);
 
-        SpiPayment initialPayment = getSpiSingle(TransactionStatus.RCVD, "initialPayment");
+        SpiPayment initialPayment = getSpiSingle(SpiTransactionStatus.RCVD, "initialPayment");
 
         SpiAccountReference spiAccountReference = jsonReader.getObjectFromFile("json/spi/impl/account-reference.json", SpiAccountReference.class);
 
@@ -350,10 +351,10 @@ class GeneralPaymentServiceTest {
 
         when(paymentRestClient.getPaymentStatusById(PAYMENT_ID)).thenReturn(ResponseEntity.ok(TransactionStatusTO.ACSP));
 
-        SpiResponse<SpiGetPaymentStatusResponse> actual = generalPaymentService.getPaymentStatusById(PaymentTypeTO.SINGLE, JSON_MEDIA_TYPE, PAYMENT_ID, TransactionStatus.ACSP, BYTES);
+        SpiResponse<SpiGetPaymentStatusResponse> actual = generalPaymentService.getPaymentStatusById(PaymentTypeTO.SINGLE, JSON_MEDIA_TYPE, PAYMENT_ID, SpiTransactionStatus.ACSP, BYTES);
 
         assertTrue(actual.isSuccessful());
-        assertEquals(TransactionStatus.ACSP, actual.getPayload().getTransactionStatus());
+        assertEquals(SpiTransactionStatus.ACSP, actual.getPayload().getTransactionStatus());
         assertEquals(SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON, actual.getPayload().getResponseContentType());
         assertEquals(PSU_MESSAGE, actual.getPayload().getPsuMessage());
         assertTrue(actual.getPayload().getFundsAvailable());
@@ -377,10 +378,10 @@ class GeneralPaymentServiceTest {
         when(paymentRestClient.getPaymentStatusById(PAYMENT_ID)).thenThrow(feignException);
         when(feignExceptionReader.getErrorMessage(feignException)).thenReturn("dev message");
 
-        SpiResponse<SpiGetPaymentStatusResponse> actual = generalPaymentService.getPaymentStatusById(PaymentTypeTO.SINGLE, JSON_MEDIA_TYPE, PAYMENT_ID, TransactionStatus.ACSP, BYTES);
+        SpiResponse<SpiGetPaymentStatusResponse> actual = generalPaymentService.getPaymentStatusById(PaymentTypeTO.SINGLE, JSON_MEDIA_TYPE, PAYMENT_ID, SpiTransactionStatus.ACSP, BYTES);
 
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.FORMAT_ERROR, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.FORMAT_ERROR, actual.getErrors().get(0).getErrorCode());
 
         verify(authRequestInterceptor, times(1)).setAccessToken(null);
     }
@@ -398,7 +399,7 @@ class GeneralPaymentServiceTest {
 
         when(paymentRestClient.getPaymentStatusById(PAYMENT_ID)).thenReturn(ResponseEntity.ok(null));
 
-        assertThrows(IllegalStateException.class, () -> generalPaymentService.getPaymentStatusById(PaymentTypeTO.SINGLE, JSON_MEDIA_TYPE, PAYMENT_ID, TransactionStatus.ACSP, BYTES));
+        assertThrows(IllegalStateException.class, () -> generalPaymentService.getPaymentStatusById(PaymentTypeTO.SINGLE, JSON_MEDIA_TYPE, PAYMENT_ID, SpiTransactionStatus.ACSP, BYTES));
 
         verify(authRequestInterceptor, times(1)).setAccessToken(null);
     }
@@ -434,7 +435,7 @@ class GeneralPaymentServiceTest {
         SpiResponse<SpiPaymentExecutionResponse> actual = generalPaymentService.verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(spiScaConfirmation, spiAspspConsentDataProvider);
 
         assertTrue(actual.isSuccessful());
-        assertEquals(TransactionStatus.ACCP, actual.getPayload().getTransactionStatus());
+        assertEquals(SpiTransactionStatus.ACCP, actual.getPayload().getTransactionStatus());
 
         verify(cmsPsuPisClient, times(1)).updatePaymentStatus(PAYMENT_ID, TransactionStatus.ACCP, INSTANCE_ID);
         verify(authRequestInterceptor, times(1)).setAccessToken(null);
@@ -464,7 +465,7 @@ class GeneralPaymentServiceTest {
         SpiResponse<SpiPaymentExecutionResponse> actual = generalPaymentService.verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(spiScaConfirmation, spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
         assertEquals(SpiAuthorisationStatus.ATTEMPT_FAILURE, actual.getPayload().getSpiAuthorisationStatus());
 
         verify(cmsPsuPisClient, never()).updatePaymentStatus(any(), any(), any());
@@ -495,7 +496,7 @@ class GeneralPaymentServiceTest {
         SpiResponse<SpiPaymentExecutionResponse> actual = generalPaymentService.verifyScaAuthorisationAndExecutePaymentWithPaymentResponse(spiScaConfirmation, spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.PSU_CREDENTIALS_INVALID, actual.getErrors().get(0).getErrorCode());
         assertNull(actual.getPayload());
 
         verify(cmsPsuPisClient, never()).updatePaymentStatus(any(), any(), any());
@@ -520,7 +521,7 @@ class GeneralPaymentServiceTest {
         SpiResponse<SpiPaymentExecutionResponse> actual = generalPaymentService.executePaymentWithoutSca(spiAspspConsentDataProvider);
 
         assertTrue(actual.isSuccessful());
-        assertEquals(TransactionStatus.ACCP, actual.getPayload().getTransactionStatus());
+        assertEquals(SpiTransactionStatus.ACCP, actual.getPayload().getTransactionStatus());
     }
 
     @Test
@@ -541,7 +542,7 @@ class GeneralPaymentServiceTest {
         SpiResponse<SpiPaymentExecutionResponse> actual = generalPaymentService.executePaymentWithoutSca(spiAspspConsentDataProvider);
 
         assertTrue(actual.isSuccessful());
-        assertEquals(TransactionStatus.ACCP, actual.getPayload().getTransactionStatus());
+        assertEquals(SpiTransactionStatus.ACCP, actual.getPayload().getTransactionStatus());
     }
 
     @Test
@@ -562,7 +563,7 @@ class GeneralPaymentServiceTest {
         SpiResponse<SpiPaymentExecutionResponse> actual = generalPaymentService.executePaymentWithoutSca(spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.FORMAT_ERROR_PAYMENT_NOT_EXECUTED, actual.getErrors().get(0).getErrorCode());
     }
 
     @Test
@@ -585,7 +586,7 @@ class GeneralPaymentServiceTest {
         SpiResponse<SpiPaymentExecutionResponse> actual = generalPaymentService.executePaymentWithoutSca(spiAspspConsentDataProvider);
 
         assertTrue(actual.hasError());
-        assertEquals(MessageErrorCode.FORMAT_ERROR, actual.getErrors().get(0).getErrorCode());
+        assertEquals(SpiMessageErrorCode.FORMAT_ERROR, actual.getErrors().get(0).getErrorCode());
     }
 
     @Test
@@ -612,7 +613,7 @@ class GeneralPaymentServiceTest {
         verify(authRequestInterceptor, times(1)).setAccessToken(null);
     }
 
-    private SpiSinglePayment getSpiSingle(TransactionStatus transactionStatus, String agent) {
+    private SpiSinglePayment getSpiSingle(SpiTransactionStatus transactionStatus, String agent) {
         SpiSinglePayment spiPayment = new SpiSinglePayment(PAYMENT_PRODUCT);
         spiPayment.setPaymentId("myPaymentId");
         spiPayment.setCreditorAgent(agent);
@@ -620,7 +621,7 @@ class GeneralPaymentServiceTest {
         return spiPayment;
     }
 
-    private SpiSinglePayment getSpiSingleWithDebtorName(TransactionStatus transactionStatus) {
+    private SpiSinglePayment getSpiSingleWithDebtorName(SpiTransactionStatus transactionStatus) {
         SpiSinglePayment spiPayment = new SpiSinglePayment(PAYMENT_PRODUCT);
         spiPayment.setPaymentId("myPaymentId");
         spiPayment.setDebtorName(DEBTOR_NAME);
@@ -637,7 +638,7 @@ class GeneralPaymentServiceTest {
     }
 
     private GlobalScaResponseTO getGlobalScaResponseTO() {
-        SpiPayment initialPayment = getSpiSingleWithDebtorName(TransactionStatus.ACSP);
+        SpiPayment initialPayment = getSpiSingleWithDebtorName(SpiTransactionStatus.ACSP);
         GlobalScaResponseTO sca = new GlobalScaResponseTO();
         sca.setOperationObjectId(initialPayment.getPaymentId());
         BearerTokenTO bearerTokenTO = new BearerTokenTO();

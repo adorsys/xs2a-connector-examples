@@ -16,8 +16,8 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
-import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
-import de.adorsys.psd2.xs2a.core.error.TppMessage;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiTppMessage;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
@@ -39,7 +39,7 @@ public class FeignExceptionHandler {
     private FeignExceptionHandler() {
     }
 
-    public static TppMessage getFailureMessage(FeignException e, MessageErrorCode errorCode) {
+    public static SpiTppMessage getFailureMessage(FeignException e, SpiMessageErrorCode errorCode) {
         logger.error(e.getMessage(), e);
 
         if (e.getCause() instanceof ConnectException) {
@@ -48,23 +48,23 @@ public class FeignExceptionHandler {
 
         switch (HttpStatus.valueOf(e.status())) {
             case INTERNAL_SERVER_ERROR:
-                return new TppMessage(MessageErrorCode.INTERNAL_SERVER_ERROR);
+                return new SpiTppMessage(SpiMessageErrorCode.INTERNAL_SERVER_ERROR);
             case UNAUTHORIZED:
-                return new TppMessage(MessageErrorCode.PSU_CREDENTIALS_INVALID);
+                return new SpiTppMessage(SpiMessageErrorCode.PSU_CREDENTIALS_INVALID);
             default:
-                return new TppMessage(errorCode);
+                return new SpiTppMessage(errorCode);
         }
     }
 
-    public static TppMessage getFailureMessage(FeignException e, MessageErrorCode errorCode, String errorMessageAspsp) {
+    public static SpiTppMessage getFailureMessage(FeignException e, SpiMessageErrorCode errorCode, String errorMessageAspsp) {
         return shouldUseNormalErrorMessage(e, errorCode, errorMessageAspsp)
                        ? getFailureMessage(e, errorCode)
-                       : new TppMessage(errorCode, errorMessageAspsp);
+                       : new SpiTppMessage(errorCode, errorMessageAspsp);
     }
 
-    private static boolean shouldUseNormalErrorMessage(FeignException e, MessageErrorCode errorCode, String errorMessageAspsp) {
+    private static boolean shouldUseNormalErrorMessage(FeignException e, SpiMessageErrorCode errorCode, String errorMessageAspsp) {
         return StringUtils.isBlank(errorMessageAspsp) ||
-                       HttpStatus.valueOf(e.status()) == BAD_REQUEST && errorCode == MessageErrorCode.PAYMENT_FAILED;
+                       HttpStatus.valueOf(e.status()) == BAD_REQUEST && errorCode == SpiMessageErrorCode.PAYMENT_FAILED;
     }
 
     public static FeignException getException(HttpStatus httpStatus, String message) {

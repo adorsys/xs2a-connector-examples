@@ -17,11 +17,11 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment;
 
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
-import de.adorsys.psd2.xs2a.core.profile.PaymentType;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.account.SpiAccountReference;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiBulkPayment;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentType;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPeriodicPayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiSinglePayment;
 import de.adorsys.psd2.xs2a.spi.domain.payment.response.SpiBulkPaymentInitiationResponse;
@@ -51,7 +51,7 @@ public class PaymentSpiImpl implements PaymentSpi {
                                                                                                       @NotNull P spiPayment,
                                                                                                       @NotNull SpiAspspConsentDataProvider aspspConsentDataProvider) throws NotSupportedPaymentTypeException {
         // Payment initiation can only be called if exemption.
-        PaymentType paymentType = spiPayment.getPaymentType();
+        SpiPaymentType paymentType = spiPayment.getPaymentType();
 
         Set<SpiAccountReference> spiAccountReferences;
         SpiPsuData spiPsuData = contextData.getPsuData();

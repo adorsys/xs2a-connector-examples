@@ -21,8 +21,8 @@ import de.adorsys.aspsp.xs2a.util.TestConfiguration;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
 import de.adorsys.ledgers.middleware.client.mappers.PaymentMapperTO;
 import de.adorsys.psd2.mapper.Xs2aObjectMapper;
-import de.adorsys.psd2.xs2a.core.profile.PaymentType;
 import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentInfo;
+import de.adorsys.psd2.xs2a.spi.domain.payment.SpiPaymentType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -67,7 +67,7 @@ class LedgersSpiCommonPaymentTOMapperTest {
         SpiPaymentInfo spiPaymentInfo = jsonReader.getObjectFromFile("json/spi/converter/raw-spi-payment-single.json", SpiPaymentInfo.class);
         when(standardPaymentProductsResolverConnector.isRawPaymentProduct(RAW_PAYMENT_PRODUCT)).thenReturn(true);
 
-        PaymentTO actual = mapper.mapToPaymentTO(PaymentType.SINGLE, spiPaymentInfo);
+        PaymentTO actual = mapper.mapToPaymentTO(SpiPaymentType.SINGLE, spiPaymentInfo);
 
         PaymentTO expected = jsonReader.getObjectFromFile("json/spi/converter/raw-payment-single-response.json", PaymentTO.class);
         assertEquals(expected, actual);
@@ -78,7 +78,7 @@ class LedgersSpiCommonPaymentTOMapperTest {
         SpiPaymentInfo spiPaymentInfo = jsonReader.getObjectFromFile("json/spi/converter/raw-spi-payment-periodic.json", SpiPaymentInfo.class);
         when(standardPaymentProductsResolverConnector.isRawPaymentProduct(RAW_PAYMENT_PRODUCT)).thenReturn(true);
 
-        PaymentTO actual = mapper.mapToPaymentTO(PaymentType.PERIODIC, spiPaymentInfo);
+        PaymentTO actual = mapper.mapToPaymentTO(SpiPaymentType.PERIODIC, spiPaymentInfo);
 
         PaymentTO expected = jsonReader.getObjectFromFile("json/spi/converter/raw-payment-periodic-response.json", PaymentTO.class);
         assertEquals(expected, actual);
@@ -89,7 +89,7 @@ class LedgersSpiCommonPaymentTOMapperTest {
         SpiPaymentInfo spiPaymentInfo = jsonReader.getObjectFromFile("json/spi/converter/raw-spi-payment-periodic-wrong.json", SpiPaymentInfo.class);
         when(standardPaymentProductsResolverConnector.isRawPaymentProduct(RAW_PAYMENT_PRODUCT)).thenReturn(true);
 
-        assertThrows(IllegalArgumentException.class, () -> mapper.mapToPaymentTO(PaymentType.PERIODIC, spiPaymentInfo));
+        assertThrows(IllegalArgumentException.class, () -> mapper.mapToPaymentTO(SpiPaymentType.PERIODIC, spiPaymentInfo));
     }
 
     @Test
@@ -97,7 +97,7 @@ class LedgersSpiCommonPaymentTOMapperTest {
         SpiPaymentInfo spiPaymentInfo = jsonReader.getObjectFromFile("json/spi/converter/spi-single-payment.json", SpiPaymentInfo.class);
         when(standardPaymentProductsResolverConnector.isRawPaymentProduct(PAYMENT_PRODUCT)).thenReturn(false);
 
-        PaymentTO actual = mapper.mapToPaymentTO(PaymentType.SINGLE, spiPaymentInfo);
+        PaymentTO actual = mapper.mapToPaymentTO(SpiPaymentType.SINGLE, spiPaymentInfo);
 
         PaymentTO expected = jsonReader.getObjectFromFile("json/spi/converter/payment-single-response.json", PaymentTO.class);
         assertEquals(expected, actual);
@@ -108,7 +108,7 @@ class LedgersSpiCommonPaymentTOMapperTest {
         SpiPaymentInfo spiPaymentInfo = jsonReader.getObjectFromFile("json/spi/converter/spi-periodic-payment.json", SpiPaymentInfo.class);
         when(standardPaymentProductsResolverConnector.isRawPaymentProduct(PAYMENT_PRODUCT)).thenReturn(false);
 
-        PaymentTO actual = mapper.mapToPaymentTO(PaymentType.PERIODIC, spiPaymentInfo);
+        PaymentTO actual = mapper.mapToPaymentTO(SpiPaymentType.PERIODIC, spiPaymentInfo);
 
         PaymentTO expected = jsonReader.getObjectFromFile("json/spi/converter/payment-periodic-response.json", PaymentTO.class);
         assertEquals(expected, actual);
@@ -119,7 +119,7 @@ class LedgersSpiCommonPaymentTOMapperTest {
         SpiPaymentInfo spiPaymentInfo = jsonReader.getObjectFromFile("json/spi/converter/spi-periodic-payment-day-of-execution-is-null.json", SpiPaymentInfo.class);
         when(standardPaymentProductsResolverConnector.isRawPaymentProduct(PAYMENT_PRODUCT)).thenReturn(false);
 
-        PaymentTO actual = mapper.mapToPaymentTO(PaymentType.PERIODIC, spiPaymentInfo);
+        PaymentTO actual = mapper.mapToPaymentTO(SpiPaymentType.PERIODIC, spiPaymentInfo);
 
         PaymentTO expected = jsonReader.getObjectFromFile("json/spi/converter/payment-periodic-response-day-of-execution-is-null.json", PaymentTO.class);
         assertEquals(expected, actual);
@@ -130,7 +130,7 @@ class LedgersSpiCommonPaymentTOMapperTest {
         SpiPaymentInfo spiPaymentInfo = jsonReader.getObjectFromFile("json/spi/converter/spi-bulk-payment.json", SpiPaymentInfo.class);
         when(standardPaymentProductsResolverConnector.isRawPaymentProduct(PAYMENT_PRODUCT)).thenReturn(false);
 
-        PaymentTO actual = mapper.mapToPaymentTO(PaymentType.BULK, spiPaymentInfo);
+        PaymentTO actual = mapper.mapToPaymentTO(SpiPaymentType.BULK, spiPaymentInfo);
 
         PaymentTO expected = jsonReader.getObjectFromFile("json/spi/converter/payment-bulk-response.json", PaymentTO.class);
         assertEquals(expected, actual);

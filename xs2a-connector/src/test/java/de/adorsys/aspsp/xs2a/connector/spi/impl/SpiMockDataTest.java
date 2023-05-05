@@ -16,10 +16,10 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.impl;
 
-import de.adorsys.psd2.xs2a.core.domain.TppMessageInformation;
-import de.adorsys.psd2.xs2a.core.error.MessageErrorCode;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiHrefType;
 import de.adorsys.psd2.xs2a.spi.domain.common.SpiLinks;
+import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
+import de.adorsys.psd2.xs2a.spi.domain.response.SpiTppMessageInformation;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -41,8 +41,8 @@ class SpiMockDataTest {
     @Test
     void getTppMessages_mockDataEnabled() {
         // When
-        Set<TppMessageInformation> actual = SpiMockData.TPP_MESSAGES;
-        Set<TppMessageInformation> expected = getTppMessages();
+        Set<SpiTppMessageInformation> actual = SpiMockData.TPP_MESSAGES;
+        Set<SpiTppMessageInformation> expected = getTppMessages();
 
         // Then
         assertEquals(expected, actual);
@@ -65,7 +65,7 @@ class SpiMockDataTest {
         return spiLinks;
     }
 
-    private Set<TppMessageInformation> getTppMessages() {
-        return Collections.singleton(TppMessageInformation.buildWithCustomWarning(MessageErrorCode.FORMAT_ERROR, "Mocked tpp message from SPI"));
+    private Set<SpiTppMessageInformation> getTppMessages() {
+        return Collections.singleton(SpiTppMessageInformation.buildWithCustomWarning(SpiMessageErrorCode.FORMAT_ERROR, "Mocked tpp message from SPI"));
     }
 }

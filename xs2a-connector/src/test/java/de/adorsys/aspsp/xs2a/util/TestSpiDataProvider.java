@@ -16,9 +16,9 @@
 
 package de.adorsys.aspsp.xs2a.util;
 
-import de.adorsys.psd2.xs2a.core.tpp.TppInfo;
 import de.adorsys.psd2.xs2a.spi.domain.SpiContextData;
 import de.adorsys.psd2.xs2a.spi.domain.psu.SpiPsuData;
+import de.adorsys.psd2.xs2a.spi.domain.tpp.SpiTppInfo;
 
 import java.util.UUID;
 
@@ -61,7 +61,7 @@ public class TestSpiDataProvider {
                         .psuHttpMethod(PSU_HTTP_METHOD)
                         .psuDeviceId(PSU_DEVICE_ID)
                         .build(),
-                new TppInfo(),
+                new SpiTppInfo(),
                 X_REQUEST_ID,
                 INTERNAL_REQUEST_ID,
                 AUTHORISATION,
