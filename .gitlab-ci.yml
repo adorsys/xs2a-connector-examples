@@ -299,5 +299,5 @@ Clone to github:
     - schedules
   variables:
     GITHUB_USERNAME: adorsys
-    GITHUB_REPOSITORY: adorsys/XS2A-Sandbox
+    GITHUB_REPOSITORY: adorsys/xs2a-connector-examples
     GITHUB_PROJECT_CLONE_VERSION: "14"
