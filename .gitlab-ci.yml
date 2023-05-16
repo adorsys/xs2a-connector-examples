@@ -293,7 +293,7 @@ Clone to github:
   <<: *sync_changes_github
   image: alpine/git:latest
   only:
-    - develop
+    - support-14.x
     - /^release-14\..*/
   except:
     - schedules
