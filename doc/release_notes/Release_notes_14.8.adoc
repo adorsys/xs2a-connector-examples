@@ -1,0 +1,9 @@
+= Release notes v.14.8
+
+== Table of Contents
+
+* Migrated onto new XS2A and ledgers
+
+== Migrated onto new XS2A and ledgers
+
+From now on, Connector uses XS2A version 14.8 and ledgers version 4.22.
