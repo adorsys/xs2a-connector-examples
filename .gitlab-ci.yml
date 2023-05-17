@@ -290,7 +290,6 @@ Release snapshot artifacts (tags):
 
 Clone to github:
   stage: "Clone to github"
-  <<: *sync_changes_github
   image: alpine/git:latest
   only:
     - support-14.x
@@ -298,6 +297,6 @@ Clone to github:
   except:
     - schedules
   variables:
-    GITHUB_USERNAME: adorsys
     GITHUB_REPOSITORY: adorsys/xs2a-connector-examples
     GITHUB_PROJECT_CLONE_VERSION: "14"
+  <<: *sync_changes_github
