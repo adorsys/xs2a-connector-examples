@@ -4,6 +4,12 @@
 
 * Migrated onto new XS2A
 
+* Bumped dependency versions
+
 == Migrated onto new XS2A
 
 From now on, Connector uses XS2A version 14.9.
+
+== Bumped dependency versions
+
+- spring-boot-dependencies was bumped up to 2.7.13.
