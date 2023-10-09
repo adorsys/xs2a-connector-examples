@@ -9,7 +9,7 @@
 == Allow custom payment validation
 
 From now on, XS2A allows to validate custom country-specific payments.
-Payment body and payment business validators were affected by this changes.
+Payment body and payment business validators were affected by these changes.
 To configure validation for another country, SPI developer should provide custom implementation of `de.adorsys.psd2.validator.payment.CountryValidatorHolder` interface.
 
 == Migrate to common payment object
