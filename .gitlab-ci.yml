@@ -97,8 +97,8 @@ Lint (CI):
   stage: "Lint"
   except:
     - schedules
-    - support-14.x
-    - master-14.x
+    - support-16.x
+    - master-16.x
   script:
     - apt-get update && apt-get install yamllint python3-pkg-resources -yq
     - echo "Run Gitlab ci file lint"
