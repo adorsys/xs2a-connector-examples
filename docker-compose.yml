@@ -9,7 +9,7 @@ volumes:
 services:
 
   xs2a-connector-examples:
-    image: adorsys/xs2a-connector-examples
+    image: gitlab-registry.adorsys.de/adorsys/xs2a/xs2a-connector-examples/xs2a-connector-examples:${XS2A_VERSION}
     container_name: xs2a-connector-examples
     restart: on-failure
     ports:
@@ -30,7 +30,7 @@ services:
 
 
   ledgers:
-    image: adorsys/ledgers
+    image: gitlab-registry.adorsys.de/adorsys/xs2a/ledgers/ledgers:${LEDGERS_VERSION}
     container_name: ledgers
     restart: on-failure
     networks:

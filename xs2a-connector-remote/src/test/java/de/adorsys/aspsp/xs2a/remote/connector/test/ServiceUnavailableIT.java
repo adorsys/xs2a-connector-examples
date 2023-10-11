@@ -45,7 +45,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.context.WebApplicationContext;
 
-import javax.servlet.Filter;
+import jakarta.servlet.Filter;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -138,7 +138,7 @@ class ServiceUnavailableIT {
     }
 
     private void create_consent_service_unavailable_test(MockMvc mockMvc) throws Exception {
-        service_unavailable_test(mockMvc, DEDICATED_CONSENT_REQUEST_JSON_PATH, post("/v1/consents/"));
+        service_unavailable_test(mockMvc, DEDICATED_CONSENT_REQUEST_JSON_PATH, post("/v1/consents"));
     }
 
     private void service_unavailable_test(MockMvc mockMvc, String contentFilePath, MockHttpServletRequestBuilder requestBuilder) throws Exception {

@@ -18,10 +18,19 @@ package de.adorsys.aspsp.xs2a.connector;
 
 import de.adorsys.ledgers.keycloak.client.KeycloakClientConfiguration;
 import de.adorsys.ledgers.keycloak.client.impl.KeycloakTokenServiceImpl;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 
 @Configuration
 @ComponentScan(basePackageClasses = {LedgersXS2AConnectorBasePackage.class, KeycloakTokenServiceImpl.class, KeycloakClientConfiguration.class})
 public class LedgersXS2AConnectorConfiguration {
+
+    // This is required because we need to disable security for all XS2A endpoints.
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().anyRequest();
+    }
+
 }

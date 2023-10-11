@@ -72,8 +72,6 @@ xs2a:
       # How long, in seconds, the response from a pre-flight request can be cached by clients
       max-age: 3600
 ---
-spring:
-  profiles: dev
 
 logging.level.org.postgresql: INFO
 logging.level.org.hibernate.SQL: WARN
