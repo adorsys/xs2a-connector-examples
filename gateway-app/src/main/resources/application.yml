@@ -91,7 +91,9 @@ xs2a:
 
 ---
 spring:
-  profiles: dev
+  config:
+    activate:
+      on-profile: dev
   main:
     allow-bean-definition-overriding: true
 

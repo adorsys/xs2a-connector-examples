@@ -8,8 +8,8 @@ volumes:
 
 services:
 
-  aspsp-profile:
-    image: adorsys/xs2a-aspsp-profile
+  xs2a-aspsp-profile:
+    image: gitlab-registry.adorsys.de/adorsys/xs2a/aspsp-xs2a/xs2a-aspsp-profile:${XS2A_VERSION}
     container_name: aspsp_profile
     restart: on-failure
     environment:
@@ -38,8 +38,8 @@ services:
       - POSTGRESQL_USER=cms
       - POSTGRESQL_PASSWORD=cms
 
-  consent-management:
-    image: adorsys/xs2a-consent-management
+  xs2a-consent-management:
+    image: gitlab-registry.adorsys.de/adorsys/xs2a/aspsp-xs2a/xs2a-consent-management:${XS2A_VERSION}
     container_name: consent_management
     restart: on-failure
     ports:
@@ -58,7 +58,7 @@ services:
       - xs2a-connector-examples-db
 
   ledgers:
-    image: adorsys/ledgers:develop
+    image: gitlab-registry.adorsys.de/adorsys/xs2a/ledgers/ledgers:${LEDGERS_VERSION}
     container_name: ledgers
     restart: on-failure
     networks:
@@ -76,7 +76,7 @@ services:
       - DB_PASSWORD=cms
 
   xs2a-connector-examples:
-    image: adorsys/xs2a-connector-examples:develop
+    image: gitlab-registry.adorsys.de/adorsys/xs2a/xs2a-connector-examples/xs2a-connector-examples:${XS2A_VERSION}
     container_name: xs2a-connector-examples
     restart: on-failure
     ports:
@@ -91,19 +91,3 @@ services:
       - DB_PASSWORD=cms
     networks:
       - xs2a-net
-
-  xs2a-online-banking:
-    image: adorsys/xs2a-online-banking
-    container_name: online_banking
-    restart: on-failure
-    build:
-      context: online-banking-app
-      dockerfile: Dockerfile
-    ports:
-      - "8090:8090"
-    #      - "8190:8000"
-    networks:
-      - xs2a-net
-    environment:
-      - XS2A_URL=http://xs2a-connector-examples:8089
-      - LEDGERS_URL=http://ledgers:8088

@@ -24,10 +24,11 @@ import de.adorsys.psd2.xs2a.web.config.EnableXs2aSwagger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @EnableFeignClients(basePackageClasses = {PaymentRestClient.class, CmsPsuPisRestClient.class})
-@SpringBootApplication(exclude = {HypermediaAutoConfiguration.class})
+@SpringBootApplication(exclude = {HypermediaAutoConfiguration.class, UserDetailsServiceAutoConfiguration.class })
 @EnableLedgersXS2AConnectorRemote
 @EnableXs2aInterface
 @EnableXs2aSwagger
