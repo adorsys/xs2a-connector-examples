@@ -30,7 +30,6 @@ public class LedgersXS2AConnectorConfiguration {
     // This is required because we need to disable security for all XS2A endpoints.
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().anyRequest();
+        return web -> web.ignoring().anyRequest();
     }
-
 }
