@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Java JDK version 11.x, Maven 3.x;
-- Relational database for Ledgers project. We recommend to use PostgreSQL 9.5;
+- Relational database for Ledgers project. We recommend to use PostgreSQL 12;
 - Docker.
 
 This XS2A connector works with the XS2A and Ledgers projects. XS2A project is used as a maven dependency and Ledgers is
@@ -19,7 +19,7 @@ that those projects are launched and accessible.
 ### XS2A connector with Ledgers as a standalone application
 
 Ledgers project:
-- Set up the PostgreSQL 9.5;
+- Set up the PostgreSQL 12;
 - Create the user `ledgers` with the password `ledgers`;
 - Create the database with name `ledgers`;
 - Clone the project and build it:
@@ -32,9 +32,7 @@ $ mvn clean install
 
 ### XS2A connector with Ledgers inside the docker container
 
-Ledgers project:
-- Clone the project: https://git.adorsys.de/adorsys/xs2a/ledgers.git;
-- Run `docker-compose up` in the root directory.
+- Run `docker-compose -f docker-compose-all.yml up` in the root directory.
 
 ### XS2A connector
 

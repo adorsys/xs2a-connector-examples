@@ -90,7 +90,8 @@ Lint (Docker compose):
   script:
     - apt update && apt install yamllint docker-compose make -yq
     - echo "Run Docker compose lint"
-    - docker-compose -f docker-compose.yml config  -q
+    - docker-compose -f docker-compose-all.yml config  -q
+    - docker-compose -f docker-compose-all-embedded.yml config  -q
 
 Lint (CI):
   image: debian:stable-slim
