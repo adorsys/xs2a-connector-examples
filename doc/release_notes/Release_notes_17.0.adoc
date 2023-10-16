@@ -2,8 +2,14 @@
 
 == Table of Contents
 
-* Migrated onto new XS2A
+* Migrated onto new XS2A and Ledgers
 
-== Migrated onto new XS2A
+* Support of Java 17
 
-From now on, Connector uses XS2A version 17.0.
+== Migrated onto new XS2A and Ledgers
+
+From now on, Connector uses XS2A version 17.0 and Ledgers 5.0.
+
+== Support of Java 17
+
+From now on, XS2A-Connector-example supports Java 17.
