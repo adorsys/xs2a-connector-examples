@@ -1,0 +1,95 @@
+version: "3"
+
+networks:
+  xs2a-net:
+
+volumes:
+  xs2a-connector-data:
+  keycloak-data:
+
+services:
+  # Xs2a connector example
+  xs2a-connector-embedded:
+    image: gitlab-registry.adorsys.de/adorsys/xs2a/xs2a-connector-examples/xs2a-connector-embedded:${XS2A_VERSION}
+    container_name: xs2a-connector-embedded
+    restart: on-failure
+    ports:
+      - "8089:8089"
+      - "8189:8000"
+    build:
+      context: gateway-app-embedded
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_PROFILES_ACTIVE=mock-qwac,debug_mode
+      - KEYCLOAK_AUTH_SERVER_URL=http://ledgers-keycloak:8080
+      - XS2ASANDBOX_LEDGERS_URL=http://ledgers:8088
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://xs2a-consent-management-db/consent?currentSchema=consent
+      - SPRING_DATASOURCE_USERNAME=cms
+      - SPRING_DATASOURCE_PASSWORD=cms
+      - SERVER_KEY=secret123
+      - SPRING_LIQUIBASE_ENABLED=true
+    networks:
+      - xs2a-net
+    depends_on:
+      - ledgers
+      - xs2a-consent-management-db
+
+  # Xs2a consent management DB
+  xs2a-consent-management-db:
+    image: centos/postgresql-12-centos7
+    container_name: xs2a-consent-management-db
+    restart: on-failure
+    volumes:
+      - xs2a-connector-data:/var/lib/pgsql/data
+      - ./db-scripts/pg-create-schema.sh:/usr/share/container-scripts/postgresql/start/zzz-create-schema.sh
+    expose:
+      - 5432
+    ports:
+      - "5433:5432"
+    networks:
+      - xs2a-net
+    environment:
+      - POSTGRESQL_ADMIN_PASSWORD=postgres
+      - POSTGRESQL_DATABASE=consent
+      - POSTGRESQL_USER=cms
+      - POSTGRESQL_PASSWORD=cms
+
+  # Ledgers
+  ledgers:
+    image: gitlab-registry.adorsys.de/adorsys/xs2a/ledgers/ledgers:${LEDGERS_VERSION}
+    container_name: ledgers
+    restart: on-failure
+    networks:
+      - xs2a-net
+    depends_on:
+      - ledgers-keycloak
+      - xs2a-consent-management-db
+    ports:
+      - "8088:8088"
+      - "8188:8001"
+    environment:
+      - SPRING_PROFILES_ACTIVE=postgres,develop
+      - SPRING_JPA_SHOW_SQL=false
+      - DB_HOST=xs2a-consent-management-db
+      - DB_URL=jdbc:postgresql://xs2a-consent-management-db/consent?currentSchema=ledgers
+      - DB_DATABASE=consent
+      - DB_USER=cms
+      - DB_PASSWORD=cms
+      - KEYCLOAK_AUTH_SERVER_URL=http://ledgers-keycloak:8080
+      - LEDGERS_SCA_MULTILEVEL_ENABLED=true
+
+  ledgers-keycloak:
+    image: gitlab-registry.adorsys.de/adorsys/xs2a/ledgers/keycloak-and-ledgers-plugin:${LEDGERS_VERSION}
+    container_name: ledgers-keycloak
+    restart: on-failure
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+    networks:
+      - xs2a-net
+    ports:
+      - "8080:8080"
+    environment:
+      - KC_HOSTNAME=ledgers-keycloak:8080
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_PROXY=edge

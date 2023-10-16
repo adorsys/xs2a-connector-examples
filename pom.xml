@@ -85,9 +85,9 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- xs2a version -->
-        <xs2a.version>15.10-SNAPSHOT</xs2a.version>
+        <xs2a.version>17.0</xs2a.version>
         <!-- ledgers version -->
-        <ledgers.version>5.1-SNAPSHOT</ledgers.version>
+        <ledgers.version>5.0</ledgers.version>
 
         <!-- Spring-related versions -->
         <spring-boot-dependencies.version>3.1.2</spring-boot-dependencies.version>
