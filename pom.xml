@@ -85,13 +85,13 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- xs2a version -->
-        <xs2a.version>17.0</xs2a.version>
+        <xs2a.version>17.1-SNAPSHOT</xs2a.version>
         <!-- ledgers version -->
         <ledgers.version>5.0</ledgers.version>
 
         <!-- Spring-related versions -->
         <spring-boot-dependencies.version>3.1.2</spring-boot-dependencies.version>
-        <spring-cloud-feign.version>4.0.4</spring-cloud-feign.version>
+        <spring-cloud-starter-openfeign.version>4.0.4</spring-cloud-starter-openfeign.version>
 
         <!-- Other versions -->
         <slf4j.version>2.0.9</slf4j.version>
@@ -124,6 +124,8 @@
 		<maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
         <jacoco-maven-plugin.version>0.8.10</jacoco-maven-plugin.version>
         <sonar-maven-plugin.version>3.7.0.1746</sonar-maven-plugin.version>
+        <maven-javadoc-plugin.version>3.6.0</maven-javadoc-plugin.version>
+        <maven-resources-plugin.version>3.0.1</maven-resources-plugin.version>
 
         <!--Sonar -->
         <sonar.core.coveragePlugin>jacoco</sonar.core.coveragePlugin>
@@ -184,15 +186,13 @@
         <dependencies>
 
             <!-- spring dependencies -->
-
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-starter-openfeign</artifactId>
-                <version>${spring-cloud-feign.version}</version>
+                <version>${spring-cloud-starter-openfeign.version}</version>
             </dependency>
 
             <!-- swagger -->
-
             <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
@@ -206,7 +206,6 @@
             </dependency>
 
             <!-- logging dependencies -->
-
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
@@ -314,10 +313,28 @@
                     <artifactId>sonar-maven-plugin</artifactId>
                     <version>${sonar-maven-plugin.version}</version>
                 </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${maven-source-plugin.version}</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${maven-javadoc-plugin.version}</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>${maven-gpg-plugin.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
-        <plugins>
 
+        <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
@@ -380,7 +397,6 @@
                     <excludes>
                         <exclude>**/generated-sources/**</exclude>
                     </excludes>
-
                 </configuration>
                 <executions>
                     <execution>
@@ -398,6 +414,7 @@
                     </execution>
                 </executions>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -431,11 +448,9 @@
             <id>release</id>
             <build>
                 <plugins>
-
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>${maven-source-plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -449,9 +464,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>${maven-gpg-plugin.version}</version>
-                        <configuration>
-                        </configuration>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -485,7 +497,6 @@
                             </execution>
                         </executions>
                     </plugin>
-
                 </plugins>
             </build>
         </profile>
@@ -494,11 +505,9 @@
             <id>gitlab-maven</id>
             <build>
                 <plugins>
-
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>${maven-source-plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -527,6 +536,7 @@
                     </plugin>
                 </plugins>
             </build>
+
             <distributionManagement>
                 <repository>
                     <id>gitlab-maven</id>
@@ -538,8 +548,5 @@
                 </snapshotRepository>
             </distributionManagement>
         </profile>
-
     </profiles>
-
-
 </project>
