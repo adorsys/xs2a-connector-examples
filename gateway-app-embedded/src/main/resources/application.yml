@@ -133,6 +133,8 @@ xs2a:
     scheduler:
       pool:
         size: 30
+    db:
+      max-chunk-size: 999
 
 ---
 spring:
