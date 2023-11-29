@@ -100,7 +100,7 @@
         <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
         <springdoc.version>2.2.0</springdoc.version>
         <swagger-annotations.version>2.2.15</swagger-annotations.version>
-        <log4j.version>1.2.17</log4j.version>
+        <log4j.version>2.22.0</log4j.version>
         <lombok.version>1.18.24</lombok.version>
         <google.guava.version>23.0</google.guava.version>
         <springfox-bean-validators.version>2.9.2</springfox-bean-validators.version>
