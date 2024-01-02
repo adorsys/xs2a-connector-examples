@@ -21,7 +21,7 @@
 	<parent>
 		<groupId>de.adorsys.ledgers</groupId>
 		<artifactId>xs2a-connector-examples</artifactId>
-		<version>17.2-SNAPSHOT</version>
+		<version>17.2</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>gateway-app</artifactId>
