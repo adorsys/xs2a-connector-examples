@@ -3,7 +3,18 @@
 == Table of Contents
 
 * Migrated onto new XS2A
+* Updated dependencies
 
 == Migrated onto new XS2A
 
 From now on, Connector uses XS2A version 16.3.
+
+== Updated dependencies
+
+Libraries were updated:
+
+- spring-boot-dependencies updated to 2.7.18;
+- jackson updated to 2.15.3;
+- h2 updated to 2.2.220;
+- guava updated to 32.1.2-jre;
+- snakeyaml updated to 2.0.
