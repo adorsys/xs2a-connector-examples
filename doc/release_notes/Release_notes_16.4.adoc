@@ -1,0 +1,16 @@
+= Release notes v.16.4
+
+== Table of Contents
+
+* Migrated onto new XS2A
+* Updated dependencies
+
+== Migrated onto new XS2A
+
+From now on, Connector uses XS2A version 16.4.
+
+== Updated dependencies
+
+Libraries were updated:
+
+- postgresql - to 42.3.10.
