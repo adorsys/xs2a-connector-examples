@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 adorsys GmbH & Co KG
+ * Copyright 2018-2024 adorsys GmbH & Co KG
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,14 @@
 
 package de.adorsys.ledgers.gateway.config;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceUnit;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.springframework.context.annotation.Configuration;
-
-import javax.annotation.PostConstruct;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceUnit;
 
 @Configuration
 @RequiredArgsConstructor
@@ -39,10 +38,10 @@ public class HibernateListenerConfig {
         final SessionFactoryImplementor sessionFactory = entityManagerFactory.unwrap(SessionFactoryImplementor.class);
 
         final EventListenerRegistry registry = sessionFactory
-                                                   .getServiceRegistry()
-                                                   .getService(EventListenerRegistry.class);
+                                                       .getServiceRegistry()
+                                                       .getService(EventListenerRegistry.class);
 
         registry.getEventListenerGroup(EventType.PRE_INSERT)
-            .appendListener(serviceInstanceIdEventListener);
+                .appendListener(serviceInstanceIdEventListener);
     }
 }

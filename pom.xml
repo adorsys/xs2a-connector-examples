@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2018-2023 adorsys GmbH & Co KG
+  ~ Copyright 2018-2024 adorsys GmbH & Co KG
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -16,522 +16,538 @@
   -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>de.adorsys.ledgers</groupId>
-	<artifactId>xs2a-connector-examples</artifactId>
-    <version>14.10-SNAPSHOT</version>
-	<packaging>pom</packaging>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>de.adorsys.ledgers</groupId>
+    <artifactId>xs2a-connector-examples</artifactId>
+    <version>17.3</version>
+    <packaging>pom</packaging>
 
-	<name>XS2A Connector Examples</name>
-	<description>OpenSource Implementation Of XS2A connector examples</description>
+    <name>XS2A Connector Examples</name>
+    <description>OpenSource Implementation Of XS2A connector examples</description>
 
-	<modules>
-		<module>ledgers-rest-client</module>
-		<module>xs2a-connector</module>
-		<module>gateway-app</module>
-		<module>xs2a-connector-remote</module>
+    <modules>
+        <module>ledgers-rest-client</module>
+        <module>xs2a-connector</module>
+        <module>gateway-app</module>
+        <module>xs2a-connector-remote</module>
         <module>gateway-app-embedded</module>
         <module>xs2a-connector-embedded</module>
-		<module>xs2a-connector-oauth-service</module>
-	</modules>
+        <module>xs2a-connector-oauth-service</module>
+    </modules>
 
-	<url>https://git.adorsys.de/adorsys/xs2a/xs2a-connector-examples</url>
+    <url>https://git.adorsys.de/adorsys/xs2a/xs2a-connector-examples</url>
 
-	<licenses>
-		<license>
-			<name>The Apache License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-		</license>
-	</licenses>
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
 
-	<developers>
-		<developer>
-			<name>Francis Pouatcha</name>
-			<email>fpo@adorsys.de</email>
-			<organization>adorsys GmbH &amp; Co KG</organization>
-			<organizationUrl>https://adorsys.de/</organizationUrl>
-		</developer>
-		<developer>
-			<name>Serhii Petrychenko</name>
-			<email>spe@adorsys.com.ua</email>
-			<organization>LLC Golden Dimension</organization>
-			<organizationUrl>https://adorsys.com.ua/</organizationUrl>
-		</developer>
-		<developer>
-			<name>Dmytro Mishchuck</name>
-			<email>dmi@adorsys.com.ua</email>
-			<organization>LLC Golden Dimension</organization>
-			<organizationUrl>https://adorsys.com.ua/</organizationUrl>
-		</developer>
-		<developer>
-			<name>Petro Rudenko</name>
-			<email>pru@adorsys.com.ua</email>
-			<organization>LLC Golden Dimension</organization>
-			<organizationUrl>https://adorsys.com.ua/</organizationUrl>
-		</developer>
-	</developers>
+    <developers>
+        <developer>
+            <name>Francis Pouatcha</name>
+            <email>fpo@adorsys.de</email>
+            <organization>adorsys GmbH &amp; Co KG</organization>
+            <organizationUrl>https://adorsys.de/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Serhii Petrychenko</name>
+            <email>spe@adorsys.com.ua</email>
+            <organization>LLC Golden Dimension</organization>
+            <organizationUrl>https://adorsys.com.ua/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Dmytro Mishchuck</name>
+            <email>dmi@adorsys.com.ua</email>
+            <organization>LLC Golden Dimension</organization>
+            <organizationUrl>https://adorsys.com.ua/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Petro Rudenko</name>
+            <email>pru@adorsys.com.ua</email>
+            <organization>LLC Golden Dimension</organization>
+            <organizationUrl>https://adorsys.com.ua/</organizationUrl>
+        </developer>
+    </developers>
 
-	<properties>
-		<!-- common properties -->
-		<java.version>11</java.version>
-		<maven.compiler.source>${java.version}</maven.compiler.source>
-		<maven.compiler.target>${java.version}</maven.compiler.target>
-		<dependency.locations.enabled>false</dependency.locations.enabled>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <properties>
+        <!-- Common properties -->
+        <java.version>17</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <ruleset.basedir>${project.basedir}</ruleset.basedir>
+        <dependency.locations.enabled>false</dependency.locations.enabled>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-		<ruleset.basedir>${project.basedir}</ruleset.basedir>
+        <!-- xs2a version -->
+        <xs2a.version>17.3</xs2a.version>
+        <!-- ledgers version -->
+        <ledgers.version>5.1</ledgers.version>
 
-		<!-- XS2A version -->
-		<xs2a.version>14.10-SNAPSHOT</xs2a.version>
+        <!-- Spring-related versions -->
+        <spring-boot-dependencies.version>3.2.0</spring-boot-dependencies.version>
+        <spring-cloud-starter-openfeign.version>4.1.0</spring-cloud-starter-openfeign.version>
 
-		<!-- Ledgers version -->
-		<ledgers.version>4.22</ledgers.version>
+        <!-- Other versions -->
+        <slf4j.version>2.0.9</slf4j.version>
+        <jetbrains.annotations.version>15.0</jetbrains.annotations.version>
+        <javatar-commons.version>0.6</javatar-commons.version>
+        <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
+        <springdoc.version>2.3.0</springdoc.version>
+        <swagger-annotations.version>2.2.15</swagger-annotations.version>
+        <log4j.version>2.22.0</log4j.version>
+        <lombok.version>1.18.30</lombok.version>
+        <google.guava.version>23.0</google.guava.version>
+        <springfox-bean-validators.version>2.9.2</springfox-bean-validators.version>
+        <commons-io.version>2.8.0</commons-io.version>
+        <jakarta.validation-api.version>3.0.2</jakarta.validation-api.version>
+        <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
+        <jackson.version>2.16.1</jackson.version>
+        <liquibase.version>4.25.1</liquibase.version>
+        <h2.version>2.2.220</h2.version>
+        <postgresql.version>42.3.8</postgresql.version>
+        <junit-jupiter.version>5.10.0</junit-jupiter.version>
+        <mockito.version>5.2.0</mockito.version>
 
-		<!-- Spring-related versions -->
-		<spring-boot-dependencies.version>2.7.13</spring-boot-dependencies.version>
-		<spring-cloud-starter-openfeign.version>3.1.3</spring-cloud-starter-openfeign.version>
+        <!-- Maven plugins-->
+        <maven-pmd-plugin.version>3.21.0</maven-pmd-plugin.version>
+        <maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
+        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+        <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
+        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
+        <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
+		<maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
+        <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
+        <sonar-maven-plugin.version>3.7.0.1746</sonar-maven-plugin.version>
+        <maven-javadoc-plugin.version>3.6.0</maven-javadoc-plugin.version>
+        <maven-resources-plugin.version>3.0.1</maven-resources-plugin.version>
 
-		<!-- Other versions -->
-		<slf4j.version>1.7.36</slf4j.version>
-		<jetbrains.annotations.version>15.0</jetbrains.annotations.version>
-		<javatar-commons.version>0.6</javatar-commons.version>
-		<org.mapstruct.version>1.4.1.Final</org.mapstruct.version>
-		<springdoc.version>1.6.8</springdoc.version>
-		<swagger.annotations.version>2.2.0</swagger.annotations.version>
-		<log4j.version>1.2.17</log4j.version>
-		<lombok.version>1.18.6</lombok.version>
-		<google.guava.version>23.0</google.guava.version>
-		<springfox-bean-validators.version>2.9.2</springfox-bean-validators.version>
-		<commons-io.version>2.8.0</commons-io.version>
-		<javax.validation.version>2.0.1.Final</javax.validation.version>
+        <!--Sonar -->
+        <sonar.core.coveragePlugin>jacoco</sonar.core.coveragePlugin>
+        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+        <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+        <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
+        <sonar.language>java</sonar.language>
+        <sonar.coverage.exclusions>
+            **/*Entity.java,**/*TO.java,**/*BO.java,**/*PO.java,**/*Application.java,**/*Exception.java,
+            **/*Config.java,**/*Configuration.java,pom.xml,/ledgers-rest-client/**/*,/gateway-app-embedded/**/*
+        </sonar.coverage.exclusions>
+        <skipITs>false</skipITs>
+        <skipTests>false</skipTests>
+    </properties>
 
-		<jackson.version>2.13.2</jackson.version>
-		<liquibase-core.version>4.17.0</liquibase-core.version>
-		<h2.version>2.1.210</h2.version>
-		<postgresql.version>42.3.8</postgresql.version>
+    <repositories>
+        <repository>
+            <id>spring-milestones</id>
+            <name>Spring Milestones</name>
+            <url>https://repo.spring.io/milestone/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>gitlab-maven</id>
+            <url>https://git.adorsys.de/api/v4/groups/49/-/packages/maven</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>gitlab-xs2a-impl</id>
+            <url>https://git.adorsys.de/api/v4/projects/1323/packages/maven</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>gitlab-ledgers</id>
+            <url>https://git.adorsys.de/api/v4/projects/1500/packages/maven</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
-		<junit-jupiter.version>5.5.2</junit-jupiter.version>
-		<mockito.version>3.11.2</mockito.version>
+    <dependencyManagement>
+        <dependencies>
 
-		<!--Maven plugin properties-->
-		<maven-pmd-plugin.version>3.12.0</maven-pmd-plugin.version>
-		<maven-enforcer-plugin.version>3.0.0-M3</maven-enforcer-plugin.version>
-		<maven-surefire-plugin.version>3.0.0-M6</maven-surefire-plugin.version>
-		<maven-failsafe-plugin.version>3.0.0-M6</maven-failsafe-plugin.version>
-		<maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
-		<jacoco-maven-plugin.version>0.8.5</jacoco-maven-plugin.version>
-		<maven-source-plugin.version>3.0.1</maven-source-plugin.version>
-		<maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
+            <!-- spring dependencies -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-openfeign</artifactId>
+                <version>${spring-cloud-starter-openfeign.version}</version>
+            </dependency>
 
-		<!--Sonar -->
-		<sonar.core.coveragePlugin>jacoco</sonar.core.coveragePlugin>
-		<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
-		<sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-		<sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
-		<sonar.language>java</sonar.language>
-		<sonar.coverage.exclusions>**/*Entity.java,**/*TO.java,**/*BO.java,**/*PO.java,**/*Application.java,**/*Exception.java,
-			**/*Config.java,**/*Configuration.java,pom.xml,/ledgers-rest-client/**/*,/gateway-app-embedded/**/*</sonar.coverage.exclusions>
-		<skipITs>false</skipITs>
-		<skipTests>false</skipTests>
-	</properties>
+            <!-- swagger -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
 
-	<repositories>
-		<repository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>http://repo.spring.io/milestone</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>gitlab-maven</id>
-			<url>https://git.adorsys.de/api/v4/groups/49/-/packages/maven</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>gitlab-xs2a-impl</id>
-			<url>https://git.adorsys.de/api/v4/projects/1323/packages/maven</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>gitlab-ledgers</id>
-			<url>https://git.adorsys.de/api/v4/projects/1500/packages/maven</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger-annotations.version}</version>
+            </dependency>
 
-	<dependencyManagement>
-		<dependencies>
+            <!-- logging dependencies -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
 
-			<!-- spring dependencies -->
+            <!-- other dependencies -->
 
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-starter-openfeign</artifactId>
-				<version>${spring-cloud-starter-openfeign.version}</version>
-			</dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
 
-			<!-- swagger -->
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${org.mapstruct.version}</version>
+            </dependency>
 
-			<dependency>
-				<groupId>org.springdoc</groupId>
-				<artifactId>springdoc-openapi-ui</artifactId>
-				<version>${springdoc.version}</version>
-			</dependency>
+            <dependency>
+                <groupId>org.jetbrains</groupId>
+                <artifactId>annotations</artifactId>
+                <version>${jetbrains.annotations.version}</version>
+                <scope>compile</scope>
+            </dependency>
 
-			<dependency>
-				<groupId>io.swagger.core.v3</groupId>
-				<artifactId>swagger-annotations</artifactId>
-				<version>${swagger.annotations.version}</version>
-			</dependency>
+            <dependency>
+                <groupId>pro.javatar.commons</groupId>
+                <artifactId>javatar-commons</artifactId>
+                <version>${javatar-commons.version}</version>
+            </dependency>
 
-			<!-- logging dependencies -->
+            <dependency>
+                <groupId>io.springfox</groupId>
+                <artifactId>springfox-bean-validators</artifactId>
+                <version>${springfox-bean-validators.version}</version>
+            </dependency>
 
-			<dependency>
-				<groupId>org.slf4j</groupId>
-				<artifactId>slf4j-api</artifactId>
-				<version>${slf4j.version}</version>
-			</dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
+            </dependency>
 
-			<!-- other dependencies -->
+            <dependency>
+                <groupId>jakarta.validation</groupId>
+                <artifactId>jakarta.validation-api</artifactId>
+                <version>${jakarta.validation-api.version}</version>
+            </dependency>
 
-			<dependency>
-				<groupId>com.fasterxml.jackson</groupId>
-				<artifactId>jackson-bom</artifactId>
-				<version>${jackson.version}</version>
-				<scope>import</scope>
-				<type>pom</type>
-			</dependency>
+            <dependency>
+                <groupId>jakarta.servlet</groupId>
+                <artifactId>jakarta.servlet-api</artifactId>
+                <version>${jakarta.servlet-api.version}</version>
+            </dependency>
 
-			<dependency>
-				<groupId>org.mapstruct</groupId>
-				<artifactId>mapstruct</artifactId>
-				<version>${org.mapstruct.version}</version>
-			</dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+                <scope>provided</scope>
+            </dependency>
 
-			<dependency>
-				<groupId>org.jetbrains</groupId>
-				<artifactId>annotations</artifactId>
-				<version>${jetbrains.annotations.version}</version>
-				<scope>compile</scope>
-			</dependency>
+            <!-- test dependencies -->
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit-jupiter.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
-			<dependency>
-				<groupId>pro.javatar.commons</groupId>
-				<artifactId>javatar-commons</artifactId>
-				<version>${javatar-commons.version}</version>
-			</dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+            </dependency>
 
-			<dependency>
-				<groupId>io.springfox</groupId>
-				<artifactId>springfox-bean-validators</artifactId>
-				<version>${springfox-bean-validators.version}</version>
-			</dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
+                <version>${mockito.version}</version>
+            </dependency>
 
-			<dependency>
-				<groupId>commons-io</groupId>
-				<artifactId>commons-io</artifactId>
-				<version>${commons-io.version}</version>
-			</dependency>
+            <!-- spring BOMs -->
 
-			<dependency>
-				<groupId>javax.validation</groupId>
-				<artifactId>validation-api</artifactId>
-				<version>${javax.validation.version}</version>
-			</dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot-dependencies.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
-			<dependency>
-				<groupId>org.projectlombok</groupId>
-				<artifactId>lombok</artifactId>
-				<version>${lombok.version}</version>
-				<scope>provided</scope>
-			</dependency>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>${sonar-maven-plugin.version}</version>
+                </plugin>
 
-			<!-- test dependencies -->
-			<dependency>
-				<groupId>org.junit</groupId>
-				<artifactId>junit-bom</artifactId>
-				<version>${junit-jupiter.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${maven-source-plugin.version}</version>
+                </plugin>
 
-			<dependency>
-				<groupId>org.mockito</groupId>
-				<artifactId>mockito-core</artifactId>
-				<version>${mockito.version}</version>
-			</dependency>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${maven-javadoc-plugin.version}</version>
+                </plugin>
 
-			<dependency>
-				<groupId>org.mockito</groupId>
-				<artifactId>mockito-junit-jupiter</artifactId>
-				<version>${mockito.version}</version>
-			</dependency>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>${maven-gpg-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
 
-			<!-- spring BOMs -->
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>${maven-pmd-plugin.version}</version>
+                <configuration>
+                    <minimumTokens>100</minimumTokens>
+                    <targetJdk>${java.version}</targetJdk>
+                    <analysisCache>true</analysisCache>
+                    <linkXRef>false</linkXRef>
+                    <rulesets>
+                        <ruleset>${ruleset.basedir}/qa/pmd/pmd-ruleset.xml</ruleset>
+                    </rulesets>
+                    <failOnViolation>true</failOnViolation>
+                    <printFailingErrors>true</printFailingErrors>
+                    <excludeRoots>
+                        <excludeRoot>../xs2a-connector/target/generated-sources/annotations
+                        </excludeRoot>
+                        <excludeRoot>../online-banking-app/target/generated-sources/annotations
+                        </excludeRoot>
+                    </excludeRoots>
+                </configuration>
+            </plugin>
 
-			<dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-dependencies</artifactId>
-				<version>${spring-boot-dependencies.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <parameters>true</parameters>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${org.mapstruct.version}</version>
+                        </path>
+                        <annotationProcessorPath>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </annotationProcessorPath>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
 
-	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.sonarsource.scanner.maven</groupId>
-					<artifactId>sonar-maven-plugin</artifactId>
-					<version>3.7.0.1746</version>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-		<plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surefire-plugin.version}</version>
+            </plugin>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-pmd-plugin</artifactId>
-				<version>${maven-pmd-plugin.version}</version>
-				<configuration>
-					<sourceEncoding>${project.build.sourceEncoding}</sourceEncoding>
-					<minimumTokens>100</minimumTokens>
-					<targetJdk>${java.version}</targetJdk>
-					<analysisCache>true</analysisCache>
-					<linkXRef>false</linkXRef>
-					<rulesets>
-						<ruleset>${ruleset.basedir}/qa/pmd/pmd-ruleset.xml</ruleset>
-					</rulesets>
-					<failOnViolation>true</failOnViolation>
-					<printFailingErrors>true</printFailingErrors>
-					<excludeRoots>
-						<excludeRoot>../xs2a-connector/target/generated-sources/annotations
-						</excludeRoot>
-						<excludeRoot>../online-banking-app/target/generated-sources/annotations
-						</excludeRoot>
-					</excludeRoots>
-				</configuration>
-			</plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco-maven-plugin.version}</version>
+                <configuration>
+                    <destFile>${sonar.jacoco.reportPath}</destFile>
+                    <dataFile>${sonar.jacoco.reportPath}</dataFile>
+                    <append>true</append>
+                    <excludes>
+                        <exclude>**/generated-sources/**</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>jacoco-initialize</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-site</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${maven-compiler-plugin.version}</version>
-				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
-					<annotationProcessorPaths>
-						<path>
-							<groupId>org.mapstruct</groupId>
-							<artifactId>mapstruct-processor</artifactId>
-							<version>${org.mapstruct.version}</version>
-						</path>
-						<annotationProcessorPath>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-							<version>${lombok.version}</version>
-						</annotationProcessorPath>
-					</annotationProcessorPaths>
-				</configuration>
-			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>${maven-failsafe-plugin.version}</version>
+                <configuration>
+                    <includes>
+                        <include>**/*IT.java</include>
+                    </includes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>${maven-surefire-plugin.version}</version>
-			</plugin>
+    <scm>
+        <connection>scm:git@github.com:adorsys/xs2a-connector-examples.git</connection>
+        <developerConnection>scm:git:git@github.com:adorsys/xs2a-connector-examples.git</developerConnection>
+        <url>git@github.com:adorsys/xs2a-connector-examples.git</url>
+        <tag>HEAD</tag>
+    </scm>
 
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>${jacoco-maven-plugin.version}</version>
-				<configuration>
-					<destFile>${sonar.jacoco.reportPath}</destFile>
-					<dataFile>${sonar.jacoco.reportPath}</dataFile>
-					<append>true</append>
-					<excludes>
-						<exclude>**/generated-sources/**</exclude>
-					</excludes>
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
 
-				</configuration>
-				<executions>
-					<execution>
-						<id>jacoco-initialize</id>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>jacoco-site</id>
-						<phase>package</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>${maven-failsafe-plugin.version}</version>
-				<configuration>
-					<includes>
-						<include>**/*IT.java</include>
-					</includes>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>integration-test</goal>
-							<goal>verify</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
-
-	<scm>
-		<connection>scm:git@github.com:adorsys/xs2a-connector-examples.git</connection>
-		<developerConnection>scm:git:git@github.com:adorsys/xs2a-connector-examples.git</developerConnection>
-		<url>git@github.com:adorsys/xs2a-connector-examples.git</url>
-		<tag>HEAD</tag>
-	</scm>
-
-	<profiles>
-		<profile>
-			<id>release</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-source-plugin</artifactId>
-						<version>${maven-source-plugin.version}</version>
-						<executions>
-							<execution>
-								<id>attach-sources</id>
-								<goals>
-									<goal>jar-no-fork</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-gpg-plugin</artifactId>
-						<version>${maven-gpg-plugin.version}</version>
-						<configuration>
-						</configuration>
-						<executions>
-							<execution>
-								<id>sign-artifacts</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>sign</goal>
-								</goals>
-								<configuration>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
                                     <gpgArguments>
                                         <arg>--pinentry-mode</arg>
                                         <arg>loopback</arg>
                                     </gpgArguments>
                                 </configuration>
-							</execution>
-						</executions>
-					</plugin>
+                            </execution>
+                        </executions>
+                    </plugin>
 
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-javadoc-plugin</artifactId>
-						<configuration>
-							<doclint>none</doclint>
-						</configuration>
-						<executions>
-							<execution>
-								<id>attach-javadocs</id>
-								<phase>package</phase>
-								<goals>
-									<goal>jar</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <doclint>none</doclint>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
 
-				</plugins>
-			</build>
-		</profile>
+        <profile>
+            <id>gitlab-maven</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
 
-		<profile>
-				<id>gitlab-maven</id>
-				<build>
-						<plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <doclint>none</doclint>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
 
-								<plugin>
-										<groupId>org.apache.maven.plugins</groupId>
-										<artifactId>maven-source-plugin</artifactId>
-										<version>${maven-source-plugin.version}</version>
-										<executions>
-												<execution>
-														<id>attach-sources</id>
-														<goals>
-																<goal>jar-no-fork</goal>
-														</goals>
-												</execution>
-										</executions>
-								</plugin>
-
-								<plugin>
-										<groupId>org.apache.maven.plugins</groupId>
-										<artifactId>maven-javadoc-plugin</artifactId>
-										<configuration>
-												<doclint>none</doclint>
-										</configuration>
-										<executions>
-												<execution>
-														<id>attach-javadocs</id>
-														<phase>package</phase>
-														<goals>
-																<goal>jar</goal>
-														</goals>
-												</execution>
-										</executions>
-								</plugin>
-						</plugins>
-				</build>
-
-				<distributionManagement>
-						<repository>
-								<id>gitlab-maven</id>
-								<url>https://git.adorsys.de/api/v4/projects/1585/packages/maven</url>
-						</repository>
-						<snapshotRepository>
-								<id>gitlab-maven</id>
-								<url>https://git.adorsys.de/api/v4/projects/1585/packages/maven</url>
-						</snapshotRepository>
-				</distributionManagement>
-		</profile>
-	</profiles>
+            <distributionManagement>
+                <repository>
+                    <id>gitlab-maven</id>
+                    <url>https://git.adorsys.de/api/v4/projects/1585/packages/maven</url>
+                </repository>
+                <snapshotRepository>
+                    <id>gitlab-maven</id>
+                    <url>https://git.adorsys.de/api/v4/projects/1585/packages/maven</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+    </profiles>
 </project>

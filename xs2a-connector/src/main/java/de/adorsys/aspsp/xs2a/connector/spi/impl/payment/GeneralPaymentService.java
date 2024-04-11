@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 adorsys GmbH & Co KG
+ * Copyright 2018-2024 adorsys GmbH & Co KG
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -153,11 +153,9 @@ public class GeneralPaymentService {
                                                                          @NotNull byte[] aspspConsentData) {
         if (acceptMediaType.equals(XML_MEDIA_TYPE)) {
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus,
-                                                                    SpiMockData.FUNDS_AVAILABLE,
+                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, SpiMockData.FUNDS_AVAILABLE,
                                                                     SpiGetPaymentStatusResponse.RESPONSE_TYPE_XML,
-                                                                    transactionStatusXmlBody.getBytes(),
-                                                                    SpiMockData.PSU_MESSAGE,
+                                                                    transactionStatusXmlBody.getBytes(), SpiMockData.PSU_MESSAGE,
                                                                     SpiMockData.SPI_LINKS,
                                                                     SpiMockData.TPP_MESSAGES
                            ))
@@ -166,11 +164,9 @@ public class GeneralPaymentService {
 
         if (!SpiTransactionStatus.ACSP.equals(spiTransactionStatus)) {
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus,
-                                                                    SpiMockData.FUNDS_AVAILABLE,
+                           .payload(new SpiGetPaymentStatusResponse(spiTransactionStatus, SpiMockData.FUNDS_AVAILABLE,
                                                                     SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON,
-                                                                    null,
-                                                                    SpiMockData.PSU_MESSAGE,
+                                                                    null, SpiMockData.PSU_MESSAGE,
                                                                     SpiMockData.SPI_LINKS,
                                                                     SpiMockData.TPP_MESSAGES))
                            .build();
@@ -188,11 +184,8 @@ public class GeneralPaymentService {
             logger.info("Transaction status: {}", status);
             //TODO: after implementation of https://git.adorsys.de/adorsys/xs2a/psd2-dynamic-sandbox/-/issues/305 set "fundsAvailable" flag from Ledgers response into SpiGetPaymentStatusResponse
             return SpiResponse.<SpiGetPaymentStatusResponse>builder()
-                           .payload(new SpiGetPaymentStatusResponse(status,
-                                                                    SpiMockData.FUNDS_AVAILABLE,
-                                                                    SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON,
-                                                                    null,
-                                                                    SpiMockData.PSU_MESSAGE,
+                           .payload(new SpiGetPaymentStatusResponse(status, SpiMockData.FUNDS_AVAILABLE, SpiGetPaymentStatusResponse.RESPONSE_TYPE_JSON,
+                                                                    null, SpiMockData.PSU_MESSAGE,
                                                                     SpiMockData.SPI_LINKS,
                                                                     SpiMockData.TPP_MESSAGES))
                            .build();

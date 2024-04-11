@@ -6,4 +6,4 @@
 
 == Migrated onto new XS2A and ledgers
 
-From now on, Connector uses XS2A version 15.8 and ledgers version 4.22.
+From now on, Connector uses XS2A version 15.8, ledgers version is 4.22.

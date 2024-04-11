@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 adorsys GmbH & Co KG
+ * Copyright 2018-2024 adorsys GmbH & Co KG
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -117,7 +117,7 @@ public class LedgersSpiPaymentMapper {
         spiPayment.setRemittanceInformationStructuredArray(mapToRemittanceStructuredArray(paymentTargetTO.getRemittanceInformationStructuredArray()));
         spiPayment.setPurposeCode(Optional.ofNullable(paymentTargetTO.getPurposeCode())
                                           .map(PurposeCodeTO::name)
-                                          .map(SpiPisPurposeCode::fromValue)
+                                          .map(SpiPurposeCode::fromValue)
                                           .orElse(null));
     }
 

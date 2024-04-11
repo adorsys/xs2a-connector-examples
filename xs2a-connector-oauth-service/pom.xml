@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2018-2023 adorsys GmbH & Co KG
+  ~ Copyright 2018-2024 adorsys GmbH & Co KG
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
     <parent>
         <artifactId>xs2a-connector-examples</artifactId>
         <groupId>de.adorsys.ledgers</groupId>
-        <version>14.10-SNAPSHOT</version>
+        <version>17.3</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -59,6 +59,11 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
         </dependency>
 
         <!-- test dependencies-->

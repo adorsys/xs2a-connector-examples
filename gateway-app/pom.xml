@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright 2018-2023 adorsys GmbH & Co KG
+  ~ Copyright 2018-2024 adorsys GmbH & Co KG
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 	<parent>
 		<groupId>de.adorsys.ledgers</groupId>
 		<artifactId>xs2a-connector-examples</artifactId>
-		<version>14.10-SNAPSHOT</version>
+		<version>17.3</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>gateway-app</artifactId>
@@ -48,12 +48,12 @@
 		</dependency>
 		
 		<!-- spring dependencies -->
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -67,6 +67,7 @@
 				<filtering>true</filtering>
 			</resource>
 		</resources>
+
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -95,10 +96,11 @@
 					</execution>
 				</executions>
 			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
-				<version>2.7</version>
+				<version>${maven-resources-plugin.version}</version>
 				<configuration>
 					<delimiters>
 						<delimiter>@</delimiter>

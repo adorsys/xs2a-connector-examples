@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 adorsys GmbH & Co KG
+ * Copyright 2018-2024 adorsys GmbH & Co KG
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,14 +28,14 @@ import de.adorsys.ledgers.middleware.api.domain.sca.StartScaOprTO;
 import de.adorsys.ledgers.rest.client.AuthRequestInterceptor;
 import de.adorsys.ledgers.rest.client.RedirectScaRestClient;
 import de.adorsys.psd2.xs2a.spi.domain.SpiAspspConsentDataProvider;
-import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthenticationObject;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorisationStatus;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiAuthorizationCodeResult;
 import de.adorsys.psd2.xs2a.spi.domain.authorisation.SpiPsuAuthorisationResponse;
+import de.adorsys.psd2.xs2a.spi.domain.common.SpiAuthenticationObject;
+import de.adorsys.psd2.xs2a.spi.domain.common.SpiChallengeData;
 import de.adorsys.psd2.xs2a.spi.domain.error.SpiMessageErrorCode;
 import de.adorsys.psd2.xs2a.spi.domain.error.SpiTppMessage;
 import de.adorsys.psd2.xs2a.spi.domain.response.SpiResponse;
-import de.adorsys.psd2.xs2a.spi.domain.sca.SpiChallengeData;
 import de.adorsys.psd2.xs2a.spi.domain.sca.SpiScaStatus;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -117,12 +117,12 @@ public class GeneralAuthorisationService {
     public SpiResponse<SpiAuthorizationCodeResult> returnScaMethodSelection(SpiAspspConsentDataProvider aspspConsentDataProvider, GlobalScaResponseTO sca,
                                                                             String authenticationMethodId) {
         SpiChallengeData challengeData = Optional.ofNullable(challengeDataMapper.toChallengeData(sca.getChallengeData()))
-                                              .orElse(new SpiChallengeData());
+                                                 .orElse(new SpiChallengeData());
         SpiAuthenticationObject selectedScaMethod = sca.getScaMethods().stream()
-                                                         .filter(method -> method.getId().equals(authenticationMethodId))
-                                                         .findFirst()
-                                                         .map(scaMethodConverter::toAuthenticationObject)
-                                                         .orElse(null);
+                                                            .filter(method -> method.getId().equals(authenticationMethodId))
+                                                            .findFirst()
+                                                            .map(scaMethodConverter::toAuthenticationObject)
+                                                            .orElse(null);
         aspspConsentDataProvider.updateAspspConsentData(consentDataService.store(sca));
         return SpiResponse.<SpiAuthorizationCodeResult>builder()
                        .payload(new SpiAuthorizationCodeResult(false, challengeData, selectedScaMethod,

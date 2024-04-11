@@ -73,6 +73,8 @@ spring:
   liquibase:
     change-log: classpath:master.xml
     enabled: false
+  main:
+    allow-bean-definition-overriding: true
 
 xs2a.cms.url: http://localhost:38080
 xs2asandbox.ledgers.url: http://localhost:8088
@@ -82,7 +84,7 @@ xs2asandbox.tppui.online-banking.url: http://localhost:8090/api/v1/consents/conf
 logging.level.org.springframework.web: ERROR
 
 xs2a.license.url: https://git.adorsys.de/adorsys/xs2a/aspsp-xs2a/-/blob/master/LICENSE
-
+xs2a.spi-mock-data.enabled: true
 springfox.documentation.swagger.v2.path: /swagger.json
 
 skip.ssl.certificate.verification: true
@@ -131,10 +133,14 @@ xs2a:
     scheduler:
       pool:
         size: 30
+    db:
+      max-chunk-size: 999
 
 ---
 spring:
-  profiles: dev
+  config:
+    activate:
+      on-profile: dev
 
 logging.level.org.postgresql: INFO
 logging.level.org.hibernate.SQL: WARN

@@ -1,0 +1,20 @@
+= Release notes v.17.3
+
+== Table of Contents
+
+* Migrated onto new XS2A
+* Updated dependencies
+
+== Migrated onto new XS2A
+
+From now on, Connector uses XS2A version 17.3.
+
+== Updated dependencies
+
+Libraries were updated:
+
+- spring-boot-dependencies updated to 3.2.0;
+- jackson updated to 2.16.1;
+- spring-cloud-starter-openfeign to 4.1.0;
+- springdoc to 2.3.0;
+- lombok to 1.18.30.

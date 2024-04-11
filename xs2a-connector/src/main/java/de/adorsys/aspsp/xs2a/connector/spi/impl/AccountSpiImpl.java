@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 adorsys GmbH & Co KG
+ * Copyright 2018-2024 adorsys GmbH & Co KG
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,6 +72,7 @@ import java.util.stream.Collectors;
 
 @Component
 @PropertySource("classpath:mock-data.properties")
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.GodClass"})
 public class AccountSpiImpl implements AccountSpi {
     private static final Logger logger = LoggerFactory.getLogger(AccountSpiImpl.class);
     private static final String RESPONSE_STATUS_200_WITH_EMPTY_BODY = "Response status was 200, but the body was empty!";
@@ -89,7 +90,6 @@ public class AccountSpiImpl implements AccountSpi {
     private final TransactionLinksService transactionLinksService;
     private final FileManagementService fileManagementService;
     private final Xs2aObjectMapper xs2aObjectMapper;
-
 
     @Value("${xs2a.transaction.list.defaultPage}")
     private int defaultPage;

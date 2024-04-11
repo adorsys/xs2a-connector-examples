@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 adorsys GmbH & Co KG
+ * Copyright 2018-2024 adorsys GmbH & Co KG
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -109,7 +109,6 @@ class PiisConsentSpiImplTest {
     private ScaResponseMapper scaResponseMapper = Mappers.getMapper(ScaResponseMapper.class);
     @Spy
     private ScaMethodConverter scaMethodConverter = Mappers.getMapper(ScaMethodConverter.class);
-
 
     @Captor
     private ArgumentCaptor<StartScaOprTO> startScaOprTOCaptor;
