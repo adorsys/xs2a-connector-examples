@@ -14,3 +14,7 @@ From now on, Connector uses XS2A version 17.4.
 Libraries were updated:
 
 - postgresql - to 42.3.10.
+- spring-boot - to 3.2.7
+- spring-cloud-starter-openfeign - to 4.1.3.
+
+
