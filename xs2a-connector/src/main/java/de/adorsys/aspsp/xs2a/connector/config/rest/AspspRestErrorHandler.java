@@ -26,7 +26,7 @@ public class AspspRestErrorHandler extends DefaultResponseErrorHandler {
 
     @Override
     public void handleError(ClientHttpResponse response) throws IOException {
-        HttpStatus statusCode = response.getStatusCode();
+        HttpStatus statusCode = (HttpStatus) response.getStatusCode();
         throw new RestException(statusCode, statusCode.getReasonPhrase());
     }
 }
