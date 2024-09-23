@@ -72,6 +72,7 @@ import java.util.stream.Collectors;
 
 @Component
 @PropertySource("classpath:mock-data.properties")
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.GodClass"})
 public class AccountSpiImpl implements AccountSpi {
     private static final Logger logger = LoggerFactory.getLogger(AccountSpiImpl.class);
     private static final String RESPONSE_STATUS_200_WITH_EMPTY_BODY = "Response status was 200, but the body was empty!";
