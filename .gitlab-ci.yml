@@ -122,7 +122,7 @@ Lint (YAML, JSON, XML):
 #	  - find ./ -type f \( -iname "*.xml" ! -iname pom.xml \) -exec xmllint --noout {} \;
 
 Lint (PMD CPD):
-  image: maven:3.6-jdk-11-slim
+  image: maven:3.6.3-openjdk-17
   stage: "Lint"
   except:
     - schedules
