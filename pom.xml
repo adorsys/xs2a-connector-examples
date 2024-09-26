@@ -72,6 +72,30 @@
             <organization>LLC Golden Dimension</organization>
             <organizationUrl>https://adorsys.com.ua/</organizationUrl>
         </developer>
+        <developer>
+            <name>Borelli Fotso</name>
+            <email>bfo@adorsys.com</email>
+            <organization>adorsys GmbH &amp; Co KG</organization>
+            <organizationUrl>https://adorsys.de/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Esum Brandon</name>
+            <email>ebr@adorsys.com</email>
+            <organization>adorsys GmbH &amp; Co KG</organization>
+            <organizationUrl>https://adorsys.de/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Said Ndoum</name>
+            <email>snd@adorsys.com</email>
+            <organization>adorsys GmbH &amp; Co KG</organization>
+            <organizationUrl>https://adorsys.de/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Volodymyr Stepanenko</name>
+            <email>vst@adorsys.com.ua</email>
+            <organization>LLC Golden Dimension</organization>
+            <organizationUrl>https://adorsys.com.ua/</organizationUrl>
+        </developer>
     </developers>
 
     <properties>
