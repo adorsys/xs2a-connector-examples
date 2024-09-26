@@ -72,6 +72,30 @@
             <organization>LLC Golden Dimension</organization>
             <organizationUrl>https://adorsys.com.ua/</organizationUrl>
         </developer>
+        <developer>
+            <name>Borelli Fotso</name>
+            <email>bfo@adorsys.com</email>
+            <organization>adorsys GmbH &amp; Co KG</organization>
+            <organizationUrl>https://adorsys.de/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Esum Brandon</name>
+            <email>ebr@adorsys.com</email>
+            <organization>adorsys GmbH &amp; Co KG</organization>
+            <organizationUrl>https://adorsys.de/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Said Ndoum</name>
+            <email>snd@adorsys.com</email>
+            <organization>adorsys GmbH &amp; Co KG</organization>
+            <organizationUrl>https://adorsys.de/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Volodymyr Stepanenko</name>
+            <email>vst@adorsys.com.ua</email>
+            <organization>LLC Golden Dimension</organization>
+            <organizationUrl>https://adorsys.com.ua/</organizationUrl>
+        </developer>
     </developers>
 
     <properties>
@@ -85,8 +109,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- xs2a version -->
-<!--        TODO: update this line for xs2a suport branch -->
-        <xs2a.version>17.4-SNAPSHOT</xs2a.version>
+
+        <xs2a.version>16.4-SNAPSHOT</xs2a.version>
         <!-- ledgers version -->
         <ledgers.version>6.1-SNAPSHOT</ledgers.version>
 
