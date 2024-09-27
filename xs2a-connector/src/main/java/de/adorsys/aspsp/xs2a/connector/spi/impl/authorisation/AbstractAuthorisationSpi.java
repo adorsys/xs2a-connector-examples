@@ -18,7 +18,7 @@ package de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation;
 
 import de.adorsys.aspsp.xs2a.connector.spi.converter.ScaMethodConverter;
 import de.adorsys.aspsp.xs2a.connector.spi.converter.SpiScaStatusResponseMapper;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.*; //NOPMD
 import de.adorsys.ledgers.keycloak.client.api.KeycloakTokenService;
 import de.adorsys.ledgers.middleware.api.domain.sca.GlobalScaResponseTO;
 import de.adorsys.ledgers.middleware.api.domain.sca.OpTypeTO;

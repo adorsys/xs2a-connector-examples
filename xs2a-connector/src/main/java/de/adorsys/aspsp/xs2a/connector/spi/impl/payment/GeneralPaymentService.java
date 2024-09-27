@@ -17,7 +17,7 @@
 package de.adorsys.aspsp.xs2a.connector.spi.impl.payment;
 
 import de.adorsys.aspsp.xs2a.connector.cms.CmsPsuPisClient;
-import de.adorsys.aspsp.xs2a.connector.spi.impl.*;
+import de.adorsys.aspsp.xs2a.connector.spi.impl.*;//NOPMD
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.PaymentTypeTO;
 import de.adorsys.ledgers.middleware.api.domain.payment.TransactionStatusTO;

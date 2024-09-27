@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Java JDK version 11.x, Maven 3.x;
+- Java JDK version 17.x, Maven 3.x;
 - Relational database for Ledgers project. We recommend to use PostgreSQL 12;
 - Docker.
 
