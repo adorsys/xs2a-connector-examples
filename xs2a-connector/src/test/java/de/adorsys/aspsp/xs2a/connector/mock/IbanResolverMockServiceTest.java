@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;//NOPMD
 
 class IbanResolverMockServiceTest {
     private static final String IBAN_NONE_SCA = "DE69760700240340283600";

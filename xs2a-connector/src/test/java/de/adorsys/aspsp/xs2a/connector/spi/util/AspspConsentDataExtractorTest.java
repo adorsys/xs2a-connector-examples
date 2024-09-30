@@ -19,7 +19,7 @@ package de.adorsys.aspsp.xs2a.connector.spi.util;
 import de.adorsys.aspsp.xs2a.connector.spi.impl.authorisation.SpiAspspConsentDataProviderWithEncryptedId;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;//NOPMD
 
 class AspspConsentDataExtractorTest {
 

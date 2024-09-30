@@ -45,7 +45,7 @@ import org.springframework.http.ResponseEntity;
 import java.nio.charset.Charset;
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;//NOPMD
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 

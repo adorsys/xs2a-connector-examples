@@ -51,7 +51,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.*;//NOPMD
 
 @ExtendWith({MockitoExtension.class})
 class SinglePaymentSpiImplTest {

@@ -22,7 +22,7 @@ import de.adorsys.psd2.consent.api.pis.CreatePisCommonPaymentResponse;
 import de.adorsys.psd2.xs2a.core.psu.PsuIdData;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.*;//NOPMD
 
 @FeignClient(value = "cmsPsuPis", url = "${xs2a.cms.url}", path = "/psu-api/v1/payment", primary = false, configuration = FeignConfig.class)
 public interface CmsPsuPisRestClient {

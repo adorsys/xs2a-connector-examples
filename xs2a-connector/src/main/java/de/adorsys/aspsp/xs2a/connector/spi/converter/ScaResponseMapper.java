@@ -16,7 +16,7 @@
 
 package de.adorsys.aspsp.xs2a.connector.spi.converter;
 
-import de.adorsys.ledgers.middleware.api.domain.sca.*;
+import de.adorsys.ledgers.middleware.api.domain.sca.*;//NOPMD
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
