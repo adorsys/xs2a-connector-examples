@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.*;//NOPMD
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SpiMockData {

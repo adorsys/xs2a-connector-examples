@@ -31,7 +31,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;//NOPMD
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {AisConsentMapperImpl.class, IbanResolverMockService.class})

@@ -17,12 +17,12 @@
 package de.adorsys.aspsp.xs2a.connector.spi.converter;
 
 import de.adorsys.ledgers.middleware.api.domain.general.AddressTO;
-import de.adorsys.ledgers.middleware.api.domain.payment.*;
-import de.adorsys.psd2.xs2a.spi.domain.payment.*;
+import de.adorsys.ledgers.middleware.api.domain.payment.*;//NOPMD
+import de.adorsys.psd2.xs2a.spi.domain.payment.*;//NOPMD
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.time.*;
+import java.time.*;//NOPMD
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

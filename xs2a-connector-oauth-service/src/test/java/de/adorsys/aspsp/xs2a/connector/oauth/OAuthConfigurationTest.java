@@ -20,7 +20,7 @@ import de.adorsys.psd2.xs2a.core.mapper.ServiceType;
 import de.adorsys.xs2a.reader.JsonReader;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;//NOPMD
 
 class OAuthConfigurationTest {
 

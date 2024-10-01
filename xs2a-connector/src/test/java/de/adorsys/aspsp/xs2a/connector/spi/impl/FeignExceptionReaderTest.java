@@ -35,7 +35,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;//NOPMD
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {FeignExceptionReader.class, TestConfiguration.class})
