@@ -291,6 +291,7 @@ Release snapshot artifacts (tags):
     JAVA_TOOL_OPTIONS: "-Djavax.net.ssl.trustStorePassword=changeit -XX:MaxRAM=3G"
   <<: *release_java_private
 
+
 # Uncomment the next job if you need to restore github sync
 #Clone to github:
 #  stage: "Clone to github"
