@@ -7,3 +7,6 @@
 == Migrated onto new XS2A version
 
 From now on, Connector uses XS2A version 19.1.
+
+== Dependency version
+* commons-io version to 2.17.0.

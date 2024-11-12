@@ -8,3 +8,5 @@
 
 From now on, Connector uses XS2A version 18.1.
 
+== Dependency version
+* commons-io version to 2.17.0.
