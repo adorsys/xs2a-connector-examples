@@ -1,0 +1,16 @@
+= Release notes v.19.2
+
+== Table of Contents
+
+* Migrated onto new XS2A version
+
+== Migrated onto new XS2A version
+
+From now on, Connector uses XS2A version 19.2.
+== Dependency version
+* commons-io version to 2.17.0.
+* slf4j version to 2.0.16
+* logback-core version to 1.5.7
+* logback-classic version to 1.5.7
+* spring version to 3.3.5
+* javatar-commons to 0.8
