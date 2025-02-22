@@ -16,6 +16,7 @@ pom.xml.versionsBackup
 !.idea
 .idea/*
 !.idea/copyright/
+.idea
 
 *.iws
 *.iml
